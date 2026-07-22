@@ -8,14 +8,50 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
+
+  const validateEmail = (value) => {
+    if (!value.trim()) return "El correo es obligatorio.";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) return "Ingresa un correo electrónico válido.";
+    return "";
+  };
+
+  const validatePassword = (value) => {
+    if (!value) return "La contraseña es obligatoria.";
+    if (value.length < 6)
+      return "La contraseña debe tener al menos 6 caracteres.";
+    return "";
+  };
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    setFieldErrors((prev) => ({ ...prev, email: validateEmail(val) }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const val = e.target.value;
+    setPassword(val);
+    setFieldErrors((prev) => ({ ...prev, password: validatePassword(val) }));
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    const emailErr = validateEmail(email);
+    const passErr = validatePassword(password);
+
+    if (emailErr || passErr) {
+      setFieldErrors({ email: emailErr, password: passErr });
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
 
@@ -26,12 +62,12 @@ export default function Login() {
     }
   };
 
+  const hasErrors = fieldErrors.email || fieldErrors.password;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutralCustom-50 font-sans p-4">
       <div className="w-full max-w-md bg-white border border-neutralCustom-100 rounded-brand-lg p-8 shadow-sm">
-        {/* Contenedor del Logo e Identidad */}
         <div className="text-center mb-8">
-          {/* Imagen del Logo con tamaño ampliado */}
           <div className="flex justify-center mb-4">
             <img
               src={logo}
@@ -59,7 +95,6 @@ export default function Login() {
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
-          {/* Campo Email */}
           <div>
             <label className="block text-sm font-medium text-neutralCustom-500 mb-2">
               Correo electrónico
@@ -68,19 +103,26 @@ export default function Login() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none focus:border-brand-400 transition-colors font-normal text-sm"
+              onChange={handleEmailChange}
+              className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                fieldErrors.email
+                  ? "border-fiscal-danger focus:border-fiscal-danger"
+                  : "border-neutralCustom-100 focus:border-brand-400"
+              }`}
               placeholder="ejemplo@ingefact.com"
             />
+            {fieldErrors.email && (
+              <p className="mt-1 text-xs text-fiscal-danger">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
-          {/* Campo Password con Ojo y Recuperación */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-neutralCustom-500">
                 Contraseña
               </label>
-              {/* Enlace para la recuperación de contraseña */}
               <a
                 href="/forgot-password"
                 className="text-xs font-medium text-brand-600 hover:text-brand-400 transition-colors"
@@ -94,12 +136,15 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-4 pr-10 py-2.5 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none focus:border-brand-400 transition-colors font-normal text-sm"
+                onChange={handlePasswordChange}
+                className={`w-full pl-4 pr-10 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  fieldErrors.password
+                    ? "border-fiscal-danger focus:border-fiscal-danger"
+                    : "border-neutralCustom-100 focus:border-brand-400"
+                }`}
                 placeholder="••••••••"
               />
 
-              {/* Botón de visibilidad de contraseña (Ojo) */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -142,13 +187,17 @@ export default function Login() {
                 )}
               </button>
             </div>
+            {fieldErrors.password && (
+              <p className="mt-1 text-xs text-fiscal-danger">
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
-          {/* Botón de Acción Principal */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 text-sm mt-2"
+            disabled={loading || hasErrors}
+            className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
           >
             {loading ? "Validando credenciales..." : "Iniciar sesión"}
           </button>
