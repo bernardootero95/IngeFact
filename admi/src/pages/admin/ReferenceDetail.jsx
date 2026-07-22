@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import Sidebar from "../../components/Sidebar";
+import ReferenceModal from "../../components/References/ReferenceModal";
 
-// Mapeo para títulos limpios en la interfaz
 const tableTitles = {
   paises: "Países",
   departamentos: "Departamentos",
@@ -30,20 +30,9 @@ export default function ReferenceDetail() {
   const [syncLoading, setSyncLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Estados para el Modal CRUD Manual
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [currentId, setCurrentId] = useState(null);
-  const [code, setCode] = useState("");
-  const [value, setValue] = useState("");
-  const [estado, setEstado] = useState("activo");
-
-  // Campos especiales alineados con la BD e indirectamente con Allegra
-  const [deptCode, setDeptCode] = useState("");
-  const [deptValue, setDeptValue] = useState("");
-  const [valueNade, setValueNade] = useState("");
-  const [modalError, setModalError] = useState(null);
-  const [submitLoading, setSubmitLoading] = useState(false);
+  const [currentRecord, setCurrentRecord] = useState(null);
 
   const isMunicipio = tableName === "municipios";
   const isNotaCredito = tableName === "conceptos_nota_credito";
@@ -91,7 +80,6 @@ export default function ReferenceDetail() {
     setLoading(false);
   };
 
-  // Función de Sincronización Automática con Allegra a través de la Edge Function
   const handleSync = async () => {
     if (
       !window.confirm(
@@ -116,7 +104,7 @@ export default function ReferenceDetail() {
         alert(
           `¡Sincronización exitosa! Se procesaron ${data.processed} registros para ${title}.`,
         );
-        fetchRecords(); // Recargar la tabla con los datos frescos de Allegra
+        fetchRecords();
       }
     } catch (err) {
       console.error(err);
@@ -128,74 +116,14 @@ export default function ReferenceDetail() {
 
   const openCreateModal = () => {
     setIsEditing(false);
-    setCurrentId(null);
-    setCode("");
-    setValue("");
-    setEstado("activo");
-    setDeptCode("");
-    setDeptValue("");
-    setValueNade("");
-    setModalError(null);
+    setCurrentRecord(null);
     setIsModalOpen(true);
   };
 
   const openEditModal = (rec) => {
     setIsEditing(true);
-    setCurrentId(rec.id);
-    setCode(rec.code);
-    setValue(rec.value);
-    setEstado(rec.estado);
-    if (isMunicipio) {
-      setDeptCode(rec.department_code || "");
-      setDeptValue(rec.department_value || "");
-    }
-    if (isNotaCredito) {
-      setValueNade(rec.value_nade || "");
-    }
-    setModalError(null);
+    setCurrentRecord(rec);
     setIsModalOpen(true);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitLoading(true);
-    setModalError(null);
-
-    const payload = {
-      code,
-      value,
-      estado,
-      actualizado: new Date().toISOString(),
-    };
-
-    if (isMunicipio) {
-      payload.department_code = deptCode;
-      payload.department_value = deptValue;
-    }
-    if (isNotaCredito) {
-      payload.value_nade = valueNade;
-    }
-
-    let error = null;
-
-    if (isEditing) {
-      const res = await supabase
-        .from(tableName)
-        .update(payload)
-        .eq("id", currentId);
-      error = res.error;
-    } else {
-      const res = await supabase.from(tableName).insert([payload]);
-      error = res.error;
-    }
-
-    if (error) {
-      setModalError(error.message);
-    } else {
-      setIsModalOpen(false);
-      fetchRecords();
-    }
-    setSubmitLoading(false);
   };
 
   return (
@@ -203,7 +131,6 @@ export default function ReferenceDetail() {
       <Sidebar />
 
       <main className="flex-1 flex flex-col">
-        {/* Barra superior */}
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
           <div className="flex items-center space-x-4">
             <button
@@ -218,7 +145,6 @@ export default function ReferenceDetail() {
           </div>
 
           <div className="flex items-center space-x-3">
-            {/* Botón de Sincronización */}
             <button
               onClick={handleSync}
               disabled={syncLoading || loading}
@@ -276,7 +202,6 @@ export default function ReferenceDetail() {
           </div>
         </header>
 
-        {/* Panel de contenido */}
         <div className="p-8 flex-1 flex flex-col space-y-4 overflow-y-auto">
           <div className="max-w-md">
             <input
@@ -395,133 +320,17 @@ export default function ReferenceDetail() {
         </div>
       </main>
 
-      {/* Modal CRUD Manual */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-neutralCustom-800/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg w-full max-w-md p-6 shadow-lg">
-            <h3 className="text-lg font-bold text-neutralCustom-800 mb-4">
-              {isEditing
-                ? `Modificar en ${title}`
-                : `Nuevo Registro en ${title}`}
-            </h3>
-
-            {modalError && (
-              <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
-                {modalError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1">
-                  <label className="block text-sm font-medium text-neutralCustom-500 mb-1">
-                    Código
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm font-mono focus:outline-none focus:border-brand-400"
-                    placeholder="Ej: 01"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-neutralCustom-500 mb-1">
-                    Descripción / Valor
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={value}
-                    onChange={(e) => setValue(e.target.value)}
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
-                    placeholder="Descripción oficial"
-                  />
-                </div>
-              </div>
-
-              {isMunicipio && (
-                <div className="grid grid-cols-3 gap-4 border-t border-neutralCustom-100 pt-3">
-                  <div className="col-span-1">
-                    <label className="block text-sm font-medium text-neutralCustom-500 mb-1">
-                      Cód. Depto
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={deptCode}
-                      onChange={(e) => setDeptCode(e.target.value)}
-                      className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm font-mono focus:outline-none focus:border-brand-400"
-                      placeholder="Ej: 08"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-neutralCustom-500 mb-1">
-                      Nombre Departamento
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={deptValue}
-                      onChange={(e) => setDeptValue(e.target.value)}
-                      className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
-                      placeholder="Atlántico"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {isNotaCredito && (
-                <div className="border-t border-neutralCustom-100 pt-3">
-                  <label className="block text-sm font-medium text-neutralCustom-500 mb-1">
-                    Valor NADE
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={valueNade}
-                    onChange={(e) => setValueNade(e.target.value)}
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
-                    placeholder="Valor estandarizado NADE"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-neutralCustom-500 mb-1">
-                  Estado
-                </label>
-                <select
-                  value={estado}
-                  onChange={(e) => setEstado(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
-                >
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-neutralCustom-100 text-neutralCustom-500 text-sm font-medium rounded-brand-md hover:bg-neutralCustom-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitLoading}
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
-                >
-                  {submitLoading ? "Guardando..." : "Guardar"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <ReferenceModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        isEditing={isEditing}
+        currentRecord={currentRecord}
+        tableName={tableName}
+        title={title}
+        isMunicipio={isMunicipio}
+        isNotaCredito={isNotaCredito}
+        onSaveSuccess={fetchRecords}
+      />
     </div>
   );
 }
