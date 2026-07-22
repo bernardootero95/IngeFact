@@ -12,6 +12,7 @@ export default function UserModal({
   const [email, setEmail] = useState("");
   const [estado, setEstado] = useState("activo");
   const [modalError, setModalError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({ nombre: "", email: "" });
   const [submitLoading, setSubmitLoading] = useState(false);
 
   useEffect(() => {
@@ -25,21 +26,56 @@ export default function UserModal({
       setEstado("activo");
     }
     setModalError(null);
+    setFieldErrors({ nombre: "", email: "" });
   }, [isEditing, currentUser, isOpen]);
 
   if (!isOpen) return null;
 
+  const validateName = (value) => {
+    if (!value.trim()) return "El nombre es obligatorio.";
+    if (value.trim().length < 3)
+      return "El nombre debe tener al menos 3 caracteres.";
+    return "";
+  };
+
+  const validateEmail = (value) => {
+    if (!value.trim()) return "El correo es obligatorio.";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) return "El correo no tiene un formato válido.";
+    return "";
+  };
+
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setNombre(val);
+    setFieldErrors((prev) => ({ ...prev, nombre: validateName(val) }));
+  };
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    setFieldErrors((prev) => ({ ...prev, email: validateEmail(val) }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const nameError = validateName(nombre);
+    const emailError = validateEmail(email);
+
+    if (nameError || emailError) {
+      setFieldErrors({ nombre: nameError, email: emailError });
+      return;
+    }
+
     setSubmitLoading(true);
     setModalError(null);
 
     if (isEditing) {
-      // Actualización: El email se envía igual pero el UI garantiza que no cambió
       const { error } = await supabase
         .from("usuarios")
         .update({
-          nombre,
+          nombre: nombre.trim(),
           estado,
           actualizado: new Date().toISOString(),
         })
@@ -51,11 +87,10 @@ export default function UserModal({
         return;
       }
     } else {
-      // Creación segura invocando la Edge Function
       const { data, error } = await supabase.functions.invoke(
         "create-admin-user",
         {
-          body: { nombre, email, estado },
+          body: { nombre: nombre.trim(), email: email.trim(), estado },
         },
       );
 
@@ -70,6 +105,8 @@ export default function UserModal({
     onSaveSuccess();
     onClose();
   };
+
+  const hasErrors = fieldErrors.nombre || fieldErrors.email;
 
   return (
     <div className="fixed inset-0 bg-neutralCustom-800/50 flex items-center justify-center p-4 z-50">
@@ -93,10 +130,19 @@ export default function UserModal({
               type="text"
               required
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
+              onChange={handleNameChange}
+              className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                fieldErrors.nombre
+                  ? "border-fiscal-danger focus:border-fiscal-danger"
+                  : "border-neutralCustom-100 focus:border-brand-400"
+              }`}
               placeholder="Nombre completo"
             />
+            {fieldErrors.nombre && (
+              <p className="mt-1 text-xs text-fiscal-danger">
+                {fieldErrors.nombre}
+              </p>
+            )}
           </div>
 
           <div>
@@ -112,11 +158,20 @@ export default function UserModal({
               type="email"
               required
               value={email}
-              disabled={isEditing} // <-- Bloquea el input si se está editando
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400 disabled:opacity-60 disabled:bg-neutralCustom-100 disabled:cursor-not-allowed"
+              disabled={isEditing}
+              onChange={handleEmailChange}
+              className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none disabled:opacity-60 disabled:bg-neutralCustom-100 disabled:cursor-not-allowed ${
+                fieldErrors.email && !isEditing
+                  ? "border-fiscal-danger focus:border-fiscal-danger"
+                  : "border-neutralCustom-100 focus:border-brand-400"
+              }`}
               placeholder="correo@ingefact.com"
             />
+            {fieldErrors.email && !isEditing && (
+              <p className="mt-1 text-xs text-fiscal-danger">
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
           <div>
@@ -143,8 +198,8 @@ export default function UserModal({
             </button>
             <button
               type="submit"
-              disabled={submitLoading}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+              disabled={submitLoading || hasErrors}
+              className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitLoading ? "Guardando..." : "Guardar"}
             </button>
