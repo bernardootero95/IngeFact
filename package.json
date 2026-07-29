@@ -23,5 +23,8 @@
   "license": "UNLICENSED",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.110.0"
   }
 }

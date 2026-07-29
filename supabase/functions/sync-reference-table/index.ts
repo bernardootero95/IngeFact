@@ -63,7 +63,7 @@ const ALLEGRA_CONFIG: Record<string, { url: string; key: string }> = {
   },
 };
 
-// 2. Funciones Auxiliares (SRP)
+// 2. Funciones Auxiliares
 const chunkArray = <T>(array: T[], size: number): T[][] => {
   const chunked = [];
   for (let i = 0; i < array.length; i += size) {
@@ -85,7 +85,6 @@ const transformRecord = (item: any, tableName: string) => {
     baseRecord.department_value = item.departmentValue;
   }
 
-  // Extendemos la seguridad para notas crédito y débito
   if (
     tableName === "conceptos_nota_credito" ||
     tableName === "conceptos_nota_debito"
@@ -111,21 +110,35 @@ serve(async (req) => {
       );
     }
 
-    const email = Deno.env.get("ALLEGRA_EMAIL") || "";
-    const token = Deno.env.get("ALLEGRA_TOKEN") || "";
-    const credentials = btoa(`${email}:${token}`);
+    // SANITIZACIÓN ESTRICTA: .trim() elimina espacios invisibles
+    const token = (Deno.env.get("ALLEGRA_TOKEN") || "").trim();
 
+    if (!token) {
+      throw new Error(
+        "El token de Allegra no está configurado en las variables de entorno.",
+      );
+    }
+
+    // Autorización Bearer según la documentación de e-provider
     const allegraResponse = await fetch(config.url, {
       method: "GET",
       headers: {
-        Authorization: `Basic ${credentials}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
     });
 
     if (!allegraResponse.ok) {
+      let errorDetail = "";
+      try {
+        const errorData = await allegraResponse.json();
+        errorDetail = JSON.stringify(errorData);
+      } catch (e) {
+        errorDetail = allegraResponse.statusText;
+      }
       throw new Error(
-        `Error de comunicación con Allegra: ${allegraResponse.status} ${allegraResponse.statusText}`,
+        `Error de comunicación con Allegra: ${allegraResponse.status}. Detalles: ${errorDetail}`,
       );
     }
 
@@ -148,7 +161,6 @@ serve(async (req) => {
       transformRecord(item, tableName),
     );
 
-    // Lotes de 250 registros para proteger el rendimiento de la DB y evitar timeouts
     const BATCH_SIZE = 250;
     const batches = chunkArray(recordsToUpsert, BATCH_SIZE);
 
