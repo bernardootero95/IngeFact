@@ -1,0 +1,10 @@
+{
+  "name": "@ingefact/core-api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/supabase.js",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}

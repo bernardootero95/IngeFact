@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../../../packages/core-api/src/supabase";
 import logo from "../../assets/logo.png";
 
 export default function Login() {
@@ -39,6 +39,7 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    // Validación final antes de enviar la petición
     const emailErr = validateEmail(email);
     const passErr = validatePassword(password);
 
@@ -67,7 +68,9 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-neutralCustom-50 font-sans p-4">
       <div className="w-full max-w-md bg-white border border-neutralCustom-100 rounded-brand-lg p-8 shadow-sm">
+        {/* Contenedor del Logo e Identidad */}
         <div className="text-center mb-8">
+          {/* Imagen del Logo con tamaño ampliado */}
           <div className="flex justify-center mb-4">
             <img
               src={logo}
@@ -95,6 +98,7 @@ export default function Login() {
         )}
 
         <form onSubmit={handleLogin} className="space-y-5">
+          {/* Campo Email */}
           <div>
             <label className="block text-sm font-medium text-neutralCustom-500 mb-2">
               Correo electrónico
@@ -118,6 +122,7 @@ export default function Login() {
             )}
           </div>
 
+          {/* Campo Password con Ojo y Recuperación */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-neutralCustom-500">
@@ -145,6 +150,7 @@ export default function Login() {
                 placeholder="••••••••"
               />
 
+              {/* Botón de visibilidad de contraseña (Ojo) */}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -194,6 +200,7 @@ export default function Login() {
             )}
           </div>
 
+          {/* Botón de Acción Principal */}
           <button
             type="submit"
             disabled={loading || hasErrors}
