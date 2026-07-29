@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../../../../../../packages/core-api/src/supabase";
+import { supabase } from "@ingefact/core-api";
 import logo from "../../../assets/logo.png";
 
 export default function Login() {

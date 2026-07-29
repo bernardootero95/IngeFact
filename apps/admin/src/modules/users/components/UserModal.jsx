@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../../../../packages/core-api/src/supabase";
+import { supabase } from "@ingefact/core-api";
 
 export default function UserModal({
   isOpen,

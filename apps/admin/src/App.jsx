@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./modules/auth/store/authStore";
-import { supabase } from "../../../packages/core-api/src/supabase";
+import { supabase } from "@ingefact/core-api";
 
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../../../../../packages/core-api/src/supabase";
+import { supabase } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import ReferenceModal from "../components/ReferenceModal";
 

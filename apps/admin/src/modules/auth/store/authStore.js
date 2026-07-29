@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { supabase } from "../../../../packages/core-api/src/supabase";
+import { supabase } from "@ingefact/core-api";
 
 export const useAuthStore = create((set) => ({
   user: null,
