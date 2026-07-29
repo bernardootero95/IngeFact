@@ -1,0 +1,27 @@
+{
+  "name": "ingefact-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sistema de Facturación Electrónica en Colombia - IngeFact",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "build:admin": "npm run build --workspace=apps/admin",
+    "lint": "npm run lint --workspaces"
+  },
+  "keywords": [
+    "facturacion-electronica",
+    "colombia",
+    "saas",
+    "monorepo",
+    "solid"
+  ],
+  "author": "TecnoIngenieria B.O. - Ing. Esp. Bernardo Andres Otero Jimenez",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
