@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../../../packages/core-api/src/supabase";
 import Sidebar from "../../components/Sidebar";
 import UserTable from "../../components/Users/UserTable";
 import UserModal from "../../components/Users/UserModal";

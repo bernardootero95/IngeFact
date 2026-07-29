@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../../../packages/core-api/src/supabase";
 
 export default function ReferenceModal({
   isOpen,
@@ -45,6 +45,7 @@ export default function ReferenceModal({
 
   if (!isOpen) return null;
 
+  // --- VALIDACIONES INMEDIATAS ---
   const validateCode = (val) =>
     !val.trim() ? "El código es obligatorio." : "";
   const validateValue = (val) =>
@@ -89,6 +90,7 @@ export default function ReferenceModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Verificación final de seguridad antes del submit
     const errors = {
       code: validateCode(code),
       value: validateValue(value),

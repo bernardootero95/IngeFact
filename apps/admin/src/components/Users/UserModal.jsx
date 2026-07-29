@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabase";
+import { supabase } from "../../../../../packages/core-api/src/supabase";
 
 export default function UserModal({
   isOpen,
@@ -60,6 +60,7 @@ export default function UserModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validación de seguridad final antes de enviar
     const nameError = validateName(nombre);
     const emailError = validateEmail(email);
 
@@ -72,6 +73,7 @@ export default function UserModal({
     setModalError(null);
 
     if (isEditing) {
+      // Actualización: El email se envía igual pero el UI garantiza que no cambió
       const { error } = await supabase
         .from("usuarios")
         .update({
@@ -87,6 +89,7 @@ export default function UserModal({
         return;
       }
     } else {
+      // Creación segura invocando la Edge Function
       const { data, error } = await supabase.functions.invoke(
         "create-admin-user",
         {
