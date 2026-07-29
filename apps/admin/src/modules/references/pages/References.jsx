@@ -1,11 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Sidebar";
+import Sidebar from "../../../components/Sidebar";
 
 export default function References() {
   const navigate = useNavigate();
 
-  // Configuración de las 13 tablas organizadas por categorías de negocio
   const categories = [
     {
       title: "Ubicación Geográfica",
@@ -71,18 +70,15 @@ export default function References() {
       <Sidebar />
 
       <main className="flex-1 flex flex-col">
-        {/* Barra Superior */}
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center px-8">
           <h2 className="text-lg font-medium text-neutralCustom-800">
             Tablas de Referencia (Anexos DIAN)
           </h2>
         </header>
 
-        {/* Contenedor del Hub */}
         <div className="p-8 flex-1 overflow-y-auto space-y-8">
           {categories.map((category, index) => (
             <div key={index} className="space-y-4">
-              {/* Título de Categoría */}
               <div>
                 <h3 className="text-base font-bold text-neutralCustom-800">
                   {category.title}
@@ -92,7 +88,6 @@ export default function References() {
                 </p>
               </div>
 
-              {/* Rejilla de Tarjetas */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {category.items.map((table) => (
                   <button

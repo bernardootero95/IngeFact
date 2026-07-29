@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../../../../../packages/core-api/src/supabase";
-import Sidebar from "../../components/Sidebar";
-import ReferenceModal from "../../components/References/ReferenceModal";
+import { supabase } from "../../../../../../packages/core-api/src/supabase";
+import Sidebar from "../../../components/Sidebar";
+import ReferenceModal from "../components/ReferenceModal";
 
 const tableTitles = {
   paises: "Países",

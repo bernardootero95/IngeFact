@@ -1,18 +1,15 @@
 import React from "react";
-import { useAuthStore } from "../../store/authStore";
-import Sidebar from "../../components/Sidebar";
+import { useAuthStore } from "../../auth/store/authStore";
+import Sidebar from "../../../components/Sidebar";
 
 export default function Dashboard() {
   const { usuario } = useAuthStore();
 
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
-      {/* Barra Lateral Reutilizable */}
       <Sidebar />
 
-      {/* Contenido Principal */}
       <main className="flex-1 flex flex-col">
-        {/* Barra superior */}
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
           <h2 className="text-lg font-medium text-neutralCustom-800">
             Resumen del Sistema
@@ -20,9 +17,7 @@ export default function Dashboard() {
           <div className="text-sm text-neutralCustom-500">{usuario?.email}</div>
         </header>
 
-        {/* Panel de Trabajo */}
         <div className="p-8 space-y-8 flex-1 overflow-y-auto">
-          {/* Fila de Tarjetas de Métricas */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
               <p className="text-sm font-medium text-neutralCustom-500">
@@ -50,7 +45,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bloque Informativo de Bienvenida */}
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg p-6 shadow-sm">
             <h3 className="text-base font-medium text-neutralCustom-800 mb-2">
               ¡Bienvenido a IngeFact!

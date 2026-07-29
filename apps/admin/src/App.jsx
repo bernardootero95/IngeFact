@@ -1,56 +1,58 @@
 import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useAuthStore } from "./store/authStore";
+import { useAuthStore } from "./modules/auth/store/authStore";
 import { supabase } from "../../../packages/core-api/src/supabase";
-import Login from "./pages/Auth/Login";
-import Dashboard from "./pages/Admin/Dashboard";
-import Users from "./pages/Admin/Users";
-import References from "./pages/Admin/References";
-import ReferenceDetail from "./pages/Admin/ReferenceDetail";
 
-function ProtectedRoute({ children }) {
-  const { user } = useAuthStore();
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
-}
+import Login from "./modules/auth/pages/Login";
+import Dashboard from "./modules/dashboard/pages/Dashboard";
+import Users from "./modules/users/pages/Users";
+import References from "./modules/references/pages/References";
+import ReferenceDetail from "./modules/references/pages/ReferenceDetail";
 
-export default function App() {
-  const { user, loading, setSession } = useAuthStore();
-
-  useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }) => setSession(session));
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) =>
-      setSession(session),
-    );
-    return () => subscription.unsubscribe();
-  }, [setSession]);
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuthStore();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutralCustom-50">
-        <p className="text-sm text-neutralCustom-500 font-medium animate-pulse">
-          Cargando sistema...
+        <p className="text-sm font-medium text-neutralCustom-500 animate-pulse">
+          Verificando sesión...
         </p>
       </div>
     );
   }
 
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+export default function App() {
+  const { setSession } = useAuthStore();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setSession]);
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta Pública */}
-        <Route
-          path="/login"
-          element={
-            !user ? <Login /> : <Navigate to="/admin/dashboard" replace />
-          }
-        />
+        <Route path="/login" element={<Login />} />
 
-        {/* Rutas Privadas del Administrador */}
         <Route
           path="/admin/dashboard"
           element={
@@ -59,6 +61,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/users"
           element={
@@ -68,7 +71,6 @@ export default function App() {
           }
         />
 
-        {/* ENLACES DE REFERENCIA (Deben ir juntos y en este orden) */}
         <Route
           path="/admin/references"
           element={
@@ -77,6 +79,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/admin/references/:tableName"
           element={
@@ -86,13 +89,8 @@ export default function App() {
           }
         />
 
-        {/* RUTA COMODÍN (Estrictamente al final de todo) */}
-        <Route
-          path="*"
-          element={
-            <Navigate to={user ? "/admin/dashboard" : "/login"} replace />
-          }
-        />
+        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
   );

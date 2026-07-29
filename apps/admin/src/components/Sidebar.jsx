@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../modules/auth/store/authStore";
 import logo from "../assets/logo 2.png";
 
 export default function Sidebar() {
@@ -130,7 +130,6 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer del Sidebar: Información de Cuenta y Cierre de Sesión */}
       <div className="border-t border-neutralCustom-500/20 pt-4 text-center">
         <div className="mb-4">
           <p className="text-xs text-neutralCustom-500 truncate w-full">

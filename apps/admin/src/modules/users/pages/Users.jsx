@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../../../../packages/core-api/src/supabase";
-import Sidebar from "../../components/Sidebar";
-import UserTable from "../../components/Users/UserTable";
-import UserModal from "../../components/Users/UserModal";
+import { supabase } from "../../../../../../packages/core-api/src/supabase";
+import Sidebar from "../../../components/Sidebar";
+import UserTable from "../components/UserTable";
+import UserModal from "../components/UserModal";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
