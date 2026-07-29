@@ -24,12 +24,18 @@ export default function ReferenceDetail() {
   const { tableName } = useParams();
   const navigate = useNavigate();
 
+  // Estados de datos
   const [records, setRecords] = useState([]);
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Estados de Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50; // Cantidad de registros por página
+
+  // Estados del Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentRecord, setCurrentRecord] = useState(null);
@@ -50,6 +56,7 @@ export default function ReferenceDetail() {
     if (tableName) {
       fetchRecords();
       setSearchTerm("");
+      setCurrentPage(1); // Reiniciar página al cambiar de tabla
     }
   }, [tableName]);
 
@@ -61,15 +68,19 @@ export default function ReferenceDetail() {
         rec.value?.toLowerCase().includes(lowerSearch),
     );
     setFilteredRecords(filtered);
+    setCurrentPage(1); // Si el usuario busca algo, lo devolvemos a la página 1
   }, [searchTerm, records]);
 
   const fetchRecords = async () => {
     setLoading(true);
+    // Nota: Por defecto Supabase limita a 1000 registros.
+    // Usamos limit masivo para traer todo el catálogo al cliente y paginar rápido.
     const { data, error } = await supabase
       .from(tableName)
       .select("*")
       .is("eliminado", null)
-      .order("code", { ascending: true });
+      .order("code", { ascending: true })
+      .limit(5000);
 
     if (error) {
       console.error("Error cargando referencias:", error.message);
@@ -126,12 +137,23 @@ export default function ReferenceDetail() {
     setIsModalOpen(true);
   };
 
+  // --- LÓGICA DE PAGINACIÓN ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentRecords = filteredRecords.slice(
+    indexOfFirstItem,
+    indexOfLastItem,
+  );
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        <header className="h-16 shrink-0 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate("/admin/references")}
@@ -202,8 +224,8 @@ export default function ReferenceDetail() {
           </div>
         </header>
 
-        <div className="p-8 flex-1 flex flex-col space-y-4 overflow-y-auto">
-          <div className="max-w-md">
+        <div className="p-8 flex-1 flex flex-col space-y-4 overflow-hidden">
+          <div className="max-w-md shrink-0">
             <input
               type="text"
               placeholder="Buscar por código o descripción..."
@@ -218,11 +240,11 @@ export default function ReferenceDetail() {
               Cargando datos de la DIAN...
             </p>
           ) : (
-            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden flex-1">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-neutralCustom-50 border-b border-neutralCustom-100">
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col flex-1 overflow-hidden">
+              <div className="overflow-y-auto flex-1">
+                <table className="w-full text-left border-collapse relative">
+                  <thead className="sticky top-0 bg-neutralCustom-50 z-10 shadow-sm border-b border-neutralCustom-100">
+                    <tr>
                       <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                         Código
                       </th>
@@ -253,18 +275,17 @@ export default function ReferenceDetail() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutralCustom-100">
-                    {filteredRecords.length === 0 ? (
+                    {currentRecords.length === 0 ? (
                       <tr>
                         <td
                           colSpan={isMunicipio ? 6 : isNotaCredito ? 5 : 4}
                           className="p-8 text-sm text-neutralCustom-500 text-center"
                         >
-                          No se encontraron registros. Presiona "Sincronizar
-                          Allegra" para cargar los datos oficiales.
+                          No se encontraron registros.
                         </td>
                       </tr>
                     ) : (
-                      filteredRecords.map((rec) => (
+                      currentRecords.map((rec) => (
                         <tr
                           key={rec.id}
                           className="hover:bg-neutralCustom-50/50 transition-colors"
@@ -315,6 +336,46 @@ export default function ReferenceDetail() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Controles de Paginación UI */}
+              {filteredRecords.length > 0 && (
+                <div className="bg-neutralCustom-50 border-t border-neutralCustom-100 p-4 flex items-center justify-between shrink-0">
+                  <span className="text-sm text-neutralCustom-500">
+                    Mostrando{" "}
+                    <span className="font-medium text-neutralCustom-800">
+                      {indexOfFirstItem + 1}
+                    </span>{" "}
+                    a{" "}
+                    <span className="font-medium text-neutralCustom-800">
+                      {Math.min(indexOfLastItem, filteredRecords.length)}
+                    </span>{" "}
+                    de{" "}
+                    <span className="font-medium text-neutralCustom-800">
+                      {filteredRecords.length}
+                    </span>{" "}
+                    registros
+                  </span>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 border border-neutralCustom-200 bg-white text-neutralCustom-700 rounded-brand-md text-sm font-medium hover:bg-neutralCustom-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <span className="px-4 py-1.5 text-sm font-medium text-neutralCustom-800">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 border border-neutralCustom-200 bg-white text-neutralCustom-700 rounded-brand-md text-sm font-medium hover:bg-neutralCustom-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
