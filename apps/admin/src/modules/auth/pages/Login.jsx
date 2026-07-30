@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@ingefact/core-api";
 import logo from "../../../assets/logo.png";
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -60,6 +62,10 @@ export default function Login() {
       setLoading(false);
       return;
     }
+
+    // Corrección: Apagar el estado de carga y redirigir al Dashboard
+    setLoading(false);
+    navigate("/admin/dashboard", { replace: true });
   };
 
   const hasErrors = fieldErrors.email || fieldErrors.password;
