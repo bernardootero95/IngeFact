@@ -180,8 +180,11 @@ export default function CompanyModal({
     setModalError(null);
 
     try {
+      // Modificación Principal: Añadimos id y idAlegra al payload
       const payload = {
         empresa: {
+          id: currentCompany?.id,
+          idAlegra: currentCompany?.id_alegra || idAlegra,
           razonSocial,
           nombreComercial,
           numeroIdentificacion,
@@ -336,12 +339,13 @@ export default function CompanyModal({
                     </label>
                     <input
                       type="text"
+                      disabled={!!currentCompany}
                       value={numeroIdentificacion}
                       onChange={handleChange(
                         setNumeroIdentificacion,
                         "numeroIdentificacion",
                       )}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.numeroIdentificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 ${errors.numeroIdentificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
                     />
                     {errors.numeroIdentificacion && (
                       <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">
