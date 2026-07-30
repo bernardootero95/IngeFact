@@ -15,7 +15,6 @@ serve(async (req) => {
     const payload = await req.json();
     const { empresa, suscripcion, usuario } = payload;
 
-    // 1. Validaciones básicas de entrada
     if (
       !empresa?.numeroIdentificacion ||
       !empresa?.razonSocial ||
@@ -24,7 +23,6 @@ serve(async (req) => {
       throw new Error("Datos incompletos para aprovisionar el Tenant.");
     }
 
-    // 2. Registrar la empresa en Alegra (API e-provider)
     const token = (Deno.env.get("ALLEGRA_TOKEN") || "").trim();
     if (!token)
       throw new Error(
@@ -36,8 +34,8 @@ serve(async (req) => {
       tradeName: empresa.nombreComercial || empresa.razonSocial,
       identification: empresa.numeroIdentificacion,
       dv: String(empresa.digitoVerificacion),
-      useAlegraCertificate: true, // Configuramos por defecto el certificado de Alegra
-      identificationType: "31", // NIT por defecto según DIAN
+      useAlegraCertificate: true,
+      identificationType: "31",
       email: usuario.correoElectronico,
       phone: empresa.telefono || "",
       organizationType: empresa.tipoOrganizacion
@@ -77,16 +75,16 @@ serve(async (req) => {
     }
 
     const alegraData = await alegraRes.json();
-    const idAlegra = alegraData.id;
 
-    // 3. Inicializar el cliente administrativo de Supabase (Brinda permisos totales)
+    // CORRECCIÓN APLICADA: Extracción correcta del ID basado en el payload de Alegra
+    const idAlegra = alegraData.company.id;
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } },
     );
 
-    // 4. Insertar la Empresa en Base de Datos
     const { data: dbEmpresa, error: errEmpresa } = await supabaseAdmin
       .from("empresas")
       .insert({
@@ -111,7 +109,6 @@ serve(async (req) => {
     if (errEmpresa)
       throw new Error(`Fallo al guardar la Empresa: ${errEmpresa.message}`);
 
-    // 5. Insertar la Suscripción ligada a la Empresa
     const { error: errSub } = await supabaseAdmin.from("suscripciones").insert({
       empresa_id: dbEmpresa.id,
       max_documentos: Number(suscripcion.maxDocumentos),
@@ -123,7 +120,6 @@ serve(async (req) => {
     if (errSub)
       throw new Error(`Fallo al guardar la Suscripción: ${errSub.message}`);
 
-    // 6. Crear el Usuario en Supabase Auth
     const tempPassword = `Ing-${Math.random().toString(36).slice(-6)}*`;
     const { data: authUser, error: errAuth } =
       await supabaseAdmin.auth.admin.createUser({
@@ -138,7 +134,6 @@ serve(async (req) => {
         `Fallo al crear el Usuario de Autenticación: ${errAuth.message}`,
       );
 
-    // 7. Insertar en tabla local de usuarios_empresas
     const { error: errUsrEmp } = await supabaseAdmin
       .from("usuarios_empresas")
       .insert({
@@ -154,7 +149,6 @@ serve(async (req) => {
         `Fallo al enlazar el perfil de Usuario: ${errUsrEmp.message}`,
       );
 
-    // 8. Respuesta de Éxito
     return new Response(
       JSON.stringify({
         success: true,

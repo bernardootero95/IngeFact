@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { supabase } from "@ingefact/core-api";
 
 export default function CompanyModal({
   isOpen,
@@ -6,11 +7,11 @@ export default function CompanyModal({
   currentCompany,
   onSaveSuccess,
 }) {
-  const [activeTab, setActiveTab] = useState("empresa"); // 'empresa' | 'suscripcion'
+  const [activeTab, setActiveTab] = useState("empresa");
   const [submitLoading, setSubmitLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
 
-  // --- ESTADOS: DATOS DE LA EMPRESA ---
+  // ESTADOS: DATOS DE LA EMPRESA
   const [razonSocial, setRazonSocial] = useState("");
   const [nombreComercial, setNombreComercial] = useState("");
   const [numeroIdentificacion, setNumeroIdentificacion] = useState("");
@@ -26,12 +27,12 @@ export default function CompanyModal({
   const [idAlegra, setIdAlegra] = useState("");
   const [estadoEmpresa, setEstadoEmpresa] = useState("activo");
 
-  // --- ESTADOS: DATOS DE SUSCRIPCIÓN ---
+  // ESTADOS: DATOS DE SUSCRIPCIÓN
   const [maxDocumentos, setMaxDocumentos] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
-  // --- ESTADOS: ERRORES DE VALIDACIÓN ---
+  // ESTADOS: ERRORES
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -95,7 +96,7 @@ export default function CompanyModal({
 
   if (!isOpen) return null;
 
-  // --- VALIDACIONES INMEDIATAS ---
+  // VALIDACIONES INMEDIATAS
   const validateField = (field, value) => {
     let errorMsg = "";
     switch (field) {
@@ -178,25 +179,57 @@ export default function CompanyModal({
     setSubmitLoading(true);
     setModalError(null);
 
-    // TODO: En la Fase 2 conectaremos esto a una Edge Function (create-tenant)
-    // para garantizar la inserción transaccional de Empresa + Suscripción + Auth User
-    console.log("Datos listos para enviar:", {
-      razonSocial,
-      numeroIdentificacion,
-      maxDocumentos,
-    });
+    try {
+      const payload = {
+        empresa: {
+          razonSocial,
+          nombreComercial,
+          numeroIdentificacion,
+          digitoVerificacion,
+          direccion,
+          departamento,
+          municipio,
+          regimen,
+          telefono,
+          notificacionCorreo,
+          tipoOrganizacion,
+          estadoEmpresa,
+        },
+        suscripcion: {
+          maxDocumentos,
+          fechaInicio,
+          fechaFin,
+        },
+        usuario: {
+          correoElectronico,
+        },
+      };
 
-    setTimeout(() => {
+      const { data, error } = await supabase.functions.invoke("create-tenant", {
+        body: payload,
+      });
+
+      if (error || data?.error) {
+        throw new Error(
+          error?.message ||
+            data?.error ||
+            "Error desconocido al registrar la empresa.",
+        );
+      }
+
       setSubmitLoading(false);
       onSaveSuccess();
       onClose();
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      setSubmitLoading(false);
+      setModalError(err.message);
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-neutralCustom-800/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white border border-neutralCustom-100 rounded-brand-lg w-full max-w-3xl shadow-lg flex flex-col max-h-[90vh]">
-        {/* Header Modal */}
         <div className="p-6 border-b border-neutralCustom-100 flex justify-between items-center shrink-0">
           <h3 className="text-xl font-bold text-neutralCustom-800">
             {currentCompany
@@ -223,7 +256,6 @@ export default function CompanyModal({
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="flex border-b border-neutralCustom-100 px-6 shrink-0 bg-neutralCustom-50">
           <button
             type="button"
@@ -248,13 +280,13 @@ export default function CompanyModal({
             2. Suscripción y Accesos
             {(errors.maxDocumentos ||
               errors.fechaInicio ||
-              errors.fechaFin) && (
+              errors.fechaFin ||
+              errors.correoElectronico) && (
               <span className="ml-2 w-2 h-2 rounded-full bg-fiscal-danger"></span>
             )}
           </button>
         </div>
 
-        {/* Body Scrollable */}
         <div className="p-6 overflow-y-auto flex-1">
           {modalError && (
             <div className="mb-6 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
@@ -263,7 +295,6 @@ export default function CompanyModal({
           )}
 
           <form id="company-form" onSubmit={handleSubmit} className="space-y-6">
-            {/* TAB 1: EMPRESA */}
             <div className={activeTab === "empresa" ? "block" : "hidden"}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="col-span-1 md:col-span-2">
@@ -411,7 +442,6 @@ export default function CompanyModal({
               </div>
             </div>
 
-            {/* TAB 2: SUSCRIPCIÓN Y ACCESO */}
             <div className={activeTab === "suscripcion" ? "block" : "hidden"}>
               <div className="bg-brand-50/30 border border-brand-100 rounded-brand-md p-4 mb-6">
                 <h4 className="text-sm font-bold text-brand-800 mb-2">
@@ -469,6 +499,7 @@ export default function CompanyModal({
                     Plan de Facturación
                   </h4>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
                     Máx. Documentos a Emitir *
@@ -487,7 +518,9 @@ export default function CompanyModal({
                     </p>
                   )}
                 </div>
-                <div className="hidden md:block"></div> {/* Espaciador */}
+
+                <div className="hidden md:block"></div>
+
                 <div>
                   <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
                     Fecha de Inicio *
@@ -504,6 +537,7 @@ export default function CompanyModal({
                     </p>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
                     Fecha de Finalización *
@@ -520,6 +554,7 @@ export default function CompanyModal({
                     </p>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
                     Estado de la Empresa
@@ -533,24 +568,11 @@ export default function CompanyModal({
                     <option value="inactivo">Inactivo / Suspendido</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
-                    ID Integración Alegra
-                  </label>
-                  <input
-                    type="text"
-                    value={idAlegra}
-                    onChange={handleChange(setIdAlegra, "idAlegra")}
-                    placeholder="Opcional"
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm font-mono focus:outline-none focus:border-brand-400"
-                  />
-                </div>
               </div>
             </div>
           </form>
         </div>
 
-        {/* Footer Actions */}
         <div className="p-6 border-t border-neutralCustom-100 flex justify-end space-x-3 shrink-0 bg-white">
           <button
             type="button"
