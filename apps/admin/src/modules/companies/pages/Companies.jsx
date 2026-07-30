@@ -32,7 +32,9 @@ export default function Companies() {
       .order("creado", { ascending: false });
 
     if (error) {
-      console.error("Error al obtener empresas:", error.message);
+      console.error("Error al obtener empresas:", error);
+      // Alerta explícita para no quedarnos a ciegas si falla la lectura
+      alert(`Error de base de datos al cargar empresas: ${error.message}`);
     } else {
       setCompanies(data || []);
     }
