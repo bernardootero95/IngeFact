@@ -8,6 +8,7 @@ import Dashboard from "./modules/dashboard/pages/Dashboard";
 import Users from "./modules/users/pages/Users";
 import References from "./modules/references/pages/References";
 import ReferenceDetail from "./modules/references/pages/ReferenceDetail";
+import Companies from "./modules/companies/pages/Companies";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore();
@@ -58,6 +59,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/companies"
+          element={
+            <ProtectedRoute>
+              <Companies />
             </ProtectedRoute>
           }
         />
