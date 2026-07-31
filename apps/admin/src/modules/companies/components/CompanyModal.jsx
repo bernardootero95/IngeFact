@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@ingefact/core-api";
 
+// --- UTILIDAD: Algoritmo Oficial DIAN para calcular DV ---
+const calculateColombianNITDV = (nit) => {
+  const cleanNit = nit.replace(/\D/g, "");
+  if (!cleanNit) return "";
+
+  const primes = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+  let sum = 0;
+
+  for (let i = 0; i < cleanNit.length; i++) {
+    sum += parseInt(cleanNit.charAt(cleanNit.length - 1 - i), 10) * primes[i];
+  }
+
+  const mod = sum % 11;
+  return mod > 1 ? (11 - mod).toString() : mod.toString();
+};
+
 export default function CompanyModal({
   isOpen,
   onClose,
@@ -11,6 +27,7 @@ export default function CompanyModal({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
 
+  // ESTADOS: DATOS DE LA EMPRESA
   const [razonSocial, setRazonSocial] = useState("");
   const [nombreComercial, setNombreComercial] = useState("");
   const [numeroIdentificacion, setNumeroIdentificacion] = useState("");
@@ -26,10 +43,12 @@ export default function CompanyModal({
   const [idAlegra, setIdAlegra] = useState("");
   const [estadoEmpresa, setEstadoEmpresa] = useState("activo");
 
+  // ESTADOS: DATOS DE SUSCRIPCIÓN
   const [maxDocumentos, setMaxDocumentos] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
+  // ESTADOS: ERRORES
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -93,6 +112,7 @@ export default function CompanyModal({
 
   if (!isOpen) return null;
 
+  // VALIDACIONES INMEDIATAS
   const validateField = (field, value) => {
     let errorMsg = "";
     switch (field) {
@@ -138,6 +158,21 @@ export default function CompanyModal({
       e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setter(value);
     if (e.target.type !== "checkbox") validateField(field, value);
+  };
+
+  // Handler especializado para el NIT con auto-cálculo de DV
+  const handleNitChange = (e) => {
+    const val = e.target.value.replace(/\D/g, ""); // Solo permite números
+    setNumeroIdentificacion(val);
+    validateField("numeroIdentificacion", val);
+
+    if (val) {
+      const calculatedDV = calculateColombianNITDV(val);
+      setDigitoVerificacion(calculatedDV);
+      validateField("digitoVerificacion", calculatedDV);
+    } else {
+      setDigitoVerificacion("");
+    }
   };
 
   const checkAllErrors = () => {
@@ -215,7 +250,6 @@ export default function CompanyModal({
         );
       }
 
-      // Alerta para mostrar la contraseña temporal si se generó un nuevo usuario
       if (data?.password_temporal) {
         alert(
           `¡Usuario creado exitosamente!\n\n` +
@@ -346,11 +380,8 @@ export default function CompanyModal({
                       type="text"
                       disabled={!!currentCompany}
                       value={numeroIdentificacion}
-                      onChange={handleChange(
-                        setNumeroIdentificacion,
-                        "numeroIdentificacion",
-                      )}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 ${errors.numeroIdentificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                      onChange={handleNitChange}
+                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
                     />
                     {errors.numeroIdentificacion && (
                       <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">
@@ -364,19 +395,10 @@ export default function CompanyModal({
                     </label>
                     <input
                       type="text"
-                      maxLength={1}
+                      readOnly
                       value={digitoVerificacion}
-                      onChange={handleChange(
-                        setDigitoVerificacion,
-                        "digitoVerificacion",
-                      )}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm text-center focus:outline-none ${errors.digitoVerificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                      className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${errors.digitoVerificacion ? "border-fiscal-danger" : "border-neutralCustom-200"}`}
                     />
-                    {errors.digitoVerificacion && (
-                      <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">
-                        {errors.digitoVerificacion}
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -473,7 +495,7 @@ export default function CompanyModal({
                       setCorreoElectronico,
                       "correoElectronico",
                     )}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 ${errors.correoElectronico ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
+                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
                   />
                   {errors.correoElectronico && (
                     <p className="mt-1 text-xs text-fiscal-danger">
