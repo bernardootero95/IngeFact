@@ -12,6 +12,12 @@ export default function CompanyModal({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
 
+  // ESTADOS: REFERENCIAS (Catálogos DIAN)
+  const [departmentsList, setDepartmentsList] = useState([]);
+  const [municipalitiesList, setMunicipalitiesList] = useState([]);
+  const [regimesList, setRegimesList] = useState([]);
+  const [orgTypesList, setOrgTypesList] = useState([]);
+
   // ESTADOS: DATOS DE LA EMPRESA
   const [razonSocial, setRazonSocial] = useState("");
   const [nombreComercial, setNombreComercial] = useState("");
@@ -37,7 +43,38 @@ export default function CompanyModal({
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
+    const fetchReferences = async () => {
+      const [depts, muns, regs, orgs] = await Promise.all([
+        supabase
+          .from("departamentos")
+          .select("*")
+          .is("eliminado", null)
+          .order("value"),
+        supabase
+          .from("municipios")
+          .select("*")
+          .is("eliminado", null)
+          .order("value"),
+        supabase
+          .from("responsabilidades_fiscales")
+          .select("*")
+          .is("eliminado", null)
+          .order("value"),
+        supabase
+          .from("tipos_organizacion")
+          .select("*")
+          .is("eliminado", null)
+          .order("value"),
+      ]);
+      setDepartmentsList(depts.data || []);
+      setMunicipalitiesList(muns.data || []);
+      setRegimesList(regs.data || []);
+      setOrgTypesList(orgs.data || []);
+    };
+
     if (isOpen) {
+      fetchReferences();
+
       if (currentCompany) {
         setRazonSocial(currentCompany.razon_social || "");
         setNombreComercial(currentCompany.nombre_comercial || "");
@@ -109,13 +146,25 @@ export default function CompanyModal({
         else if (!/^\d+$/.test(value)) errorMsg = "Debe contener solo números.";
         break;
       case "digitoVerificacion":
-        if (!value.trim()) errorMsg = "Requerido.";
+        if (!String(value).trim()) errorMsg = "Requerido.";
         else if (!/^\d$/.test(value)) errorMsg = "Un solo dígito.";
         break;
       case "correoElectronico":
         if (!value.trim()) errorMsg = "El correo es obligatorio.";
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
           errorMsg = "Correo inválido.";
+        break;
+      case "departamento":
+        if (!value) errorMsg = "Seleccione un departamento.";
+        break;
+      case "municipio":
+        if (!value) errorMsg = "Seleccione un municipio.";
+        break;
+      case "regimen":
+        if (!value) errorMsg = "Seleccione una responsabilidad fiscal.";
+        break;
+      case "tipoOrganizacion":
+        if (!value) errorMsg = "Seleccione el tipo de organización.";
         break;
       case "maxDocumentos":
         if (!value) errorMsg = "Obligatorio.";
@@ -145,7 +194,6 @@ export default function CompanyModal({
     if (e.target.type !== "checkbox") validateField(field, value);
   };
 
-  // Handler especializado para el NIT con auto-cálculo de DV desde el helper
   const handleNitChange = (e) => {
     const val = e.target.value.replace(/\D/g, "");
     setNumeroIdentificacion(val);
@@ -160,6 +208,14 @@ export default function CompanyModal({
     }
   };
 
+  const handleDepartmentChange = (e) => {
+    const val = e.target.value;
+    setDepartamento(val);
+    setMunicipio("");
+    validateField("departamento", val);
+    validateField("municipio", "");
+  };
+
   const checkAllErrors = () => {
     const rSocialErr = validateField("razonSocial", razonSocial);
     const numIdErr = validateField(
@@ -168,6 +224,10 @@ export default function CompanyModal({
     );
     const dvErr = validateField("digitoVerificacion", digitoVerificacion);
     const emailErr = validateField("correoElectronico", correoElectronico);
+    const deptoErr = validateField("departamento", departamento);
+    const munErr = validateField("municipio", municipio);
+    const regErr = validateField("regimen", regimen);
+    const orgErr = validateField("tipoOrganizacion", tipoOrganizacion);
     const maxDocErr = validateField("maxDocumentos", maxDocumentos);
     const fInicioErr = validateField("fechaInicio", fechaInicio);
     const fFinErr = validateField("fechaFin", fechaFin);
@@ -177,6 +237,10 @@ export default function CompanyModal({
       numIdErr ||
       dvErr ||
       emailErr ||
+      deptoErr ||
+      munErr ||
+      regErr ||
+      orgErr ||
       maxDocErr ||
       fInicioErr ||
       fFinErr
@@ -254,6 +318,10 @@ export default function CompanyModal({
     }
   };
 
+  const filteredMunicipalities = municipalitiesList.filter(
+    (m) => m.department_code === departamento,
+  );
+
   return (
     <div className="fixed inset-0 bg-neutralCustom-800/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white border border-neutralCustom-100 rounded-brand-lg w-full max-w-3xl shadow-lg flex flex-col max-h-[90vh]">
@@ -294,6 +362,14 @@ export default function CompanyModal({
             }`}
           >
             1. Datos de la Empresa
+            {(errors.razonSocial ||
+              errors.numeroIdentificacion ||
+              errors.departamento ||
+              errors.municipio ||
+              errors.regimen ||
+              errors.tipoOrganizacion) && (
+              <span className="ml-2 inline-block w-2 h-2 rounded-full bg-fiscal-danger"></span>
+            )}
           </button>
           <button
             type="button"
@@ -407,26 +483,98 @@ export default function CompanyModal({
 
                 <div>
                   <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
-                    Cód. Departamento (DIAN)
+                    Departamento (DIAN) *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={departamento}
-                    onChange={handleChange(setDepartamento, "departamento")}
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
-                  />
+                    onChange={handleDepartmentChange}
+                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.departamento ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                  >
+                    <option value="">Seleccione un departamento...</option>
+                    {departmentsList.map((d) => (
+                      <option key={d.id} value={d.code}>
+                        {d.code} - {d.value}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.departamento && (
+                    <p className="mt-1 text-[10px] text-fiscal-danger">
+                      {errors.departamento}
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
-                    Cód. Municipio (DIAN)
+                    Municipio (DIAN) *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={municipio}
                     onChange={handleChange(setMunicipio, "municipio")}
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
-                  />
+                    disabled={!departamento}
+                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${errors.municipio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                  >
+                    <option value="">Seleccione un municipio...</option>
+                    {filteredMunicipalities.map((m) => (
+                      <option key={m.id} value={m.code}>
+                        {m.code} - {m.value}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.municipio && (
+                    <p className="mt-1 text-[10px] text-fiscal-danger">
+                      {errors.municipio}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
+                    Responsabilidad Fiscal *
+                  </label>
+                  <select
+                    value={regimen}
+                    onChange={handleChange(setRegimen, "regimen")}
+                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.regimen ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                  >
+                    <option value="">Seleccione...</option>
+                    {regimesList.map((r) => (
+                      <option key={r.id} value={r.code}>
+                        {r.code} - {r.value}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.regimen && (
+                    <p className="mt-1 text-[10px] text-fiscal-danger">
+                      {errors.regimen}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
+                    Tipo de Organización *
+                  </label>
+                  <select
+                    value={tipoOrganizacion}
+                    onChange={handleChange(
+                      setTipoOrganizacion,
+                      "tipoOrganizacion",
+                    )}
+                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.tipoOrganizacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                  >
+                    <option value="">Seleccione...</option>
+                    {orgTypesList.map((o) => (
+                      <option key={o.id} value={o.code}>
+                        {o.code} - {o.value}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.tipoOrganizacion && (
+                    <p className="mt-1 text-[10px] text-fiscal-danger">
+                      {errors.tipoOrganizacion}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -439,21 +587,6 @@ export default function CompanyModal({
                     onChange={handleChange(setTelefono, "telefono")}
                     className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutralCustom-700 mb-1">
-                    Régimen
-                  </label>
-                  <select
-                    value={regimen}
-                    onChange={handleChange(setRegimen, "regimen")}
-                    className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
-                  >
-                    <option value="">Seleccione...</option>
-                    <option value="48">Responsable de IVA (48)</option>
-                    <option value="49">No Responsable de IVA (49)</option>
-                  </select>
                 </div>
               </div>
             </div>

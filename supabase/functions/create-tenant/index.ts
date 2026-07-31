@@ -49,7 +49,7 @@ serve(async (req) => {
         organizationType: empresa.tipoOrganizacion
           ? Number(empresa.tipoOrganizacion)
           : 1,
-        regimeCode: empresa.regimen === "48" ? "O-48" : "R-99-PN",
+        regimeCode: empresa.regimen || "R-99-PN",
         address: {
           address: empresa.direccion || "No registrada",
           department: empresa.departamento || "11",
@@ -123,6 +123,7 @@ serve(async (req) => {
           telefono: empresa.telefono,
           notificacion_correo: empresa.notificacionCorreo,
           estado: empresa.estadoEmpresa || "activo",
+          tipo_organizacion: empresa.tipoOrganizacion,
           actualizado: new Date().toISOString(),
         })
         .eq("id", dbEmpresaId);
