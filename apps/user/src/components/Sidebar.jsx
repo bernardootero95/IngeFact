@@ -1,17 +1,45 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@ingefact/core-api";
-import logo from "../assets/logo.png"; // Asegúrate de que el nombre del logo coincida
+import logo from "../assets/logo 2.png";
 
 export default function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState("");
+  const [companyName, setCompanyName] = useState("Cargando...");
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserEmail(user.email);
-    });
+    const fetchUserData = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email);
+
+        // El empresa_id lo inyectamos en el user_metadata desde la Edge Function
+        const empresaId = user.user_metadata?.empresa_id;
+
+        if (empresaId) {
+          const { data, error } = await supabase
+            .from("empresas")
+            .select("razon_social, nombre_comercial")
+            .eq("id", empresaId)
+            .single();
+
+          if (data && !error) {
+            // Prioriza el nombre comercial, si no existe usa la razón social
+            setCompanyName(data.nombre_comercial || data.razon_social);
+          } else {
+            setCompanyName("Mi Empresa");
+          }
+        } else {
+          setCompanyName("Mi Empresa");
+        }
+      }
+    };
+
+    fetchUserData();
   }, []);
 
   const handleLogout = async () => {
@@ -101,8 +129,11 @@ export default function Sidebar() {
           <h1 className="text-2xl font-bold text-brand-400 tracking-tight">
             IngeFact
           </h1>
-          <p className="text-sm text-white mt-1 font-medium truncate w-full">
-            Mi Empresa
+          <p
+            className="text-sm text-white mt-1 font-medium truncate w-full"
+            title={companyName}
+          >
+            {companyName}
           </p>
         </div>
 
@@ -133,7 +164,10 @@ export default function Sidebar() {
 
       <div className="border-t border-neutralCustom-500/20 pt-4 text-center mt-8">
         <div className="mb-4">
-          <p className="text-xs text-neutralCustom-500 truncate w-full">
+          <p
+            className="text-xs text-neutralCustom-500 truncate w-full"
+            title={userEmail}
+          >
             {userEmail || "Cargando..."}
           </p>
           <span className="inline-block mt-1 text-[10px] font-bold text-brand-400 bg-brand-50/10 px-2 py-0.5 rounded-brand-md uppercase">
