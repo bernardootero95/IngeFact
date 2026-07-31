@@ -1,21 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@ingefact/core-api";
-
-// --- UTILIDAD: Algoritmo Oficial DIAN para calcular DV ---
-const calculateColombianNITDV = (nit) => {
-  const cleanNit = nit.replace(/\D/g, "");
-  if (!cleanNit) return "";
-
-  const primes = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
-  let sum = 0;
-
-  for (let i = 0; i < cleanNit.length; i++) {
-    sum += parseInt(cleanNit.charAt(cleanNit.length - 1 - i), 10) * primes[i];
-  }
-
-  const mod = sum % 11;
-  return mod > 1 ? (11 - mod).toString() : mod.toString();
-};
+import { calculateColombianNITDV } from "../../../utils/dianHelpers";
 
 export default function CompanyModal({
   isOpen,
@@ -160,9 +145,9 @@ export default function CompanyModal({
     if (e.target.type !== "checkbox") validateField(field, value);
   };
 
-  // Handler especializado para el NIT con auto-cálculo de DV
+  // Handler especializado para el NIT con auto-cálculo de DV desde el helper
   const handleNitChange = (e) => {
-    const val = e.target.value.replace(/\D/g, ""); // Solo permite números
+    const val = e.target.value.replace(/\D/g, "");
     setNumeroIdentificacion(val);
     validateField("numeroIdentificacion", val);
 
