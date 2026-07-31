@@ -4,6 +4,7 @@ import { supabase } from "@ingefact/core-api";
 
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
+import CustomersPage from "./modules/customers/pages/CustomersPage";
 
 const ProtectedRoute = ({ children }) => {
   const [session, setSession] = useState(null);
@@ -52,6 +53,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/customers"
+          element={
+            <ProtectedRoute>
+              <CustomersPage />
             </ProtectedRoute>
           }
         />
