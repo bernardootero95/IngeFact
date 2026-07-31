@@ -11,7 +11,6 @@ export default function CompanyModal({
   const [submitLoading, setSubmitLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
 
-  // ESTADOS: DATOS DE LA EMPRESA
   const [razonSocial, setRazonSocial] = useState("");
   const [nombreComercial, setNombreComercial] = useState("");
   const [numeroIdentificacion, setNumeroIdentificacion] = useState("");
@@ -27,12 +26,10 @@ export default function CompanyModal({
   const [idAlegra, setIdAlegra] = useState("");
   const [estadoEmpresa, setEstadoEmpresa] = useState("activo");
 
-  // ESTADOS: DATOS DE SUSCRIPCIÓN
   const [maxDocumentos, setMaxDocumentos] = useState("");
   const [fechaInicio, setFechaInicio] = useState("");
   const [fechaFin, setFechaFin] = useState("");
 
-  // ESTADOS: ERRORES
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -96,7 +93,6 @@ export default function CompanyModal({
 
   if (!isOpen) return null;
 
-  // VALIDACIONES INMEDIATAS
   const validateField = (field, value) => {
     let errorMsg = "";
     switch (field) {
@@ -180,7 +176,6 @@ export default function CompanyModal({
     setModalError(null);
 
     try {
-      // Modificación Principal: Añadimos id y idAlegra al payload
       const payload = {
         empresa: {
           id: currentCompany?.id,
@@ -217,6 +212,16 @@ export default function CompanyModal({
           error?.message ||
             data?.error ||
             "Error desconocido al registrar la empresa.",
+        );
+      }
+
+      // Alerta para mostrar la contraseña temporal si se generó un nuevo usuario
+      if (data?.password_temporal) {
+        alert(
+          `¡Usuario creado exitosamente!\n\n` +
+            `Usuario: ${correoElectronico}\n` +
+            `Contraseña Temporal: ${data.password_temporal}\n\n` +
+            `Por favor, copia esta información y entrégala al cliente de forma segura.`,
         );
       }
 

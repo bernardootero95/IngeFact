@@ -29,12 +29,11 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
-    let dbEmpresaId = empresa.id; // Vendrá definido si la empresa fue sincronizada previamente
+    let dbEmpresaId = empresa.id;
     let idAlegra = empresa.idAlegra;
 
     // --- FASE 1: CREAR O ACTUALIZAR EMPRESA ---
     if (!dbEmpresaId) {
-      // 1A. ES UNA EMPRESA NUEVA (NO SINCRONIZADA). Crear en Alegra primero.
       const token = (Deno.env.get("ALLEGRA_TOKEN") || "").trim();
       if (!token) throw new Error("El token de Allegra no está configurado.");
 
@@ -87,7 +86,6 @@ serve(async (req) => {
       const alegraData = await alegraRes.json();
       idAlegra = alegraData.company.id;
 
-      // Insertar nueva empresa en Base de Datos Local
       const { data: dbEmpresa, error: errEmpresa } = await supabaseAdmin
         .from("empresas")
         .insert({
@@ -113,7 +111,6 @@ serve(async (req) => {
         throw new Error(`Fallo al guardar la Empresa: ${errEmpresa.message}`);
       dbEmpresaId = dbEmpresa.id;
     } else {
-      // 1B. LA EMPRESA YA EXISTE (HUÉRFANA DE SINCRONIZACIÓN O EDICIÓN)
       const { error: errUpd } = await supabaseAdmin
         .from("empresas")
         .update({
@@ -134,8 +131,7 @@ serve(async (req) => {
         throw new Error(`Fallo al actualizar la Empresa: ${errUpd.message}`);
     }
 
-    // --- FASE 2: GESTIÓN DE LA SUSCRIPCIÓN (UPSERT) ---
-    // Verificar si la empresa ya tenía un plan activo
+    // --- FASE 2: GESTIÓN DE LA SUSCRIPCIÓN ---
     const { data: subActual } = await supabaseAdmin
       .from("suscripciones")
       .select("id")
@@ -168,7 +164,7 @@ serve(async (req) => {
     }
 
     // --- FASE 3: GESTIÓN DEL USUARIO ADMINISTRADOR ---
-    // Verificar si el usuario ya fue aprovisionado antes
+    let tempPasswordGenerada = null;
     const { data: userLocal } = await supabaseAdmin
       .from("usuarios_empresas")
       .select("id")
@@ -176,17 +172,16 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!userLocal) {
-      const tempPassword = `Ing-${Math.random().toString(36).slice(-6)}*`;
+      tempPasswordGenerada = `Ing-${Math.random().toString(36).slice(-6)}*`;
 
       const { data: authUser, error: errAuth } =
         await supabaseAdmin.auth.admin.createUser({
           email: usuario.correoElectronico,
-          password: tempPassword,
+          password: tempPasswordGenerada,
           email_confirm: true,
           user_metadata: { is_tenant_admin: true, empresa_id: dbEmpresaId },
         });
 
-      // Si falla porque el correo ya existe en otro tenant, lanzamos error limpio
       if (errAuth)
         throw new Error(`Fallo al generar el acceso: ${errAuth.message}`);
 
@@ -211,6 +206,7 @@ serve(async (req) => {
         success: true,
         empresa_id: dbEmpresaId,
         id_alegra: idAlegra,
+        password_temporal: tempPasswordGenerada,
         mensaje: "Tenant gestionado y aprovisionado exitosamente.",
       }),
       {
