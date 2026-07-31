@@ -3,6 +3,8 @@ import { supabase } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
 import CompanyModal from "../components/CompanyModal";
+import SpinnerLoading from "../../../components/ui/SpinnerLoading";
+import ToastAlert from "../../../components/ui/ToastAlert";
 
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
@@ -11,6 +13,13 @@ export default function Companies() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentCompany, setCurrentCompany] = useState(null);
+
+  // Estados centralizados para notificaciones Toast
+  const [toast, setToast] = useState({ message: null, type: "success" });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
 
   useEffect(() => {
     fetchCompanies();
@@ -33,8 +42,7 @@ export default function Companies() {
 
     if (error) {
       console.error("Error al obtener empresas:", error);
-      // Alerta explícita para no quedarnos a ciegas si falla la lectura
-      alert(`Error de base de datos al cargar empresas: ${error.message}`);
+      showToast(`Error al cargar empresas: ${error.message}`, "error");
     } else {
       setCompanies(data || []);
     }
@@ -54,7 +62,7 @@ export default function Companies() {
   const handleSyncAlegra = async () => {
     if (
       !window.confirm(
-        "¿Estás seguro de que deseas sincronizar las empresas desde Alegra? Esto actualizará los datos locales.",
+        "¿Estás seguro de que deseas sincronizar las empresas desde Alegra?",
       )
     )
       return;
@@ -67,13 +75,13 @@ export default function Companies() {
           error?.message || data?.error || "Error al sincronizar.",
         );
       }
-      alert(
+      showToast(
         `¡Sincronización exitosa! Se procesaron ${data.processed} empresas.`,
       );
-      fetchCompanies(); // Recargar la tabla
+      fetchCompanies();
     } catch (err) {
       console.error(err);
-      alert(err.message);
+      showToast(err.message, "error");
     } finally {
       setSyncLoading(false);
     }
@@ -95,28 +103,7 @@ export default function Companies() {
               className="flex items-center px-4 py-2 border border-brand-600 text-brand-600 hover:bg-brand-50 disabled:opacity-50 text-sm font-medium rounded-brand-md transition-all"
             >
               {syncLoading ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Sincronizando...
-                </>
+                <SpinnerLoading text="Sincronizando..." />
               ) : (
                 <>
                   <svg
@@ -146,7 +133,7 @@ export default function Companies() {
           </div>
         </header>
 
-        <div className="p-8 flex-1 overflow-y-auto">
+        <div className="p-8 flex-1 overflow-y-auto relative">
           <div className="mb-6">
             <h3 className="text-sm font-medium text-neutralCustom-500">
               Gestión centralizada de cuentas de facturación, cuotas de
@@ -154,11 +141,18 @@ export default function Companies() {
             </h3>
           </div>
 
-          <CompanyTable
-            companies={companies}
-            loading={loading}
-            onEdit={handleEditClick}
-          />
+          {loading ? (
+            <SpinnerLoading
+              fullScreen={false}
+              text="Cargando empresas del sistema..."
+            />
+          ) : (
+            <CompanyTable
+              companies={companies}
+              loading={false}
+              onEdit={handleEditClick}
+            />
+          )}
         </div>
       </main>
 
@@ -166,7 +160,17 @@ export default function Companies() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         currentCompany={currentCompany}
-        onSaveSuccess={fetchCompanies}
+        onSaveSuccess={() => {
+          fetchCompanies();
+          showToast("Empresa gestionada y guardada correctamente.");
+        }}
+      />
+
+      {/* Componente Global de Alertas Toast */}
+      <ToastAlert
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
       />
     </div>
   );
