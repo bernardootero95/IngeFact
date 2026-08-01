@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import CustomerModal from "../components/CustomerModal";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
@@ -8,16 +9,20 @@ export default function CustomersPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // Aquí luego conectaremos la consulta a Supabase filtrando por empresa_id
     const fetchCustomers = async () => {
       setLoading(true);
-      // Simulación temporal
       setCustomers([]);
       setLoading(false);
     };
 
     fetchCustomers();
   }, []);
+
+  const handleSaveCustomer = (newCustomer) => {
+    // Aquí implementaremos luego la inserción a Supabase
+    console.log("Guardando cliente:", newCustomer);
+    setCustomers((prev) => [newCustomer, ...prev]);
+  };
 
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
@@ -35,7 +40,7 @@ export default function CustomersPage() {
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center"
+            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
           >
             <svg
               className="w-4 h-4 mr-2"
@@ -56,7 +61,6 @@ export default function CustomersPage() {
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
-            {/* Barra de búsqueda / Filtros */}
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-between items-center">
               <div className="relative w-64">
                 <input
@@ -80,7 +84,6 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            {/* Contenido de la Tabla */}
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando clientes...
@@ -101,7 +104,24 @@ export default function CustomersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {/* Aquí irá el map de los clientes */}
+                  {customers.map((c, i) => (
+                    <tr
+                      key={i}
+                      className="hover:bg-neutralCustom-50 transition-colors"
+                    >
+                      <td className="px-6 py-4">{c.identificationNumber}</td>
+                      <td className="px-6 py-4 font-medium text-neutralCustom-800">
+                        {c.name}
+                      </td>
+                      <td className="px-6 py-4">{c.email}</td>
+                      <td className="px-6 py-4">{c.phone || "-"}</td>
+                      <td className="px-6 py-4 text-right">
+                        <button className="text-brand-600 hover:text-brand-400 text-xs font-medium">
+                          Editar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             ) : (
@@ -135,9 +155,6 @@ export default function CustomersPage() {
                   >
                     Agregar Cliente
                   </button>
-                  <button className="px-4 py-2 border border-neutralCustom-200 text-neutralCustom-600 hover:bg-neutralCustom-50 text-sm font-medium rounded-brand-md transition-colors">
-                    Importar Excel
-                  </button>
                 </div>
               </div>
             )}
@@ -145,22 +162,12 @@ export default function CustomersPage() {
         </div>
       </main>
 
-      {/* Aquí montaremos el modal en el próximo paso */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-neutralCustom-800/50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-brand-lg">
-            <h3 className="text-lg font-bold">
-              Modal de Cliente (Próximo paso)
-            </h3>
-            <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-4 px-4 py-2 bg-neutralCustom-200 rounded-brand-md"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Montaje del Modal */}
+      <CustomerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveCustomer}
+      />
     </div>
   );
 }

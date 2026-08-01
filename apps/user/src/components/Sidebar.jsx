@@ -11,31 +11,52 @@ export default function Sidebar() {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setUserEmail(user.email);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-        // El empresa_id lo inyectamos en el user_metadata desde la Edge Function
-        const empresaId = user.user_metadata?.empresa_id;
+        if (user) {
+          setUserEmail(user.email);
 
-        if (empresaId) {
+          // AQUÍ ESTÁ LA MAGIA: usamos maybeSingle() para evitar el colapso 406
           const { data, error } = await supabase
-            .from("empresas")
-            .select("razon_social, nombre_comercial")
-            .eq("id", empresaId)
-            .single();
+            .from("usuarios_empresas")
+            .select(
+              `
+              empresa_id,
+              empresas (
+                razon_social,
+                nombre_comercial
+              )
+            `,
+            )
+            .eq("id", user.id)
+            .maybeSingle();
 
-          if (data && !error) {
-            // Prioriza el nombre comercial, si no existe usa la razón social
-            setCompanyName(data.nombre_comercial || data.razon_social);
+          if (error) {
+            console.error("Error en la consulta:", error.message);
+            setCompanyName("Mi Empresa");
+            return;
+          }
+
+          if (data && data.empresas) {
+            const empresaData = Array.isArray(data.empresas)
+              ? data.empresas[0]
+              : data.empresas;
+            setCompanyName(
+              empresaData?.nombre_comercial ||
+                empresaData?.razon_social ||
+                "Mi Empresa",
+            );
           } else {
+            // Si data es null, significa que devolvió 0 filas de forma segura sin romper la app.
             setCompanyName("Mi Empresa");
           }
-        } else {
-          setCompanyName("Mi Empresa");
         }
+      } catch (err) {
+        console.error("Error inesperado:", err);
+        setCompanyName("Mi Empresa");
       }
     };
 
