@@ -5,7 +5,7 @@ import { EmpresaContext } from "./EmpresaContext.js";
 /**
  * Resuelve UNA vez por sesión de rutas protegidas la empresa (tenant) del
  * usuario autenticado, y la comparte vía contexto. Evita que el Sidebar y
- * cada página (Clientes, Facturas, Sucursales...) hagan su propia consulta
+ * cada página (Clientes, Facturas, Productos...) hagan su propia consulta
  * duplicada a usuarios_empresas.
  */
 export function EmpresaProvider({ children }) {

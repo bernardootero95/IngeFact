@@ -62,10 +62,8 @@ export default function Dashboard() {
             </h3>
             <p className="text-sm text-neutralCustom-500 leading-relaxed font-normal">
               Has iniciado sesión correctamente. Desde este panel podrás
-              gestionar tus catálogos, sucursales y emitir comprobantes
-              electrónicos validados por la DIAN. Recuerda que para comenzar a
-              facturar, primero debes registrar al menos una
-              <span className="text-brand-600 font-medium"> Sucursal</span>.
+              gestionar tus clientes, tu catálogo de productos y emitir
+              comprobantes electrónicos validados por la DIAN.
             </p>
           </div>
         </div>
