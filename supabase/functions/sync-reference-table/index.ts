@@ -1,59 +1,60 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, requireInternalAdmin } from "../_shared/auth.ts";
+import { ALEGRA_BASE_URL } from "../_shared/alegra.ts";
 
-// 1. Configuración de endpoints
-const ALLEGRA_CONFIG: Record<string, { url: string; key: string }> = {
+// 1. Configuración de endpoints (rutas relativas a ALEGRA_BASE_URL)
+const ALLEGRA_CONFIG: Record<string, { path: string; key: string }> = {
   tipos_identificacion: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/identification-types",
+    path: "/dian/identification-types",
     key: "identification-types",
   },
   monedas: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/currencies",
+    path: "/dian/currencies",
     key: "currencies",
   },
   formas_pago: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/payment-forms",
+    path: "/dian/payment-forms",
     key: "payment-forms",
   },
   metodos_pago: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/payment-methods",
+    path: "/dian/payment-methods",
     key: "payment-methods",
   },
   paises: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/countries",
+    path: "/dian/countries",
     key: "countries",
   },
   departamentos: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/departments",
+    path: "/dian/departments",
     key: "departments",
   },
   municipios: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/municipalities",
+    path: "/dian/municipalities",
     key: "municipalities",
   },
   tipos_organizacion: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/organization-types",
+    path: "/dian/organization-types",
     key: "organization-types",
   },
   responsabilidades_fiscales: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/fiscal-Responsability-types",
+    path: "/dian/fiscal-Responsability-types",
     key: "fiscal-Responsability-types",
   },
   tributos: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/tax-types",
+    path: "/dian/tax-types",
     key: "tax-types",
   },
   tipos_unidad: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/unit-codes",
+    path: "/dian/unit-codes",
     key: "unit-codes",
   },
   conceptos_nota_credito: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/correction-concept-codes-nc",
+    path: "/dian/correction-concept-codes-nc",
     key: "correction-concept-codes-nc",
   },
   conceptos_nota_debito: {
-    url: "https://api.alegra.com/e-provider/col/v1/dian/correction-concept-codes-nd",
+    path: "/dian/correction-concept-codes-nd",
     key: "correction-concept-codes-nd",
   },
 };
@@ -123,7 +124,7 @@ serve(async (req) => {
     }
 
     // Autorización Bearer según la documentación de e-provider
-    const allegraResponse = await fetch(config.url, {
+    const allegraResponse = await fetch(`${ALEGRA_BASE_URL}${config.path}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

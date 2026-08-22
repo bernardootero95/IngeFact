@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders, requireInternalAdmin } from "../_shared/auth.ts";
+import { ALEGRA_BASE_URL } from "../_shared/alegra.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -56,7 +57,7 @@ serve(async (req) => {
       };
 
       const alegraRes = await fetch(
-        "https://api.alegra.com/e-provider/col/v1/companies",
+        `${ALEGRA_BASE_URL}/companies`,
         {
           method: "POST",
           headers: {
