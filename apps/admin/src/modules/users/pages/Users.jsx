@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import UserTable from "../components/UserTable";
@@ -10,10 +10,6 @@ export default function Users() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -30,6 +26,10 @@ export default function Users() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleCreateClick = () => {
     setIsEditing(false);

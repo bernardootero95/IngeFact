@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@ingefact/core-api";
 
 export default function ReferenceModal({
@@ -126,7 +126,7 @@ export default function ReferenceModal({
       payload.value_nade = valueNade.trim();
     }
 
-    let error = null;
+    let error;
 
     if (isEditing) {
       const res = await supabase

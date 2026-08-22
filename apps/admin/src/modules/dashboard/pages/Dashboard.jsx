@@ -1,4 +1,3 @@
-import React from "react";
 import { useAuthStore } from "../../auth/store/authStore";
 import Sidebar from "../../../components/Sidebar";
 

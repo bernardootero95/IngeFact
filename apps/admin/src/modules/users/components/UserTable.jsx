@@ -1,4 +1,3 @@
-import React from "react";
 
 export default function UserTable({ users, loading, onEdit }) {
   if (loading) {

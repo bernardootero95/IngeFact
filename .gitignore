@@ -20,6 +20,8 @@ build
 # Supabase temporales
 supabase/.temp
 **/supabase/.temp
+supabase/.branches
+**/supabase/.branches
 
 # Editor y Sistema Operativo
 .vscode/*
