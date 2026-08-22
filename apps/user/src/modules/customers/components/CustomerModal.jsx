@@ -26,6 +26,7 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
   const [isConsulting, setIsConsulting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [consultMessage, setConsultMessage] = useState(null);
+  const [modalError, setModalError] = useState(null);
 
   // Cargar tablas de referencia al montar el componente
   useEffect(() => {
@@ -33,24 +34,23 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
       const fetchReferences = async () => {
         setLoadingCatalogs(true);
         try {
-          // Ajusta los nombres de las tablas si son diferentes en tu BD
           const [idRes, orgRes, regRes, taxRes] = await Promise.all([
             supabase
               .from("tipos_identificacion")
-              .select("codigo, descripcion")
-              .order("descripcion"),
+              .select("code, value")
+              .order("value"),
             supabase
               .from("tipos_organizacion")
-              .select("codigo, descripcion")
-              .order("descripcion"),
+              .select("code, value")
+              .order("value"),
             supabase
-              .from("regimenes")
-              .select("codigo, descripcion")
-              .order("descripcion"),
+              .from("responsabilidades_fiscales")
+              .select("code, value")
+              .order("value"),
             supabase
               .from("tributos")
-              .select("codigo, descripcion")
-              .order("descripcion"),
+              .select("code, value")
+              .order("value"),
           ]);
 
           setCatalogs({
@@ -63,10 +63,10 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
           // Setear valores por defecto si los catálogos traen data
           setFormData((prev) => ({
             ...prev,
-            identificationType: idRes.data?.[0]?.codigo || "",
-            organizationType: orgRes.data?.[0]?.codigo || "",
-            regime: regRes.data?.[0]?.codigo || "",
-            tax: taxRes.data?.[0]?.codigo || "",
+            identificationType: idRes.data?.[0]?.code || "",
+            organizationType: orgRes.data?.[0]?.code || "",
+            regime: regRes.data?.[0]?.code || "",
+            tax: taxRes.data?.[0]?.code || "",
           }));
         } catch (error) {
           console.error("Error cargando tablas de referencia:", error);
@@ -77,8 +77,16 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
 
       fetchReferences();
       // Resetear estado al abrir
+      setFormData((prev) => ({
+        ...prev,
+        identificationNumber: "",
+        name: "",
+        email: "",
+        phone: "",
+      }));
       setErrors({});
       setConsultMessage(null);
+      setModalError(null);
     }
   }, [isOpen]);
 
@@ -86,6 +94,8 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
 
   const validateField = (name, value) => {
     let error = "";
+    if (name === "identificationType" && !value)
+      error = "El tipo de documento es obligatorio.";
     if (name === "identificationNumber" && !value.trim())
       error = "La identificación es obligatoria.";
     if (name === "name" && !value.trim())
@@ -168,6 +178,17 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     }
   };
 
+  const buildClientePayload = () => ({
+    tipo_identificacion: formData.identificationType,
+    numero_identificacion: formData.identificationNumber.trim(),
+    nombre: formData.name.trim(),
+    correo_electronico: formData.email.trim(),
+    telefono: formData.phone.trim() || null,
+    tipo_organizacion: formData.organizationType || null,
+    regimen: formData.regime || null,
+    tributo: formData.tax || null,
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -182,12 +203,15 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     }
 
     setIsSaving(true);
-    // TODO: Enviar formData a la base de datos (tabla clientes)
-    setTimeout(() => {
-      setIsSaving(false);
-      onSave(formData);
+    setModalError(null);
+    try {
+      await onSave(buildClientePayload());
       onClose();
-    }, 1000);
+    } catch (error) {
+      setModalError(error.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -220,6 +244,11 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
 
         {/* Body */}
         <div className="p-6 overflow-y-auto flex-1">
+          {modalError && (
+            <div className="mb-6 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              {modalError}
+            </div>
+          )}
           {loadingCatalogs ? (
             <div className="flex flex-col items-center justify-center py-12 text-neutralCustom-500">
               <span className="animate-spin text-2xl mb-2">⟳</span>
@@ -257,8 +286,8 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                       className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                     >
                       {catalogs.identificationTypes.map((type) => (
-                        <option key={type.codigo} value={type.codigo}>
-                          {type.codigo} - {type.descripcion}
+                        <option key={type.code} value={type.code}>
+                          {type.code} - {type.value}
                         </option>
                       ))}
                     </select>
@@ -411,8 +440,8 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                     className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                   >
                     {catalogs.organizationTypes.map((org) => (
-                      <option key={org.codigo} value={org.codigo}>
-                        {org.descripcion}
+                      <option key={org.code} value={org.code}>
+                        {org.value}
                       </option>
                     ))}
                   </select>
@@ -429,8 +458,8 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                     className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                   >
                     {catalogs.regimes.map((reg) => (
-                      <option key={reg.codigo} value={reg.codigo}>
-                        {reg.descripcion}
+                      <option key={reg.code} value={reg.code}>
+                        {reg.value}
                       </option>
                     ))}
                   </select>
@@ -447,8 +476,8 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
                     className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                   >
                     {catalogs.taxes.map((tax) => (
-                      <option key={tax.codigo} value={tax.codigo}>
-                        {tax.codigo} - {tax.descripcion}
+                      <option key={tax.code} value={tax.code}>
+                        {tax.code} - {tax.value}
                       </option>
                     ))}
                   </select>

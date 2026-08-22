@@ -1,26 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { listClientes, createCliente } from "@ingefact/core-api";
+import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import CustomerModal from "../components/CustomerModal";
 
 export default function CustomersPage() {
+  const { empresaId, loading: loadingEmpresa } = useCurrentEmpresa();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      setLoading(true);
-      setCustomers([]);
+  const fetchCustomers = useCallback(async () => {
+    if (!empresaId) return;
+    setLoading(true);
+    try {
+      const data = await listClientes(empresaId);
+      setCustomers(data);
+    } catch (error) {
+      console.error("Error al obtener clientes:", error.message);
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [empresaId]);
 
-    fetchCustomers();
-  }, []);
+  useEffect(() => {
+    if (empresaId) fetchCustomers();
+  }, [empresaId, fetchCustomers]);
 
-  const handleSaveCustomer = (newCustomer) => {
-    // Aquí implementaremos luego la inserción a Supabase
-    console.log("Guardando cliente:", newCustomer);
-    setCustomers((prev) => [newCustomer, ...prev]);
+  const handleSaveCustomer = async (payload) => {
+    const nuevoCliente = await createCliente({
+      ...payload,
+      empresa_id: empresaId,
+    });
+    setCustomers((prev) => [nuevoCliente, ...prev]);
   };
 
   return (
@@ -83,7 +95,7 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            {loading ? (
+            {loading || loadingEmpresa ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando clientes...
               </div>
@@ -103,17 +115,17 @@ export default function CustomersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {customers.map((c, i) => (
+                  {customers.map((c) => (
                     <tr
-                      key={i}
+                      key={c.id}
                       className="hover:bg-neutralCustom-50 transition-colors"
                     >
-                      <td className="px-6 py-4">{c.identificationNumber}</td>
+                      <td className="px-6 py-4">{c.numero_identificacion}</td>
                       <td className="px-6 py-4 font-medium text-neutralCustom-800">
-                        {c.name}
+                        {c.nombre}
                       </td>
-                      <td className="px-6 py-4">{c.email}</td>
-                      <td className="px-6 py-4">{c.phone || "-"}</td>
+                      <td className="px-6 py-4">{c.correo_electronico}</td>
+                      <td className="px-6 py-4">{c.telefono || "-"}</td>
                       <td className="px-6 py-4 text-right">
                         <button className="text-brand-600 hover:text-brand-400 text-xs font-medium">
                           Editar
