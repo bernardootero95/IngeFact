@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@ingefact/core-api";
 import { calculateColombianNITDV } from "../../../utils/dianHelpers";
 
@@ -41,6 +41,30 @@ export default function CompanyModal({
 
   // ESTADOS: ERRORES
   const [errors, setErrors] = useState({});
+
+  const resetSuscripcion = () => {
+    setMaxDocumentos("");
+    setFechaInicio("");
+    setFechaFin("");
+  };
+
+  const resetForm = () => {
+    setRazonSocial("");
+    setNombreComercial("");
+    setNumeroIdentificacion("");
+    setDigitoVerificacion("");
+    setDireccion("");
+    setDepartamento("");
+    setMunicipio("");
+    setRegimen("");
+    setTelefono("");
+    setCorreoElectronico("");
+    setNotificacionCorreo(true);
+    setTipoOrganizacion("");
+    setIdAlegra("");
+    setEstadoEmpresa("activo");
+    resetSuscripcion();
+  };
 
   useEffect(() => {
     const fetchReferences = async () => {
@@ -107,30 +131,6 @@ export default function CompanyModal({
       setModalError(null);
     }
   }, [isOpen, currentCompany]);
-
-  const resetSuscripcion = () => {
-    setMaxDocumentos("");
-    setFechaInicio("");
-    setFechaFin("");
-  };
-
-  const resetForm = () => {
-    setRazonSocial("");
-    setNombreComercial("");
-    setNumeroIdentificacion("");
-    setDigitoVerificacion("");
-    setDireccion("");
-    setDepartamento("");
-    setMunicipio("");
-    setRegimen("");
-    setTelefono("");
-    setCorreoElectronico("");
-    setNotificacionCorreo(true);
-    setTipoOrganizacion("");
-    setIdAlegra("");
-    setEstadoEmpresa("activo");
-    resetSuscripcion();
-  };
 
   if (!isOpen) return null;
 
@@ -299,12 +299,10 @@ export default function CompanyModal({
         );
       }
 
-      if (data?.password_temporal) {
+      if (data?.invitacion_enviada) {
         alert(
-          `¡Usuario creado exitosamente!\n\n` +
-            `Usuario: ${correoElectronico}\n` +
-            `Contraseña Temporal: ${data.password_temporal}\n\n` +
-            `Por favor, copia esta información y entrégala al cliente de forma segura.`,
+          `¡Empresa registrada exitosamente!\n\n` +
+            `Se envió un correo de invitación a ${correoElectronico} para que el usuario defina su propia contraseña.`,
         );
       }
 

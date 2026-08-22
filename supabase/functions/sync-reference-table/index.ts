@@ -1,11 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apiKey, content-type",
-};
+import { corsHeaders, requireInternalAdmin } from "../_shared/auth.ts";
 
 // 1. Configuración de endpoints
 const ALLEGRA_CONFIG: Record<string, { url: string; key: string }> = {
@@ -101,6 +96,14 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
 
   try {
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } },
+    );
+
+    await requireInternalAdmin(req, supabaseAdmin);
+
     const { tableName } = await req.json();
     const config = ALLEGRA_CONFIG[tableName];
 
@@ -150,12 +153,6 @@ serve(async (req) => {
         `La respuesta de Allegra para ${tableName} no contiene un arreglo válido bajo la clave "${config.key}".`,
       );
     }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } },
-    );
 
     const recordsToUpsert = rawList.map((item) =>
       transformRecord(item, tableName),

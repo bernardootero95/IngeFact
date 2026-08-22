@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@ingefact/core-api";
 
 export default function CustomerModal({ isOpen, onClose, onSave }) {
@@ -129,27 +129,21 @@ export default function CustomerModal({ isOpen, onClose, onSave }) {
     setConsultMessage(null);
 
     try {
-      const token = import.meta.env.VITE_ALEGRA_TOKEN;
-      const response = await fetch(
-        `https://api.alegra.com/e-provider/col/v1/acquirer-info?identificationType=${formData.identificationType}&identificationNumber=${formData.identificationNumber}`,
+      const { data, error } = await supabase.functions.invoke(
+        "consult-acquirer",
         {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: "application/json",
+          body: {
+            identificationType: formData.identificationType,
+            identificationNumber: formData.identificationNumber,
           },
         },
       );
 
-      if (!response.ok) {
-        if (response.status === 404)
-          throw new Error("Adquiriente no encontrado en la DIAN.");
-        if (response.status === 400)
-          throw new Error("Datos de consulta inválidos.");
-        throw new Error("Error de conexión con el proveedor.");
+      if (error || data?.error) {
+        throw new Error(
+          error?.message || data?.error || "Error de conexión con el proveedor.",
+        );
       }
-
-      const data = await response.json();
 
       setFormData((prev) => ({
         ...prev,

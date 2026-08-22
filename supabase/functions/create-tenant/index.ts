@@ -1,11 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apiKey, content-type",
-};
+import { corsHeaders, requireInternalAdmin } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS")
@@ -28,6 +23,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } },
     );
+
+    await requireInternalAdmin(req, supabaseAdmin);
 
     let dbEmpresaId = empresa.id;
     let idAlegra = empresa.idAlegra;
@@ -165,7 +162,7 @@ serve(async (req) => {
     }
 
     // --- FASE 3: GESTIÓN DEL USUARIO ADMINISTRADOR ---
-    let tempPasswordGenerada = null;
+    let invitacionEnviada = false;
     const { data: userLocal } = await supabaseAdmin
       .from("usuarios_empresas")
       .select("id")
@@ -173,15 +170,14 @@ serve(async (req) => {
       .maybeSingle();
 
     if (!userLocal) {
-      tempPasswordGenerada = `Ing-${Math.random().toString(36).slice(-6)}*`;
-
       const { data: authUser, error: errAuth } =
-        await supabaseAdmin.auth.admin.createUser({
-          email: usuario.correoElectronico,
-          password: tempPasswordGenerada,
-          email_confirm: true,
-          user_metadata: { is_tenant_admin: true, empresa_id: dbEmpresaId },
-        });
+        await supabaseAdmin.auth.admin.inviteUserByEmail(
+          usuario.correoElectronico,
+          {
+            data: { is_tenant_admin: true, empresa_id: dbEmpresaId },
+          },
+        );
+      invitacionEnviada = true;
 
       if (errAuth)
         throw new Error(`Fallo al generar el acceso: ${errAuth.message}`);
@@ -207,7 +203,7 @@ serve(async (req) => {
         success: true,
         empresa_id: dbEmpresaId,
         id_alegra: idAlegra,
-        password_temporal: tempPasswordGenerada,
+        invitacion_enviada: invitacionEnviada,
         mensaje: "Tenant gestionado y aprovisionado exitosamente.",
       }),
       {

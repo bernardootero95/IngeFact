@@ -414,7 +414,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 [functions.create-admin-user]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 import_map = "./functions/create-admin-user/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -425,7 +425,7 @@ entrypoint = "./functions/create-admin-user/index.ts"
 
 [functions.sync-reference-table]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 import_map = "./functions/sync-reference-table/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -436,7 +436,7 @@ entrypoint = "./functions/sync-reference-table/index.ts"
 
 [functions.create-tenant]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 import_map = "./functions/create-tenant/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -447,7 +447,7 @@ entrypoint = "./functions/create-tenant/index.ts"
 
 [functions.sync-companies]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 import_map = "./functions/sync-companies/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -455,3 +455,9 @@ entrypoint = "./functions/sync-companies/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/sync-companies/*.html" ]
+
+[functions.consult-acquirer]
+enabled = true
+verify_jwt = true
+import_map = "./functions/consult-acquirer/deno.json"
+entrypoint = "./functions/consult-acquirer/index.ts"
