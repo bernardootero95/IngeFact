@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "@ingefact/core-api";
+import { EmpresaProvider } from "./context/EmpresaProvider";
 
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
@@ -39,7 +40,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  return children;
+  return <EmpresaProvider>{children}</EmpresaProvider>;
 };
 
 export default function App() {

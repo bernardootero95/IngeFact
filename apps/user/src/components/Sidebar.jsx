@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase, getEmpresaByUsuarioId } from "@ingefact/core-api";
+import { supabase } from "@ingefact/core-api";
 import { SidebarShell } from "@ingefact/ui";
+import { useCurrentEmpresa } from "../context/useCurrentEmpresa";
 import logo from "../assets/logo 2.png";
 
 const navItems = [
@@ -69,36 +70,23 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const { empresa, loading } = useCurrentEmpresa();
   const [userEmail, setUserEmail] = useState("");
-  const [companyName, setCompanyName] = useState("Cargando...");
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) return;
-      setUserEmail(user.email);
-
-      try {
-        const empresa = await getEmpresaByUsuarioId(user.id);
-        setCompanyName(
-          empresa?.nombre_comercial || empresa?.razon_social || "Mi Empresa",
-        );
-      } catch (err) {
-        console.error("Error al obtener la empresa:", err.message);
-        setCompanyName("Mi Empresa");
-      }
-    };
-
-    fetchUserData();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserEmail(user.email);
+    });
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/login", { replace: true });
   };
+
+  const companyName = loading
+    ? "Cargando..."
+    : empresa?.nombre_comercial || empresa?.razon_social || "Mi Empresa";
 
   return (
     <SidebarShell
