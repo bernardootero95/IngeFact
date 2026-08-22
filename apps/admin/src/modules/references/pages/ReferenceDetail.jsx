@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
@@ -44,6 +44,26 @@ export default function ReferenceDetail() {
   const isNotaCredito = tableName === "conceptos_nota_credito";
   const title = tableTitles[tableName] || "Tabla de Referencia";
 
+  const fetchRecords = async () => {
+    setLoading(true);
+    // Nota: Por defecto Supabase limita a 1000 registros.
+    // Usamos limit masivo para traer todo el catálogo al cliente y paginar rápido.
+    const { data, error } = await supabase
+      .from(tableName)
+      .select("*")
+      .is("eliminado", null)
+      .order("code", { ascending: true })
+      .limit(5000);
+
+    if (error) {
+      console.error("Error cargando referencias:", error.message);
+    } else {
+      setRecords(data || []);
+      setFilteredRecords(data || []);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (tableName && !tableTitles[tableName]) {
       console.warn(
@@ -70,26 +90,6 @@ export default function ReferenceDetail() {
     setFilteredRecords(filtered);
     setCurrentPage(1); // Si el usuario busca algo, lo devolvemos a la página 1
   }, [searchTerm, records]);
-
-  const fetchRecords = async () => {
-    setLoading(true);
-    // Nota: Por defecto Supabase limita a 1000 registros.
-    // Usamos limit masivo para traer todo el catálogo al cliente y paginar rápido.
-    const { data, error } = await supabase
-      .from(tableName)
-      .select("*")
-      .is("eliminado", null)
-      .order("code", { ascending: true })
-      .limit(5000);
-
-    if (error) {
-      console.error("Error cargando referencias:", error.message);
-    } else {
-      setRecords(data || []);
-      setFilteredRecords(data || []);
-    }
-    setLoading(false);
-  };
 
   const handleSync = async () => {
     if (

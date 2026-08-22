@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { supabase } from "@ingefact/core-api";
+import { useState, useEffect } from "react";
 import Sidebar from "../../../components/Sidebar";
 import CustomerModal from "../components/CustomerModal";
 

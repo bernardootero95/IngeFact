@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
 import CompanyModal from "../components/CompanyModal";
-import SpinnerLoading from "../../../components/ui/SpinnerLoading";
-import ToastAlert from "../../../components/ui/ToastAlert";
+import { SpinnerLoading, ToastAlert } from "@ingefact/ui";
 
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
@@ -20,10 +19,6 @@ export default function Companies() {
   const showToast = (message, type = "success") => {
     setToast({ message, type });
   };
-
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -48,6 +43,10 @@ export default function Companies() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
 
   const handleCreateClick = () => {
     setCurrentCompany(null);

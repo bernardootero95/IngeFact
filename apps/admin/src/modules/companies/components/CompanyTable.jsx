@@ -1,4 +1,3 @@
-import React from "react";
 
 export default function CompanyTable({ companies, loading, onEdit }) {
   if (loading) {
