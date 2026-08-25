@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@ingefact/core-api";
+import { supabase, listImpuestosEmpresa } from "@ingefact/core-api";
+import { SearchableSelect } from "@ingefact/ui";
 
 const TIPOS_PRODUCTO = [
-  { value: "bien", label: "Bien" },
+  { value: "bien", label: "Producto" },
   { value: "servicio", label: "Servicio" },
 ];
 
-export default function ProductModal({ isOpen, onClose, onSave }) {
+const UNIDAD_MEDIDA_DEFAULT = "94";
+
+export default function ProductModal({ isOpen, onClose, onSave, empresaId }) {
   const [formData, setFormData] = useState({
     tipo: "bien",
     codigo: "",
@@ -14,13 +17,13 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
     descripcion: "",
     precio: "",
     unidad_medida: "",
-    tributo: "",
-    tarifa_impuesto: "0",
+    impuestoKey: "",
   });
 
   const [catalogs, setCatalogs] = useState({
     unidadesMedida: [],
     tributos: [],
+    impuestosEmpresa: [],
   });
 
   const [errors, setErrors] = useState({});
@@ -29,26 +32,33 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
   const [modalError, setModalError] = useState(null);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && empresaId) {
       const fetchReferences = async () => {
         setLoadingCatalogs(true);
         try {
-          const [unitRes, taxRes] = await Promise.all([
+          const [unitRes, taxRes, impuestosEmpresa] = await Promise.all([
             supabase
               .from("tipos_unidad")
               .select("code, value")
               .order("value"),
             supabase.from("tributos").select("code, value").order("value"),
+            listImpuestosEmpresa(empresaId),
           ]);
 
+          const unidadesMedida = unitRes.data || [];
           setCatalogs({
-            unidadesMedida: unitRes.data || [],
+            unidadesMedida,
             tributos: taxRes.data || [],
+            impuestosEmpresa,
           });
+
+          const defaultUnidad =
+            unidadesMedida.find((u) => u.code === UNIDAD_MEDIDA_DEFAULT) ||
+            unidadesMedida[0];
 
           setFormData((prev) => ({
             ...prev,
-            unidad_medida: unitRes.data?.[0]?.code || "",
+            unidad_medida: defaultUnidad?.code || "",
           }));
         } catch (error) {
           console.error("Error cargando tablas de referencia:", error);
@@ -65,18 +75,29 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
         nombre: "",
         descripcion: "",
         precio: "",
-        tributo: "",
-        tarifa_impuesto: "0",
+        impuestoKey: "",
       }));
       setErrors({});
       setModalError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, empresaId]);
 
   if (!isOpen) return null;
 
-  const validateField = (name, value, currentData = formData) => {
+  const tributoNombre = (code) =>
+    catalogs.tributos.find((t) => t.code === code)?.value || code;
+
+  const impuestoOptions = catalogs.impuestosEmpresa.map((i) => ({
+    key: `${i.tributo}-${i.tarifa}`,
+    tributo: i.tributo,
+    tarifa: i.tarifa,
+    label: `${tributoNombre(i.tributo)} ${i.tarifa}%`,
+  }));
+
+  const validateField = (name, value) => {
     let error = "";
+    if (name === "codigo" && !value.trim())
+      error = "El código interno es obligatorio.";
     if (name === "nombre" && !value.trim())
       error = "El nombre es obligatorio.";
     if (name === "precio") {
@@ -86,57 +107,40 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
     }
     if (name === "unidad_medida" && !value)
       error = "La unidad de medida es obligatoria.";
-    if (name === "tarifa_impuesto" && currentData.tributo) {
-      if (value === "" || isNaN(value))
-        error = "La tarifa es obligatoria cuando hay un tributo asociado.";
-      else if (Number(value) < 0 || Number(value) > 100)
-        error = "La tarifa debe estar entre 0 y 100.";
-    }
     return error;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const nextData = { ...formData, [name]: value };
-
-    if (name === "tributo" && !value) {
-      nextData.tarifa_impuesto = "0";
-    }
-
-    setFormData(nextData);
-    setErrors((prev) => ({
-      ...prev,
-      [name]: validateField(name, value, nextData),
-      ...(name === "tributo"
-        ? {
-            tarifa_impuesto: validateField(
-              "tarifa_impuesto",
-              nextData.tarifa_impuesto,
-              nextData,
-            ),
-          }
-        : {}),
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
-  const buildProductoPayload = () => ({
-    tipo: formData.tipo,
-    codigo: formData.codigo.trim() || null,
-    nombre: formData.nombre.trim(),
-    descripcion: formData.descripcion.trim() || null,
-    precio: Number(formData.precio),
-    unidad_medida: formData.unidad_medida,
-    tributo: formData.tributo || null,
-    tarifa_impuesto: formData.tributo ? Number(formData.tarifa_impuesto) : 0,
-  });
+  const handleUnidadMedidaChange = (code) => {
+    handleChange({ target: { name: "unidad_medida", value: code } });
+  };
+
+  const buildProductoPayload = () => {
+    const preset = impuestoOptions.find((o) => o.key === formData.impuestoKey);
+    return {
+      tipo: formData.tipo,
+      codigo: formData.codigo.trim(),
+      nombre: formData.nombre.trim(),
+      descripcion: formData.descripcion.trim() || null,
+      precio: Number(formData.precio),
+      unidad_medida: formData.unidad_medida,
+      tributo: preset?.tributo || null,
+      tarifa_impuesto: preset?.tarifa || 0,
+    };
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const fieldsToValidate = ["nombre", "precio", "unidad_medida", "tarifa_impuesto"];
+    const fieldsToValidate = ["codigo", "nombre", "precio", "unidad_medida"];
     const newErrors = {};
     fieldsToValidate.forEach((key) => {
-      newErrors[key] = validateField(key, formData[key], formData);
+      newErrors[key] = validateField(key, formData[key]);
     });
 
     if (Object.values(newErrors).some((err) => err)) {
@@ -150,7 +154,11 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
       await onSave(buildProductoPayload());
       onClose();
     } catch (error) {
-      setModalError(error.message);
+      if (error.code === "23505") {
+        setModalError("Ya tienes un producto con ese código interno.");
+      } else {
+        setModalError(error.message);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -223,16 +231,26 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                    Código Interno (SKU)
+                    Código Interno (SKU){" "}
+                    <span className="text-fiscal-danger">*</span>
                   </label>
                   <input
                     type="text"
                     name="codigo"
                     value={formData.codigo}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
-                    placeholder="Opcional. Ej. PROD-001"
+                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                      errors.codigo
+                        ? "border-fiscal-danger"
+                        : "border-neutralCustom-200 focus:border-brand-400"
+                    }`}
+                    placeholder="Ej. PROD-001"
                   />
+                  {errors.codigo && (
+                    <p className="mt-1 text-xs text-fiscal-danger">
+                      {errors.codigo}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -304,22 +322,13 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
                     Unidad de Medida{" "}
                     <span className="text-fiscal-danger">*</span>
                   </label>
-                  <select
-                    name="unidad_medida"
+                  <SearchableSelect
+                    options={catalogs.unidadesMedida}
                     value={formData.unidad_medida}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                      errors.unidad_medida
-                        ? "border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400"
-                    }`}
-                  >
-                    {catalogs.unidadesMedida.map((u) => (
-                      <option key={u.code} value={u.code}>
-                        {u.code} - {u.value}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={handleUnidadMedidaChange}
+                    placeholder="Buscar unidad de medida..."
+                    error={!!errors.unidad_medida}
+                  />
                   {errors.unidad_medida && (
                     <p className="mt-1 text-xs text-fiscal-danger">
                       {errors.unidad_medida}
@@ -328,55 +337,29 @@ export default function ProductModal({ isOpen, onClose, onSave }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t border-neutralCustom-100 pt-5">
-                <div>
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                    Tributo
-                  </label>
-                  <select
-                    name="tributo"
-                    value={formData.tributo}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
-                  >
-                    <option value="">Excluido de impuestos</option>
-                    {catalogs.tributos.map((t) => (
-                      <option key={t.code} value={t.code}>
-                        {t.code} - {t.value}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                    Tarifa (%){" "}
-                    {formData.tributo && (
-                      <span className="text-fiscal-danger">*</span>
-                    )}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    name="tarifa_impuesto"
-                    value={formData.tarifa_impuesto}
-                    onChange={handleChange}
-                    disabled={!formData.tributo}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
-                      errors.tarifa_impuesto
-                        ? "border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400"
-                    }`}
-                    placeholder="Ej. 19"
-                  />
-                  {errors.tarifa_impuesto && (
-                    <p className="mt-1 text-xs text-fiscal-danger">
-                      {errors.tarifa_impuesto}
-                    </p>
-                  )}
-                </div>
+              <div className="border-t border-neutralCustom-100 pt-5">
+                <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                  Impuesto
+                </label>
+                <select
+                  name="impuestoKey"
+                  value={formData.impuestoKey}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                >
+                  <option value="">Excluido de impuestos</option>
+                  {impuestoOptions.map((o) => (
+                    <option key={o.key} value={o.key}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+                {impuestoOptions.length === 0 && (
+                  <p className="mt-1 text-xs text-neutralCustom-400">
+                    Aún no tienes impuestos configurados. Ve a Configuración →
+                    Impuestos para crearlos.
+                  </p>
+                )}
               </div>
             </form>
           )}
