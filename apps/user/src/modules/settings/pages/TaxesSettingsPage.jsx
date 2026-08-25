@@ -6,7 +6,6 @@ import {
 } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
-import SettingsNav from "../components/SettingsNav";
 import TaxPresetModal from "../components/TaxPresetModal";
 
 export default function TaxesSettingsPage() {
@@ -51,8 +50,6 @@ export default function TaxesSettingsPage() {
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
-
-      <SettingsNav />
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
