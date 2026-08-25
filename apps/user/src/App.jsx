@@ -6,6 +6,7 @@ import { EmpresaProvider } from "./context/EmpresaProvider";
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
+import ProductsPage from "./modules/products/pages/ProductsPage";
 
 const ProtectedRoute = ({ children }) => {
   const [session, setSession] = useState(null);
@@ -63,6 +64,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CustomersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/products"
+          element={
+            <ProtectedRoute>
+              <ProductsPage />
             </ProtectedRoute>
           }
         />
