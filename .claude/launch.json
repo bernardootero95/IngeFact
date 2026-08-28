@@ -13,6 +13,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--workspace=apps/user"],
       "port": 3001
+    },
+    {
+      "name": "api-dev",
+      "runtimeExecutable": "apps/api/venv/Scripts/uvicorn.exe",
+      "runtimeArgs": ["src.main:app", "--reload", "--app-dir", "apps/api", "--port", "8000"],
+      "port": 8000
     }
   ]
 }
