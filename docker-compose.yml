@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ingefact-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ingefact
+      POSTGRES_PASSWORD: ingefact
+      POSTGRES_DB: ingefact
+    ports:
+      - "5433:5432"
+    volumes:
+      - ingefact_postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: ingefact-api
+    restart: unless-stopped
+    env_file:
+      - ./apps/api/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://ingefact:ingefact@postgres:5432/ingefact
+    volumes:
+      - ./apps/api:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+volumes:
+  ingefact_postgres_data:
