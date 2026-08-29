@@ -1,0 +1,72 @@
+import httpx
+
+from src.core.config import get_settings
+
+
+class AlegraApiError(Exception):
+    """Error definitivo de Alegra (4xx) -- no tiene sentido reintentar."""
+
+    def __init__(self, status_code: int, body: dict):
+        self.status_code = status_code
+        self.body = body
+        super().__init__(f"Alegra respondio {status_code}: {body}")
+
+
+class AlegraTransientError(Exception):
+    """Error transitorio (timeout, 5xx) -- candidato a reintento con backoff."""
+
+
+class AlegraClient:
+    """
+    Cliente delgado para la API e-provider de Alegra.
+
+    Hallazgos de Sprint 0 (ver docs/alegra-investigacion.md) ya incorporados aqui:
+    - POST /companies responde anidado bajo "company", no plano.
+    - POST /test-sets responde anidado bajo "testSet" (singular), no "testSets".
+    """
+
+    SANDBOX_GOVERNMENT_ID = "a70562e0-631e-4ceb-aa65-36887b57dc17"
+
+    def __init__(self):
+        settings = get_settings()
+        self._base_url = settings.alegra_base_url
+        self._headers = {
+            "Authorization": f"Bearer {settings.alegra_token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+    def _request(self, method: str, path: str, **kwargs) -> dict:
+        try:
+            resp = httpx.request(method, f"{self._base_url}{path}", headers=self._headers, timeout=30, **kwargs)
+        except httpx.TimeoutException as exc:
+            raise AlegraTransientError(str(exc)) from exc
+
+        if resp.status_code >= 500:
+            raise AlegraTransientError(f"Alegra respondio {resp.status_code}")
+
+        try:
+            body = resp.json()
+        except ValueError:
+            body = {}
+
+        if resp.status_code >= 400:
+            raise AlegraApiError(resp.status_code, body)
+
+        return body
+
+    def create_company(self, payload: dict) -> dict:
+        body = self._request("POST", "/companies", json=payload)
+        return body["company"]
+
+    def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
+        body = self._request(
+            "POST",
+            "/test-sets",
+            json={
+                "type": document_type,
+                "governmentId": self.SANDBOX_GOVERNMENT_ID,
+                "company": {"id": company_id},
+            },
+        )
+        return body["testSet"]
