@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     alegra_base_url: str
     alegra_token: str
     credentials_encryption_key: str = ""
+    jwt_secret: str
     log_level: str = "INFO"
 
 
