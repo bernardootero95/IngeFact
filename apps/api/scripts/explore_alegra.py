@@ -8,7 +8,7 @@ imprime como JSON y se redirige a un archivo de log para documentarlo despues
 en docs/alegra-investigacion.md.
 
 No es parte de la aplicacion FastAPI, es una herramienta de investigacion de
-un solo uso (no se importa desde src/).
+un solo uso (no se importa desde src/, pero reusa src/core/nit.py para el DV).
 """
 
 import json
@@ -19,6 +19,9 @@ from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 import os
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.core.nit import nit_check_digit  # noqa: E402
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
@@ -31,15 +34,6 @@ HEADERS = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 }
-
-
-def nit_check_digit(nit: str) -> str:
-    """Algoritmo oficial DIAN para el digito de verificacion de un NIT."""
-    weights = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71]
-    digits = [int(d) for d in nit.zfill(15)]
-    total = sum(d * w for d, w in zip(reversed(digits), weights))
-    remainder = total % 11
-    return str(remainder) if remainder in (0, 1) else str(11 - remainder)
 
 
 def call(method: str, path: str, **kwargs) -> httpx.Response:
