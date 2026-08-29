@@ -32,23 +32,8 @@ class Empresa(Base):
     )
     eliminado: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    credenciales_alegra: Mapped[list["AlegraCredentials"]] = relationship(back_populates="empresa")
     historial_estado_alegra: Mapped[list["CompanyStatus"]] = relationship(back_populates="empresa")
-
-
-class AlegraCredentials(Base):
-    __tablename__ = "alegra_credentials"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    empresa_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False)
-    token_encriptado: Mapped[str] = mapped_column(String, nullable=False)
-
-    creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    actualizado: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
-
-    empresa: Mapped["Empresa"] = relationship(back_populates="credenciales_alegra")
+    usuarios: Mapped[list["UsuarioEmpresa"]] = relationship(back_populates="empresa")
 
 
 class CompanyStatus(Base):
