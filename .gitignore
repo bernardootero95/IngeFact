@@ -19,6 +19,7 @@ build
 *.md
 !INGEFACT_ROADMAP.md
 !INGEFACT_VISTAS_Y_FLUJOS.md
+!apps/api/docs/*.md
 
 # Supabase temporales
 supabase/.temp

@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "IngeFact - Alegra E-Provider (Sprint 0)",
+    "description": "Colección de ejemplos investigados en Sprint 0 contra el sandbox de Alegra. Ver apps/api/docs/alegra-investigacion.md para el detalle de cada hallazgo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://sandbox-api.alegra.com/e-provider/col/v1" },
+    { "key": "token", "value": "{{ALEGRA_TOKEN}}" },
+    { "key": "companyId", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "1. Crear empresa asociada (createcompany)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/companies",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"IngeFact Test SAS\",\n  \"tradeName\": \"IngeFact Test\",\n  \"identification\": \"900618467\",\n  \"dv\": \"4\",\n  \"useAlegraCertificate\": true,\n  \"identificationType\": \"31\",\n  \"email\": \"test@ingefact.test\",\n  \"phone\": \"3000000000\",\n  \"organizationType\": 1,\n  \"regimeCode\": \"R-99-PN\",\n  \"address\": {\n    \"address\": \"Calle de prueba 123\",\n    \"department\": \"11\",\n    \"city\": \"11001\",\n    \"country\": \"CO\"\n  }\n}"
+        },
+        "description": "Respuesta real (201): { \"company\": { \"id\": \"...\", \"type\": \"associated\", ... } } -- ojo, anidado bajo 'company', la doc oficial dice que es plano."
+      }
+    },
+    {
+      "name": "2. Crear test set (sandbox)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/test-sets",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"type\": \"invoices\",\n  \"governmentId\": \"a70562e0-631e-4ceb-aa65-36887b57dc17\",\n  \"company\": { \"id\": \"{{companyId}}\" }\n}"
+        },
+        "description": "Respuesta real (201): { \"testSet\": { \"id\", \"status\": \"ACCEPTED\", ... } } -- singular, la doc dice 'testSets' plural."
+      }
+    },
+    {
+      "name": "3. Consultar empresa principal del token",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/company",
+        "description": "Devuelve la empresa dueña del token autenticado."
+      }
+    },
+    {
+      "name": "4. Listar/buscar empresas por NIT",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/companies?identification=900618467",
+        "description": "identification va SIN digito de verificacion."
+      }
+    },
+    {
+      "name": "5. Resoluciones por NIT (NO disponible en sandbox)",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/resolutions/900618467",
+        "description": "Siempre devuelve 404 AEP9006 'Environment not supported. Production environment only' en sandbox, verificado con 3 NITs distintos."
+      }
+    },
+    {
+      "name": "6. Crear factura (payload minimo -> 400 esperado)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/invoices",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documentType\": \"01\",\n  \"number\": 1,\n  \"company\": { \"id\": \"{{companyId}}\" },\n  \"customer\": {\n    \"name\": \"Cliente de prueba\",\n    \"identificationType\": \"13\",\n    \"identificationNumber\": \"1000000000\"\n  },\n  \"items\": [\n    { \"description\": \"Producto de prueba\", \"price\": 100000, \"quantity\": 1, \"unitCode\": \"94\", \"subtotal\": 100000, \"taxAmount\": 19000 }\n  ],\n  \"totalAmounts\": {\n    \"grossTotal\": 100000, \"taxableTotal\": 100000, \"taxTotal\": 19000, \"payableTotal\": 119000, \"currencyCode\": \"COP\"\n  },\n  \"payments\": []\n}"
+        },
+        "description": "400 esperado: faltan totalAmounts.discountTotal/chargeTotal/advanceTotal (obligatorios aunque sean 0) y el objeto 'resolution' completo."
+      }
+    },
+    {
+      "name": "7. Crear factura (payload completo)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/invoices",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documentType\": \"01\",\n  \"number\": 1,\n  \"prefix\": \"SETP\",\n  \"company\": { \"id\": \"{{companyId}}\" },\n  \"resolution\": {\n    \"resolutionNumber\": \"18760000001\",\n    \"prefix\": \"SETP\",\n    \"minNumber\": 990000000,\n    \"maxNumber\": 995000000,\n    \"startDate\": \"2019-01-19\",\n    \"endDate\": \"2030-01-19\",\n    \"technicalKey\": \"<debe pertenecer al NIT emisor>\"\n  },\n  \"customer\": {\n    \"name\": \"Cliente de prueba\",\n    \"identificationType\": \"13\",\n    \"identificationNumber\": \"1000000000\"\n  },\n  \"items\": [\n    {\n      \"description\": \"Producto de prueba\",\n      \"price\": 100000,\n      \"quantity\": 1,\n      \"unitCode\": \"94\",\n      \"subtotal\": 100000,\n      \"taxAmount\": 19000,\n      \"taxes\": [ { \"taxCode\": \"01\", \"taxAmount\": 19000, \"taxPercentage\": \"19\", \"taxableAmount\": 100000 } ]\n    }\n  ],\n  \"totalAmounts\": {\n    \"grossTotal\": 100000,\n    \"taxableTotal\": 100000,\n    \"taxTotal\": 19000,\n    \"discountTotal\": 0,\n    \"chargeTotal\": 0,\n    \"advanceTotal\": 0,\n    \"payableTotal\": 119000,\n    \"currencyCode\": \"COP\"\n  },\n  \"payments\": [ { \"paymentForm\": \"1\", \"paymentMethod\": \"10\", \"amount\": 119000 } ]\n}"
+        },
+        "description": "201 si el payload es valido -- pero legalStatus queda 'REJECTED' si el technicalKey de la resolucion no pertenece al NIT emisor (verificado). taxPercentage debe ir como STRING ('0'|'5'|'16'|'19'). payments requiere paymentForm+paymentMethod, no method/meanOfPayment."
+      }
+    },
+    {
+      "name": "8. Crear nota credito (referencia doc, no probado en vivo)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/credit-notes",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"number\": 1,\n  \"conceptCode\": \"2\",\n  \"company\": { \"id\": \"{{companyId}}\" },\n  \"customer\": { \"name\": \"Cliente de prueba\", \"identificationType\": \"13\", \"identificationNumber\": \"1000000000\" },\n  \"associatedDocuments\": [ { \"date\": \"2026-08-29\", \"documentType\": \"01\", \"number\": 1, \"prefix\": \"SETP\", \"uuid\": \"<CUFE de la factura original>\" } ],\n  \"items\": [ { \"description\": \"Producto de prueba\", \"price\": 100000, \"quantity\": 1, \"unitCode\": \"94\", \"subtotal\": 100000, \"taxAmount\": 19000 } ],\n  \"totalAmounts\": { \"grossTotal\": 100000, \"taxableTotal\": 100000, \"taxTotal\": 19000, \"discountTotal\": 0, \"chargeTotal\": 0, \"advanceTotal\": 0, \"payableTotal\": 119000, \"currencyCode\": \"COP\" },\n  \"payments\": [ { \"paymentForm\": \"1\", \"paymentMethod\": \"10\", \"amount\": 119000 } ]\n}"
+        },
+        "description": "conceptCode: 1=devolucion parcial, 2=anulacion factura, 3=descuento, 4=ajuste precio, 5=descuento pronto pago, 6=descuento por volumen."
+      }
+    },
+    {
+      "name": "9. Crear nota debito (referencia doc, no probado en vivo)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/debit-notes",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"number\": 1,\n  \"conceptCode\": \"1\",\n  \"company\": { \"id\": \"{{companyId}}\" },\n  \"customer\": { \"name\": \"Cliente de prueba\", \"identificationType\": \"13\", \"identificationNumber\": \"1000000000\" },\n  \"associatedDocuments\": [ { \"date\": \"2026-08-29\", \"documentType\": \"01\", \"number\": 1, \"prefix\": \"SETP\", \"uuid\": \"<CUFE de la factura original>\" } ],\n  \"items\": [ { \"description\": \"Producto de prueba\", \"price\": 100000, \"quantity\": 1, \"unitCode\": \"94\", \"subtotal\": 100000, \"taxAmount\": 19000 } ],\n  \"totalAmounts\": { \"grossTotal\": 100000, \"taxableTotal\": 100000, \"taxTotal\": 19000, \"discountTotal\": 0, \"chargeTotal\": 0, \"advanceTotal\": 0, \"payableTotal\": 119000, \"currencyCode\": \"COP\" },\n  \"payments\": [ { \"paymentForm\": \"1\", \"paymentMethod\": \"10\", \"amount\": 119000 } ]\n}"
+        }
+      }
+    },
+    {
+      "name": "10. Configurar webhooks (dentro de updatecompany)",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/companies/{{companyId}}",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"webhooks\": {\n    \"general\": { \"governmentStatusChanged\": { \"url\": \"https://tuapi.com/webhooks/alegra/general\", \"status\": \"active\" } },\n    \"invoices\": { \"emissionFinished\": { \"url\": \"https://tuapi.com/webhooks/alegra/invoices\", \"status\": \"active\" } }\n  }\n}"
+        },
+        "description": "No hay firma/HMAC documentada para verificar la autenticidad del webhook entrante -- validar contra el estado ya guardado antes de aceptar la actualizacion."
+      }
+    },
+    {
+      "name": "11. Payload recibido en webhook invoices.emissionFinished (referencia)",
+      "request": {
+        "method": "POST",
+        "url": "https://tuapi.com/webhooks/alegra/invoices",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"invoice\": {\n    \"type\": \"invoice\",\n    \"id\": \"...\",\n    \"cufe\": \"... (solo si fue aceptada)\",\n    \"status\": \"SENT\",\n    \"legalStatus\": \"ACCEPTED\",\n    \"governmentResponse\": { \"code\": \"00\", \"message\": \"Documento Factura XX, ha sido autorizado.\", \"errorMessages\": [] },\n    \"errors\": []\n  }\n}"
+        },
+        "description": "Este request de ejemplo documenta lo que ALEGRA envia a nuestra URL configurada, no algo que se llame desde Postman."
+      }
+    }
+  ]
+}
