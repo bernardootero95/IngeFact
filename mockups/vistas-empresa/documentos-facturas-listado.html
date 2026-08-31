@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IngeFact — Facturas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50: "#EAF5E9", 100: "#D3EAD1", 400: "#3D9E3A", 500: "#2E8A2B", 600: "#1E7A1B", 700: "#164A14" },
+          neutralCustom: { 50: "#F7F8F9", 100: "#EEEEF0", 200: "#E2E3E7", 300: "#C7C9D1", 400: "#9799A6", 500: "#6B6E7A", 600: "#4B4E5A", 700: "#33353F", 800: "#1A1C23" },
+          fiscal: { danger: "#E24B4A", warning: "#EF9F27", info: "#378ADD", success: "#10B981" },
+        },
+        borderRadius: { "brand-md": "10px", "brand-lg": "14px" },
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+      },
+    },
+  };
+</script>
+<style>body{font-family:'Inter',sans-serif;}</style>
+</head>
+<body class="bg-neutralCustom-50">
+<div class="min-h-screen flex">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="w-64 bg-neutralCustom-800 text-white flex flex-col justify-between p-6 shrink-0 h-screen overflow-y-auto transition-all duration-200">
+    <div>
+      <div class="flex justify-end mb-2">
+        <button type="button" onclick="toggleSidebar()" class="w-6 h-6 flex items-center justify-center rounded-full bg-neutralCustom-600 hover:bg-brand-600 text-white transition-colors shrink-0">
+          <svg id="collapseIcon" class="w-3.5 h-3.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+      </div>
+
+      <div class="mb-8 flex flex-col items-center text-center w-full">
+        <div class="h-14 w-14 rounded-brand-lg bg-gradient-to-br from-brand-600 to-brand-400 flex items-center justify-center text-white font-bold text-xl mb-3 shrink-0">IF</div>
+        <div class="sidebar-label">
+          <h1 class="text-2xl font-bold text-brand-400 tracking-tight">IngeFact</h1>
+          <p class="text-sm text-white mt-1 font-medium truncate w-full">Tech Solutions S.A.S</p>
+        </div>
+      </div>
+
+      <nav class="space-y-2">
+        <a href="dashboard-mejorado.html" class="flex items-center px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+          <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+          <span class="sidebar-label">Inicio</span>
+        </a>
+
+        <div>
+          <button type="button" onclick="toggleSubmenu('docs')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-brand-md text-sm font-medium bg-brand-600 text-white transition-colors">
+            <span class="flex items-center">
+              <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              <span class="sidebar-label">Documentos</span>
+            </span>
+            <svg class="w-4 h-4 rotate-90 transition-transform sidebar-label" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          </button>
+          <div id="submenu-docs" class="mt-1 ml-8 space-y-1 sidebar-label">
+            <a href="documentos-facturas-listado.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium bg-brand-600 text-white">Facturas</a>
+            <a href="documentos-notas-listado.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Notas Crédito</a>
+            <a href="documentos-notas-listado.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Notas Débito</a>
+          </div>
+        </div>
+
+        <a href="#" class="flex items-center px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+          <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <span class="sidebar-label">Clientes</span>
+        </a>
+
+        <a href="#" class="flex items-center px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+          <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+          <span class="sidebar-label">Catálogo</span>
+        </a>
+
+        <div>
+          <button type="button" onclick="toggleSubmenu('config')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+            <span class="flex items-center">
+              <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
+              <span class="sidebar-label">Configuración</span>
+            </span>
+            <svg class="w-4 h-4 transition-transform sidebar-label" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          </button>
+          <div id="submenu-config" class="hidden mt-1 ml-8 space-y-1 sidebar-label">
+            <a href="configuracion-datos-empresa.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Datos de la Empresa</a>
+            <a href="configuracion-resolucion-dian.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Resolución DIAN</a>
+            <a href="#" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Impuestos</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <div class="border-t border-neutralCustom-500/20 pt-4 text-center mt-8">
+      <div class="mb-4 sidebar-label">
+        <p class="text-xs text-neutralCustom-500 truncate w-full">usuario@empresademo.test</p>
+        <span class="inline-block mt-1 text-[10px] font-bold text-brand-400 bg-brand-50/10 px-2 py-0.5 rounded-brand-md uppercase">Facturador</span>
+      </div>
+      <button class="w-full flex items-center justify-center px-4 py-2 bg-fiscal-danger/10 hover:bg-fiscal-danger text-fiscal-danger hover:text-white rounded-brand-md text-sm font-medium transition-all">
+        <span class="sidebar-label">Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden">
+    <header class="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+      <div>
+        <h2 class="text-lg font-medium text-neutralCustom-800">Facturas</h2>
+        <p class="text-xs text-neutralCustom-500">Documentos electrónicos emitidos ante la DIAN.</p>
+      </div>
+      <a href="documentos-facturas-nueva.html" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm">
+        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        Nueva Factura
+      </a>
+    </header>
+
+    <div class="p-8 flex-1 overflow-y-auto">
+
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-4 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
+          <p class="text-xs font-medium text-neutralCustom-500 uppercase tracking-wide">Total Facturado</p>
+          <p class="text-2xl font-bold text-neutralCustom-800 mt-1">$580.000</p>
+        </div>
+        <div class="bg-white p-4 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
+          <p class="text-xs font-medium text-neutralCustom-500 uppercase tracking-wide">Aceptadas</p>
+          <p class="text-2xl font-bold text-brand-600 mt-1">2</p>
+        </div>
+        <div class="bg-white p-4 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
+          <p class="text-xs font-medium text-neutralCustom-500 uppercase tracking-wide">Pendientes DIAN</p>
+          <p class="text-2xl font-bold text-fiscal-info mt-1">1</p>
+        </div>
+        <div class="bg-white p-4 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
+          <p class="text-xs font-medium text-neutralCustom-500 uppercase tracking-wide">Rechazadas</p>
+          <p class="text-2xl font-bold text-fiscal-danger mt-1">1</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+        <div class="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-between items-center gap-4">
+          <div class="relative w-64">
+            <input type="text" placeholder="Buscar por número o cliente..." class="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400" />
+            <svg class="w-4 h-4 absolute left-3 top-2.5 text-neutralCustom-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+          </div>
+          <div class="flex gap-3">
+            <select class="px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm text-neutralCustom-600 focus:outline-none focus:border-brand-400">
+              <option>Todos los estados</option>
+              <option>Borrador</option>
+              <option>Enviada</option>
+              <option>Aceptada</option>
+              <option>Rechazada</option>
+              <option>Anulada</option>
+            </select>
+            <input type="date" class="px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm text-neutralCustom-600 focus:outline-none focus:border-brand-400" />
+          </div>
+        </div>
+
+        <table class="w-full text-left text-sm text-neutralCustom-600">
+          <thead class="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
+            <tr>
+              <th class="px-6 py-3 font-semibold">Número</th>
+              <th class="px-6 py-3 font-semibold">Cliente</th>
+              <th class="px-6 py-3 font-semibold">Fecha</th>
+              <th class="px-6 py-3 text-right font-semibold">Total</th>
+              <th class="px-6 py-3 font-semibold">CUFE</th>
+              <th class="px-6 py-3 font-semibold">Estado</th>
+              <th class="px-6 py-3 text-right font-semibold">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-neutralCustom-100">
+            <tr class="hover:bg-neutralCustom-50 transition-colors">
+              <td class="px-6 py-4 font-medium text-neutralCustom-800">SETP-990000015</td>
+              <td class="px-6 py-4">Retail Inc</td>
+              <td class="px-6 py-4">2026-08-28</td>
+              <td class="px-6 py-4 text-right">$297.500</td>
+              <td class="px-6 py-4 text-brand-600 text-xs">✓ Emitido</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-600">✅ Aceptada</span></td>
+              <td class="px-6 py-4 text-right">
+                <a href="documentos-facturas-detalle.html" class="text-brand-600 hover:text-brand-400 text-xs font-medium">Ver detalle</a>
+              </td>
+            </tr>
+            <tr class="hover:bg-neutralCustom-50 transition-colors">
+              <td class="px-6 py-4 font-medium text-neutralCustom-800">SETP-990000014</td>
+              <td class="px-6 py-4">Services Co</td>
+              <td class="px-6 py-4">2026-08-27</td>
+              <td class="px-6 py-4 text-right">$85.000</td>
+              <td class="px-6 py-4 text-brand-600 text-xs">✓ Emitido</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-brand-50 text-brand-600">✅ Aceptada</span></td>
+              <td class="px-6 py-4 text-right">
+                <a href="documentos-facturas-detalle.html" class="text-brand-600 hover:text-brand-400 text-xs font-medium">Ver detalle</a>
+              </td>
+            </tr>
+            <tr class="hover:bg-neutralCustom-50 transition-colors">
+              <td class="px-6 py-4 font-medium text-neutralCustom-800">SETP-990000013</td>
+              <td class="px-6 py-4">Commerce Ltd</td>
+              <td class="px-6 py-4">2026-08-26</td>
+              <td class="px-6 py-4 text-right">$200.000</td>
+              <td class="px-6 py-4 text-neutralCustom-400 text-xs">—</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-fiscal-info/10 text-fiscal-info">⏳ Enviada</span></td>
+              <td class="px-6 py-4 text-right">
+                <a href="documentos-facturas-detalle.html" class="text-brand-600 hover:text-brand-400 text-xs font-medium">Ver detalle</a>
+              </td>
+            </tr>
+            <tr class="hover:bg-neutralCustom-50 transition-colors">
+              <td class="px-6 py-4 font-medium text-neutralCustom-800">SETP-990000012</td>
+              <td class="px-6 py-4">Retail Inc</td>
+              <td class="px-6 py-4">2026-08-25</td>
+              <td class="px-6 py-4 text-right">$50.000</td>
+              <td class="px-6 py-4 text-neutralCustom-400 text-xs">—</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-fiscal-danger/10 text-fiscal-danger">❌ Rechazada</span></td>
+              <td class="px-6 py-4 text-right">
+                <a href="documentos-facturas-detalle.html" class="text-brand-600 hover:text-brand-400 text-xs font-medium">Ver detalle</a>
+              </td>
+            </tr>
+            <tr class="hover:bg-neutralCustom-50 transition-colors opacity-70">
+              <td class="px-6 py-4 font-medium text-neutralCustom-800">SETP-990000011</td>
+              <td class="px-6 py-4">Commerce Ltd</td>
+              <td class="px-6 py-4">2026-08-24</td>
+              <td class="px-6 py-4 text-right">$120.000</td>
+              <td class="px-6 py-4 text-neutralCustom-400 text-xs">—</td>
+              <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-neutralCustom-100 text-neutralCustom-500">📝 Borrador</span></td>
+              <td class="px-6 py-4 text-right">
+                <a href="documentos-facturas-nueva.html" class="text-brand-600 hover:text-brand-400 text-xs font-medium">Continuar</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="px-6 py-3 border-t border-neutralCustom-100 flex justify-between items-center text-xs text-neutralCustom-500">
+          <span>Mostrando 1–5 de 28</span>
+          <div class="flex gap-1">
+            <button class="w-7 h-7 flex items-center justify-center rounded-brand-md hover:bg-neutralCustom-100">‹</button>
+            <button class="w-7 h-7 flex items-center justify-center rounded-brand-md bg-brand-600 text-white">1</button>
+            <button class="w-7 h-7 flex items-center justify-center rounded-brand-md hover:bg-neutralCustom-100">2</button>
+            <button class="w-7 h-7 flex items-center justify-center rounded-brand-md hover:bg-neutralCustom-100">3</button>
+            <button class="w-7 h-7 flex items-center justify-center rounded-brand-md hover:bg-neutralCustom-100">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const el = document.getElementById('sidebar');
+    el.classList.toggle('w-64');
+    el.classList.toggle('w-20');
+    el.classList.toggle('p-6');
+    el.classList.toggle('px-2');
+    el.classList.toggle('py-6');
+    document.getElementById('collapseIcon').classList.toggle('rotate-180');
+    document.querySelectorAll('.sidebar-label').forEach(l => l.classList.toggle('hidden'));
+  }
+  function toggleSubmenu(key) {
+    document.getElementById('submenu-' + key).classList.toggle('hidden');
+  }
+</script>
+</body>
+</html>
