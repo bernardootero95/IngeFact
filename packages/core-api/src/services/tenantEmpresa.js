@@ -7,3 +7,12 @@ import { apiRequest } from "../apiClient.js";
 export async function getMiEmpresa() {
   return apiRequest("/api/v1/tenant/empresa");
 }
+
+/**
+ * Solo el subconjunto de datos informativos que el propio tenant puede
+ * editar (nombre_comercial, telefono, direccion) -- razon social/NIT/correo
+ * son de solo lectura para el tenant, los administra staff desde apps/admin.
+ */
+export async function actualizarDatosEmpresa(payload) {
+  return apiRequest("/api/v1/tenant/empresa", { method: "PATCH", body: payload });
+}

@@ -75,7 +75,9 @@ export async function publicRequest(path, { method = "GET", body } = {}) {
   const data = await parseBody(response);
   if (!response.ok) {
     const message = (data && (data.detail || data.message)) || `Error ${response.status}`;
-    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
+    const error = new Error(typeof message === "string" ? message : JSON.stringify(message));
+    error.status = response.status;
+    throw error;
   }
   return data;
 }
@@ -107,7 +109,9 @@ export async function apiRequest(path, { method = "GET", body, headers } = {}) {
   const data = await parseBody(response);
   if (!response.ok) {
     const message = (data && (data.detail || data.message)) || `Error ${response.status}`;
-    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
+    const error = new Error(typeof message === "string" ? message : JSON.stringify(message));
+    error.status = response.status;
+    throw error;
   }
   return data;
 }

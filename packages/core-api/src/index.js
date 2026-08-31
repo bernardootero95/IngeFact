@@ -2,7 +2,12 @@ export { supabase } from "./supabase.js";
 export { configureApiClient, apiRequest, publicRequest } from "./apiClient.js";
 export { createAuthStore } from "./authStore.js";
 export { loginAdmin, loginTenant, refreshSession, logoutSession, getMe } from "./services/auth.js";
-export { getMiEmpresa } from "./services/tenantEmpresa.js";
+export { getMiEmpresa, actualizarDatosEmpresa } from "./services/tenantEmpresa.js";
+export {
+  getResolucionDian,
+  guardarResolucionDian,
+  validarResolucionDian,
+} from "./services/resolucionDian.js";
 export { getTenantDashboardKpis } from "./services/tenantDashboard.js";
 export {
   listEmpresas,
