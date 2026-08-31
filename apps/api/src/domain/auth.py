@@ -34,3 +34,4 @@ class MeResponse(BaseModel):
     nombre: str
     email: str
     rol: str
+    empresa_id: str | None = None
