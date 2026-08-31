@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@ingefact/core-api";
+import { supabase, crearEmpresa, actualizarEmpresa, cambiarPlanEmpresa } from "@ingefact/core-api";
 import { calculateColombianNITDV } from "../../../utils/dianHelpers";
 
 export default function CompanyModal({
@@ -31,7 +31,6 @@ export default function CompanyModal({
   const [correoElectronico, setCorreoElectronico] = useState("");
   const [notificacionCorreo, setNotificacionCorreo] = useState(true);
   const [tipoOrganizacion, setTipoOrganizacion] = useState("");
-  const [idAlegra, setIdAlegra] = useState("");
   const [estadoEmpresa, setEstadoEmpresa] = useState("activo");
 
   // ESTADOS: DATOS DE SUSCRIPCIÓN
@@ -61,7 +60,6 @@ export default function CompanyModal({
     setCorreoElectronico("");
     setNotificacionCorreo(true);
     setTipoOrganizacion("");
-    setIdAlegra("");
     setEstadoEmpresa("activo");
     resetSuscripcion();
   };
@@ -112,10 +110,9 @@ export default function CompanyModal({
         setCorreoElectronico(currentCompany.correo_electronico || "");
         setNotificacionCorreo(currentCompany.notificacion_correo ?? true);
         setTipoOrganizacion(currentCompany.tipo_organizacion || "");
-        setIdAlegra(currentCompany.id_alegra || "");
         setEstadoEmpresa(currentCompany.estado || "activo");
 
-        const sub = currentCompany.suscripciones?.[0];
+        const sub = currentCompany.suscripcion;
         if (sub) {
           setMaxDocumentos(sub.max_documentos || "");
           setFechaInicio(sub.fecha_inicio || "");
@@ -260,51 +257,46 @@ export default function CompanyModal({
     setModalError(null);
 
     try {
-      const payload = {
-        empresa: {
-          id: currentCompany?.id,
-          idAlegra: currentCompany?.id_alegra || idAlegra,
-          razonSocial,
-          nombreComercial,
-          numeroIdentificacion,
-          digitoVerificacion,
-          direccion,
-          departamento,
-          municipio,
-          regimen,
-          telefono,
-          notificacionCorreo,
-          tipoOrganizacion,
-          estadoEmpresa,
-        },
-        suscripcion: {
-          maxDocumentos,
-          fechaInicio,
-          fechaFin,
-        },
-        usuario: {
-          correoElectronico,
-        },
+      const planPayload = {
+        max_documentos: Number(maxDocumentos),
+        fecha_inicio: fechaInicio,
+        fecha_fin: fechaFin,
       };
 
-      const { data, error } = await supabase.functions.invoke("create-tenant", {
-        body: payload,
-      });
-
-      if (error || data?.error) {
-        throw new Error(
-          error?.message ||
-            data?.error ||
-            "Error desconocido al registrar la empresa.",
-        );
+      let empresaId;
+      if (currentCompany) {
+        await actualizarEmpresa(currentCompany.id, {
+          razon_social: razonSocial,
+          nombre_comercial: nombreComercial || null,
+          direccion: direccion || null,
+          departamento: departamento || null,
+          municipio: municipio || null,
+          regimen: regimen || null,
+          tipo_organizacion: tipoOrganizacion || null,
+          telefono: telefono || null,
+          notificacion_correo: notificacionCorreo,
+          estado: estadoEmpresa,
+        });
+        empresaId = currentCompany.id;
+      } else {
+        const creada = await crearEmpresa({
+          razon_social: razonSocial,
+          nombre_comercial: nombreComercial || null,
+          numero_identificacion: numeroIdentificacion,
+          digito_verificacion: digitoVerificacion,
+          direccion: direccion || null,
+          departamento: departamento || null,
+          municipio: municipio || null,
+          regimen,
+          tipo_organizacion: tipoOrganizacion || null,
+          telefono: telefono || null,
+          correo_electronico: correoElectronico,
+          notificacion_correo: notificacionCorreo,
+        });
+        empresaId = creada.id;
       }
 
-      if (data?.invitacion_enviada) {
-        alert(
-          `¡Empresa registrada exitosamente!\n\n` +
-            `Se envió un correo de invitación a ${correoElectronico} para que el usuario defina su propia contraseña.`,
-        );
-      }
+      await cambiarPlanEmpresa(empresaId, planPayload);
 
       setSubmitLoading(false);
       onSaveSuccess();
