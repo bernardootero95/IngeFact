@@ -33,7 +33,7 @@ class UsuarioAdminService:
             email=data.email,
             password_hash=hash_password(generate_opaque_token()),
             rol="admin",
-            estado="activo",
+            estado=data.estado,
         )
         self.db.add(usuario)
         self.db.commit()

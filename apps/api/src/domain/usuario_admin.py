@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr, field_validator
 class CrearUsuarioAdminRequest(BaseModel):
     nombre: str
     email: EmailStr
+    estado: str = "activo"
 
     @field_validator("nombre")
     @classmethod
@@ -14,6 +15,13 @@ class CrearUsuarioAdminRequest(BaseModel):
         v = v.strip()
         if len(v) < 3:
             raise ValueError("El nombre debe tener al menos 3 caracteres.")
+        return v
+
+    @field_validator("estado")
+    @classmethod
+    def estado_valido(cls, v: str) -> str:
+        if v not in ("activo", "inactivo"):
+            raise ValueError("El estado debe ser 'activo' o 'inactivo'.")
         return v
 
 
