@@ -59,6 +59,12 @@ class AlegraClient:
         body = self._request("POST", "/companies", json=payload)
         return body["company"]
 
+    def get_reference_catalog(self, path: str, key: str) -> list[dict]:
+        """GET generico para los catalogos DIAN de Alegra (/dian/*). `key` es
+        el nombre de la clave bajo la que responde el arreglo (ej. `{"departments": [...]}`)."""
+        body = self._request("GET", path)
+        return body.get(key) or []
+
     def list_companies(self, from_id: int = 0, limit: int = 80) -> dict:
         """Una pagina del listado de empresas en Alegra. El llamador pagina
         avanzando `from_id` mientras la respuesta venga llena (ver sync-companies)."""
