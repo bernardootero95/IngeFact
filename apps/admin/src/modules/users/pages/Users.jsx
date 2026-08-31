@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@ingefact/core-api";
+import { listUsuariosAdmin } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import UserTable from "../components/UserTable";
 import UserModal from "../components/UserModal";
@@ -13,16 +13,11 @@ export default function Users() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .is("eliminado", null)
-      .order("creado", { ascending: false });
-
-    if (error) {
-      console.error("Error al obtener usuarios:", error.message);
-    } else {
+    try {
+      const data = await listUsuariosAdmin();
       setUsers(data);
+    } catch (err) {
+      console.error("Error al obtener usuarios:", err.message);
     }
     setLoading(false);
   };

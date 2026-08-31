@@ -11,6 +11,7 @@ export {
   sincronizarEmpresasAlegra,
 } from "./services/adminEmpresas.js";
 export { getDashboardKpis } from "./services/dashboard.js";
+export { listUsuariosAdmin, crearUsuarioAdmin, actualizarUsuarioAdmin } from "./services/adminUsuarios.js";
 export { listClientes, createCliente } from "./services/clientes.js";
 export { listProductos, createProducto } from "./services/productos.js";
 export {

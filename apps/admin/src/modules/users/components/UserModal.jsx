@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@ingefact/core-api";
+import { crearUsuarioAdmin, actualizarUsuarioAdmin } from "@ingefact/core-api";
 
 export default function UserModal({
   isOpen,
@@ -72,41 +72,19 @@ export default function UserModal({
     setSubmitLoading(true);
     setModalError(null);
 
-    if (isEditing) {
-      // Actualización: El email se envía igual pero el UI garantiza que no cambió
-      const { error } = await supabase
-        .from("usuarios")
-        .update({
-          nombre: nombre.trim(),
-          estado,
-          actualizado: new Date().toISOString(),
-        })
-        .eq("id", currentUser.id);
-
-      if (error) {
-        setModalError(error.message);
-        setSubmitLoading(false);
-        return;
+    try {
+      if (isEditing) {
+        await actualizarUsuarioAdmin(currentUser.id, { nombre: nombre.trim(), estado });
+      } else {
+        await crearUsuarioAdmin({ nombre: nombre.trim(), email: email.trim(), estado });
       }
-    } else {
-      // Creación segura invocando la Edge Function
-      const { data, error } = await supabase.functions.invoke(
-        "create-admin-user",
-        {
-          body: { nombre: nombre.trim(), email: email.trim(), estado },
-        },
-      );
-
-      if (error || data?.error) {
-        setModalError(error?.message || data?.error);
-        setSubmitLoading(false);
-        return;
-      }
+      setSubmitLoading(false);
+      onSaveSuccess();
+      onClose();
+    } catch (err) {
+      setModalError(err.message);
+      setSubmitLoading(false);
     }
-
-    setSubmitLoading(false);
-    onSaveSuccess();
-    onClose();
   };
 
   const hasErrors = fieldErrors.nombre || fieldErrors.email;
