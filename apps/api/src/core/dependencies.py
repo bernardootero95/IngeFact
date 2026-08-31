@@ -27,7 +27,7 @@ class CurrentTenant:
     empresa_id: uuid.UUID
 
 
-def _decode_or_401(credentials: HTTPAuthorizationCredentials | None) -> dict:
+def decode_or_401(credentials: HTTPAuthorizationCredentials | None) -> dict:
     if credentials is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "No autenticado: falta el token de sesion.")
     try:
@@ -42,7 +42,7 @@ def get_current_admin(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> CurrentAdmin:
-    payload = _decode_or_401(credentials)
+    payload = decode_or_401(credentials)
     if payload.get("user_type") != "admin":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado: se requiere ser staff interno.")
 
@@ -57,7 +57,7 @@ def get_current_tenant(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: Session = Depends(get_db),
 ) -> CurrentTenant:
-    payload = _decode_or_401(credentials)
+    payload = decode_or_401(credentials)
     if payload.get("user_type") != "tenant":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado: se requiere ser usuario de un tenant.")
 

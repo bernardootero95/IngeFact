@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./modules/auth/store/authStore";
-import { supabase } from "@ingefact/core-api";
 
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
@@ -31,23 +30,11 @@ const ProtectedRoute = ({ children }) => {
 };
 
 export default function App() {
-  const { setSession } = useAuthStore();
+  const { restoreSession } = useAuthStore();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [setSession]);
+    restoreSession();
+  }, [restoreSession]);
 
   return (
     <BrowserRouter>
