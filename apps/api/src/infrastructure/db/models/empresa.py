@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -21,9 +21,11 @@ class Empresa(Base):
     departamento: Mapped[str | None] = mapped_column(String(2))
     municipio: Mapped[str | None] = mapped_column(String(5))
     regimen: Mapped[str | None] = mapped_column(String(20))
+    tipo_organizacion: Mapped[str | None] = mapped_column(String(10))
     telefono: Mapped[str | None] = mapped_column(String(20))
     correo_electronico: Mapped[str | None] = mapped_column(String(200))
     id_alegra: Mapped[str | None] = mapped_column(String(50))
+    notificacion_correo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -34,6 +36,7 @@ class Empresa(Base):
 
     historial_estado_alegra: Mapped[list["CompanyStatus"]] = relationship(back_populates="empresa")
     usuarios: Mapped[list["UsuarioEmpresa"]] = relationship(back_populates="empresa")
+    suscripciones: Mapped[list["Suscripcion"]] = relationship(back_populates="empresa")
 
 
 class CompanyStatus(Base):

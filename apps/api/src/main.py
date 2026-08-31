@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import get_settings
 from src.core.logging import configure_logging
-from src.presentation.routes import auth, empresas, webhooks
+from src.presentation.routes import auth, dashboard, empresas, webhooks
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -22,6 +22,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(empresas.router)
+app.include_router(dashboard.router)
 app.include_router(webhooks.router)
 
 
