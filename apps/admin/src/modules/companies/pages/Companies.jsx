@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@ingefact/core-api";
+import { listEmpresas, sincronizarEmpresasAlegra } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
 import CompanyModal from "../components/CompanyModal";
@@ -22,24 +22,12 @@ export default function Companies() {
 
   const fetchCompanies = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("empresas")
-      .select(
-        `
-        *,
-        suscripciones (
-          id, max_documentos, documentos_usados, fecha_inicio, fecha_fin, estado
-        )
-      `,
-      )
-      .is("eliminado", null)
-      .order("creado", { ascending: false });
-
-    if (error) {
-      console.error("Error al obtener empresas:", error);
-      showToast(`Error al cargar empresas: ${error.message}`, "error");
-    } else {
+    try {
+      const data = await listEmpresas();
       setCompanies(data || []);
+    } catch (err) {
+      console.error("Error al obtener empresas:", err);
+      showToast(`Error al cargar empresas: ${err.message}`, "error");
     }
     setLoading(false);
   };
@@ -68,12 +56,7 @@ export default function Companies() {
 
     setSyncLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("sync-companies");
-      if (error || data?.error) {
-        throw new Error(
-          error?.message || data?.error || "Error al sincronizar.",
-        );
-      }
+      const data = await sincronizarEmpresasAlegra();
       showToast(
         `¡Sincronización exitosa! Se procesaron ${data.processed} empresas.`,
       );

@@ -58,7 +58,7 @@ export default function CompanyTable({ companies, loading, onEdit }) {
           </thead>
           <tbody className="divide-y divide-neutralCustom-100">
             {companies.map((company) => {
-              const sub = company.suscripciones?.[0] || null;
+              const sub = company.suscripcion || null;
               const percentUsed = sub
                 ? Math.round((sub.documentos_usados / sub.max_documentos) * 100)
                 : 0;
