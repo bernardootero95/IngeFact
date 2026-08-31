@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@ingefact/core-api";
+import { listReferenceTable, sincronizarReferenceTable } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import ReferenceModal from "../components/ReferenceModal";
 
@@ -46,20 +46,12 @@ export default function ReferenceDetail() {
 
   const fetchRecords = async () => {
     setLoading(true);
-    // Nota: Por defecto Supabase limita a 1000 registros.
-    // Usamos limit masivo para traer todo el catálogo al cliente y paginar rápido.
-    const { data, error } = await supabase
-      .from(tableName)
-      .select("*")
-      .is("eliminado", null)
-      .order("code", { ascending: true })
-      .limit(5000);
-
-    if (error) {
-      console.error("Error cargando referencias:", error.message);
-    } else {
+    try {
+      const data = await listReferenceTable(tableName);
       setRecords(data || []);
       setFilteredRecords(data || []);
+    } catch (err) {
+      console.error("Error cargando referencias:", err.message);
     }
     setLoading(false);
   };
@@ -102,24 +94,14 @@ export default function ReferenceDetail() {
 
     setSyncLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "sync-reference-table",
-        {
-          body: { tableName: tableName },
-        },
+      const data = await sincronizarReferenceTable(tableName);
+      alert(
+        `¡Sincronización exitosa! Se procesaron ${data.processed} registros para ${title}.`,
       );
-
-      if (error || data?.error) {
-        alert(`Error en la sincronización: ${error?.message || data?.error}`);
-      } else {
-        alert(
-          `¡Sincronización exitosa! Se procesaron ${data.processed} registros para ${title}.`,
-        );
-        fetchRecords();
-      }
+      fetchRecords();
     } catch (err) {
       console.error(err);
-      alert("Error inesperado al conectar con el servidor de sincronización.");
+      alert(`Error en la sincronización: ${err.message}`);
     } finally {
       setSyncLoading(false);
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@ingefact/core-api";
+import { crearReferenceRecord, actualizarReferenceRecord } from "@ingefact/core-api";
 
 export default function ReferenceModal({
   isOpen,
@@ -115,7 +115,6 @@ export default function ReferenceModal({
       code: code.trim(),
       value: value.trim(),
       estado,
-      actualizado: new Date().toISOString(),
     };
 
     if (isMunicipio) {
@@ -126,26 +125,18 @@ export default function ReferenceModal({
       payload.value_nade = valueNade.trim();
     }
 
-    let error;
-
-    if (isEditing) {
-      const res = await supabase
-        .from(tableName)
-        .update(payload)
-        .eq("id", currentRecord.id);
-      error = res.error;
-    } else {
-      const res = await supabase.from(tableName).insert([payload]);
-      error = res.error;
-    }
-
-    if (error) {
-      setModalError(error.message);
-      setSubmitLoading(false);
-    } else {
+    try {
+      if (isEditing) {
+        await actualizarReferenceRecord(tableName, currentRecord.id, payload);
+      } else {
+        await crearReferenceRecord(tableName, payload);
+      }
       setSubmitLoading(false);
       onSaveSuccess();
       onClose();
+    } catch (err) {
+      setModalError(err.message);
+      setSubmitLoading(false);
     }
   };
 
