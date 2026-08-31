@@ -46,6 +46,11 @@ describe("apiRequest", () => {
     await expect(apiRequest("/api/v1/empresas")).rejects.toThrow("NIT invalido");
   });
 
+  it("adjunta el status HTTP al error para que el caller distinga 404 de otros errores", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(404, { detail: "No encontrado" }));
+    await expect(apiRequest("/api/v1/tenant/resolucion")).rejects.toMatchObject({ status: 404 });
+  });
+
   it("reintenta una vez tras refrescar el token si la primera respuesta es 401", async () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(401))

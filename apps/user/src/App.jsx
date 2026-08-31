@@ -7,6 +7,8 @@ import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
+import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
+import ResolutionSettingsPage from "./modules/settings/pages/ResolutionSettingsPage";
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
 
 const ProtectedRoute = ({ children }) => {
@@ -64,6 +66,24 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ProductsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/company"
+          element={
+            <ProtectedRoute>
+              <CompanyDataSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/resolution"
+          element={
+            <ProtectedRoute>
+              <ResolutionSettingsPage />
             </ProtectedRoute>
           }
         />
