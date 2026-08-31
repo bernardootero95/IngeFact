@@ -134,6 +134,24 @@ class ActualizarEmpresaRequest(BaseModel):
         return v
 
 
+class ActualizarDatosContactoRequest(BaseModel):
+    """Subconjunto de campos que el propio tenant puede editar -- el resto
+    (razon social, NIT, correo) son de solo lectura para el tenant, los
+    administra staff desde apps/admin."""
+
+    nombre_comercial: str | None = None
+    telefono: str | None = None
+    direccion: str | None = None
+
+    @field_validator("nombre_comercial", "telefono", "direccion")
+    @classmethod
+    def normalizar(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip()
+        return v or None
+
+
 class CambiarPlanRequest(BaseModel):
     max_documentos: int
     fecha_inicio: date

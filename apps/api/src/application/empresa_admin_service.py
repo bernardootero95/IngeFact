@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from src.domain.empresa import ActualizarEmpresaRequest, CambiarPlanRequest
+from src.domain.empresa import ActualizarDatosContactoRequest, ActualizarEmpresaRequest, CambiarPlanRequest
 from src.infrastructure.db.models import Empresa, Suscripcion
 
 
@@ -59,6 +59,18 @@ class EmpresaAdminService:
         empresa.telefono = data.telefono
         empresa.notificacion_correo = data.notificacion_correo
         empresa.estado = data.estado
+        self.db.add(empresa)
+        self.db.commit()
+        self.db.refresh(empresa)
+        return empresa
+
+    def actualizar_datos_contacto(self, empresa_id: uuid.UUID, data: ActualizarDatosContactoRequest) -> Empresa:
+        """Edicion propia del tenant -- solo datos informativos, no toca
+        razon_social/NIT/correo (esos los administra staff, ver `actualizar`)."""
+        empresa = self.obtener(empresa_id)
+        empresa.nombre_comercial = data.nombre_comercial
+        empresa.telefono = data.telefono
+        empresa.direccion = data.direccion
         self.db.add(empresa)
         self.db.commit()
         self.db.refresh(empresa)

@@ -70,6 +70,11 @@ class AlegraClient:
         avanzando `from_id` mientras la respuesta venga llena (ver sync-companies)."""
         return self._request("GET", f"/companies?limit={limit}&from={from_id}")
 
+    def get_resolution(self, nit: str) -> dict:
+        """GET /resolutions/{nit}. Hallazgo de Sprint 0: este endpoint solo
+        funciona en produccion, en sandbox siempre responde AEP9006."""
+        return self._request("GET", f"/resolutions/{nit}")
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

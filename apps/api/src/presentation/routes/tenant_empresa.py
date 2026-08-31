@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from src.application.empresa_admin_service import EmpresaAdminService
 from src.core.dependencies import CurrentTenant, get_current_tenant
-from src.domain.empresa import EmpresaDetailResponse
+from src.domain.empresa import ActualizarDatosContactoRequest, EmpresaDetailResponse
 from src.infrastructure.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/tenant/empresa", tags=["tenant"])
@@ -15,4 +15,14 @@ def obtener_mi_empresa(
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
     empresa = EmpresaAdminService(db).obtener(tenant.empresa_id)
+    return EmpresaDetailResponse.from_empresa(empresa)
+
+
+@router.patch("", response_model=EmpresaDetailResponse)
+def actualizar_mi_empresa(
+    body: ActualizarDatosContactoRequest,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    empresa = EmpresaAdminService(db).actualizar_datos_contacto(tenant.empresa_id, body)
     return EmpresaDetailResponse.from_empresa(empresa)
