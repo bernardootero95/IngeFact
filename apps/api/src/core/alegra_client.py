@@ -59,6 +59,11 @@ class AlegraClient:
         body = self._request("POST", "/companies", json=payload)
         return body["company"]
 
+    def list_companies(self, from_id: int = 0, limit: int = 80) -> dict:
+        """Una pagina del listado de empresas en Alegra. El llamador pagina
+        avanzando `from_id` mientras la respuesta venga llena (ver sync-companies)."""
+        return self._request("GET", f"/companies?limit={limit}&from={from_id}")
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

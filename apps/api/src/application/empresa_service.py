@@ -37,7 +37,7 @@ class CreateEmpresaAlegraService:
             "identificationType": data.tipo_identificacion,
             "email": data.correo_electronico,
             "phone": data.telefono or "",
-            "organizationType": 1,
+            "organizationType": int(data.tipo_organizacion) if data.tipo_organizacion else 1,
             "regimeCode": data.regimen,
             "address": {
                 "address": data.direccion or "No registrada",
@@ -64,8 +64,10 @@ class CreateEmpresaAlegraService:
             departamento=data.departamento,
             municipio=data.municipio,
             regimen=data.regimen,
+            tipo_organizacion=data.tipo_organizacion,
             telefono=data.telefono,
             correo_electronico=data.correo_electronico,
+            notificacion_correo=data.notificacion_correo,
             estado="creando",
         )
         self.db.add(empresa)
@@ -93,8 +95,10 @@ class CreateEmpresaAlegraService:
             departamento=empresa.departamento,
             municipio=empresa.municipio,
             regimen=empresa.regimen,
+            tipo_organizacion=empresa.tipo_organizacion,
             telefono=empresa.telefono,
             correo_electronico=empresa.correo_electronico,
+            notificacion_correo=empresa.notificacion_correo,
         )
         self._provisionar_en_alegra(empresa, data)
         self.db.refresh(empresa)
