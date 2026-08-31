@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IngeFact — Modelo Visual de Vistas Pendientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50: "#EAF5E9", 100: "#D3EAD1", 400: "#3D9E3A", 500: "#2E8A2B", 600: "#1E7A1B", 700: "#164A14" },
+          neutralCustom: { 50: "#F7F8F9", 100: "#EEEEF0", 200: "#E2E3E7", 300: "#C7C9D1", 400: "#9799A6", 500: "#6B6E7A", 600: "#4B4E5A", 700: "#33353F", 800: "#1A1C23" },
+          fiscal: { danger: "#E24B4A", warning: "#EF9F27", info: "#378ADD", success: "#10B981" },
+        },
+        borderRadius: { "brand-md": "10px", "brand-lg": "14px" },
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+      },
+    },
+  };
+</script>
+<style>body{font-family:'Inter',sans-serif;}</style>
+</head>
+<body class="bg-neutralCustom-50 min-h-screen">
+
+  <header class="bg-neutralCustom-800 text-white px-8 py-8">
+    <div class="max-w-5xl mx-auto flex items-center gap-4">
+      <div class="h-12 w-12 rounded-brand-lg bg-gradient-to-br from-brand-600 to-brand-400 flex items-center justify-center text-white font-bold text-lg shrink-0">IF</div>
+      <div>
+        <h1 class="text-xl font-bold text-brand-400">IngeFact — apps/user</h1>
+        <p class="text-sm text-neutralCustom-500 mt-0.5">Modelo visual de las vistas pendientes, con el mismo sistema de diseño de la app real (sidebar colapsable, colores de marca, tablas y tarjetas de <code class="text-white">packages/ui</code>).</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-8 py-10">
+
+    <section class="mb-10">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-neutralCustom-500 mb-4">Bloque A — Configuración de Empresa</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <a href="configuracion-datos-empresa.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Datos de la Empresa</h3>
+          <p class="text-xs text-neutralCustom-500">Nombre comercial, contacto y dirección editables; NIT/razón social/correo de solo lectura.</p>
+        </a>
+        <a href="configuracion-resolucion-dian.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Resolución DIAN</h3>
+          <p class="text-xs text-neutralCustom-500">Formulario de resolución + consecutivo interno controlado por IngeFact.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-neutralCustom-500 mb-4">Bloque B — Documentos › Facturas</h2>
+      <div class="grid grid-cols-3 gap-4">
+        <a href="documentos-facturas-listado.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Listado de Facturas</h3>
+          <p class="text-xs text-neutralCustom-500">Filtros, estados con color y resumen de totales.</p>
+        </a>
+        <a href="documentos-facturas-nueva.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Nueva Factura (wizard)</h3>
+          <p class="text-xs text-neutralCustom-500">4 pasos navegables: Cliente → Líneas → Revisar → Confirmación.</p>
+        </a>
+        <a href="documentos-facturas-detalle.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Detalle de Factura</h3>
+          <p class="text-xs text-neutralCustom-500">CUFE, descargas, historial y acceso a notas.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-neutralCustom-500 mb-4">Bloque C — Documentos › Notas Crédito/Débito</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <a href="documentos-notas-listado.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Listado de Notas</h3>
+          <p class="text-xs text-neutralCustom-500">Crédito y débito combinadas, mismo patrón que Facturas.</p>
+        </a>
+        <a href="documentos-notas-nueva.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Nueva Nota</h3>
+          <p class="text-xs text-neutralCustom-500">Se crea desde una factura: tipo, motivo y líneas afectadas (parcial o total).</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xs font-bold uppercase tracking-wide text-neutralCustom-500 mb-4">Bloque D — Dashboard</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <a href="dashboard-mejorado.html" class="block bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-5 hover:border-brand-400 transition-colors">
+          <h3 class="text-sm font-semibold text-neutralCustom-800 mb-1">Dashboard mejorado</h3>
+          <p class="text-xs text-neutralCustom-500">KPIs reales + estado de plan/resolución + últimas facturas, una vez que Facturas ya emite datos.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+      <h3 class="text-sm font-semibold text-neutralCustom-800 mb-2">Notas de este modelo</h3>
+      <ul class="text-xs text-neutralCustom-500 space-y-1.5 list-disc pl-4">
+        <li>Reutiliza literalmente el mismo sidebar colapsable (con submenús "Documentos" y "Configuración") y la paleta de <code>apps/user/tailwind.config.js</code>, para que se pueda copiar el marcado/clases directo a los componentes React reales.</li>
+        <li>Se completaron algunos tonos intermedios de la paleta (brand-500/700, neutralCustom-200/300/400/600/700) que hoy no existen en el <code>tailwind.config.js</code> real pero sí se usan en clases del código (ej. <code>hover:bg-brand-500</code>, <code>border-neutralCustom-200</code>) — vale la pena agregarlos al config real para que esas clases sí generen estilo.</li>
+        <li>Datos de ejemplo ficticios — no hay conexión a Supabase ni a Alegra.</li>
+        <li>El sidebar es puramente visual: los enlaces navegan entre estos mismos archivos, no hay estado compartido entre páginas.</li>
+      </ul>
+    </section>
+
+  </main>
+</body>
+</html>

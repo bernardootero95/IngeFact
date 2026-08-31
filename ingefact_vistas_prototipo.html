@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IngeFact - Prototipo Visual</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Brand Colors */
+            --brand-600: #1E7A1B;
+            --brand-400: #3D9E3A;
+            --brand-50: #EAF5E9;
+            
+            /* Neutral Colors */
+            --neutral-800: #1A1C23;
+            --neutral-500: #6B6E7A;
+            --neutral-100: #EEEEF0;
+            --neutral-50: #F7F8F9;
+            
+            /* Status Colors */
+            --danger: #E24B4A;
+            --warning: #EF9F27;
+            --info: #378ADD;
+            --success: #10b981;
+            
+            /* Neutral grays */
+            --gray-900: #111827;
+            --gray-700: #374151;
+            --gray-600: #4b5563;
+            --gray-400: #9ca3af;
+            --gray-200: #e5e7eb;
+            
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 24px;
+            --space-2xl: 32px;
+            
+            /* Border Radius */
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--neutral-50);
+            color: var(--neutral-800);
+            line-height: 1.5;
+        }
+
+        .container-main {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            width: 280px;
+            background: var(--neutral-800);
+            color: white;
+            padding: var(--space-lg);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--brand-400);
+            margin-bottom: var(--space-2xl);
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--brand-400);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav-section {
+            margin-bottom: var(--space-2xl);
+        }
+
+        .nav-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--space-md);
+            padding: 0 var(--space-md);
+        }
+
+        .nav-item {
+            padding: var(--space-md) var(--space-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: var(--space-sm);
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            position: relative;
+            border-left: 3px solid transparent;
+            padding-left: calc(var(--space-md) - 2px);
+        }
+
+        .nav-item:hover {
+            background: rgba(61, 158, 58, 0.1);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(61, 158, 58, 0.15);
+            color: var(--brand-400);
+            border-left-color: var(--brand-400);
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: var(--space-lg) 0;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .topbar {
+            background: white;
+            border-bottom: 1px solid var(--neutral-100);
+            padding: var(--space-lg) var(--space-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-lg);
+        }
+
+        .topbar-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--neutral-800);
+            letter-spacing: -0.5px;
+        }
+
+        .topbar-subtitle {
+            font-size: 13px;
+            color: var(--neutral-500);
+            font-weight: 500;
+        }
+
+        .topbar-right {
+            display: flex;
+            gap: var(--space-lg);
+            align-items: center;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            padding: var(--space-sm) var(--space-md);
+            background: var(--neutral-50);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-600), var(--brand-400));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .page-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-2xl);
+        }
+
+        /* ============ CARDS & SECTIONS ============ */
+        .card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--neutral-100);
+            padding: var(--space-lg);
+            margin-bottom: var(--space-lg);
+        }
+
+        .card-header {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: var(--space-lg);
+            color: var(--neutral-800);
+            letter-spacing: -0.3px;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--neutral-500);
+            margin-bottom: var(--space-lg);
+        }
+
+        /* ============ STATS GRID ============ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-2xl);
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--neutral-100);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--brand-600);
+            margin: var(--space-md) 0;
+            letter-spacing: -1px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============ BUTTONS ============ */
+        .btn {
+            padding: var(--space-md) var(--space-lg);
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-md);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--brand-600);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #164a14;
+            box-shadow: 0 4px 12px rgba(30, 122, 27, 0.2);
+        }
+
+        .btn-secondary {
+            background: var(--neutral-50);
+            color: var(--neutral-800);
+            border: 1px solid var(--neutral-100);
+        }
+
+        .btn-secondary:hover {
+            background: var(--neutral-100);
+            border-color: var(--neutral-100);
+        }
+
+        .btn-sm {
+            padding: var(--space-sm) var(--space-md);
+            font-size: 13px;
+        }
+
+        /* ============ TABLES ============ */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: var(--neutral-50);
+            padding: var(--space-md) var(--space-lg);
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            color: var(--neutral-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--neutral-100);
+        }
+
+        .table td {
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--neutral-100);
+            font-size: 14px;
+        }
+
+        .table tr:hover {
+            background: var(--neutral-50);
+        }
+
+        .table strong {
+            color: var(--neutral-800);
+            font-weight: 600;
+        }
+
+        /* ============ BADGES ============ */
+        .badge {
+            display: inline-block;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: rgba(30, 122, 27, 0.1);
+            color: var(--brand-600);
+        }
+
+        .badge-warning {
+            background: rgba(239, 159, 39, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-error {
+            background: rgba(226, 75, 74, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-info {
+            background: rgba(55, 138, 221, 0.1);
+            color: var(--info);
+        }
+
+        /* ============ FORMS ============ */
+        .form-group {
+            margin-bottom: var(--space-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: var(--space-sm);
+            color: var(--neutral-800);
+            font-size: 14px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: var(--space-md) var(--space-lg);
+            border: 1px solid var(--neutral-100);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--brand-400);
+            box-shadow: 0 0 0 3px var(--brand-50);
+        }
+
+        .form-input:disabled {
+            background: var(--neutral-50);
+            color: var(--neutral-500);
+            cursor: not-allowed;
+        }
+
+        /* ============ LOGIN FORM ============ */
+        .login-container {
+            max-width: 420px;
+            margin: 80px auto;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--brand-600), var(--brand-400));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto var(--space-lg);
+        }
+
+        .login-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--neutral-800);
+            margin-bottom: var(--space-sm);
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: var(--neutral-500);
+        }
+
+        /* ============ BREADCRUMB ============ */
+        .breadcrumb {
+            display: flex;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
+            font-size: 13px;
+            color: var(--neutral-500);
+        }
+
+        .breadcrumb a {
+            color: var(--brand-600);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* ============ WIZARD ============ */
+        .wizard-steps {
+            display: flex;
+            margin-bottom: var(--space-2xl);
+        }
+
+        .wizard-step {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .wizard-step::after {
+            content: '';
+            flex: 1;
+            height: 2px;
+            background: var(--neutral-100);
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .wizard-step:last-child::after {
+            display: none;
+        }
+
+        .wizard-step-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--neutral-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+            color: var(--neutral-500);
+            font-size: 15px;
+        }
+
+        .wizard-step.active .wizard-step-circle {
+            background: var(--brand-600);
+            color: white;
+            border-color: var(--brand-600);
+        }
+
+        .wizard-step.completed .wizard-step-circle {
+            background: var(--brand-400);
+            color: white;
+            border-color: var(--brand-400);
+        }
+
+        .wizard-step-label {
+            position: absolute;
+            top: 56px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: var(--neutral-600);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* ============ STATE CARD ============ */
+        .state-card {
+            background: linear-gradient(135deg, var(--brand-600) 0%, var(--brand-400) 100%);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: var(--space-xl);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            border: none;
+        }
+
+        .state-info {
+            flex: 1;
+        }
+
+        .state-label {
+            font-size: 12px;
+            opacity: 0.9;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--space-sm);
+        }
+
+        .state-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .state-icon {
+            font-size: 32px;
+        }
+
+        /* ============ UTILITIES ============ */
+        .hidden {
+            display: none !important;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-lg {
+            gap: var(--space-lg);
+        }
+
+        .gap-md {
+            gap: var(--space-md);
+        }
+
+        .mb-lg {
+            margin-bottom: var(--space-lg);
+        }
+
+        .mb-2xl {
+            margin-bottom: var(--space-2xl);
+        }
+
+        .mt-lg {
+            margin-top: var(--space-lg);
+        }
+
+        .text-muted {
+            color: var(--neutral-500);
+            font-size: 13px;
+        }
+
+        .action-menu {
+            display: inline-block;
+            cursor: pointer;
+            color: var(--neutral-400);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .action-menu:hover {
+            color: var(--neutral-600);
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .container-main {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: var(--space-md);
+                gap: var(--space-2xl);
+            }
+
+            .nav-section {
+                flex-shrink: 0;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-content {
+                padding: var(--space-lg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-main">
+        <!-- ============ SIDEBAR ============ -->
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                <span>IngeFact</span>
+            </div>
+
+            <!-- Admin Section -->
+            <div class="nav-section">
+                <div class="nav-title">Admin</div>
+                <div class="nav-item active" onclick="showPage('admin-login')">🔐 Login</div>
+                <div class="nav-item" onclick="showPage('admin-dashboard')">📊 Dashboard</div>
+                <div class="nav-item" onclick="showPage('admin-empresas')">🏢 Empresas</div>
+                <div class="nav-item" onclick="showPage('admin-usuarios')">👥 Usuarios</div>
+                <div class="nav-item" onclick="showPage('admin-tablas')">📋 Tablas Ref</div>
+            </div>
+
+            <div class="nav-divider"></div>
+
+            <!-- User Section -->
+            <div class="nav-section">
+                <div class="nav-title">Tenant</div>
+                <div class="nav-item" onclick="showPage('user-login')">🔐 Login</div>
+                <div class="nav-item" onclick="showPage('user-dashboard')">📊 Dashboard</div>
+                <div class="nav-item" onclick="showPage('user-config')">⚙️ Configuración</div>
+                <div class="nav-item" onclick="showPage('user-clientes')">👥 Clientes</div>
+                <div class="nav-item" onclick="showPage('user-catalogo')">📦 Catálogo</div>
+                <div class="nav-item" onclick="showPage('user-facturas')">📄 Facturas</div>
+                <div class="nav-item" onclick="showPage('user-crear-factura')">✏️ Crear Factura</div>
+            </div>
+        </div>
+
+        <!-- ============ MAIN CONTENT ============ -->
+        <div class="main-content">
+            <!-- Topbar -->
+            <div class="topbar">
+                <div class="topbar-left">
+                    <div>
+                        <div class="topbar-title" id="page-title">IngeFact</div>
+                        <div class="topbar-subtitle" id="page-subtitle">Facturación Electrónica</div>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="user-badge">
+                        <div class="user-avatar">AD</div>
+                        <span style="font-size: 13px; font-weight: 500;">Admin User</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pages -->
+            <div class="page-content">
+
+                <!-- ======================== ADMIN LOGIN ======================== -->
+                <div id="admin-login" class="page active">
+                    <div class="login-container">
+                        <div class="login-header">
+                            <div class="login-logo">📊</div>
+                            <h1 class="login-title">IngeFact Admin</h1>
+                            <p class="login-subtitle">Panel de administración</p>
+                        </div>
+
+                        <div class="card">
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input class="form-input" type="email" placeholder="admin@ingefact.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Contraseña</label>
+                                <input class="form-input" type="password" placeholder="••••••••">
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%; justify-content: center;">Iniciar sesión</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== ADMIN DASHBOARD ======================== -->
+                <div id="admin-dashboard" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <div>
+                            <h1 style="font-size: 24px; font-weight: 700; color: var(--neutral-800);">Dashboard</h1>
+                            <p class="text-muted">Bienvenido de vuelta, Admin</p>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Empresas</div>
+                            <div class="stat-value">25</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Empresas Activas</div>
+                            <div class="stat-value">20</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Revenue Total</div>
+                            <div class="stat-value" style="font-size: 24px;">$1.2M</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Nuevas Este Mes</div>
+                            <div class="stat-value">3</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">Actividad Reciente</div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Acción</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Tech Solutions</strong></td>
+                                    <td>Empresa Creada</td>
+                                    <td>Hoy</td>
+                                    <td><span class="badge badge-success">✅ Activa</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Retail Inc</strong></td>
+                                    <td>Plan Actualizado</td>
+                                    <td>Ayer</td>
+                                    <td><span class="badge badge-success">✅ Activa</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Services Co</strong></td>
+                                    <td>Error en Alegra</td>
+                                    <td>Hace 2d</td>
+                                    <td><span class="badge badge-error">❌ Error</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== ADMIN EMPRESAS ======================== -->
+                <div id="admin-empresas" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <h1 style="font-size: 24px; font-weight: 700;">Gestión de Empresas</h1>
+                        <button class="btn btn-primary" onclick="showPage('admin-crear-empresa')">+ Nueva Empresa</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                            <input class="form-input" style="flex: 1; max-width: 300px;" type="text" placeholder="Buscar empresa...">
+                            <select class="form-select" style="width: 150px;">
+                                <option>Estado</option>
+                                <option>Activa</option>
+                                <option>Inactiva</option>
+                                <option>Error</option>
+                            </select>
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>RUT</th>
+                                    <th>Plan</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Tech Solutions</strong></td>
+                                    <td>900123456-2</td>
+                                    <td>Premium</td>
+                                    <td><span class="badge badge-success">✅ Activa</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Retail Inc</strong></td>
+                                    <td>987654321-5</td>
+                                    <td>Free</td>
+                                    <td><span class="badge badge-success">✅ Activa</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Services Co</strong></td>
+                                    <td>456789123-8</td>
+                                    <td>Pro</td>
+                                    <td><span class="badge badge-warning">⏳ Validación</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== ADMIN CREAR EMPRESA ======================== -->
+                <div id="admin-crear-empresa" class="page">
+                    <div class="breadcrumb mb-lg">
+                        <a onclick="showPage('admin-empresas')">Empresas</a>
+                        <span>/</span>
+                        <span>Nueva</span>
+                    </div>
+
+                    <div class="card" style="max-width: 600px;">
+                        <div class="card-header">Crear Nueva Empresa</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Razón Social *</label>
+                            <input class="form-input" placeholder="Ej: Tech Solutions S.A.S">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">RUT *</label>
+                            <div class="flex gap-md">
+                                <input class="form-input" style="flex: 1;" placeholder="Ej: 900123456">
+                                <input class="form-input" style="width: 100px;" placeholder="DV">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input class="form-input" type="email" placeholder="admin@empresa.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Plan *</label>
+                            <select class="form-select">
+                                <option>Seleccionar plan...</option>
+                                <option>Free - $0/mes</option>
+                                <option>Pro - $49,000/mes</option>
+                                <option>Premium - $99,000/mes</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="display: flex; align-items: center; gap: var(--space-md); cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span>Usar certificado de Alegra (recomendado)</span>
+                            </label>
+                        </div>
+
+                        <div class="flex gap-md mt-lg">
+                            <button class="btn btn-secondary" onclick="showPage('admin-empresas')">Cancelar</button>
+                            <button class="btn btn-primary">Crear Empresa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== ADMIN USUARIOS ======================== -->
+                <div id="admin-usuarios" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <h1 style="font-size: 24px; font-weight: 700;">Usuarios Administrativos</h1>
+                        <button class="btn btn-primary">+ Nuevo Usuario</button>
+                    </div>
+
+                    <div class="card">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>Rol</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Admin One</strong></td>
+                                    <td>admin1@ingefact.com</td>
+                                    <td><span class="badge badge-info">Admin</span></td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Admin Two</strong></td>
+                                    <td>admin2@ingefact.com</td>
+                                    <td><span class="badge badge-info">Admin</span></td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== ADMIN TABLAS ======================== -->
+                <div id="admin-tablas" class="page">
+                    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: var(--space-2xl);">Tablas de Referencia</h1>
+
+                    <div class="card">
+                        <div class="card-header">Tipos de Documento (DIAN)</div>
+                        <div style="margin-bottom: var(--space-lg);">
+                            <button class="btn btn-primary btn-sm">+ Agregar</button>
+                            <button class="btn btn-secondary btn-sm">Importar CSV</button>
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>13</strong></td>
+                                    <td>Cédula de Ciudadanía</td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>31</strong></td>
+                                    <td>NIT</td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>41</strong></td>
+                                    <td>Pasaporte</td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== USER LOGIN ======================== -->
+                <div id="user-login" class="page">
+                    <div class="login-container">
+                        <div class="login-header">
+                            <div class="login-logo">📄</div>
+                            <h1 class="login-title">IngeFact</h1>
+                            <p class="login-subtitle">Facturación Electrónica</p>
+                        </div>
+
+                        <div class="card">
+                            <div class="form-group">
+                                <label class="form-label">Empresa</label>
+                                <select class="form-select">
+                                    <option>Seleccionar empresa...</option>
+                                    <option>Tech Solutions</option>
+                                    <option>Retail Inc</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Usuario</label>
+                                <input class="form-input" placeholder="usuario@empresa.com">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Contraseña</label>
+                                <input class="form-input" type="password" placeholder="••••••••">
+                            </div>
+
+                            <button class="btn btn-primary" style="width: 100%; justify-content: center;">Iniciar sesión</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== USER DASHBOARD ======================== -->
+                <div id="user-dashboard" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <div>
+                            <h1 style="font-size: 24px; font-weight: 700;">Dashboard</h1>
+                            <p class="text-muted">Tech Solutions</p>
+                        </div>
+                    </div>
+
+                    <div class="state-card">
+                        <div class="state-info">
+                            <div class="state-label">Plan Activo</div>
+                            <div class="state-value">Premium • Sandbox</div>
+                        </div>
+                        <div class="state-icon">✅</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Facturas Este Mes</div>
+                            <div class="stat-value">12</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Facturado</div>
+                            <div class="stat-value" style="font-size: 20px;">$2.5M</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Pendientes</div>
+                            <div class="stat-value">2</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Tasa Aceptación</div>
+                            <div class="stat-value">100%</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">Últimas Facturas</div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Cliente</th>
+                                    <th>Valor</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>000015</strong></td>
+                                    <td>Retail Inc</td>
+                                    <td>$145,000</td>
+                                    <td><span class="badge badge-success">✅ Aceptada</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>000014</strong></td>
+                                    <td>Services Co</td>
+                                    <td>$85,000</td>
+                                    <td><span class="badge badge-success">✅ Aceptada</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>000013</strong></td>
+                                    <td>Commerce Ltd</td>
+                                    <td>$200,000</td>
+                                    <td><span class="badge badge-warning">⏳ Enviada</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); margin-top: var(--space-2xl);">
+                        <button class="btn btn-primary" onclick="showPage('user-crear-factura')" style="justify-content: center;">Nueva Factura</button>
+                        <button class="btn btn-secondary" onclick="showPage('user-config')" style="justify-content: center;">Configuración</button>
+                        <button class="btn btn-secondary" onclick="showPage('user-clientes')" style="justify-content: center;">Clientes</button>
+                        <button class="btn btn-secondary" onclick="showPage('user-facturas')" style="justify-content: center;">Todas las Facturas</button>
+                    </div>
+                </div>
+
+                <!-- ======================== USER CONFIG ======================== -->
+                <div id="user-config" class="page">
+                    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: var(--space-lg);">Configuración</h1>
+
+                    <div class="card" style="max-width: 600px;">
+                        <div class="card-header">Datos de la Empresa</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Razón Social</label>
+                            <input class="form-input" value="Tech Solutions S.A.S">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">RUT (No editable)</label>
+                            <input class="form-input" value="900123456-2" disabled>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input class="form-input" value="admin@techsolutions.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Teléfono</label>
+                            <input class="form-input" value="+57 1 234 5678">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="display: flex; align-items: center; gap: var(--space-md); cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span>Responsable del IVA</span>
+                            </label>
+                        </div>
+
+                        <div class="flex gap-md mt-lg">
+                            <button class="btn btn-secondary">Cancelar</button>
+                            <button class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ======================== USER CLIENTES ======================== -->
+                <div id="user-clientes" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <h1 style="font-size: 24px; font-weight: 700;">Clientes</h1>
+                        <button class="btn btn-primary">+ Nuevo Cliente</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="margin-bottom: var(--space-lg);">
+                            <input class="form-input" style="max-width: 300px;" type="text" placeholder="Buscar cliente...">
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Documento</th>
+                                    <th>Email</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Retail Inc</strong></td>
+                                    <td>123456789</td>
+                                    <td>info@retail.co</td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Services Co</strong></td>
+                                    <td>987654321</td>
+                                    <td>cont@service.co</td>
+                                    <td><span class="badge badge-success">✅ Activo</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== USER CATALOGO ======================== -->
+                <div id="user-catalogo" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <h1 style="font-size: 24px; font-weight: 700;">Catálogo</h1>
+                        <button class="btn btn-primary">+ Nuevo Item</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="margin-bottom: var(--space-lg);">
+                            <input class="form-input" style="max-width: 300px;" type="text" placeholder="Buscar producto...">
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Descripción</th>
+                                    <th>Tipo</th>
+                                    <th>Valor Unitario</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Consultoría Tech</strong></td>
+                                    <td>Servicio</td>
+                                    <td>$150,000</td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Licencia Software</strong></td>
+                                    <td>Producto</td>
+                                    <td>$50,000</td>
+                                    <td><span class="action-menu">⋯</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== USER FACTURAS ======================== -->
+                <div id="user-facturas" class="page">
+                    <div class="flex justify-between items-center mb-2xl">
+                        <h1 style="font-size: 24px; font-weight: 700;">Facturas</h1>
+                        <button class="btn btn-primary" onclick="showPage('user-crear-factura')">+ Crear Factura</button>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; gap: var(--space-lg); margin-bottom: var(--space-lg);">
+                            <input class="form-input" style="flex: 1;" type="text" placeholder="Buscar factura...">
+                            <select class="form-select" style="width: 150px;">
+                                <option>Estado</option>
+                                <option>Aceptada</option>
+                                <option>Enviada</option>
+                                <option>Rechazada</option>
+                            </select>
+                        </div>
+
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Número</th>
+                                    <th>Cliente</th>
+                                    <th>Valor</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>000015</strong></td>
+                                    <td>Retail Inc</td>
+                                    <td>$145,000</td>
+                                    <td>2024-08-28</td>
+                                    <td><span class="badge badge-success">✅ Aceptada</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>000014</strong></td>
+                                    <td>Services Co</td>
+                                    <td>$85,000</td>
+                                    <td>2024-08-27</td>
+                                    <td><span class="badge badge-success">✅ Aceptada</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>000013</strong></td>
+                                    <td>Commerce Ltd</td>
+                                    <td>$200,000</td>
+                                    <td>2024-08-26</td>
+                                    <td><span class="badge badge-warning">⏳ Enviada</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>000012</strong></td>
+                                    <td>Retail Inc</td>
+                                    <td>$50,000</td>
+                                    <td>2024-08-25</td>
+                                    <td><span class="badge badge-error">❌ Rechazada</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ======================== USER CREAR FACTURA ======================== -->
+                <div id="user-crear-factura" class="page">
+                    <div class="breadcrumb mb-lg">
+                        <a onclick="showPage('user-facturas')">Facturas</a>
+                        <span>/</span>
+                        <span>Crear</span>
+                    </div>
+
+                    <h1 style="font-size: 24px; font-weight: 700; margin-bottom: var(--space-2xl);">Nueva Factura</h1>
+
+                    <!-- Wizard -->
+                    <div class="wizard-steps" style="margin-bottom: var(--space-2xl); padding: 0 var(--space-xl);">
+                        <div class="wizard-step active">
+                            <div class="wizard-step-circle">1</div>
+                            <div class="wizard-step-label">Cliente</div>
+                        </div>
+                        <div class="wizard-step">
+                            <div class="wizard-step-circle">2</div>
+                            <div class="wizard-step-label">Líneas</div>
+                        </div>
+                        <div class="wizard-step">
+                            <div class="wizard-step-circle">3</div>
+                            <div class="wizard-step-label">Revisar</div>
+                        </div>
+                        <div class="wizard-step">
+                            <div class="wizard-step-circle">4</div>
+                            <div class="wizard-step-label">Enviar</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="max-width: 600px;">
+                        <div class="card-header">Paso 1: Seleccionar Cliente</div>
+                        <div class="card-subtitle">Elige el cliente para esta factura</div>
+
+                        <div class="form-group">
+                            <label class="form-label">Cliente *</label>
+                            <select class="form-select">
+                                <option>Seleccionar cliente...</option>
+                                <option>Retail Inc (NIT 123456789)</option>
+                                <option>Services Co (NIT 987654321)</option>
+                                <option>Commerce Ltd (NIT 456789123)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Fecha</label>
+                            <input class="form-input" type="date" value="2024-08-28">
+                        </div>
+
+                        <div style="background: var(--brand-50); border: 1px solid rgba(30, 122, 27, 0.2); padding: var(--space-lg); border-radius: var(--radius-md); margin: var(--space-lg) 0;">
+                            <div style="font-weight: 500; color: var(--neutral-800); margin-bottom: var(--space-md);">Información del Cliente</div>
+                            <div style="font-size: 13px; color: var(--neutral-600);">
+                                <div>✅ Responsable IVA</div>
+                                <div>Email: info@retail.co</div>
+                                <div>Teléfono: +57 1 234 5678</div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-md">
+                            <button class="btn btn-secondary" onclick="showPage('user-facturas')">Cancelar</button>
+                            <button class="btn btn-primary">Siguiente →</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            document.getElementById(pageId).classList.add('active');
+
+            const titles = {
+                'admin-login': 'Login - Admin',
+                'admin-dashboard': 'Dashboard',
+                'admin-empresas': 'Gestión de Empresas',
+                'admin-crear-empresa': 'Crear Empresa',
+                'admin-usuarios': 'Usuarios Admin',
+                'admin-tablas': 'Tablas de Referencia',
+                'user-login': 'Login - Tenant',
+                'user-dashboard': 'Dashboard',
+                'user-config': 'Configuración',
+                'user-clientes': 'Clientes',
+                'user-catalogo': 'Catálogo',
+                'user-facturas': 'Facturas',
+                'user-crear-factura': 'Crear Factura'
+            };
+
+            document.getElementById('page-title').textContent = titles[pageId] || 'IngeFact';
+        }
+    </script>
+</body>
+</html>

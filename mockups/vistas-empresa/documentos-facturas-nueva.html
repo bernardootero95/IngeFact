@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IngeFact — Nueva Factura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand: { 50: "#EAF5E9", 100: "#D3EAD1", 400: "#3D9E3A", 500: "#2E8A2B", 600: "#1E7A1B", 700: "#164A14" },
+          neutralCustom: { 50: "#F7F8F9", 100: "#EEEEF0", 200: "#E2E3E7", 300: "#C7C9D1", 400: "#9799A6", 500: "#6B6E7A", 600: "#4B4E5A", 700: "#33353F", 800: "#1A1C23" },
+          fiscal: { danger: "#E24B4A", warning: "#EF9F27", info: "#378ADD", success: "#10B981" },
+        },
+        borderRadius: { "brand-md": "10px", "brand-lg": "14px" },
+        fontFamily: { sans: ["Inter", "sans-serif"] },
+      },
+    },
+  };
+</script>
+<style>
+  body{font-family:'Inter',sans-serif;}
+  .wizard-step:not(:last-child)::after{content:'';position:absolute;top:20px;left:56%;width:88%;height:2px;background:#E2E3E7;z-index:0;}
+  .wizard-step.done:not(:last-child)::after{background:#3D9E3A;}
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+</style>
+</head>
+<body class="bg-neutralCustom-50">
+<div class="min-h-screen flex">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside id="sidebar" class="w-64 bg-neutralCustom-800 text-white flex flex-col justify-between p-6 shrink-0 h-screen overflow-y-auto transition-all duration-200">
+    <div>
+      <div class="flex justify-end mb-2">
+        <button type="button" onclick="toggleSidebar()" class="w-6 h-6 flex items-center justify-center rounded-full bg-neutralCustom-600 hover:bg-brand-600 text-white transition-colors shrink-0">
+          <svg id="collapseIcon" class="w-3.5 h-3.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+      </div>
+      <div class="mb-8 flex flex-col items-center text-center w-full">
+        <div class="h-14 w-14 rounded-brand-lg bg-gradient-to-br from-brand-600 to-brand-400 flex items-center justify-center text-white font-bold text-xl mb-3 shrink-0">IF</div>
+        <div class="sidebar-label">
+          <h1 class="text-2xl font-bold text-brand-400 tracking-tight">IngeFact</h1>
+          <p class="text-sm text-white mt-1 font-medium truncate w-full">Tech Solutions S.A.S</p>
+        </div>
+      </div>
+      <nav class="space-y-2">
+        <a href="dashboard-mejorado.html" class="flex items-center px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+          <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+          <span class="sidebar-label">Inicio</span>
+        </a>
+        <div>
+          <button type="button" onclick="toggleSubmenu('docs')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-brand-md text-sm font-medium bg-brand-600 text-white transition-colors">
+            <span class="flex items-center">
+              <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              <span class="sidebar-label">Documentos</span>
+            </span>
+            <svg class="w-4 h-4 rotate-90 transition-transform sidebar-label" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          </button>
+          <div id="submenu-docs" class="mt-1 ml-8 space-y-1 sidebar-label">
+            <a href="documentos-facturas-listado.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium bg-brand-600 text-white">Facturas</a>
+            <a href="documentos-notas-listado.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Notas Crédito</a>
+            <a href="documentos-notas-listado.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Notas Débito</a>
+          </div>
+        </div>
+        <a href="#" class="flex items-center px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+          <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+          <span class="sidebar-label">Clientes</span>
+        </a>
+        <a href="#" class="flex items-center px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+          <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+          <span class="sidebar-label">Catálogo</span>
+        </a>
+        <div>
+          <button type="button" onclick="toggleSubmenu('config')" class="w-full flex items-center justify-between px-4 py-2.5 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white transition-colors">
+            <span class="flex items-center">
+              <svg class="w-5 h-5 mr-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /></svg>
+              <span class="sidebar-label">Configuración</span>
+            </span>
+            <svg class="w-4 h-4 transition-transform sidebar-label" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          </button>
+          <div id="submenu-config" class="hidden mt-1 ml-8 space-y-1 sidebar-label">
+            <a href="configuracion-datos-empresa.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Datos de la Empresa</a>
+            <a href="configuracion-resolucion-dian.html" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Resolución DIAN</a>
+            <a href="#" class="block px-4 py-2 rounded-brand-md text-sm font-medium text-neutralCustom-500 hover:bg-white/10 hover:text-white">Impuestos</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+    <div class="border-t border-neutralCustom-500/20 pt-4 text-center mt-8">
+      <div class="mb-4 sidebar-label">
+        <p class="text-xs text-neutralCustom-500 truncate w-full">usuario@empresademo.test</p>
+        <span class="inline-block mt-1 text-[10px] font-bold text-brand-400 bg-brand-50/10 px-2 py-0.5 rounded-brand-md uppercase">Facturador</span>
+      </div>
+      <button class="w-full flex items-center justify-center px-4 py-2 bg-fiscal-danger/10 hover:bg-fiscal-danger text-fiscal-danger hover:text-white rounded-brand-md text-sm font-medium transition-all">
+        <span class="sidebar-label">Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="flex-1 flex flex-col h-screen overflow-hidden">
+    <header class="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+      <div>
+        <div class="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
+          <a href="documentos-facturas-listado.html" class="text-brand-600 hover:underline font-medium">Facturas</a>
+          <span>/</span>
+          <span>Nueva</span>
+        </div>
+        <h2 class="text-lg font-medium text-neutralCustom-800">Nueva Factura</h2>
+      </div>
+      <div class="text-sm text-neutralCustom-500">usuario@empresademo.test</div>
+    </header>
+
+    <div class="p-8 flex-1 overflow-y-auto">
+      <div class="max-w-4xl mx-auto">
+
+        <!-- Wizard steps -->
+        <div class="flex mb-10 px-6">
+          <div id="wiz-1" class="wizard-step done flex-1 relative flex flex-col items-center">
+            <div class="wiz-circle w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-semibold text-sm relative z-10">1</div>
+            <span class="text-xs font-medium text-neutralCustom-700 mt-2">Cliente</span>
+          </div>
+          <div id="wiz-2" class="wizard-step flex-1 relative flex flex-col items-center">
+            <div class="wiz-circle w-10 h-10 rounded-full bg-white border-2 border-neutralCustom-200 text-neutralCustom-400 flex items-center justify-center font-semibold text-sm relative z-10">2</div>
+            <span class="text-xs font-medium text-neutralCustom-500 mt-2">Líneas</span>
+          </div>
+          <div id="wiz-3" class="wizard-step flex-1 relative flex flex-col items-center">
+            <div class="wiz-circle w-10 h-10 rounded-full bg-white border-2 border-neutralCustom-200 text-neutralCustom-400 flex items-center justify-center font-semibold text-sm relative z-10">3</div>
+            <span class="text-xs font-medium text-neutralCustom-500 mt-2">Revisar</span>
+          </div>
+          <div id="wiz-4" class="wizard-step flex-1 relative flex flex-col items-center">
+            <div class="wiz-circle w-10 h-10 rounded-full bg-white border-2 border-neutralCustom-200 text-neutralCustom-400 flex items-center justify-center font-semibold text-sm relative z-10">4</div>
+            <span class="text-xs font-medium text-neutralCustom-500 mt-2">Confirmación</span>
+          </div>
+        </div>
+
+        <!-- STEP 1: Cliente -->
+        <div id="step-1" class="step-panel active">
+          <div class="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 max-w-xl mx-auto">
+            <h3 class="text-base font-semibold text-neutralCustom-800 mb-1">Paso 1: Seleccionar Cliente</h3>
+            <p class="text-xs text-neutralCustom-500 mb-6">Elige el cliente para esta factura.</p>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-neutralCustom-800 mb-1.5">Cliente *</label>
+                <div class="relative">
+                  <input type="text" value="Retail Inc" placeholder="Buscar cliente por nombre o documento..." class="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-50" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-neutralCustom-800 mb-1.5">Fecha</label>
+                <input type="date" value="2026-08-28" class="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-50" />
+              </div>
+
+              <div class="bg-brand-50 border border-brand-100 rounded-brand-md p-4">
+                <p class="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
+                <div class="text-xs text-neutralCustom-600 space-y-1">
+                  <div>NIT: 123456789</div>
+                  <div>✅ Responsable de IVA</div>
+                  <div>Email: info@retail.co</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+              <a href="documentos-facturas-listado.html" class="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors">Cancelar</a>
+              <button onclick="goStep(2)" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm">Siguiente →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Líneas -->
+        <div id="step-2" class="step-panel">
+          <div class="flex gap-6 items-start">
+            <div class="flex-1 bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+              <h3 class="text-base font-semibold text-neutralCustom-800 mb-1">Paso 2: Agregar Líneas</h3>
+              <p class="text-xs text-neutralCustom-500 mb-6">Cliente: Retail Inc · Fecha: 2026-08-28</p>
+
+              <div class="space-y-3">
+                <div class="border border-neutralCustom-100 rounded-brand-md p-4">
+                  <div class="grid grid-cols-12 gap-3 items-end">
+                    <div class="col-span-6">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Producto / Servicio</label>
+                      <div class="px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm">Consultoría Tech</div>
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Cantidad</label>
+                      <input type="number" value="1" class="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm" />
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Precio Unit.</label>
+                      <div class="px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm text-right">$150.000</div>
+                    </div>
+                    <div class="col-span-1">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Total</label>
+                      <div class="px-3 py-2 text-sm font-medium text-right">$150k</div>
+                    </div>
+                    <div class="col-span-1 text-right">
+                      <button class="text-neutralCustom-400 hover:text-fiscal-danger">✕</button>
+                    </div>
+                  </div>
+                  <p class="text-xs text-neutralCustom-500 mt-2">IVA 19% = $28.500</p>
+                </div>
+
+                <div class="border border-neutralCustom-100 rounded-brand-md p-4">
+                  <div class="grid grid-cols-12 gap-3 items-end">
+                    <div class="col-span-6">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Producto / Servicio</label>
+                      <div class="px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm">Licencia Software</div>
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Cantidad</label>
+                      <input type="number" value="2" class="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm" />
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Precio Unit.</label>
+                      <div class="px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm text-right">$50.000</div>
+                    </div>
+                    <div class="col-span-1">
+                      <label class="block text-xs font-medium text-neutralCustom-500 mb-1">Total</label>
+                      <div class="px-3 py-2 text-sm font-medium text-right">$100k</div>
+                    </div>
+                    <div class="col-span-1 text-right">
+                      <button class="text-neutralCustom-400 hover:text-fiscal-danger">✕</button>
+                    </div>
+                  </div>
+                  <p class="text-xs text-neutralCustom-500 mt-2">IVA 19% = $19.000</p>
+                </div>
+
+                <button class="w-full border-2 border-dashed border-neutralCustom-200 hover:border-brand-400 hover:text-brand-600 text-neutralCustom-500 rounded-brand-md py-3 text-sm font-medium transition-colors">+ Agregar línea</button>
+              </div>
+
+              <div class="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+                <button onclick="goStep(1)" class="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors">← Atrás</button>
+                <button onclick="goStep(3)" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm">Siguiente →</button>
+              </div>
+            </div>
+
+            <div class="w-72 bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 shrink-0 sticky top-8">
+              <h4 class="text-sm font-semibold text-neutralCustom-800 mb-4">Resumen</h4>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between text-neutralCustom-600"><span>Subtotal</span><span>$250.000</span></div>
+                <div class="flex justify-between text-neutralCustom-600"><span>Total IVA (19%)</span><span>$47.500</span></div>
+                <div class="border-t border-neutralCustom-100 my-2"></div>
+                <div class="flex justify-between text-base font-bold text-neutralCustom-800"><span>Total</span><span>$297.500</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Revisar -->
+        <div id="step-3" class="step-panel">
+          <div class="flex gap-6 items-start">
+            <div class="flex-1 bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+              <h3 class="text-base font-semibold text-neutralCustom-800 mb-4">Paso 3: Revisar y Emitir</h3>
+
+              <div class="border border-neutralCustom-100 rounded-brand-md p-5 bg-neutralCustom-50/50">
+                <div class="flex justify-between text-sm mb-4">
+                  <div>
+                    <p class="font-semibold text-neutralCustom-800">Tech Solutions S.A.S</p>
+                    <p class="text-xs text-neutralCustom-500">NIT 900123456-2</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="font-semibold text-neutralCustom-800">SETP-990000016</p>
+                    <p class="text-xs text-neutralCustom-500">2026-08-28</p>
+                  </div>
+                </div>
+                <div class="text-sm mb-4">
+                  <p class="text-xs text-neutralCustom-500">Cliente</p>
+                  <p class="font-medium text-neutralCustom-800">Retail Inc — NIT 123456789</p>
+                </div>
+                <table class="w-full text-sm mb-4">
+                  <thead>
+                    <tr class="text-xs text-neutralCustom-500 border-b border-neutralCustom-200">
+                      <th class="text-left font-medium py-1.5">Ítem</th>
+                      <th class="text-right font-medium py-1.5">Subtotal</th>
+                      <th class="text-right font-medium py-1.5">IVA</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-neutralCustom-100">
+                    <tr>
+                      <td class="py-1.5">Consultoría Tech</td>
+                      <td class="py-1.5 text-right">$150.000</td>
+                      <td class="py-1.5 text-right">$28.500</td>
+                    </tr>
+                    <tr>
+                      <td class="py-1.5">Licencia Software x2</td>
+                      <td class="py-1.5 text-right">$100.000</td>
+                      <td class="py-1.5 text-right">$19.000</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="flex justify-end">
+                  <div class="w-48 space-y-1 text-sm">
+                    <div class="flex justify-between text-neutralCustom-600"><span>Subtotal</span><span>$250.000</span></div>
+                    <div class="flex justify-between text-neutralCustom-600"><span>IVA</span><span>$47.500</span></div>
+                    <div class="flex justify-between font-bold text-neutralCustom-800 text-base border-t border-neutralCustom-200 pt-1"><span>Total</span><span>$297.500</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-5 space-y-1.5">
+                <p class="flex items-center gap-2 text-sm text-brand-600"><span>✅</span>Cliente con documento válido</p>
+                <p class="flex items-center gap-2 text-sm text-brand-600"><span>✅</span>Resolución vigente (SETP-990000127)</p>
+                <p class="flex items-center gap-2 text-sm text-brand-600"><span>✅</span>Impuestos correctos para este cliente</p>
+                <p class="flex items-center gap-2 text-sm text-brand-600"><span>✅</span>Conectividad con Alegra: OK</p>
+              </div>
+
+              <div class="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+                <button onclick="goStep(2)" class="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors">← Atrás</button>
+                <button class="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors">Guardar Borrador</button>
+                <button onclick="goStep(4)" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm ml-auto">Enviar a DIAN →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Confirmación -->
+        <div id="step-4" class="step-panel">
+          <div class="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-8 max-w-xl mx-auto text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-fiscal-info/10 mb-4">
+              <svg class="w-8 h-8 text-fiscal-info animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </div>
+            <h3 class="text-lg font-bold text-neutralCustom-800 mb-1">Factura enviada a la DIAN</h3>
+            <p class="text-sm text-neutralCustom-500 mb-6">Esperando confirmación de Alegra (normalmente 1–10 minutos).</p>
+
+            <div class="text-left bg-neutralCustom-50 rounded-brand-md p-4 text-sm space-y-1 mb-6">
+              <div class="flex justify-between"><span class="text-neutralCustom-500">Número</span><span class="font-medium text-neutralCustom-800">SETP-990000016</span></div>
+              <div class="flex justify-between"><span class="text-neutralCustom-500">Cliente</span><span class="font-medium text-neutralCustom-800">Retail Inc</span></div>
+              <div class="flex justify-between"><span class="text-neutralCustom-500">Total</span><span class="font-medium text-neutralCustom-800">$297.500</span></div>
+              <div class="flex justify-between"><span class="text-neutralCustom-500">Estado</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-fiscal-info/10 text-fiscal-info">⏳ Enviada</span></div>
+            </div>
+
+            <div class="flex gap-3 justify-center">
+              <a href="documentos-facturas-listado.html" class="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors">Ir a Facturas</a>
+              <a href="documentos-facturas-nueva.html" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm">Crear Otra Factura</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  function toggleSidebar() {
+    const el = document.getElementById('sidebar');
+    el.classList.toggle('w-64'); el.classList.toggle('w-20');
+    el.classList.toggle('p-6'); el.classList.toggle('px-2'); el.classList.toggle('py-6');
+    document.getElementById('collapseIcon').classList.toggle('rotate-180');
+    document.querySelectorAll('.sidebar-label').forEach(l => l.classList.toggle('hidden'));
+  }
+  function toggleSubmenu(key) {
+    document.getElementById('submenu-' + key).classList.toggle('hidden');
+  }
+  function goStep(n) {
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    for (let i = 1; i <= 4; i++) {
+      const stepEl = document.getElementById('wiz-' + i);
+      const circle = stepEl.querySelector('.wiz-circle');
+      stepEl.classList.remove('done');
+      if (i < n) {
+        stepEl.classList.add('done');
+        circle.className = 'wiz-circle w-10 h-10 rounded-full bg-brand-400 text-white flex items-center justify-center font-semibold text-sm relative z-10';
+      } else if (i === n) {
+        circle.className = 'wiz-circle w-10 h-10 rounded-full bg-brand-600 text-white flex items-center justify-center font-semibold text-sm relative z-10';
+      } else {
+        circle.className = 'wiz-circle w-10 h-10 rounded-full bg-white border-2 border-neutralCustom-200 text-neutralCustom-400 flex items-center justify-center font-semibold text-sm relative z-10';
+      }
+    }
+  }
+</script>
+</body>
+</html>
