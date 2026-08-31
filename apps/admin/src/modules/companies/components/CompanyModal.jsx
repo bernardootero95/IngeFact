@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase, crearEmpresa, actualizarEmpresa, cambiarPlanEmpresa } from "@ingefact/core-api";
+import { listReferenceTable, crearEmpresa, actualizarEmpresa, cambiarPlanEmpresa } from "@ingefact/core-api";
 import { calculateColombianNITDV } from "../../../utils/dianHelpers";
 
 export default function CompanyModal({
@@ -65,33 +65,19 @@ export default function CompanyModal({
   };
 
   useEffect(() => {
+    const byValue = (a, b) => a.value.localeCompare(b.value);
+
     const fetchReferences = async () => {
       const [depts, muns, regs, orgs] = await Promise.all([
-        supabase
-          .from("departamentos")
-          .select("*")
-          .is("eliminado", null)
-          .order("value"),
-        supabase
-          .from("municipios")
-          .select("*")
-          .is("eliminado", null)
-          .order("value"),
-        supabase
-          .from("responsabilidades_fiscales")
-          .select("*")
-          .is("eliminado", null)
-          .order("value"),
-        supabase
-          .from("tipos_organizacion")
-          .select("*")
-          .is("eliminado", null)
-          .order("value"),
+        listReferenceTable("departamentos"),
+        listReferenceTable("municipios"),
+        listReferenceTable("responsabilidades_fiscales"),
+        listReferenceTable("tipos_organizacion"),
       ]);
-      setDepartmentsList(depts.data || []);
-      setMunicipalitiesList(muns.data || []);
-      setRegimesList(regs.data || []);
-      setOrgTypesList(orgs.data || []);
+      setDepartmentsList([...depts].sort(byValue));
+      setMunicipalitiesList([...muns].sort(byValue));
+      setRegimesList([...regs].sort(byValue));
+      setOrgTypesList([...orgs].sort(byValue));
     };
 
     if (isOpen) {
