@@ -5,7 +5,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.application.empresa_admin_service import EmpresaAdminService
-from src.domain.empresa import ActualizarEmpresaRequest, CambiarPlanRequest
+from src.domain.empresa import ActualizarDatosContactoRequest, ActualizarEmpresaRequest, CambiarPlanRequest
 from src.infrastructure.db.models import Empresa, Suscripcion
 
 
@@ -59,6 +59,25 @@ def test_actualizar_no_toca_nit_ni_correo(db_session):
     assert actualizada.estado == "inactivo"
     assert actualizada.numero_identificacion == original_nit
     assert actualizada.correo_electronico == original_correo
+
+
+def test_actualizar_datos_contacto_no_toca_razon_social_ni_nit(db_session):
+    empresa = _crear_empresa(db_session, razon_social="Empresa Original SAS")
+    original_razon_social = empresa.razon_social
+    original_nit = empresa.numero_identificacion
+
+    data = ActualizarDatosContactoRequest(
+        nombre_comercial="Nombre Comercial Nuevo",
+        telefono="+57 1 234 5678",
+        direccion="Cra 45 # 12-30",
+    )
+    actualizada = EmpresaAdminService(db_session).actualizar_datos_contacto(empresa.id, data)
+
+    assert actualizada.nombre_comercial == "Nombre Comercial Nuevo"
+    assert actualizada.telefono == "+57 1 234 5678"
+    assert actualizada.direccion == "Cra 45 # 12-30"
+    assert actualizada.razon_social == original_razon_social
+    assert actualizada.numero_identificacion == original_nit
 
 
 def test_cambiar_plan_crea_suscripcion_si_no_existe(db_session):
