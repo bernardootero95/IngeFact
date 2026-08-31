@@ -66,4 +66,10 @@ def me(
     user = db.get(model, uuid.UUID(payload["sub"]))
     if user is None or user.estado != "activo":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado.")
-    return MeResponse(id=str(user.id), nombre=user.nombre, email=user.email, rol=payload.get("rol", "tenant"))
+    return MeResponse(
+        id=str(user.id),
+        nombre=user.nombre,
+        email=user.email,
+        rol=payload.get("rol", "tenant"),
+        empresa_id=payload.get("empresa_id"),
+    )

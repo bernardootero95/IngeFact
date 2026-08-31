@@ -3,7 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.config import get_settings
 from src.core.logging import configure_logging
-from src.presentation.routes import auth, dashboard, empresas, reference_tables, usuarios_admin, webhooks
+from src.presentation.routes import (
+    auth,
+    dashboard,
+    empresas,
+    reference_tables,
+    tenant_dashboard,
+    tenant_empresa,
+    usuarios_admin,
+    webhooks,
+)
 
 settings = get_settings()
 configure_logging(settings.log_level)
@@ -26,6 +35,8 @@ app.include_router(dashboard.router)
 app.include_router(usuarios_admin.router)
 app.include_router(reference_tables.public_router)
 app.include_router(reference_tables.admin_router)
+app.include_router(tenant_empresa.router)
+app.include_router(tenant_dashboard.router)
 app.include_router(webhooks.router)
 
 
