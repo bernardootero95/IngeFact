@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { supabase } from "@ingefact/core-api";
+import { useAuthStore } from "./modules/auth/store/authStore";
 import { EmpresaProvider } from "./context/EmpresaProvider";
 
 import Login from "./modules/auth/pages/Login";
@@ -10,23 +10,7 @@ import ProductsPage from "./modules/products/pages/ProductsPage";
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
 
 const ProtectedRoute = ({ children }) => {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, loading } = useAuthStore();
 
   if (loading) {
     return (
@@ -38,7 +22,7 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!session) {
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
@@ -46,6 +30,12 @@ const ProtectedRoute = ({ children }) => {
 };
 
 export default function App() {
+  const { restoreSession } = useAuthStore();
+
+  useEffect(() => {
+    restoreSession();
+  }, [restoreSession]);
+
   return (
     <BrowserRouter>
       <Routes>

@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@ingefact/core-api";
 import { SidebarShell } from "@ingefact/ui";
 import { useCurrentEmpresa } from "../context/useCurrentEmpresa";
+import { useAuthStore } from "../modules/auth/store/authStore";
 import logo from "../assets/logo 2.png";
 
 const navItems = [
@@ -72,16 +71,10 @@ const navItems = [
 export default function Sidebar() {
   const navigate = useNavigate();
   const { empresa, loading } = useCurrentEmpresa();
-  const [userEmail, setUserEmail] = useState("");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserEmail(user.email);
-    });
-  }, []);
+  const { profile, logout } = useAuthStore();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await logout();
     navigate("/login", { replace: true });
   };
 
@@ -94,7 +87,7 @@ export default function Sidebar() {
       logo={logo}
       headerLabel={companyName}
       navItems={navItems}
-      footerLabel={userEmail || "Cargando..."}
+      footerLabel={profile?.email || "Cargando..."}
       roleBadge="Facturador"
       onLogout={handleLogout}
     />

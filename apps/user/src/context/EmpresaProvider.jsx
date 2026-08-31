@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { supabase, getEmpresaByUsuarioId } from "@ingefact/core-api";
+import { getMiEmpresa } from "@ingefact/core-api";
 import { EmpresaContext } from "./EmpresaContext.js";
 
 /**
  * Resuelve UNA vez por sesión de rutas protegidas la empresa (tenant) del
  * usuario autenticado, y la comparte vía contexto. Evita que el Sidebar y
  * cada página (Clientes, Facturas, Productos...) hagan su propia consulta
- * duplicada a usuarios_empresas.
+ * duplicada.
  */
 export function EmpresaProvider({ children }) {
   const [empresa, setEmpresa] = useState(null);
@@ -16,24 +16,17 @@ export function EmpresaProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
 
-    const fetchEmpresa = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) return;
-
-        const data = await getEmpresaByUsuarioId(user.id);
+    getMiEmpresa()
+      .then((data) => {
         if (!cancelled) setEmpresa(data);
-      } catch (err) {
+      })
+      .catch((err) => {
         if (!cancelled) setError(err);
-      } finally {
+      })
+      .finally(() => {
         if (!cancelled) setLoading(false);
-      }
-    };
+      });
 
-    fetchEmpresa();
     return () => {
       cancelled = true;
     };
@@ -41,7 +34,7 @@ export function EmpresaProvider({ children }) {
 
   const value = {
     empresa,
-    empresaId: empresa?.empresaId ?? null,
+    empresaId: empresa?.id ?? null,
     loading,
     error,
   };
