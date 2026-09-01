@@ -133,10 +133,11 @@ export default function TaxPresetFormPage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                  <label htmlFor="tributo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                     Tributo <span className="text-fiscal-danger">*</span>
                   </label>
                   <select
+                    id="tributo"
                     name="tributo"
                     value={formData.tributo}
                     onChange={handleChange}
@@ -151,7 +152,7 @@ export default function TaxPresetFormPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                  <label htmlFor="tarifa" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                     Tarifa (%) <span className="text-fiscal-danger">*</span>
                   </label>
                   <input
@@ -159,6 +160,7 @@ export default function TaxPresetFormPage() {
                     step="0.01"
                     min="0"
                     max="100"
+                    id="tarifa"
                     name="tarifa"
                     value={formData.tarifa}
                     onChange={handleChange}

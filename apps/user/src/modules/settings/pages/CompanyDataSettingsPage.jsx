@@ -121,11 +121,12 @@ export default function CompanyDataSettingsPage() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      <label htmlFor="nombre_comercial" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                         Nombre comercial
                       </label>
                       <input
                         type="text"
+                        id="nombre_comercial"
                         name="nombre_comercial"
                         value={formData.nombre_comercial}
                         onChange={handleChange}
@@ -147,11 +148,12 @@ export default function CompanyDataSettingsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      <label htmlFor="telefono" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                         Teléfono de contacto
                       </label>
                       <input
                         type="tel"
+                        id="telefono"
                         name="telefono"
                         value={formData.telefono}
                         onChange={handleChange}
@@ -170,11 +172,12 @@ export default function CompanyDataSettingsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      <label htmlFor="direccion" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                         Dirección
                       </label>
                       <input
                         type="text"
+                        id="direccion"
                         name="direccion"
                         value={formData.direccion}
                         onChange={handleChange}
@@ -240,11 +243,12 @@ export default function CompanyDataSettingsPage() {
 
                   <div className="space-y-4 opacity-70">
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      <label htmlFor="razon_social_display" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                         Razón Social
                       </label>
                       <input
                         type="text"
+                        id="razon_social_display"
                         value={empresa?.razon_social || ""}
                         disabled
                         className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
@@ -252,22 +256,24 @@ export default function CompanyDataSettingsPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="nit_display" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           NIT
                         </label>
                         <input
                           type="text"
+                          id="nit_display"
                           value={empresa?.numero_identificacion || ""}
                           disabled
                           className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="correo_display" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Correo asociado
                         </label>
                         <input
                           type="text"
+                          id="correo_display"
                           value={empresa?.correo_electronico || ""}
                           disabled
                           className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"

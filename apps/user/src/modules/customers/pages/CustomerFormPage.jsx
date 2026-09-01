@@ -225,10 +225,11 @@ export default function CustomerFormPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                      <label htmlFor="tipo_identificacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                         Tipo de Documento <span className="text-fiscal-danger">*</span>
                       </label>
                       <select
+                        id="tipo_identificacion"
                         name="tipo_identificacion"
                         value={formData.tipo_identificacion}
                         onChange={handleChange}
@@ -243,13 +244,14 @@ export default function CustomerFormPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                      <label htmlFor="numero_identificacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                         Número de Identificación <span className="text-fiscal-danger">*</span>
                       </label>
                       <div className="flex space-x-2">
                         <div className="flex-1">
                           <input
                             type="text"
+                            id="numero_identificacion"
                             name="numero_identificacion"
                             value={formData.numero_identificacion}
                             onChange={handleChange}
@@ -291,11 +293,12 @@ export default function CustomerFormPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="nombre" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Razón Social / Nombre Completo <span className="text-fiscal-danger">*</span>
                     </label>
                     <input
                       type="text"
+                      id="nombre"
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
@@ -308,11 +311,12 @@ export default function CustomerFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="correo_electronico" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Correo Electrónico <span className="text-fiscal-danger">*</span>
                     </label>
                     <input
                       type="email"
+                      id="correo_electronico"
                       name="correo_electronico"
                       value={formData.correo_electronico}
                       onChange={handleChange}
@@ -329,9 +333,10 @@ export default function CustomerFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">Teléfono</label>
+                    <label htmlFor="telefono" className="block text-sm font-medium text-neutralCustom-600 mb-1">Teléfono</label>
                     <input
                       type="text"
+                      id="telefono"
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
@@ -343,10 +348,11 @@ export default function CustomerFormPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-neutralCustom-100 pt-5">
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="tipo_organizacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Tipo de Organización
                     </label>
                     <select
+                      id="tipo_organizacion"
                       name="tipo_organizacion"
                       value={formData.tipo_organizacion}
                       onChange={handleChange}
@@ -361,8 +367,9 @@ export default function CustomerFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">Régimen</label>
+                    <label htmlFor="regimen" className="block text-sm font-medium text-neutralCustom-600 mb-1">Régimen</label>
                     <select
+                      id="regimen"
                       name="regimen"
                       value={formData.regimen}
                       onChange={handleChange}
@@ -377,10 +384,11 @@ export default function CustomerFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="tributo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Responsabilidad (Tributo)
                     </label>
                     <select
+                      id="tributo"
                       name="tributo"
                       value={formData.tributo}
                       onChange={handleChange}

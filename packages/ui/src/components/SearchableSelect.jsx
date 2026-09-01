@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
  * de recorrer. `options` es [{ code, value }]; se selecciona por `code`.
  */
 export default function SearchableSelect({
+  id,
   options,
   value,
   onChange,
@@ -51,6 +52,7 @@ export default function SearchableSelect({
     <div className="relative" ref={containerRef}>
       <input
         type="text"
+        id={id}
         disabled={disabled}
         value={
           isOpen

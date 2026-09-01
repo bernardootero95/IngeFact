@@ -267,11 +267,12 @@ export default function ResolutionSettingsPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="numero_resolucion" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Número de Resolución
                         </label>
                         <input
                           type="text"
+                          id="numero_resolucion"
                           name="numero_resolucion"
                           value={formData.numero_resolucion}
                           onChange={handleChange}
@@ -286,11 +287,12 @@ export default function ResolutionSettingsPage() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="prefijo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Prefijo
                         </label>
                         <input
                           type="text"
+                          id="prefijo"
                           name="prefijo"
                           value={formData.prefijo}
                           onChange={handleChange}
@@ -308,12 +310,13 @@ export default function ResolutionSettingsPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="rango_minimo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Rango Mínimo
                         </label>
                         <input
                           type="number"
                           min="1"
+                          id="rango_minimo"
                           name="rango_minimo"
                           value={formData.rango_minimo}
                           onChange={handleChange}
@@ -328,12 +331,13 @@ export default function ResolutionSettingsPage() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="rango_maximo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Rango Máximo
                         </label>
                         <input
                           type="number"
                           min="1"
+                          id="rango_maximo"
                           name="rango_maximo"
                           value={formData.rango_maximo}
                           onChange={handleChange}
@@ -351,11 +355,12 @@ export default function ResolutionSettingsPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="fecha_inicio" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Fecha Inicio
                         </label>
                         <input
                           type="date"
+                          id="fecha_inicio"
                           name="fecha_inicio"
                           value={formData.fecha_inicio}
                           onChange={handleChange}
@@ -370,11 +375,12 @@ export default function ResolutionSettingsPage() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        <label htmlFor="fecha_fin" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                           Fecha Fin
                         </label>
                         <input
                           type="date"
+                          id="fecha_fin"
                           name="fecha_fin"
                           value={formData.fecha_fin}
                           onChange={handleChange}
@@ -396,11 +402,12 @@ export default function ResolutionSettingsPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      <label htmlFor="technical_key" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                         Technical Key
                       </label>
                       <input
                         type="text"
+                        id="technical_key"
                         name="technical_key"
                         value={formData.technical_key}
                         onChange={handleChange}
