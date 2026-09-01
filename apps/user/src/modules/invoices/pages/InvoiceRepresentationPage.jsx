@@ -1,7 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import QRCode from "qrcode";
-import { getFactura, getCliente, getResolucionDian } from "@ingefact/core-api";
+import { NumerosALetras } from "numero-a-letras";
+import {
+  getFactura,
+  getCliente,
+  getResolucionDian,
+  listPublicReferenceTable,
+  obtenerFirmaDigitalFactura,
+} from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 
 const formatCOP = (value) =>
@@ -13,6 +20,11 @@ const ESTADO_LABEL = {
   enviada: "Enviada, esperando respuesta de la DIAN",
 };
 
+const montoEnLetras = (total) => {
+  const texto = NumerosALetras(total, { plural: "PESOS", singular: "PESO", centPlural: "CENTAVOS", centSingular: "CENTAVO" });
+  return texto.toUpperCase().replace(" DE ", " ").replace(" 00/100 M.N.", "");
+};
+
 export default function InvoiceRepresentationPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -22,6 +34,9 @@ export default function InvoiceRepresentationPage() {
   const [cliente, setCliente] = useState(null);
   const [resolucion, setResolucion] = useState(null);
   const [qrDataUrl, setQrDataUrl] = useState(null);
+  const [departamentoNombre, setDepartamentoNombre] = useState(null);
+  const [municipioNombre, setMunicipioNombre] = useState(null);
+  const [firmaDigital, setFirmaDigital] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -35,25 +50,33 @@ export default function InvoiceRepresentationPage() {
         return;
       }
 
-      const [clienteData, resolucionData] = await Promise.all([
+      const [clienteData, resolucionData, departamentos, municipios] = await Promise.all([
         getCliente(facturaData.cliente_id),
         getResolucionDian().catch(() => null),
+        listPublicReferenceTable("departamentos").catch(() => []),
+        listPublicReferenceTable("municipios").catch(() => []),
       ]);
 
       setFactura(facturaData);
       setCliente(clienteData);
       setResolucion(resolucionData);
+      setDepartamentoNombre(departamentos.find((d) => d.code === empresa?.departamento)?.value || null);
+      setMunicipioNombre(municipios.find((m) => m.code === empresa?.municipio)?.value || null);
 
       if (facturaData.qr_code_content) {
         const dataUrl = await QRCode.toDataURL(facturaData.qr_code_content, { margin: 1, width: 180 });
         setQrDataUrl(dataUrl);
       }
+
+      obtenerFirmaDigitalFactura(id)
+        .then((data) => setFirmaDigital(data.firma_digital))
+        .catch(() => setFirmaDigital(null));
     } catch (error) {
       setLoadError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, empresa]);
 
   useEffect(() => {
     cargarDatos();
@@ -92,55 +115,79 @@ export default function InvoiceRepresentationPage() {
         </button>
       </div>
 
-      <div className="max-w-3xl mx-auto bg-white shadow-sm print:shadow-none my-6 print:my-0 p-8 text-sm text-neutralCustom-800">
-        <div className="text-center border-b border-neutralCustom-200 pb-4 mb-4">
-          <h1 className="text-base font-bold uppercase tracking-wide">
-            Representación Gráfica de Factura Electrónica de Venta
+      <div className="max-w-4xl mx-auto bg-white shadow-sm print:shadow-none my-6 print:my-0 p-8 text-sm text-neutralCustom-800">
+        <div className="flex justify-between items-start border-b border-neutralCustom-200 pb-3 mb-3">
+          <h1 className="text-base font-bold">
+            Factura Electrónica de Venta No. {factura.numero_completo}
+            <span className="block text-xs font-normal text-neutralCustom-500 uppercase tracking-wide">
+              Representación Gráfica
+            </span>
           </h1>
-          <p className="text-lg font-bold text-brand-600 mt-1">{factura.numero_completo}</p>
+          <div className="text-right text-xs text-neutralCustom-600 space-y-0.5">
+            <p>
+              <span className="font-semibold">Forma de Pago:</span> {factura.forma_pago || "-"}
+            </p>
+            <p>
+              <span className="font-semibold">Método de Pago:</span> {factura.metodo_pago || "-"}
+            </p>
+            <p>
+              <span className="font-semibold">Moneda:</span> COP
+            </p>
+            <p>
+              <span className="font-semibold">Total de Líneas:</span> {factura.lineas.length}
+            </p>
+            <p>
+              <span className="font-semibold">Fecha de Emisión:</span> {factura.fecha}
+            </p>
+            {factura.fecha_respuesta && (
+              <p>
+                <span className="font-semibold">Fecha de Validación:</span>{" "}
+                {new Date(factura.fecha_respuesta).toLocaleString("es-CO")}
+              </p>
+            )}
+            <p>
+              <span className="font-semibold">Estado:</span> {ESTADO_LABEL[factura.estado] || factura.estado}
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6 mb-4">
-          <div>
-            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Datos del emisor</p>
+        <div className="flex gap-6 mb-4 pb-4 border-b border-neutralCustom-200">
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Emisor</p>
             <p className="font-semibold">{empresa?.razon_social}</p>
-            <p>NIT {empresa?.numero_identificacion}-{empresa?.digito_verificacion}</p>
+            <p>
+              NIT {empresa?.numero_identificacion}-{empresa?.digito_verificacion}
+            </p>
             {empresa?.direccion && <p>{empresa.direccion}</p>}
             {empresa?.telefono && <p>Tel: {empresa.telefono}</p>}
             {empresa?.correo_electronico && <p>{empresa.correo_electronico}</p>}
+            <p>
+              {[departamentoNombre, municipioNombre, "Colombia"].filter(Boolean).join(" · ")}
+            </p>
           </div>
-          <div>
-            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Datos del adquiriente</p>
+          <div className="flex-1">
+            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Adquiriente</p>
             <p className="font-semibold">{cliente?.nombre}</p>
             <p>
               {cliente?.tipo_identificacion} {cliente?.numero_identificacion}
             </p>
             {cliente?.correo_electronico && <p>{cliente.correo_electronico}</p>}
+            {cliente?.telefono && <p>Tel: {cliente.telefono}</p>}
+            {cliente?.tributo && <p>Responsabilidad Tributaria: {cliente.tributo}</p>}
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-6 mb-4 pb-4 border-b border-neutralCustom-200">
-          <div>
-            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Factura</p>
-            <p>Número: {factura.numero_completo}</p>
-            <p>Fecha: {factura.fecha}</p>
-            <p>Estado: {ESTADO_LABEL[factura.estado] || factura.estado}</p>
-          </div>
-          {resolucion && (
-            <div>
-              <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Resolución DIAN</p>
-              <p>No. {resolucion.numero_resolucion}</p>
-              <p>
-                Rango autorizado: {resolucion.prefijo}
-                {resolucion.rango_minimo} — {resolucion.prefijo}
-                {resolucion.rango_maximo}
-              </p>
-              <p>
-                Vigencia: {resolucion.fecha_inicio} a {resolucion.fecha_fin}
-              </p>
-            </div>
+          {qrDataUrl && (
+            <img src={qrDataUrl} alt="Código QR de verificación DIAN" className="w-28 h-28 shrink-0" />
           )}
         </div>
+
+        {resolucion && (
+          <div className="text-xs text-neutralCustom-600 mb-4">
+            <span className="font-semibold">Resolución DIAN:</span> No. {resolucion.numero_resolucion} — Rango
+            autorizado {resolucion.prefijo}
+            {resolucion.rango_minimo} a {resolucion.prefijo}
+            {resolucion.rango_maximo} — Vigencia {resolucion.fecha_inicio} a {resolucion.fecha_fin}
+          </div>
+        )}
 
         <table className="w-full text-left text-xs mb-4">
           <thead>
@@ -148,7 +195,7 @@ export default function InvoiceRepresentationPage() {
               <th className="py-1.5 font-semibold">Descripción</th>
               <th className="py-1.5 text-right font-semibold">Cant.</th>
               <th className="py-1.5 text-right font-semibold">Precio Unit.</th>
-              <th className="py-1.5 text-right font-semibold">Impuesto</th>
+              <th className="py-1.5 text-right font-semibold">IVA</th>
               <th className="py-1.5 text-right font-semibold">Total</th>
             </tr>
           </thead>
@@ -165,38 +212,50 @@ export default function InvoiceRepresentationPage() {
           </tbody>
         </table>
 
-        <div className="flex justify-between items-start pb-4 mb-4 border-b border-neutralCustom-200">
-          <div className="text-xs">
-            <p className="text-neutralCustom-500">Forma de pago: {factura.forma_pago || "-"}</p>
-            <p className="text-neutralCustom-500">Método de pago: {factura.metodo_pago || "-"}</p>
+        <div className="flex justify-between items-start gap-6 mb-4">
+          <div className="flex-1 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md p-3">
+            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Son</p>
+            <p className="text-xs">{montoEnLetras(factura.total)}</p>
           </div>
-          <div className="w-56 space-y-1">
-            <div className="flex justify-between">
-              <span className="text-neutralCustom-500">Subtotal</span>
+          <div className="w-64 bg-brand-50 border border-brand-100 rounded-brand-md p-3 space-y-1">
+            <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Detalle de Venta</p>
+            <div className="flex justify-between text-xs">
+              <span>Subtotal</span>
               <span>{formatCOP(factura.subtotal)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-neutralCustom-500">Total impuestos</span>
+            <div className="flex justify-between text-xs">
+              <span>Monto IVA</span>
               <span>{formatCOP(factura.total_impuestos)}</span>
             </div>
-            <div className="flex justify-between font-bold text-base border-t border-neutralCustom-200 pt-1">
-              <span>Total</span>
+            <div className="flex justify-between font-bold text-sm border-t border-brand-200 pt-1">
+              <span>Total a Pagar</span>
               <span>{formatCOP(factura.total)}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-start gap-6">
-          {qrDataUrl && <img src={qrDataUrl} alt="Código QR de verificación DIAN" className="w-32 h-32 shrink-0" />}
-          <div className="text-xs text-neutralCustom-600 space-y-1">
-            <p>
-              <span className="font-semibold">CUFE:</span> <span className="break-all font-mono">{factura.cufe}</span>
-            </p>
-            <p className="text-neutralCustom-500">
-              Este documento es una representación gráfica de una Factura Electrónica de Venta. Consulte el
-              documento electrónico y su validez en el portal de la DIAN escaneando el código QR.
-            </p>
+        <div className="text-xs text-neutralCustom-600 mb-4">
+          <p className="font-semibold">CUFE:</p>
+          <p className="break-all font-mono">{factura.cufe}</p>
+        </div>
+
+        {firmaDigital && (
+          <div className="text-xs text-neutralCustom-500 mb-4 border-t border-neutralCustom-200 pt-3">
+            <p className="font-semibold">Firma Digital:</p>
+            <p className="break-all font-mono leading-tight">{firmaDigital}</p>
           </div>
+        )}
+
+        <div className="text-[10px] text-neutralCustom-400 text-center border-t border-neutralCustom-200 pt-3 space-y-0.5">
+          {resolucion && (
+            <p>
+              Autorizado DIAN para la Facturación Electrónica mediante la resolución {resolucion.numero_resolucion}{" "}
+              entre los rangos de facturación del {resolucion.rango_minimo} al {resolucion.rango_maximo} usando el
+              prefijo {resolucion.prefijo}, con vigencia entre las fechas {resolucion.fecha_inicio} al{" "}
+              {resolucion.fecha_fin}.
+            </p>
+          )}
+          <p>Documento generado por IngeFact — XML generado y firmado por el proveedor tecnológico: Alegra.</p>
         </div>
       </div>
     </div>

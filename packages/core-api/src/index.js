@@ -64,4 +64,5 @@ export {
   eliminarBorradorFactura,
   enviarFactura,
   obtenerUrlXmlFactura,
+  obtenerFirmaDigitalFactura,
 } from "./services/facturas.js";
