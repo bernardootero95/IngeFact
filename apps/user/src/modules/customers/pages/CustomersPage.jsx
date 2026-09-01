@@ -1,38 +1,50 @@
-import { useState, useEffect, useCallback } from "react";
-import { listClientes, createCliente } from "@ingefact/core-api";
-import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { listClientes, deleteCliente } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import CustomerModal from "../components/CustomerModal";
 
 export default function CustomersPage() {
-  const { empresaId, loading: loadingEmpresa } = useCurrentEmpresa();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const debounceRef = useRef(null);
 
-  const fetchCustomers = useCallback(async () => {
-    if (!empresaId) return;
+  const fetchCustomers = useCallback(async (term) => {
     setLoading(true);
     try {
-      const data = await listClientes(empresaId);
+      const data = await listClientes(term || undefined);
       setCustomers(data);
     } catch (error) {
       console.error("Error al obtener clientes:", error.message);
     } finally {
       setLoading(false);
     }
-  }, [empresaId]);
+  }, []);
 
   useEffect(() => {
-    if (empresaId) fetchCustomers();
-  }, [empresaId, fetchCustomers]);
+    fetchCustomers("");
+  }, [fetchCustomers]);
 
-  const handleSaveCustomer = async (payload) => {
-    const nuevoCliente = await createCliente({
-      ...payload,
-      empresa_id: empresaId,
-    });
-    setCustomers((prev) => [nuevoCliente, ...prev]);
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchCustomers(value), 300);
+  };
+
+  const handleDelete = async (cliente) => {
+    if (!window.confirm(`¿Eliminar a "${cliente.nombre}" de tu directorio de clientes?`)) return;
+    setDeletingId(cliente.id);
+    try {
+      await deleteCliente(cliente.id);
+      setCustomers((prev) => prev.filter((c) => c.id !== cliente.id));
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -50,7 +62,7 @@ export default function CustomersPage() {
             </p>
           </div>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate("/customers/new")}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
           >
             <svg
@@ -76,6 +88,8 @@ export default function CustomersPage() {
               <div className="relative w-64">
                 <input
                   type="text"
+                  value={search}
+                  onChange={handleSearchChange}
                   placeholder="Buscar por NIT o nombre..."
                   className="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                 />
@@ -95,7 +109,7 @@ export default function CustomersPage() {
               </div>
             </div>
 
-            {loading || loadingEmpresa ? (
+            {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando clientes...
               </div>
@@ -126,9 +140,19 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-4">{c.correo_electronico}</td>
                       <td className="px-6 py-4">{c.telefono || "-"}</td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-brand-600 hover:text-brand-400 text-xs font-medium">
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <button
+                          onClick={() => navigate(`/customers/${c.id}/edit`)}
+                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
+                        >
                           Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(c)}
+                          disabled={deletingId === c.id}
+                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
+                        >
+                          {deletingId === c.id ? "Eliminando..." : "Eliminar"}
                         </button>
                       </td>
                     </tr>
@@ -153,32 +177,28 @@ export default function CustomersPage() {
                   </svg>
                 </div>
                 <h3 className="text-base font-bold text-neutralCustom-800 mb-1">
-                  No tienes clientes registrados
+                  {search ? "No se encontraron clientes" : "No tienes clientes registrados"}
                 </h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
-                  Agrega tu primer cliente para poder generar facturas
-                  electrónicas.
+                  {search
+                    ? "Prueba con otro nombre o número de identificación."
+                    : "Agrega tu primer cliente para poder generar facturas electrónicas."}
                 </p>
-                <div className="flex justify-center space-x-3">
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
-                  >
-                    Agregar Cliente
-                  </button>
-                </div>
+                {!search && (
+                  <div className="flex justify-center space-x-3">
+                    <button
+                      onClick={() => navigate("/customers/new")}
+                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                    >
+                      Agregar Cliente
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </main>
-
-      {/* Montaje del Modal */}
-      <CustomerModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveCustomer}
-      />
     </div>
   );
 }

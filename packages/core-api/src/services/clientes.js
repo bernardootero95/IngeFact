@@ -1,30 +1,27 @@
-import { supabase } from "../supabase.js";
+import { apiRequest } from "../apiClient.js";
 
-/**
- * Lista los clientes activos de una empresa (tenant), más recientes primero.
- */
-export async function listClientes(empresaId) {
-  const { data, error } = await supabase
-    .from("clientes")
-    .select("*")
-    .eq("empresa_id", empresaId)
-    .is("eliminado", null)
-    .order("creado", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+export async function listClientes(search) {
+  const query = search ? `?search=${encodeURIComponent(search)}` : "";
+  return apiRequest(`/api/v1/tenant/clientes${query}`);
 }
 
-/**
- * Crea un cliente para una empresa (tenant) y devuelve el registro insertado.
- */
-export async function createCliente(payload) {
-  const { data, error } = await supabase
-    .from("clientes")
-    .insert(payload)
-    .select()
-    .single();
+export async function getCliente(id) {
+  return apiRequest(`/api/v1/tenant/clientes/${id}`);
+}
 
-  if (error) throw error;
-  return data;
+export async function createCliente(payload) {
+  return apiRequest("/api/v1/tenant/clientes", { method: "POST", body: payload });
+}
+
+export async function updateCliente(id, payload) {
+  return apiRequest(`/api/v1/tenant/clientes/${id}`, { method: "PATCH", body: payload });
+}
+
+export async function deleteCliente(id) {
+  return apiRequest(`/api/v1/tenant/clientes/${id}`, { method: "DELETE" });
+}
+
+export async function consultarClienteDian(tipoIdentificacion, numeroIdentificacion) {
+  const query = `?tipo_identificacion=${encodeURIComponent(tipoIdentificacion)}&numero_identificacion=${encodeURIComponent(numeroIdentificacion)}`;
+  return apiRequest(`/api/v1/tenant/clientes/consultar-dian${query}`);
 }

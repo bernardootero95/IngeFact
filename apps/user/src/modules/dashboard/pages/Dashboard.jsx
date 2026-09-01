@@ -53,10 +53,8 @@ export default function Dashboard() {
                   <p className="text-sm font-medium text-neutralCustom-500">
                     Clientes registrados
                   </p>
-                  {/* TODO: el modulo de Clientes aun vive en Supabase, sin
-                  migrar a FastAPI -- se deja en 0 en vez de inventar el dato. */}
                   <p className="text-3xl font-bold text-neutralCustom-800 mt-2">
-                    0
+                    {kpis?.clientes_registrados ?? 0}
                   </p>
                 </div>
 
