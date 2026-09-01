@@ -10,36 +10,30 @@ import {
   enviarFactura,
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
-import WizardSteps from "../components/WizardSteps";
-import StepCliente from "../components/StepCliente";
-import StepLineas from "../components/StepLineas";
-import StepRevisar from "../components/StepRevisar";
-import StepConfirmacion from "../components/StepConfirmacion";
+import SeccionCliente from "../components/SeccionCliente";
+import SeccionLineas from "../components/SeccionLineas";
+import SeccionResumen from "../components/SeccionResumen";
 import {
   validateCliente,
   validateFecha,
   validateLineas,
   validateFormaPago,
   validateMetodoPago,
-} from "./InvoiceWizardPage.validation";
+} from "./InvoiceFormPage.validation";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export default function InvoiceWizardPage() {
+export default function InvoiceFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
-  const { empresa } = useCurrentEmpresa();
 
-  const [step, setStep] = useState(1);
   const [cliente, setCliente] = useState(null);
   const [fecha, setFecha] = useState(today());
   const [lineas, setLineas] = useState([]);
   const [formaPago, setFormaPago] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
   const [facturaId, setFacturaId] = useState(id || null);
-  const [facturaResultado, setFacturaResultado] = useState(null);
 
   const [productos, setProductos] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
@@ -75,6 +69,8 @@ export default function InvoiceWizardPage() {
         const clienteCompleto = await getCliente(factura.cliente_id);
         setCliente(clienteCompleto);
         setFecha(factura.fecha);
+        setFormaPago(factura.forma_pago || formasPagoData[0]?.code || "");
+        setMetodoPago(factura.metodo_pago || metodosPagoData[0]?.code || "");
         setLineas(
           factura.lineas.map((linea) => ({
             producto_id: linea.producto_id,
@@ -109,16 +105,6 @@ export default function InvoiceWizardPage() {
     setErrors((prev) => ({ ...prev, cliente: nuevoCliente ? "" : prev.cliente }));
   };
 
-  const handleNextFromCliente = () => {
-    const clienteError = validateCliente(cliente?.id);
-    const fechaError = validateFecha(fecha);
-    if (clienteError || fechaError) {
-      setErrors((prev) => ({ ...prev, cliente: clienteError, fecha: fechaError }));
-      return;
-    }
-    setStep(2);
-  };
-
   const handleAddLinea = () => {
     setLineas((prev) => [...prev, { producto_id: "", cantidad: "1", producto: null }]);
   };
@@ -136,15 +122,16 @@ export default function InvoiceWizardPage() {
     setLineas((prev) => prev.map((linea, i) => (i === index ? { ...linea, cantidad } : linea)));
   };
 
-  const handleNextFromLineas = () => {
-    const lineasError = validateLineas(lineas);
-    const formaPagoError = validateFormaPago(formaPago);
-    const metodoPagoError = validateMetodoPago(metodoPago);
-    if (lineasError || formaPagoError || metodoPagoError) {
-      setErrors((prev) => ({ ...prev, lineas: lineasError, formaPago: formaPagoError, metodoPago: metodoPagoError }));
-      return;
-    }
-    setStep(3);
+  const validarTodo = () => {
+    const nuevosErrores = {
+      cliente: validateCliente(cliente?.id),
+      fecha: validateFecha(fecha),
+      lineas: validateLineas(lineas),
+      formaPago: validateFormaPago(formaPago),
+      metodoPago: validateMetodoPago(metodoPago),
+    };
+    setErrors(nuevosErrores);
+    return !Object.values(nuevosErrores).some(Boolean);
   };
 
   const buildPayload = () => ({
@@ -164,11 +151,12 @@ export default function InvoiceWizardPage() {
   };
 
   const handleGuardarBorrador = async () => {
+    if (!validarTodo()) return;
     setIsSavingDraft(true);
     setSaveError(null);
     try {
-      await guardarBorrador();
-      navigate("/invoices");
+      const guardada = await guardarBorrador();
+      navigate(`/invoices/${guardada.id}`);
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -177,31 +165,18 @@ export default function InvoiceWizardPage() {
   };
 
   const handleEnviar = async () => {
+    if (!validarTodo()) return;
     setIsSending(true);
     setSaveError(null);
     try {
       const guardada = await guardarBorrador();
-      const enviada = await enviarFactura(guardada.id, { forma_pago: formaPago, metodo_pago: metodoPago });
-      setFacturaResultado(enviada);
-      setStep(4);
+      await enviarFactura(guardada.id, { forma_pago: formaPago, metodo_pago: metodoPago });
+      navigate(`/invoices/${guardada.id}`);
     } catch (error) {
       setSaveError(error.message);
     } finally {
       setIsSending(false);
     }
-  };
-
-  const handleNuevaFactura = () => {
-    setStep(1);
-    setCliente(null);
-    setFecha(today());
-    setLineas([{ producto_id: "", cantidad: "1", producto: null }]);
-    setFormaPago(formasPago[0]?.code || "");
-    setMetodoPago(metodosPago[0]?.code || "");
-    setFacturaId(null);
-    setFacturaResultado(null);
-    setErrors({});
-    setSaveError(null);
   };
 
   return (
@@ -225,7 +200,7 @@ export default function InvoiceWizardPage() {
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
             ) : loadError ? (
@@ -234,65 +209,39 @@ export default function InvoiceWizardPage() {
               </div>
             ) : (
               <>
-                <WizardSteps current={step} />
+                <SeccionCliente
+                  cliente={cliente}
+                  fecha={fecha}
+                  error={errors.cliente}
+                  onSelectCliente={handleSelectCliente}
+                  onFechaChange={setFecha}
+                />
 
-                {step === 1 && (
-                  <StepCliente
-                    cliente={cliente}
-                    fecha={fecha}
-                    error={errors.cliente}
-                    onSelectCliente={handleSelectCliente}
-                    onFechaChange={setFecha}
-                    onNext={handleNextFromCliente}
-                    onCancel={() => navigate("/invoices")}
-                  />
-                )}
+                <SeccionLineas
+                  lineas={lineas}
+                  productos={productos}
+                  formaPago={formaPago}
+                  metodoPago={metodoPago}
+                  formasPago={formasPago}
+                  metodosPago={metodosPago}
+                  errores={errors}
+                  onAddLinea={handleAddLinea}
+                  onRemoveLinea={handleRemoveLinea}
+                  onLineaProductoChange={handleLineaProductoChange}
+                  onLineaCantidadChange={handleLineaCantidadChange}
+                  onFormaPagoChange={setFormaPago}
+                  onMetodoPagoChange={setMetodoPago}
+                />
 
-                {step === 2 && (
-                  <StepLineas
-                    clienteNombre={cliente?.nombre}
-                    fecha={fecha}
-                    lineas={lineas}
-                    productos={productos}
-                    formaPago={formaPago}
-                    metodoPago={metodoPago}
-                    formasPago={formasPago}
-                    metodosPago={metodosPago}
-                    errores={errors}
-                    onAddLinea={handleAddLinea}
-                    onRemoveLinea={handleRemoveLinea}
-                    onLineaProductoChange={handleLineaProductoChange}
-                    onLineaCantidadChange={handleLineaCantidadChange}
-                    onFormaPagoChange={setFormaPago}
-                    onMetodoPagoChange={setMetodoPago}
-                    onBack={() => setStep(1)}
-                    onNext={handleNextFromLineas}
-                  />
-                )}
-
-                {step === 3 && (
-                  <StepRevisar
-                    empresaNombre={empresa?.razon_social}
-                    empresaNit={empresa?.numero_identificacion}
-                    cliente={cliente}
-                    fecha={fecha}
-                    lineas={lineas}
-                    saveError={saveError}
-                    isSavingDraft={isSavingDraft}
-                    isSending={isSending}
-                    onBack={() => setStep(2)}
-                    onGuardarBorrador={handleGuardarBorrador}
-                    onEnviar={handleEnviar}
-                  />
-                )}
-
-                {step === 4 && facturaResultado && (
-                  <StepConfirmacion
-                    factura={facturaResultado}
-                    clienteNombre={cliente?.nombre}
-                    onNuevaFactura={handleNuevaFactura}
-                  />
-                )}
+                <SeccionResumen
+                  lineas={lineas}
+                  saveError={saveError}
+                  isSavingDraft={isSavingDraft}
+                  isSending={isSending}
+                  onCancelar={() => navigate("/invoices")}
+                  onGuardarBorrador={handleGuardarBorrador}
+                  onEnviar={handleEnviar}
+                />
               </>
             )}
           </div>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { listClientes } from "@ingefact/core-api";
 
-export default function StepCliente({ cliente, fecha, error, onSelectCliente, onFechaChange, onNext, onCancel }) {
+export default function SeccionCliente({ cliente, fecha, error, onSelectCliente, onFechaChange }) {
   const [query, setQuery] = useState(cliente?.nombre || "");
   const [resultados, setResultados] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -48,11 +48,10 @@ export default function StepCliente({ cliente, fecha, error, onSelectCliente, on
   };
 
   return (
-    <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 max-w-xl mx-auto">
-      <h3 className="text-base font-semibold text-neutralCustom-800 mb-1">Paso 1: Seleccionar Cliente</h3>
-      <p className="text-xs text-neutralCustom-500 mb-6">Elige el cliente para esta factura.</p>
+    <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+      <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Cliente</h3>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative" ref={containerRef}>
           <label htmlFor="cliente-buscar" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
             Cliente <span className="text-fiscal-danger">*</span>
@@ -103,34 +102,17 @@ export default function StepCliente({ cliente, fecha, error, onSelectCliente, on
             className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
           />
         </div>
+      </div>
 
-        {cliente && (
-          <div className="bg-brand-50 border border-brand-100 rounded-brand-md p-4">
-            <p className="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
-            <div className="text-xs text-neutralCustom-600 space-y-1">
-              <div>NIT: {cliente.numero_identificacion}</div>
-              <div>Email: {cliente.correo_electronico}</div>
-            </div>
+      {cliente && (
+        <div className="bg-brand-50 border border-brand-100 rounded-brand-md p-4 mt-4">
+          <p className="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
+          <div className="text-xs text-neutralCustom-600 space-y-1">
+            <div>NIT: {cliente.numero_identificacion}</div>
+            <div>Email: {cliente.correo_electronico}</div>
           </div>
-        )}
-      </div>
-
-      <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={onNext}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm"
-        >
-          Siguiente →
-        </button>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
