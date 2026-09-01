@@ -456,8 +456,3 @@ entrypoint = "./functions/sync-companies/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/sync-companies/*.html" ]
 
-[functions.consult-acquirer]
-enabled = true
-verify_jwt = true
-import_map = "./functions/consult-acquirer/deno.json"
-entrypoint = "./functions/consult-acquirer/index.ts"
