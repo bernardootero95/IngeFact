@@ -52,6 +52,7 @@ export default function StepLineas({
                       value={linea.producto_id}
                       onChange={(productoId) => onLineaProductoChange(index, productoId)}
                       placeholder="Buscar producto..."
+                      formatOption={(opt) => opt.value}
                     />
                   </div>
                   <div className="col-span-2">

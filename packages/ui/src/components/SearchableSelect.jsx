@@ -5,6 +5,8 @@ import { useState, useRef, useEffect } from "react";
  * medida DIAN) donde un <select> nativo con cientos de opciones es incómodo
  * de recorrer. `options` es [{ code, value }]; se selecciona por `code`.
  */
+const defaultFormatOption = (opt) => `${opt.code} - ${opt.value}`;
+
 export default function SearchableSelect({
   id,
   options,
@@ -13,6 +15,7 @@ export default function SearchableSelect({
   placeholder = "Buscar...",
   error = false,
   disabled = false,
+  formatOption = defaultFormatOption,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -54,13 +57,7 @@ export default function SearchableSelect({
         type="text"
         id={id}
         disabled={disabled}
-        value={
-          isOpen
-            ? query
-            : selectedOption
-              ? `${selectedOption.code} - ${selectedOption.value}`
-              : ""
-        }
+        value={isOpen ? query : selectedOption ? formatOption(selectedOption) : ""}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => {
           setIsOpen(true);
@@ -83,7 +80,7 @@ export default function SearchableSelect({
                 onClick={() => handleSelect(opt)}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50 transition-colors"
               >
-                {opt.code} - {opt.value}
+                {formatOption(opt)}
               </button>
             ))
           ) : (
