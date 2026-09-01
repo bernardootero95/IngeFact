@@ -158,7 +158,7 @@ export default function InvoiceDetailPage() {
                       </button>
                     </>
                   )}
-                  {factura.alegra_invoice_id && (
+                  {factura.cufe && (
                     <button
                       onClick={handleDescargarXml}
                       disabled={isDownloadingXml}
