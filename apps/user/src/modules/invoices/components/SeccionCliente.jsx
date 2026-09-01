@@ -200,19 +200,9 @@ export default function SeccionCliente({
           <p className="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
             <InfoRow icon="usuario" label="Nombre" value={cliente.nombre} />
-            <InfoRow
-              icon="identificacion"
-              label="Identificación"
-              value={`${cliente.tipo_identificacion} ${cliente.numero_identificacion}`}
-            />
-            <div>
-              <InfoRow icon="correo" label="Correo" value={cliente.correo_electronico} />
-              {cliente.correo_electronico && (
-                <span className="ml-6 inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 bg-brand-100 px-2 py-0.5 rounded-full">
-                  ✓ Correo válido ({cliente.correo_electronico.length}/150)
-                </span>
-              )}
-            </div>
+            <InfoRow icon="identificacion" label="Tipo de Identificación" value={cliente.tipo_identificacion} />
+            <InfoRow icon="identificacion" label="Número de Identificación" value={cliente.numero_identificacion} />
+            <InfoRow icon="correo" label="Correo" value={cliente.correo_electronico} />
             <InfoRow icon="telefono" label="Teléfono" value={cliente.telefono} />
             <InfoRow
               icon="edificio"
