@@ -1,11 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from src.application.auth_service import AuthService
 from src.core.dependencies import bearer_scheme, decode_or_401
+from src.core.rate_limit import limiter
 from src.domain.auth import (
     ForgotPasswordRequest,
     LoginRequest,
@@ -22,12 +23,14 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
 @router.post("/admin/login", response_model=TokenResponse)
-def login_admin(body: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login_admin(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     return AuthService(db).login_admin(body.email, body.password)
 
 
 @router.post("/login", response_model=TokenResponse)
-def login_tenant(body: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login_tenant(request: Request, body: LoginRequest, db: Session = Depends(get_db)):
     return AuthService(db).login_tenant(body.email, body.password)
 
 
@@ -42,12 +45,14 @@ def logout(body: LogoutRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/admin/forgot-password", status_code=204)
-def forgot_password_admin(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def forgot_password_admin(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     AuthService(db).forgot_password(body.email, "admin")
 
 
 @router.post("/forgot-password", status_code=204)
-def forgot_password_tenant(body: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def forgot_password_tenant(request: Request, body: ForgotPasswordRequest, db: Session = Depends(get_db)):
     AuthService(db).forgot_password(body.email, "tenant")
 
 
