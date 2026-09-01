@@ -27,4 +27,10 @@ describe("CustomerFormPage validateField", () => {
     expect(validateField("telefono", "")).toBe("");
     expect(validateField("campo_desconocido", "cualquier valor")).toBe("");
   });
+
+  it("requiere regimen fiscal", () => {
+    expect(validateField("regimen_fiscal", "")).toMatch(/obligatorio/i);
+    expect(validateField("regimen_fiscal", "48")).toBe("");
+    expect(validateField("regimen_fiscal", "49")).toBe("");
+  });
 });

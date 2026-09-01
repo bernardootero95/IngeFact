@@ -2,6 +2,9 @@ import { SearchableSelect } from "@ingefact/ui";
 
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
+const REGIMEN_FISCAL_LABELS = { "48": "Responsable de IVA", "49": "No responsable de IVA" };
+const nombreRegimenFiscal = (code) => (code ? REGIMEN_FISCAL_LABELS[code] || code : null);
+
 const ICONS = {
   usuario: (
     <>
@@ -79,6 +82,7 @@ export default function SeccionCliente({
   tiposOrganizacion,
   regimenes,
   tributos,
+  tiposIdentificacion,
   onSelectCliente,
   onFechaChange,
   onCrearCliente,
@@ -138,7 +142,11 @@ export default function SeccionCliente({
           <p className="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
             <InfoRow icon="usuario" label="Nombre" value={cliente.nombre} />
-            <InfoRow icon="identificacion" label="Tipo de Identificación" value={cliente.tipo_identificacion} />
+            <InfoRow
+              icon="identificacion"
+              label="Tipo de Identificación"
+              value={nombreCatalogo(tiposIdentificacion, cliente.tipo_identificacion)}
+            />
             <InfoRow icon="identificacion" label="Número de Identificación" value={cliente.numero_identificacion} />
             <InfoRow icon="correo" label="Correo" value={cliente.correo_electronico} />
             <InfoRow icon="telefono" label="Teléfono" value={cliente.telefono} />
@@ -147,11 +155,16 @@ export default function SeccionCliente({
               label="Tipo de organización"
               value={nombreCatalogo(tiposOrganizacion, cliente.tipo_organizacion)}
             />
-            <InfoRow icon="documento" label="Régimen" value={nombreCatalogo(regimenes, cliente.regimen)} />
+            <InfoRow icon="documento" label="Régimen Fiscal" value={nombreRegimenFiscal(cliente.regimen_fiscal)} />
             <InfoRow
               icon="documento"
-              label="Responsabilidad tributaria"
-              value={nombreCatalogo(tributos, cliente.tributo)}
+              label="Responsabilidad Fiscal"
+              value={nombreCatalogo(regimenes, cliente.regimen)}
+            />
+            <InfoRow
+              icon="documento"
+              label="Responsabilidad Tributaria"
+              value={cliente.tributo ? nombreCatalogo(tributos, cliente.tributo) : "Sin responsabilidad tributaria"}
             />
           </div>
         </div>

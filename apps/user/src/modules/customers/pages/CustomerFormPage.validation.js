@@ -8,5 +8,6 @@ export function validateField(name, value) {
     if (!value.trim()) return "El correo es obligatorio.";
     if (!isValidEmail(value)) return "Correo inválido.";
   }
+  if (name === "regimen_fiscal" && !value) return "El régimen fiscal es obligatorio.";
   return "";
 }

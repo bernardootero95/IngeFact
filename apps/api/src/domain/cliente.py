@@ -10,6 +10,7 @@ class ClienteRequestBase(BaseModel):
     correo_electronico: EmailStr
     telefono: str | None = None
     tipo_organizacion: str | None = None
+    regimen_fiscal: str | None = None
     regimen: str | None = None
     tributo: str | None = None
 
@@ -45,6 +46,18 @@ class ClienteRequestBase(BaseModel):
         v = v.strip()
         return v or None
 
+    @field_validator("regimen_fiscal")
+    @classmethod
+    def regimen_fiscal_valido(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip()
+        if not v:
+            return None
+        if v not in ("48", "49"):
+            raise ValueError("El regimen fiscal debe ser 48 (responsable de IVA) o 49 (no responsable).")
+        return v
+
 
 class CrearClienteRequest(ClienteRequestBase):
     pass
@@ -62,6 +75,7 @@ class ClienteResponse(BaseModel):
     correo_electronico: str
     telefono: str | None
     tipo_organizacion: str | None
+    regimen_fiscal: str | None
     regimen: str | None
     tributo: str | None
     estado: str
@@ -77,6 +91,7 @@ class ClienteResponse(BaseModel):
             correo_electronico=cliente.correo_electronico,
             telefono=cliente.telefono,
             tipo_organizacion=cliente.tipo_organizacion,
+            regimen_fiscal=cliente.regimen_fiscal,
             regimen=cliente.regimen,
             tributo=cliente.tributo,
             estado=cliente.estado,
