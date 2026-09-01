@@ -1,7 +1,19 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { listClientes } from "@ingefact/core-api";
 
-export default function SeccionCliente({ cliente, fecha, error, onSelectCliente, onFechaChange }) {
+const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
+
+export default function SeccionCliente({
+  cliente,
+  fecha,
+  error,
+  tiposOrganizacion,
+  regimenes,
+  tributos,
+  onSelectCliente,
+  onFechaChange,
+}) {
   const [query, setQuery] = useState(cliente?.nombre || "");
   const [resultados, setResultados] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -53,9 +65,19 @@ export default function SeccionCliente({ cliente, fecha, error, onSelectCliente,
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="relative" ref={containerRef}>
-          <label htmlFor="cliente-buscar" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-            Cliente <span className="text-fiscal-danger">*</span>
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="cliente-buscar" className="block text-sm font-medium text-neutralCustom-800">
+              Cliente <span className="text-fiscal-danger">*</span>
+            </label>
+            <Link
+              to="/customers/new"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-brand-600 hover:text-brand-400"
+            >
+              + Nuevo Cliente
+            </Link>
+          </div>
           <input
             type="text"
             id="cliente-buscar"
@@ -107,9 +129,16 @@ export default function SeccionCliente({ cliente, fecha, error, onSelectCliente,
       {cliente && (
         <div className="bg-brand-50 border border-brand-100 rounded-brand-md p-4 mt-4">
           <p className="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
-          <div className="text-xs text-neutralCustom-600 space-y-1">
-            <div>NIT: {cliente.numero_identificacion}</div>
-            <div>Email: {cliente.correo_electronico}</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-xs text-neutralCustom-600">
+            <div>Nombre: {cliente.nombre}</div>
+            <div>
+              Documento: {cliente.tipo_identificacion} {cliente.numero_identificacion}
+            </div>
+            <div>Correo: {cliente.correo_electronico}</div>
+            <div>Teléfono: {cliente.telefono || "-"}</div>
+            <div>Tipo de organización: {nombreCatalogo(tiposOrganizacion, cliente.tipo_organizacion) || "-"}</div>
+            <div>Régimen: {nombreCatalogo(regimenes, cliente.regimen) || "-"}</div>
+            <div>Responsabilidad tributaria: {nombreCatalogo(tributos, cliente.tributo) || "-"}</div>
           </div>
         </div>
       )}
