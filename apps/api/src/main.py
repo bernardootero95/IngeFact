@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.core.config import get_settings
 from src.core.logging import configure_logging
+from src.core.rate_limit import limiter
 from src.presentation.routes import (
     auth,
     dashboard,
@@ -22,6 +25,9 @@ settings = get_settings()
 configure_logging(settings.log_level)
 
 app = FastAPI(title="IngeFact API", version="0.1.0")
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # apps/admin y apps/user corren en Vite (puerto variable, ej. 5173/5174) --
 # se permite cualquier origin localhost en vez de fijar un puerto.

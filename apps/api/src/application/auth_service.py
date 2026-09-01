@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from src.core.config import get_settings
 from src.core.security import (
     create_access_token,
     generate_opaque_token,
@@ -23,8 +24,9 @@ INVALID_CREDENTIALS = "Correo o contrasena incorrectos."
 
 
 class AuthService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, environment: str | None = None):
         self.db = db
+        self.environment = environment if environment is not None else get_settings().environment
 
     def _issue_tokens(self, *, user_id: uuid.UUID, user_type: str, rol: str, empresa_id: uuid.UUID | None) -> TokenResponse:
         access = create_access_token(
@@ -107,9 +109,16 @@ class AuthService:
         self.db.commit()
 
         # No hay proveedor de email configurado todavia (ver plan de Sprint 1) --
-        # se deja el link en el log del servidor a modo de dev-mode, equivalente a
-        # lo que capturaba Mailpit en el flujo de Supabase.
-        logger.info("Password reset token for %s (%s): %s", email, user_type, reset_plain)
+        # en development se deja el token en el log del servidor a modo dev-mode,
+        # equivalente a lo que capturaba Mailpit en el flujo de Supabase. En
+        # production NUNCA se loguea el token en claro (cualquiera con acceso a
+        # los logs podria resetear la contrasena de cualquier usuario) -- hasta
+        # que se conecte un proveedor de email real, el flujo de reset queda
+        # inutilizable en production a proposito.
+        if self.environment == "production":
+            logger.info("Password reset requested for %s (%s)", email, user_type)
+        else:
+            logger.info("Password reset token for %s (%s): %s", email, user_type, reset_plain)
 
     def reset_password(self, token: str, new_password: str) -> None:
         token_hash = hash_opaque_token(token)

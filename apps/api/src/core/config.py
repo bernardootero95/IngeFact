@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     database_url: str
+    environment: str = "development"
     alegra_env: str = "sandbox"
     alegra_base_url: str
     alegra_token: str

@@ -117,6 +117,31 @@ def test_reset_password_with_invalid_token_fails(db_session):
         AuthService(db_session).reset_password(str(uuid.uuid4()), "NuevaClave123!")
 
 
+def test_forgot_password_does_not_log_token_in_production(db_session, admin_user, monkeypatch, caplog):
+    monkeypatch.setattr(
+        "src.application.auth_service.generate_opaque_token", lambda: "token-secreto-no-debe-salir"
+    )
+    service = AuthService(db_session, environment="production")
+
+    with caplog.at_level("INFO"):
+        service.forgot_password("staff@ingefact.test", "admin")
+
+    assert "staff@ingefact.test" in caplog.text
+    assert "token-secreto-no-debe-salir" not in caplog.text
+
+
+def test_forgot_password_logs_token_in_development(db_session, admin_user, monkeypatch, caplog):
+    monkeypatch.setattr(
+        "src.application.auth_service.generate_opaque_token", lambda: "token-de-prueba-visible"
+    )
+    service = AuthService(db_session, environment="development")
+
+    with caplog.at_level("INFO"):
+        service.forgot_password("staff@ingefact.test", "admin")
+
+    assert "token-de-prueba-visible" in caplog.text
+
+
 def test_forgot_and_reset_password_flow(db_session, admin_user, monkeypatch):
     service = AuthService(db_session)
 
