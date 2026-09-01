@@ -7,6 +7,9 @@ import Login from "./modules/auth/pages/Login";
 import ForgotPassword from "./modules/auth/pages/ForgotPassword";
 import ResetPassword from "./modules/auth/pages/ResetPassword";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
+import InvoicesListPage from "./modules/invoices/pages/InvoicesListPage";
+import InvoiceWizardPage from "./modules/invoices/pages/InvoiceWizardPage";
+import InvoiceDetailPage from "./modules/invoices/pages/InvoiceDetailPage";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
@@ -55,6 +58,42 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/invoices"
+          element={
+            <ProtectedRoute>
+              <InvoicesListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/invoices/new"
+          element={
+            <ProtectedRoute>
+              <InvoiceWizardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/invoices/:id/edit"
+          element={
+            <ProtectedRoute>
+              <InvoiceWizardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/invoices/:id"
+          element={
+            <ProtectedRoute>
+              <InvoiceDetailPage />
             </ProtectedRoute>
           }
         />
