@@ -1,1 +1,1 @@
-export { isValidEmail } from "./validators.js";
+export { isValidEmail, isStrongPassword } from "./validators.js";

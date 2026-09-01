@@ -31,3 +31,24 @@ export async function logoutSession(refreshToken) {
 export async function getMe() {
   return apiRequest("/api/v1/auth/me");
 }
+
+export async function forgotPasswordAdmin(email) {
+  return publicRequest("/api/v1/auth/admin/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function forgotPasswordTenant(email) {
+  return publicRequest("/api/v1/auth/forgot-password", {
+    method: "POST",
+    body: { email },
+  });
+}
+
+export async function resetPassword(token, newPassword) {
+  return publicRequest("/api/v1/auth/reset-password", {
+    method: "POST",
+    body: { token, new_password: newPassword },
+  });
+}

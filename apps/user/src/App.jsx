@@ -4,6 +4,8 @@ import { useAuthStore } from "./modules/auth/store/authStore";
 import { EmpresaProvider } from "./context/EmpresaProvider";
 
 import Login from "./modules/auth/pages/Login";
+import ForgotPassword from "./modules/auth/pages/ForgotPassword";
+import ResetPassword from "./modules/auth/pages/ResetPassword";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
@@ -45,6 +47,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/dashboard"

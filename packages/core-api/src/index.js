@@ -1,6 +1,15 @@
 export { configureApiClient, apiRequest, publicRequest } from "./apiClient.js";
 export { createAuthStore } from "./authStore.js";
-export { loginAdmin, loginTenant, refreshSession, logoutSession, getMe } from "./services/auth.js";
+export {
+  loginAdmin,
+  loginTenant,
+  refreshSession,
+  logoutSession,
+  getMe,
+  forgotPasswordAdmin,
+  forgotPasswordTenant,
+  resetPassword,
+} from "./services/auth.js";
 export { getMiEmpresa, actualizarDatosEmpresa } from "./services/tenantEmpresa.js";
 export {
   getResolucionDian,
