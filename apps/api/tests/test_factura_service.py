@@ -91,9 +91,10 @@ def _payload(cliente_id, producto_id, **overrides) -> CrearFacturaRequest:
 
 
 class _FakeAlegraClient:
-    def __init__(self, response: dict | None = None, error: AlegraApiError | None = None):
+    def __init__(self, response: dict | None = None, error: AlegraApiError | None = None, raw_response: bytes = b""):
         self._response = response
         self._error = error
+        self._raw_response = raw_response
 
     def create_invoice(self, payload: dict) -> dict:
         if self._error:
@@ -104,6 +105,11 @@ class _FakeAlegraClient:
         if self._error:
             raise self._error
         return self._response or {}
+
+    def fetch_raw(self, url: str) -> bytes:
+        if self._error:
+            raise self._error
+        return self._raw_response
 
 
 def test_crear_borrador_calcula_totales_en_servidor_y_no_asigna_consecutivo(db_session):
@@ -395,3 +401,56 @@ def test_obtener_url_xml_factura_sin_enviar_falla_409(db_session):
     with pytest.raises(HTTPException) as exc_info:
         service.obtener_url_xml(empresa.id, factura.id)
     assert exc_info.value.status_code == 409
+
+
+_XML_CON_FIRMA = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<Invoice xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+    b'<ds:SignatureValue Id="xmldsig-1-sigvalue">firma-base64-de-prueba</ds:SignatureValue>'
+    b"</Invoice>"
+)
+_XML_SIN_FIRMA = b'<?xml version="1.0" encoding="UTF-8"?><Invoice></Invoice>'
+
+
+def test_obtener_firma_digital_la_extrae_del_xml_y_la_cachea(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}},
+        raw_response=_XML_CON_FIRMA,
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    fake._response = {"files": {"xml": "https://s3.example.com/factura.xml"}}
+
+    firma = service.obtener_firma_digital(empresa.id, factura.id)
+    assert firma == "firma-base64-de-prueba"
+
+    actualizada = service.obtener(empresa.id, factura.id)
+    assert actualizada.firma_digital == "firma-base64-de-prueba"
+
+    # Segunda llamada no vuelve a pedirle nada a Alegra -- usa el cache.
+    fake._error = AlegraApiError(500, {})
+    assert service.obtener_firma_digital(empresa.id, factura.id) == "firma-base64-de-prueba"
+
+
+def test_obtener_firma_digital_sin_firma_en_el_xml_falla_404(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}},
+        raw_response=_XML_SIN_FIRMA,
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    fake._response = {"files": {"xml": "https://s3.example.com/factura.xml"}}
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.obtener_firma_digital(empresa.id, factura.id)
+    assert exc_info.value.status_code == 404

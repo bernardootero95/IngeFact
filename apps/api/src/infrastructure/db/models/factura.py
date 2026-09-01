@@ -35,6 +35,7 @@ class Factura(Base):
     alegra_invoice_id: Mapped[str | None] = mapped_column(String(50))
     cufe: Mapped[str | None] = mapped_column(String(200))
     qr_code_content: Mapped[str | None] = mapped_column(Text)
+    firma_digital: Mapped[str | None] = mapped_column(Text)
     razon_rechazo: Mapped[str | None] = mapped_column(Text)
     fecha_envio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     fecha_respuesta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

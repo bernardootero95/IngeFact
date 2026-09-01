@@ -89,3 +89,16 @@ def obtener_url_xml(
     Alegra en cada llamada, nunca se persiste."""
     url = FacturaService(db).obtener_url_xml(tenant.empresa_id, factura_id)
     return {"url": url}
+
+
+@router.get("/{factura_id}/firma-digital")
+def obtener_firma_digital(
+    factura_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Extrae ds:SignatureValue del XML firmado -- se cachea en la factura
+    tras el primer pedido (la firma es inmutable una vez emitido el
+    documento, a diferencia de la URL del XML)."""
+    firma = FacturaService(db).obtener_firma_digital(tenant.empresa_id, factura_id)
+    return {"firma_digital": firma}
