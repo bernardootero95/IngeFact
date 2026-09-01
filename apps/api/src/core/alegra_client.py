@@ -75,6 +75,16 @@ class AlegraClient:
         funciona en produccion, en sandbox siempre responde AEP9006."""
         return self._request("GET", f"/resolutions/{nit}")
 
+    def get_acquirer_info(self, identification_type: str, identification_number: str) -> dict:
+        """GET /acquirer-info -- consulta DIAN de nombre/correo de un
+        adquiriente por tipo+numero de documento (usado para autocompletar el
+        formulario de Clientes)."""
+        return self._request(
+            "GET",
+            f"/acquirer-info?identificationType={identification_type}"
+            f"&identificationNumber={identification_number}",
+        )
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

@@ -50,3 +50,22 @@ def test_create_company_timeout_raises_transient_error(client):
     respx.post(f"{client._base_url}/companies").mock(side_effect=httpx.TimeoutException("timed out"))
     with pytest.raises(AlegraTransientError):
         client.create_company({"name": "Test"})
+
+
+@respx.mock
+def test_get_acquirer_info_returns_body(client):
+    respx.get(f"{client._base_url}/acquirer-info?identificationType=31&identificationNumber=900123456").mock(
+        return_value=httpx.Response(200, json={"name": "Cliente SAS", "email": "cliente@example.com"})
+    )
+    data = client.get_acquirer_info("31", "900123456")
+    assert data == {"name": "Cliente SAS", "email": "cliente@example.com"}
+
+
+@respx.mock
+def test_get_acquirer_info_404_raises_api_error(client):
+    respx.get(f"{client._base_url}/acquirer-info?identificationType=31&identificationNumber=900123456").mock(
+        return_value=httpx.Response(404, json={"errors": [{"message": "not found"}]})
+    )
+    with pytest.raises(AlegraApiError) as exc_info:
+        client.get_acquirer_info("31", "900123456")
+    assert exc_info.value.status_code == 404

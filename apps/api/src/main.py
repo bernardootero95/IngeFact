@@ -8,6 +8,7 @@ from src.presentation.routes import (
     dashboard,
     empresas,
     reference_tables,
+    tenant_clientes,
     tenant_dashboard,
     tenant_empresa,
     tenant_resolucion,
@@ -39,6 +40,7 @@ app.include_router(reference_tables.admin_router)
 app.include_router(tenant_empresa.router)
 app.include_router(tenant_dashboard.router)
 app.include_router(tenant_resolucion.router)
+app.include_router(tenant_clientes.router)
 app.include_router(webhooks.router)
 
 
