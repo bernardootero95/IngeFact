@@ -1,6 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { listClientes } from "@ingefact/core-api";
+import { SearchableSelect } from "@ingefact/ui";
 
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
@@ -75,6 +73,7 @@ function InfoRow({ icon, label, value }) {
 
 export default function SeccionCliente({
   cliente,
+  clientes,
   fecha,
   error,
   tiposOrganizacion,
@@ -82,50 +81,12 @@ export default function SeccionCliente({
   tributos,
   onSelectCliente,
   onFechaChange,
+  onCrearCliente,
 }) {
-  const [query, setQuery] = useState(cliente?.nombre || "");
-  const [resultados, setResultados] = useState([]);
-  const [isOpen, setIsOpen] = useState(false);
-  const [buscando, setBuscando] = useState(false);
-  const debounceRef = useRef(null);
-  const containerRef = useRef(null);
+  const clienteOptions = clientes.map((c) => ({ code: c.id, value: `${c.nombre} (${c.numero_identificacion})` }));
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleQueryChange = (e) => {
-    const value = e.target.value;
-    setQuery(value);
-    if (cliente) onSelectCliente(null);
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!value.trim()) {
-      setResultados([]);
-      return;
-    }
-    debounceRef.current = setTimeout(async () => {
-      setBuscando(true);
-      try {
-        const data = await listClientes(value);
-        setResultados(data);
-        setIsOpen(true);
-      } finally {
-        setBuscando(false);
-      }
-    }, 300);
-  };
-
-  const handleSelect = (cliente) => {
-    onSelectCliente(cliente);
-    setQuery(cliente.nombre);
-    setIsOpen(false);
+  const handleChange = (clienteId) => {
+    onSelectCliente(clientes.find((c) => c.id === clienteId) || null);
   };
 
   return (
@@ -133,52 +94,29 @@ export default function SeccionCliente({
       <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Cliente</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="relative" ref={containerRef}>
+        <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="cliente-buscar" className="block text-sm font-medium text-neutralCustom-800">
+            <label htmlFor="cliente-select" className="block text-sm font-medium text-neutralCustom-800">
               Cliente <span className="text-fiscal-danger">*</span>
             </label>
-            <Link
-              to="/customers/new"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={onCrearCliente}
               className="text-xs font-medium text-brand-600 hover:text-brand-400"
             >
               + Nuevo Cliente
-            </Link>
+            </button>
           </div>
-          <input
-            type="text"
-            id="cliente-buscar"
-            value={query}
-            onChange={handleQueryChange}
-            onFocus={() => resultados.length > 0 && setIsOpen(true)}
-            placeholder="Buscar cliente por nombre o documento..."
-            className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
-              error ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
-            }`}
+          <SearchableSelect
+            id="cliente-select"
+            options={clienteOptions}
+            value={cliente?.id || ""}
+            onChange={handleChange}
+            placeholder="Selecciona un cliente..."
+            error={!!error}
+            formatOption={(opt) => opt.value}
           />
           {error && <p className="mt-1 text-xs text-fiscal-danger">{error}</p>}
-          {isOpen && (
-            <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-neutralCustom-200 rounded-brand-md shadow-lg">
-              {buscando ? (
-                <div className="px-3 py-2 text-sm text-neutralCustom-400">Buscando...</div>
-              ) : resultados.length > 0 ? (
-                resultados.map((cliente) => (
-                  <button
-                    type="button"
-                    key={cliente.id}
-                    onClick={() => handleSelect(cliente)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50 transition-colors"
-                  >
-                    {cliente.nombre} <span className="text-neutralCustom-400">· {cliente.numero_identificacion}</span>
-                  </button>
-                ))
-              ) : (
-                <div className="px-3 py-2 text-sm text-neutralCustom-400">Sin resultados</div>
-              )}
-            </div>
-          )}
         </div>
 
         <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   getCliente,
   createCliente,
@@ -26,6 +26,8 @@ const REQUIRED_FIELDS = ["tipo_identificacion", "numero_identificacion", "nombre
 export default function CustomerFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo;
   const isEditing = Boolean(id);
 
   const [formData, setFormData] = useState(emptyForm);
@@ -156,10 +158,11 @@ export default function CustomerFormPage() {
     try {
       if (isEditing) {
         await updateCliente(id, payload);
+        navigate(returnTo || "/customers");
       } else {
-        await createCliente(payload);
+        const creado = await createCliente(payload);
+        navigate(returnTo || "/customers", returnTo ? { state: { newClienteId: creado.id } } : undefined);
       }
-      navigate("/customers");
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -187,7 +190,7 @@ export default function CustomerFormPage() {
           </div>
           <button
             type="button"
-            onClick={() => navigate("/customers")}
+            onClick={() => navigate(returnTo || "/customers")}
             className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
           >
             Cancelar
@@ -406,7 +409,7 @@ export default function CustomerFormPage() {
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
                   <button
                     type="button"
-                    onClick={() => navigate("/customers")}
+                    onClick={() => navigate(returnTo || "/customers")}
                     className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
                   >
                     Cancelar
