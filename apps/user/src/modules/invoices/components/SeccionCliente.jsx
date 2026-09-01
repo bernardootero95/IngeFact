@@ -4,6 +4,75 @@ import { listClientes } from "@ingefact/core-api";
 
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
+const ICONS = {
+  usuario: (
+    <>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M4.5 20c0-4.142 3.358-6.5 7.5-6.5s7.5 2.358 7.5 6.5" />
+    </>
+  ),
+  identificacion: (
+    <>
+      <rect x="3" y="6" width="18" height="12" rx="2" />
+      <line x1="7" y1="10" x2="11" y2="10" />
+      <line x1="7" y1="14" x2="15" y2="14" />
+    </>
+  ),
+  correo: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 7l9 6 9-6" />
+    </>
+  ),
+  telefono: (
+    <>
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <line x1="11" y1="18" x2="13" y2="18" />
+    </>
+  ),
+  edificio: (
+    <>
+      <rect x="4" y="3" width="16" height="18" rx="1" />
+      <line x1="8" y1="8" x2="8" y2="8.01" />
+      <line x1="12" y1="8" x2="12" y2="8.01" />
+      <line x1="16" y1="8" x2="16" y2="8.01" />
+      <line x1="8" y1="13" x2="8" y2="13.01" />
+      <line x1="12" y1="13" x2="12" y2="13.01" />
+      <line x1="16" y1="13" x2="16" y2="13.01" />
+    </>
+  ),
+  documento: (
+    <>
+      <rect x="5" y="3" width="14" height="18" rx="1" />
+      <line x1="8" y1="8" x2="16" y2="8" />
+      <line x1="8" y1="12" x2="16" y2="12" />
+      <line x1="8" y1="16" x2="12" y2="16" />
+    </>
+  ),
+};
+
+function InfoRow({ icon, label, value }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <svg
+        className="w-4 h-4 text-brand-500 shrink-0"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.75}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {ICONS[icon]}
+      </svg>
+      <span className="text-xs text-neutralCustom-700">
+        <span className="font-semibold text-neutralCustom-800">{label}:</span> {value}
+      </span>
+    </div>
+  );
+}
+
 export default function SeccionCliente({
   cliente,
   fecha,
@@ -129,16 +198,33 @@ export default function SeccionCliente({
       {cliente && (
         <div className="bg-brand-50 border border-brand-100 rounded-brand-md p-4 mt-4">
           <p className="text-sm font-medium text-neutralCustom-800 mb-2">Información del cliente</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 text-xs text-neutralCustom-600">
-            <div>Nombre: {cliente.nombre}</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <InfoRow icon="usuario" label="Nombre" value={cliente.nombre} />
+            <InfoRow
+              icon="identificacion"
+              label="Identificación"
+              value={`${cliente.tipo_identificacion} ${cliente.numero_identificacion}`}
+            />
             <div>
-              Documento: {cliente.tipo_identificacion} {cliente.numero_identificacion}
+              <InfoRow icon="correo" label="Correo" value={cliente.correo_electronico} />
+              {cliente.correo_electronico && (
+                <span className="ml-6 inline-flex items-center gap-1 text-[11px] font-medium text-brand-600 bg-brand-100 px-2 py-0.5 rounded-full">
+                  ✓ Correo válido ({cliente.correo_electronico.length}/150)
+                </span>
+              )}
             </div>
-            <div>Correo: {cliente.correo_electronico}</div>
-            <div>Teléfono: {cliente.telefono || "-"}</div>
-            <div>Tipo de organización: {nombreCatalogo(tiposOrganizacion, cliente.tipo_organizacion) || "-"}</div>
-            <div>Régimen: {nombreCatalogo(regimenes, cliente.regimen) || "-"}</div>
-            <div>Responsabilidad tributaria: {nombreCatalogo(tributos, cliente.tributo) || "-"}</div>
+            <InfoRow icon="telefono" label="Teléfono" value={cliente.telefono} />
+            <InfoRow
+              icon="edificio"
+              label="Tipo de organización"
+              value={nombreCatalogo(tiposOrganizacion, cliente.tipo_organizacion)}
+            />
+            <InfoRow icon="documento" label="Régimen" value={nombreCatalogo(regimenes, cliente.regimen)} />
+            <InfoRow
+              icon="documento"
+              label="Responsabilidad tributaria"
+              value={nombreCatalogo(tributos, cliente.tributo)}
+            />
           </div>
         </div>
       )}
