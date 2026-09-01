@@ -285,6 +285,35 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
     assert resolucion.consecutivo_actual == 2
 
 
+def test_enviar_accepted_with_observations_marca_aceptada(db_session):
+    """Hallazgo real contra el sandbox: la DIAN puede devolver
+    ACCEPTED_WITH_OBSERVATIONS (aceptado con notificaciones no bloqueantes,
+    ej. reglas FAZ09/FAJ43b) -- es una aceptacion real, no un estado
+    intermedio. No confundir con REJECTED ni dejarlo en 'enviada'."""
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {
+                "id": "inv-1",
+                "cufe": "cufe-123",
+                "fullNumber": "SETP1",
+                "legalStatus": "ACCEPTED_WITH_OBSERVATIONS",
+            }
+        }
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert enviada.estado == "aceptada"
+    assert enviada.cufe == "cufe-123"
+    assert enviada.fecha_respuesta is not None
+
+
 def test_enviar_rechazada_guarda_razon_mapeada(db_session):
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)

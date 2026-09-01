@@ -99,6 +99,21 @@ def test_webhook_invoices_marca_aceptada_y_guarda_cufe(api_client, db_session):
     assert factura.fecha_respuesta is not None
 
 
+def test_webhook_invoices_accepted_with_observations_marca_aceptada(api_client, db_session):
+    empresa = _crear_empresa(db_session, id_alegra="alegra-inv-1b")
+    factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-1b")
+
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/invoices",
+        json={"invoice": {"id": "inv-1b", "cufe": "cufe-obs", "legalStatus": "ACCEPTED_WITH_OBSERVATIONS"}},
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(factura)
+    assert factura.estado == "aceptada"
+    assert factura.cufe == "cufe-obs"
+
+
 def test_webhook_invoices_marca_rechazada_con_razon_mapeada(api_client, db_session):
     empresa = _crear_empresa(db_session, id_alegra="alegra-inv-2")
     factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-2")
