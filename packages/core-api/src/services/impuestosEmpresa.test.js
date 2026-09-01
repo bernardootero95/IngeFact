@@ -1,69 +1,54 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const order = vi.fn();
-const isFn = vi.fn(() => ({ order }));
-const eq = vi.fn(() => ({ is: isFn }));
-const selectList = vi.fn(() => ({ eq }));
+const apiRequest = vi.fn();
+vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args) }));
 
-const single = vi.fn();
-const selectInsert = vi.fn(() => ({ single }));
-const insert = vi.fn(() => ({ select: selectInsert }));
+import {
+  listImpuestosEmpresa,
+  getImpuestoEmpresa,
+  createImpuestoEmpresa,
+  updateImpuestoEmpresa,
+  deleteImpuestoEmpresa,
+} from "./impuestosEmpresa.js";
 
-vi.mock("../supabase.js", () => ({
-  supabase: {
-    from: () => ({
-      select: selectList,
-      insert,
-    }),
-  },
-}));
-
-import { listImpuestosEmpresa, createImpuestoEmpresa } from "./impuestosEmpresa.js";
-
-describe("listImpuestosEmpresa", () => {
+describe("impuestosEmpresa", () => {
   beforeEach(() => {
-    order.mockReset();
+    apiRequest.mockReset();
   });
 
-  it("devuelve la lista de impuestos activos de la empresa", async () => {
-    order.mockResolvedValue({
-      data: [{ id: "i1", tributo: "01", tarifa: 19 }],
-      error: null,
+  it("listImpuestosEmpresa hace GET a la lista", async () => {
+    apiRequest.mockResolvedValue([]);
+    await listImpuestosEmpresa();
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/impuestos");
+  });
+
+  it("getImpuestoEmpresa hace GET al recurso", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await getImpuestoEmpresa("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/impuestos/1");
+  });
+
+  it("createImpuestoEmpresa hace POST con el payload", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await createImpuestoEmpresa({ tributo: "01", tarifa: 19 });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/impuestos", {
+      method: "POST",
+      body: { tributo: "01", tarifa: 19 },
     });
-    const result = await listImpuestosEmpresa("empresa-1");
-    expect(result).toEqual([{ id: "i1", tributo: "01", tarifa: 19 }]);
   });
 
-  it("devuelve un arreglo vacío si data es null", async () => {
-    order.mockResolvedValue({ data: null, error: null });
-    const result = await listImpuestosEmpresa("empresa-1");
-    expect(result).toEqual([]);
-  });
-
-  it("lanza el error cuando supabase devuelve un error", async () => {
-    order.mockResolvedValue({ data: null, error: new Error("boom") });
-    await expect(listImpuestosEmpresa("empresa-1")).rejects.toThrow("boom");
-  });
-});
-
-describe("createImpuestoEmpresa", () => {
-  beforeEach(() => {
-    single.mockReset();
-  });
-
-  it("devuelve el impuesto insertado", async () => {
-    single.mockResolvedValue({
-      data: { id: "i1", tributo: "01", tarifa: 19 },
-      error: null,
+  it("updateImpuestoEmpresa hace PATCH al recurso", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await updateImpuestoEmpresa("1", { tributo: "01", tarifa: 5 });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/impuestos/1", {
+      method: "PATCH",
+      body: { tributo: "01", tarifa: 5 },
     });
-    const result = await createImpuestoEmpresa({ tributo: "01", tarifa: 19 });
-    expect(result).toEqual({ id: "i1", tributo: "01", tarifa: 19 });
   });
 
-  it("lanza el error cuando supabase devuelve un error", async () => {
-    single.mockResolvedValue({ data: null, error: new Error("duplicado") });
-    await expect(
-      createImpuestoEmpresa({ tributo: "01", tarifa: 19 }),
-    ).rejects.toThrow("duplicado");
+  it("deleteImpuestoEmpresa hace DELETE al recurso", async () => {
+    apiRequest.mockResolvedValue(null);
+    await deleteImpuestoEmpresa("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/impuestos/1", { method: "DELETE" });
   });
 });

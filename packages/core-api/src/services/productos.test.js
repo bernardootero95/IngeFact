@@ -1,69 +1,54 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const order = vi.fn();
-const isFn = vi.fn(() => ({ order }));
-const eq = vi.fn(() => ({ is: isFn }));
-const selectList = vi.fn(() => ({ eq }));
+const apiRequest = vi.fn();
+vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args) }));
 
-const single = vi.fn();
-const selectInsert = vi.fn(() => ({ single }));
-const insert = vi.fn(() => ({ select: selectInsert }));
+import { listProductos, getProducto, createProducto, updateProducto, deleteProducto } from "./productos.js";
 
-vi.mock("../supabase.js", () => ({
-  supabase: {
-    from: () => ({
-      select: selectList,
-      insert,
-    }),
-  },
-}));
-
-import { listProductos, createProducto } from "./productos.js";
-
-describe("listProductos", () => {
+describe("productos", () => {
   beforeEach(() => {
-    order.mockReset();
+    apiRequest.mockReset();
   });
 
-  it("devuelve la lista de productos activos de la empresa", async () => {
-    order.mockResolvedValue({
-      data: [{ id: "p1", nombre: "Producto Uno" }],
-      error: null,
+  it("listProductos sin busqueda no agrega query string", async () => {
+    apiRequest.mockResolvedValue([]);
+    await listProductos();
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/productos");
+  });
+
+  it("listProductos con busqueda la codifica en la URL", async () => {
+    apiRequest.mockResolvedValue([]);
+    await listProductos("Asesoria contable");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/productos?search=Asesoria%20contable");
+  });
+
+  it("getProducto hace GET al recurso", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await getProducto("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/productos/1");
+  });
+
+  it("createProducto hace POST con el payload", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await createProducto({ nombre: "Producto Uno" });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/productos", {
+      method: "POST",
+      body: { nombre: "Producto Uno" },
     });
-    const result = await listProductos("empresa-1");
-    expect(result).toEqual([{ id: "p1", nombre: "Producto Uno" }]);
   });
 
-  it("devuelve un arreglo vacío si data es null", async () => {
-    order.mockResolvedValue({ data: null, error: null });
-    const result = await listProductos("empresa-1");
-    expect(result).toEqual([]);
-  });
-
-  it("lanza el error cuando supabase devuelve un error", async () => {
-    order.mockResolvedValue({ data: null, error: new Error("boom") });
-    await expect(listProductos("empresa-1")).rejects.toThrow("boom");
-  });
-});
-
-describe("createProducto", () => {
-  beforeEach(() => {
-    single.mockReset();
-  });
-
-  it("devuelve el producto insertado", async () => {
-    single.mockResolvedValue({
-      data: { id: "p1", nombre: "Producto Uno" },
-      error: null,
+  it("updateProducto hace PATCH al recurso", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await updateProducto("1", { nombre: "Producto Editado" });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/productos/1", {
+      method: "PATCH",
+      body: { nombre: "Producto Editado" },
     });
-    const result = await createProducto({ nombre: "Producto Uno" });
-    expect(result).toEqual({ id: "p1", nombre: "Producto Uno" });
   });
 
-  it("lanza el error cuando supabase devuelve un error", async () => {
-    single.mockResolvedValue({ data: null, error: new Error("duplicado") });
-    await expect(createProducto({ nombre: "x" })).rejects.toThrow(
-      "duplicado",
-    );
+  it("deleteProducto hace DELETE al recurso", async () => {
+    apiRequest.mockResolvedValue(null);
+    await deleteProducto("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/productos/1", { method: "DELETE" });
   });
 });

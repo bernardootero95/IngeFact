@@ -34,8 +34,17 @@ export {
   deleteCliente,
   consultarClienteDian,
 } from "./services/clientes.js";
-export { listProductos, createProducto } from "./services/productos.js";
+export {
+  listProductos,
+  getProducto,
+  createProducto,
+  updateProducto,
+  deleteProducto,
+} from "./services/productos.js";
 export {
   listImpuestosEmpresa,
+  getImpuestoEmpresa,
   createImpuestoEmpresa,
+  updateImpuestoEmpresa,
+  deleteImpuestoEmpresa,
 } from "./services/impuestosEmpresa.js";

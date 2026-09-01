@@ -1,30 +1,22 @@
-import { supabase } from "../supabase.js";
+import { apiRequest } from "../apiClient.js";
 
-/**
- * Lista los productos/servicios activos de una empresa (tenant), más recientes primero.
- */
-export async function listProductos(empresaId) {
-  const { data, error } = await supabase
-    .from("productos")
-    .select("*")
-    .eq("empresa_id", empresaId)
-    .is("eliminado", null)
-    .order("creado", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+export async function listProductos(search) {
+  const query = search ? `?search=${encodeURIComponent(search)}` : "";
+  return apiRequest(`/api/v1/tenant/productos${query}`);
 }
 
-/**
- * Crea un producto/servicio para una empresa (tenant) y devuelve el registro insertado.
- */
-export async function createProducto(payload) {
-  const { data, error } = await supabase
-    .from("productos")
-    .insert(payload)
-    .select()
-    .single();
+export async function getProducto(id) {
+  return apiRequest(`/api/v1/tenant/productos/${id}`);
+}
 
-  if (error) throw error;
-  return data;
+export async function createProducto(payload) {
+  return apiRequest("/api/v1/tenant/productos", { method: "POST", body: payload });
+}
+
+export async function updateProducto(id, payload) {
+  return apiRequest(`/api/v1/tenant/productos/${id}`, { method: "PATCH", body: payload });
+}
+
+export async function deleteProducto(id) {
+  return apiRequest(`/api/v1/tenant/productos/${id}`, { method: "DELETE" });
 }

@@ -1,30 +1,21 @@
-import { supabase } from "../supabase.js";
+import { apiRequest } from "../apiClient.js";
 
-/**
- * Lista los impuestos (tributo + tarifa) configurados por una empresa (tenant).
- */
-export async function listImpuestosEmpresa(empresaId) {
-  const { data, error } = await supabase
-    .from("impuestos_empresa")
-    .select("*")
-    .eq("empresa_id", empresaId)
-    .is("eliminado", null)
-    .order("creado", { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+export async function listImpuestosEmpresa() {
+  return apiRequest("/api/v1/tenant/impuestos");
 }
 
-/**
- * Crea un impuesto (tributo + tarifa) para una empresa (tenant) y devuelve el registro insertado.
- */
-export async function createImpuestoEmpresa(payload) {
-  const { data, error } = await supabase
-    .from("impuestos_empresa")
-    .insert(payload)
-    .select()
-    .single();
+export async function getImpuestoEmpresa(id) {
+  return apiRequest(`/api/v1/tenant/impuestos/${id}`);
+}
 
-  if (error) throw error;
-  return data;
+export async function createImpuestoEmpresa(payload) {
+  return apiRequest("/api/v1/tenant/impuestos", { method: "POST", body: payload });
+}
+
+export async function updateImpuestoEmpresa(id, payload) {
+  return apiRequest(`/api/v1/tenant/impuestos/${id}`, { method: "PATCH", body: payload });
+}
+
+export async function deleteImpuestoEmpresa(id) {
+  return apiRequest(`/api/v1/tenant/impuestos/${id}`, { method: "DELETE" });
 }

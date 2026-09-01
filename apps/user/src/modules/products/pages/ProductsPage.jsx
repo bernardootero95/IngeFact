@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { listProductos, createProducto } from "@ingefact/core-api";
-import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { listProductos, deleteProducto } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import ProductModal from "../components/ProductModal";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", {
@@ -12,34 +11,47 @@ const formatCOP = (value) =>
   }).format(value);
 
 export default function ProductsPage() {
-  const { empresaId, loading: loadingEmpresa } = useCurrentEmpresa();
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const debounceRef = useRef(null);
 
-  const fetchProducts = useCallback(async () => {
-    if (!empresaId) return;
+  const fetchProducts = useCallback(async (term) => {
     setLoading(true);
     try {
-      const data = await listProductos(empresaId);
+      const data = await listProductos(term || undefined);
       setProducts(data);
     } catch (error) {
       console.error("Error al obtener productos:", error.message);
     } finally {
       setLoading(false);
     }
-  }, [empresaId]);
+  }, []);
 
   useEffect(() => {
-    if (empresaId) fetchProducts();
-  }, [empresaId, fetchProducts]);
+    fetchProducts("");
+  }, [fetchProducts]);
 
-  const handleSaveProduct = async (payload) => {
-    const nuevoProducto = await createProducto({
-      ...payload,
-      empresa_id: empresaId,
-    });
-    setProducts((prev) => [nuevoProducto, ...prev]);
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchProducts(value), 300);
+  };
+
+  const handleDelete = async (producto) => {
+    if (!window.confirm(`¿Eliminar "${producto.nombre}" de tu catálogo?`)) return;
+    setDeletingId(producto.id);
+    try {
+      await deleteProducto(producto.id);
+      setProducts((prev) => prev.filter((p) => p.id !== producto.id));
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   return (
@@ -57,7 +69,7 @@ export default function ProductsPage() {
             </p>
           </div>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate("/products/new")}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
           >
             <svg
@@ -83,6 +95,8 @@ export default function ProductsPage() {
               <div className="relative w-64">
                 <input
                   type="text"
+                  value={search}
+                  onChange={handleSearchChange}
                   placeholder="Buscar por código o nombre..."
                   className="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                 />
@@ -102,7 +116,7 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            {loading || loadingEmpresa ? (
+            {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando productos...
               </div>
@@ -139,9 +153,19 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         {p.tributo ? `${p.tributo} · ${p.tarifa_impuesto}%` : "Excluido"}
                       </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-brand-600 hover:text-brand-400 text-xs font-medium">
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <button
+                          onClick={() => navigate(`/products/${p.id}/edit`)}
+                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
+                        >
                           Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p)}
+                          disabled={deletingId === p.id}
+                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
+                        >
+                          {deletingId === p.id ? "Eliminando..." : "Eliminar"}
                         </button>
                       </td>
                     </tr>
@@ -166,32 +190,28 @@ export default function ProductsPage() {
                   </svg>
                 </div>
                 <h3 className="text-base font-bold text-neutralCustom-800 mb-1">
-                  No tienes productos registrados
+                  {search ? "No se encontraron productos" : "No tienes productos registrados"}
                 </h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
-                  Agrega tu primer producto o servicio para poder
-                  seleccionarlo al facturar.
+                  {search
+                    ? "Prueba con otro código o nombre."
+                    : "Agrega tu primer producto o servicio para poder seleccionarlo al facturar."}
                 </p>
-                <div className="flex justify-center space-x-3">
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
-                  >
-                    Agregar Producto
-                  </button>
-                </div>
+                {!search && (
+                  <div className="flex justify-center space-x-3">
+                    <button
+                      onClick={() => navigate("/products/new")}
+                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                    >
+                      Agregar Producto
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </main>
-
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveProduct}
-        empresaId={empresaId}
-      />
     </div>
   );
 }
