@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { isValidEmail } from "@ingefact/utils";
 
 const validateEmail = (value) => {
@@ -99,11 +100,12 @@ export default function LoginForm({
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-neutralCustom-500 mb-2">
+            <label htmlFor="login-email" className="block text-sm font-medium text-neutralCustom-500 mb-2">
               Correo electrónico
             </label>
             <input
               type="email"
+              id="login-email"
               required
               value={email}
               onChange={handleEmailChange}
@@ -123,20 +125,21 @@ export default function LoginForm({
 
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label className="block text-sm font-medium text-neutralCustom-500">
+              <label htmlFor="login-password" className="block text-sm font-medium text-neutralCustom-500">
                 Contraseña
               </label>
-              <a
-                href="/forgot-password"
+              <Link
+                to="/forgot-password"
                 className="text-xs font-medium text-brand-600 hover:text-brand-400 transition-colors"
               >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </Link>
             </div>
 
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                id="login-password"
                 required
                 value={password}
                 onChange={handlePasswordChange}

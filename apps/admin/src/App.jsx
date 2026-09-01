@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./modules/auth/store/authStore";
 
 import Login from "./modules/auth/pages/Login";
+import ForgotPassword from "./modules/auth/pages/ForgotPassword";
+import ResetPassword from "./modules/auth/pages/ResetPassword";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import Users from "./modules/users/pages/Users";
 import UserFormPage from "./modules/users/pages/UserFormPage";
@@ -43,6 +45,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route
           path="/admin/dashboard"
