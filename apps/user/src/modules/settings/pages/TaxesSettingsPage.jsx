@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listImpuestosEmpresa, deleteImpuestoEmpresa, listPublicReferenceTable } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function TaxesSettingsPage() {
@@ -8,10 +9,13 @@ export default function TaxesSettingsPage() {
   const [taxes, setTaxes] = useState([]);
   const [tributosCatalog, setTributosCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [toast, setToast] = useState({ message: null, type: "success" });
 
   const fetchTaxes = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [taxesData, tributosData] = await Promise.all([
         listImpuestosEmpresa(),
@@ -20,7 +24,7 @@ export default function TaxesSettingsPage() {
       setTaxes(taxesData);
       setTributosCatalog(tributosData);
     } catch (error) {
-      console.error("Error al obtener impuestos de la empresa:", error.message);
+      setLoadError(error.message);
     } finally {
       setLoading(false);
     }
@@ -37,7 +41,7 @@ export default function TaxesSettingsPage() {
       await deleteImpuestoEmpresa(impuesto.id);
       setTaxes((prev) => prev.filter((t) => t.id !== impuesto.id));
     } catch (error) {
-      window.alert(error.message);
+      setToast({ message: error.message, type: "error" });
     } finally {
       setDeletingId(null);
     }
@@ -86,6 +90,18 @@ export default function TaxesSettingsPage() {
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando impuestos...
+              </div>
+            ) : loadError ? (
+              <div className="p-12 text-center">
+                <p className="text-sm text-fiscal-danger mb-3">
+                  No se pudieron cargar los impuestos: {loadError}
+                </p>
+                <button
+                  onClick={fetchTaxes}
+                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                >
+                  Reintentar
+                </button>
               </div>
             ) : taxes.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -164,6 +180,12 @@ export default function TaxesSettingsPage() {
           </div>
         </div>
       </main>
+
+      <ToastAlert
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
+      />
     </div>
   );
 }

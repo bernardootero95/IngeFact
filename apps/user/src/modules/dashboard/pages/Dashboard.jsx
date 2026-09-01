@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getTenantDashboardKpis } from "@ingefact/core-api";
 import { SpinnerLoading } from "@ingefact/ui";
 import { useAuthStore } from "../../auth/store/authStore";
@@ -10,13 +10,20 @@ export default function Dashboard() {
   const { empresa, loading: loadingEmpresa } = useCurrentEmpresa();
   const [kpis, setKpis] = useState(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
+  const [kpisError, setKpisError] = useState(null);
 
-  useEffect(() => {
+  const fetchKpis = useCallback(() => {
+    setLoadingKpis(true);
+    setKpisError(null);
     getTenantDashboardKpis()
       .then(setKpis)
-      .catch((err) => console.error("Error al cargar KPIs del dashboard:", err))
+      .catch((err) => setKpisError(err.message))
       .finally(() => setLoadingKpis(false));
   }, []);
+
+  useEffect(() => {
+    fetchKpis();
+  }, [fetchKpis]);
 
   const loading = loadingEmpresa || loadingKpis;
   const suscripcion = empresa?.suscripcion ?? null;
@@ -39,6 +46,20 @@ export default function Dashboard() {
             <SpinnerLoading fullScreen={false} text="Cargando métricas..." />
           ) : (
             <>
+              {kpisError && (
+                <div className="p-4 bg-red-50 border border-fiscal-danger rounded-brand-lg flex items-center justify-between">
+                  <p className="text-sm text-fiscal-danger">
+                    No se pudieron cargar las métricas: {kpisError}
+                  </p>
+                  <button
+                    onClick={fetchKpis}
+                    className="px-3 py-1.5 bg-white border border-fiscal-danger text-fiscal-danger text-xs font-medium rounded-brand-md hover:bg-red-100 transition-colors shrink-0 ml-4"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
                   <p className="text-sm font-medium text-neutralCustom-500">

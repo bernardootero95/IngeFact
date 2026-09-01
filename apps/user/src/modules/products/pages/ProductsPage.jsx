@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProductos, deleteProducto } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -14,17 +15,20 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [toast, setToast] = useState({ message: null, type: "success" });
   const debounceRef = useRef(null);
 
   const fetchProducts = useCallback(async (term) => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await listProductos(term || undefined);
       setProducts(data);
     } catch (error) {
-      console.error("Error al obtener productos:", error.message);
+      setLoadError(error.message);
     } finally {
       setLoading(false);
     }
@@ -48,7 +52,7 @@ export default function ProductsPage() {
       await deleteProducto(producto.id);
       setProducts((prev) => prev.filter((p) => p.id !== producto.id));
     } catch (error) {
-      window.alert(error.message);
+      setToast({ message: error.message, type: "error" });
     } finally {
       setDeletingId(null);
     }
@@ -119,6 +123,18 @@ export default function ProductsPage() {
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando productos...
+              </div>
+            ) : loadError ? (
+              <div className="p-12 text-center">
+                <p className="text-sm text-fiscal-danger mb-3">
+                  No se pudieron cargar los productos: {loadError}
+                </p>
+                <button
+                  onClick={() => fetchProducts(search)}
+                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                >
+                  Reintentar
+                </button>
               </div>
             ) : products.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -212,6 +228,12 @@ export default function ProductsPage() {
           </div>
         </div>
       </main>
+
+      <ToastAlert
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
+      />
     </div>
   );
 }
