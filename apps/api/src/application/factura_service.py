@@ -219,6 +219,7 @@ class FacturaService:
         factura.metodo_pago = metodo_pago
         factura.alegra_invoice_id = invoice.get("id")
         factura.cufe = invoice.get("cufe")
+        factura.qr_code_content = invoice.get("qrCodeContent")
         factura.fecha_envio = datetime.now(timezone.utc)
 
         legal_status = invoice.get("legalStatus")

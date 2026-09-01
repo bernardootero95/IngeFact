@@ -90,6 +90,7 @@ class FacturaResponse(BaseModel):
     forma_pago: str | None
     metodo_pago: str | None
     cufe: str | None
+    qr_code_content: str | None
     razon_rechazo: str | None
     fecha_envio: datetime | None
     fecha_respuesta: datetime | None
@@ -112,6 +113,7 @@ class FacturaResponse(BaseModel):
             forma_pago=factura.forma_pago,
             metodo_pago=factura.metodo_pago,
             cufe=factura.cufe,
+            qr_code_content=factura.qr_code_content,
             razon_rechazo=factura.razon_rechazo,
             fecha_envio=factura.fecha_envio,
             fecha_respuesta=factura.fecha_respuesta,
