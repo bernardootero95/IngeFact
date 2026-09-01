@@ -98,6 +98,15 @@ class AlegraClient:
         que Alegra no lo expone (ver docs/alegra-investigacion.md)."""
         return self._request("GET", f"/invoices/{invoice_id}")
 
+    @staticmethod
+    def fetch_raw(url: str) -> bytes:
+        """GET plano a una URL fuera de la API de Alegra (ej. la URL S3
+        firmada de `files.xml`) -- sin base_url ni headers de auth, la URL
+        ya trae su propia firma en la query string."""
+        resp = httpx.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.content
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

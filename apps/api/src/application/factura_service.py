@@ -1,7 +1,9 @@
 import uuid
+import xml.etree.ElementTree as ET
 from datetime import date as date_cls
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -20,6 +22,18 @@ def _tarifa_a_string(tarifa: float) -> str:
     validacion que ya vive en el catalogo de Impuestos (Sprint 7)."""
     entero = int(round(tarifa))
     return str(entero) if float(entero) == tarifa else str(tarifa)
+
+
+def _extraer_firma_digital(xml_bytes: bytes) -> str | None:
+    """Busca <ds:SignatureValue> en el XML firmado por namespace-agnostic
+    local-name (el prefijo puede variar) -- verificado contra un XML real de
+    Alegra en sandbox."""
+    root = ET.fromstring(xml_bytes)
+    for elem in root.iter():
+        local_name = elem.tag.rsplit("}", 1)[-1]
+        if local_name == "SignatureValue" and elem.text:
+            return elem.text.strip()
+    return None
 
 
 class FacturaService:
@@ -71,6 +85,30 @@ class FacturaService:
         if not url:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Alegra no tiene un XML disponible para esta factura.")
         return url
+
+    def obtener_firma_digital(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> str:
+        """La firma (ds:SignatureValue) es inmutable una vez emitido el
+        documento -- a diferencia de la URL del XML (temporal), se cachea en
+        la factura la primera vez que se pide para no volver a descargar y
+        parsear el XML en cada visita a la representacion grafica."""
+        factura = self.obtener(empresa_id, factura_id)
+        if factura.firma_digital:
+            return factura.firma_digital
+
+        url = self.obtener_url_xml(empresa_id, factura_id)
+        try:
+            xml_bytes = self._alegra_client.fetch_raw(url)
+            firma = _extraer_firma_digital(xml_bytes)
+        except (httpx.HTTPError, ET.ParseError) as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo obtener la firma digital del XML.") from exc
+
+        if not firma:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "El XML no contiene una firma digital.")
+
+        factura.firma_digital = firma
+        self.db.add(factura)
+        self.db.commit()
+        return firma
 
     def _obtener_editable(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
         factura = self.obtener(empresa_id, factura_id)
