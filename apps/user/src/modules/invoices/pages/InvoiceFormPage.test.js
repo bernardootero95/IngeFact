@@ -7,7 +7,7 @@ import {
   validateFormaPago,
   validateMetodoPago,
   calcularTotales,
-} from "./InvoiceWizardPage.validation.js";
+} from "./InvoiceFormPage.validation.js";
 
 describe("InvoiceWizardPage validation", () => {
   it("requiere cliente", () => {

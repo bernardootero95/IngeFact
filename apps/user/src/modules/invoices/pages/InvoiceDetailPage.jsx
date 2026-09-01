@@ -159,13 +159,21 @@ export default function InvoiceDetailPage() {
                     </>
                   )}
                   {factura.cufe && (
-                    <button
-                      onClick={handleDescargarXml}
-                      disabled={isDownloadingXml}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
-                    >
-                      {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
-                    </button>
+                    <>
+                      <button
+                        onClick={() => navigate(`/invoices/${id}/representacion`)}
+                        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                      >
+                        Ver Representación Gráfica
+                      </button>
+                      <button
+                        onClick={handleDescargarXml}
+                        disabled={isDownloadingXml}
+                        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      >
+                        {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
