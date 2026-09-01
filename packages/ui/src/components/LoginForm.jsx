@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { isValidEmail } from "@ingefact/utils";
 
 const validateEmail = (value) => {
   if (!value.trim()) return "El correo es obligatorio.";
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(value)) return "Ingresa un correo electrónico válido.";
+  if (!isValidEmail(value)) return "Ingresa un correo electrónico válido.";
   return "";
 };
 

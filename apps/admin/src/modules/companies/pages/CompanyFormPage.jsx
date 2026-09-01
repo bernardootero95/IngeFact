@@ -7,6 +7,7 @@ import {
   actualizarEmpresa,
   cambiarPlanEmpresa,
 } from "@ingefact/core-api";
+import { isValidEmail } from "@ingefact/utils";
 import { calculateColombianNITDV } from "../../../utils/dianHelpers";
 import Sidebar from "../../../components/Sidebar";
 
@@ -117,7 +118,7 @@ export default function CompanyFormPage() {
         break;
       case "correoElectronico":
         if (!value.trim()) errorMsg = "El correo es obligatorio.";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) errorMsg = "Correo inválido.";
+        else if (!isValidEmail(value)) errorMsg = "Correo inválido.";
         break;
       case "departamento":
         if (!value) errorMsg = "Seleccione un departamento.";
