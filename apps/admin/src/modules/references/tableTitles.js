@@ -1,0 +1,15 @@
+export const tableTitles = {
+  paises: "Países",
+  departamentos: "Departamentos",
+  municipios: "Municipios",
+  monedas: "Monedas",
+  formas_pago: "Formas de Pago",
+  metodos_pago: "Métodos de Pago",
+  tipos_organizacion: "Tipos de Organización",
+  responsabilidades_fiscales: "Responsabilidades Fiscales",
+  tributos: "Tributos / Impuestos",
+  tipos_identificacion: "Tipos de Identificación",
+  tipos_unidad: "Tipos de Unidad",
+  conceptos_nota_credito: "Conceptos de Nota Crédito",
+  conceptos_nota_debito: "Conceptos de Nota Débito",
+};

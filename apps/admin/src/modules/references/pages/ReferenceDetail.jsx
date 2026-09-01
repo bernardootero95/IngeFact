@@ -1,24 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { listReferenceTable, sincronizarReferenceTable } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import ReferenceModal from "../components/ReferenceModal";
-
-const tableTitles = {
-  paises: "Países",
-  departamentos: "Departamentos",
-  municipios: "Municipios",
-  monedas: "Monedas",
-  formas_pago: "Formas de Pago",
-  metodos_pago: "Métodos de Pago",
-  tipos_organizacion: "Tipos de Organización",
-  responsabilidades_fiscales: "Responsabilidades Fiscales",
-  tributos: "Tributos / Impuestos",
-  tipos_identificacion: "Tipos de Identificación",
-  tipos_unidad: "Tipos de Unidad",
-  conceptos_nota_credito: "Conceptos de Nota Crédito",
-  conceptos_nota_debito: "Conceptos de Nota Débito",
-};
+import { tableTitles } from "../tableTitles";
 
 export default function ReferenceDetail() {
   const { tableName } = useParams();
@@ -35,10 +20,7 @@ export default function ReferenceDetail() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50; // Cantidad de registros por página
 
-  // Estados del Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentRecord, setCurrentRecord] = useState(null);
+  const [toast, setToast] = useState({ message: null, type: "success" });
 
   const isMunicipio = tableName === "municipios";
   const isNotaCredito = tableName === "conceptos_nota_credito";
@@ -51,7 +33,7 @@ export default function ReferenceDetail() {
       setRecords(data || []);
       setFilteredRecords(data || []);
     } catch (err) {
-      console.error("Error cargando referencias:", err.message);
+      setToast({ message: `Error al cargar registros: ${err.message}`, type: "error" });
     }
     setLoading(false);
   };
@@ -95,28 +77,16 @@ export default function ReferenceDetail() {
     setSyncLoading(true);
     try {
       const data = await sincronizarReferenceTable(tableName);
-      alert(
-        `¡Sincronización exitosa! Se procesaron ${data.processed} registros para ${title}.`,
-      );
+      setToast({
+        message: `¡Sincronización exitosa! Se procesaron ${data.processed} registros para ${title}.`,
+        type: "success",
+      });
       fetchRecords();
     } catch (err) {
-      console.error(err);
-      alert(`Error en la sincronización: ${err.message}`);
+      setToast({ message: `Error en la sincronización: ${err.message}`, type: "error" });
     } finally {
       setSyncLoading(false);
     }
-  };
-
-  const openCreateModal = () => {
-    setIsEditing(false);
-    setCurrentRecord(null);
-    setIsModalOpen(true);
-  };
-
-  const openEditModal = (rec) => {
-    setIsEditing(true);
-    setCurrentRecord(rec);
-    setIsModalOpen(true);
   };
 
   // --- LÓGICA DE PAGINACIÓN ---
@@ -198,7 +168,7 @@ export default function ReferenceDetail() {
             </button>
 
             <button
-              onClick={openCreateModal}
+              onClick={() => navigate(`/admin/references/${tableName}/new`)}
               className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors"
             >
               Agregar Registro
@@ -306,7 +276,9 @@ export default function ReferenceDetail() {
                           </td>
                           <td className="p-4 text-sm">
                             <button
-                              onClick={() => openEditModal(rec)}
+                              onClick={() =>
+                                navigate(`/admin/references/${tableName}/${rec.id}/edit`, { state: { record: rec } })
+                              }
                               className="text-brand-600 hover:text-brand-400 font-medium transition-colors"
                             >
                               Editar
@@ -363,16 +335,10 @@ export default function ReferenceDetail() {
         </div>
       </main>
 
-      <ReferenceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        isEditing={isEditing}
-        currentRecord={currentRecord}
-        tableName={tableName}
-        title={title}
-        isMunicipio={isMunicipio}
-        isNotaCredito={isNotaCredito}
-        onSaveSuccess={fetchRecords}
+      <ToastAlert
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
       />
     </div>
   );
