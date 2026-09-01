@@ -76,6 +76,33 @@ def test_guardar_actualiza_y_resetea_consecutivo(db_session):
     assert len(todas) == 1  # actualizo la misma fila, no creo una segunda
 
 
+def test_guardar_bloquea_cambiar_rango_minimo_una_vez_incrementado(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    service.incrementar_consecutivo(empresa.id)  # simula la primera factura emitida (Sprint 8)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.guardar(empresa.id, _payload(rango_minimo=200, rango_maximo=1000))
+    assert exc_info.value.status_code == 409
+
+
+def test_guardar_no_resetea_consecutivo_una_vez_incrementado(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual pasa a 101
+
+    # Editar otro campo (technical_key) sin tocar rango_minimo debe seguir
+    # permitido, y el consecutivo ya avanzado no debe volver a 100.
+    actualizada = service.guardar(
+        empresa.id, _payload(rango_minimo=100, rango_maximo=1000, technical_key="otra-clave-tecnica")
+    )
+
+    assert actualizada.consecutivo_actual == 101
+    assert actualizada.technical_key == "otra-clave-tecnica"
+
+
 def test_validar_ante_alegra_exito_marca_validada(db_session):
     empresa = _crear_empresa(db_session)
     service = ResolucionDianService(db_session, alegra_client=_FakeAlegraClient(response={"resolution": {}}))

@@ -32,15 +32,23 @@ class ResolucionDianService:
         return resolucion
 
     def guardar(self, empresa_id: uuid.UUID, data: GuardarResolucionDianRequest) -> ResolucionDian:
-        """Upsert. Nota: al no existir todavia el modulo de Facturas
-        (Sprint 8), es seguro resetear el consecutivo en cada guardado -- no
-        hay facturas reales emitidas contra ninguna resolucion todavia. Una
-        vez exista Facturas, esto debe cambiar para no reventar numeracion ya
-        usada (bloquear edicion de rango_minimo si consecutivo_actual >
-        rango_minimo)."""
+        """Upsert. El consecutivo solo se resetea a rango_minimo mientras no
+        se haya incrementado todavia (consecutivo_actual == rango_minimo) --
+        una vez `incrementar_consecutivo` avanzo el contador (Sprint 8,
+        emision de facturas), ya no se toca en cada guardado para no repetir
+        numeracion ya usada, y rango_minimo queda bloqueado para edicion."""
         resolucion = self.obtener(empresa_id)
         if resolucion is None:
             resolucion = ResolucionDian(empresa_id=empresa_id)
+            consecutivo_iniciado = False
+        else:
+            consecutivo_iniciado = resolucion.consecutivo_actual > resolucion.rango_minimo
+
+        if consecutivo_iniciado and data.rango_minimo != resolucion.rango_minimo:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "No se puede modificar el rango minimo: ya se emitieron documentos con la numeracion actual.",
+            )
 
         resolucion.numero_resolucion = data.numero_resolucion
         resolucion.prefijo = data.prefijo
@@ -49,7 +57,8 @@ class ResolucionDianService:
         resolucion.fecha_inicio = data.fecha_inicio
         resolucion.fecha_fin = data.fecha_fin
         resolucion.technical_key = data.technical_key
-        resolucion.consecutivo_actual = data.rango_minimo
+        if not consecutivo_iniciado:
+            resolucion.consecutivo_actual = data.rango_minimo
         resolucion.estado_validacion = "pendiente"
         resolucion.mensaje_validacion = None
 
