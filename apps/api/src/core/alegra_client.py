@@ -85,6 +85,19 @@ class AlegraClient:
             f"&identificationNumber={identification_number}",
         )
 
+    def create_invoice(self, payload: dict) -> dict:
+        """POST /invoices. La respuesta 201 ya trae invoice.legalStatus
+        (ACCEPTED|REJECTED) inline (verificado en Sprint 0/8, ver
+        docs/alegra-investigacion.md) -- no hace falta esperar al webhook
+        para reflejar el resultado."""
+        return self._request("POST", "/invoices", json=payload)
+
+    def get_invoice(self, invoice_id: str) -> dict:
+        """GET /invoices/{id} -- usado para re-pedir la URL S3 firmada del
+        XML (expira en 1h, no se persiste). Sin PDF: confirmado en Sprint 8
+        que Alegra no lo expone (ver docs/alegra-investigacion.md)."""
+        return self._request("GET", f"/invoices/{invoice_id}")
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",
