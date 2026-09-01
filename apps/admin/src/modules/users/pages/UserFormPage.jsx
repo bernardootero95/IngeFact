@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearUsuarioAdmin, actualizarUsuarioAdmin } from "@ingefact/core-api";
+import { isValidEmail } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 
 function validateName(value) {
@@ -11,7 +12,7 @@ function validateName(value) {
 
 function validateEmail(value) {
   if (!value.trim()) return "El correo es obligatorio.";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "El correo no tiene un formato válido.";
+  if (!isValidEmail(value)) return "El correo no tiene un formato válido.";
   return "";
 }
 
