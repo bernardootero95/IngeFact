@@ -192,10 +192,11 @@ export default function ProductFormPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="tipo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Tipo <span className="text-fiscal-danger">*</span>
                     </label>
                     <select
+                      id="tipo"
                       name="tipo"
                       value={formData.tipo}
                       onChange={handleChange}
@@ -210,11 +211,12 @@ export default function ProductFormPage() {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="codigo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Código Interno (SKU) <span className="text-fiscal-danger">*</span>
                     </label>
                     <input
                       type="text"
+                      id="codigo"
                       name="codigo"
                       value={formData.codigo}
                       onChange={handleChange}
@@ -228,11 +230,12 @@ export default function ProductFormPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                  <label htmlFor="nombre" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                     Nombre <span className="text-fiscal-danger">*</span>
                   </label>
                   <input
                     type="text"
+                    id="nombre"
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleChange}
@@ -245,8 +248,9 @@ export default function ProductFormPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">Descripción</label>
+                  <label htmlFor="descripcion" className="block text-sm font-medium text-neutralCustom-600 mb-1">Descripción</label>
                   <textarea
+                    id="descripcion"
                     name="descripcion"
                     value={formData.descripcion}
                     onChange={handleChange}
@@ -258,13 +262,14 @@ export default function ProductFormPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="precio" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Precio <span className="text-fiscal-danger">*</span>
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
+                      id="precio"
                       name="precio"
                       value={formData.precio}
                       onChange={handleChange}
@@ -277,10 +282,11 @@ export default function ProductFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                    <label htmlFor="unidad_medida" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Unidad de Medida <span className="text-fiscal-danger">*</span>
                     </label>
                     <SearchableSelect
+                      id="unidad_medida"
                       options={catalogs.unidadesMedida}
                       value={formData.unidad_medida}
                       onChange={handleUnidadMedidaChange}
@@ -294,8 +300,9 @@ export default function ProductFormPage() {
                 </div>
 
                 <div className="border-t border-neutralCustom-100 pt-5">
-                  <label className="block text-sm font-medium text-neutralCustom-600 mb-1">Impuesto</label>
+                  <label htmlFor="impuestoKey" className="block text-sm font-medium text-neutralCustom-600 mb-1">Impuesto</label>
                   <select
+                    id="impuestoKey"
                     name="impuestoKey"
                     value={formData.impuestoKey}
                     onChange={handleChange}
