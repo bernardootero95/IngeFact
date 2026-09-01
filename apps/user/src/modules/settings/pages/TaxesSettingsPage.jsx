@@ -1,51 +1,49 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  listImpuestosEmpresa,
-  createImpuestoEmpresa,
-  supabase,
-} from "@ingefact/core-api";
-import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { useNavigate } from "react-router-dom";
+import { listImpuestosEmpresa, deleteImpuestoEmpresa, listPublicReferenceTable } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import TaxPresetModal from "../components/TaxPresetModal";
 
 export default function TaxesSettingsPage() {
-  const { empresaId, loading: loadingEmpresa } = useCurrentEmpresa();
+  const navigate = useNavigate();
   const [taxes, setTaxes] = useState([]);
   const [tributosCatalog, setTributosCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const fetchTaxes = useCallback(async () => {
-    if (!empresaId) return;
     setLoading(true);
     try {
-      const [taxesData, tributosRes] = await Promise.all([
-        listImpuestosEmpresa(empresaId),
-        supabase.from("tributos").select("code, value").order("value"),
+      const [taxesData, tributosData] = await Promise.all([
+        listImpuestosEmpresa(),
+        listPublicReferenceTable("tributos"),
       ]);
       setTaxes(taxesData);
-      setTributosCatalog(tributosRes.data || []);
+      setTributosCatalog(tributosData);
     } catch (error) {
       console.error("Error al obtener impuestos de la empresa:", error.message);
     } finally {
       setLoading(false);
     }
-  }, [empresaId]);
+  }, []);
 
   useEffect(() => {
-    if (empresaId) fetchTaxes();
-  }, [empresaId, fetchTaxes]);
+    fetchTaxes();
+  }, [fetchTaxes]);
 
-  const handleSaveTax = async (payload) => {
-    const nuevoImpuesto = await createImpuestoEmpresa({
-      ...payload,
-      empresa_id: empresaId,
-    });
-    setTaxes((prev) => [nuevoImpuesto, ...prev]);
+  const handleDelete = async (impuesto) => {
+    if (!window.confirm(`¿Eliminar el preset "${impuesto.tributo} ${impuesto.tarifa}%"?`)) return;
+    setDeletingId(impuesto.id);
+    try {
+      await deleteImpuestoEmpresa(impuesto.id);
+      setTaxes((prev) => prev.filter((t) => t.id !== impuesto.id));
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
-  const tributoNombre = (code) =>
-    tributosCatalog.find((t) => t.code === code)?.value || code;
+  const tributoNombre = (code) => tributosCatalog.find((t) => t.code === code)?.value || code;
 
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
@@ -63,7 +61,7 @@ export default function TaxesSettingsPage() {
             </p>
           </div>
           <button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => navigate("/settings/taxes/new")}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
           >
             <svg
@@ -85,7 +83,7 @@ export default function TaxesSettingsPage() {
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
-            {loading || loadingEmpresa ? (
+            {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando impuestos...
               </div>
@@ -110,9 +108,19 @@ export default function TaxesSettingsPage() {
                         {tributoNombre(t.tributo)} ({t.tributo})
                       </td>
                       <td className="px-6 py-4">{t.tarifa}%</td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="text-brand-600 hover:text-brand-400 text-xs font-medium">
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <button
+                          onClick={() => navigate(`/settings/taxes/${t.id}/edit`)}
+                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
+                        >
                           Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(t)}
+                          disabled={deletingId === t.id}
+                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
+                        >
+                          {deletingId === t.id ? "Eliminando..." : "Eliminar"}
                         </button>
                       </td>
                     </tr>
@@ -145,7 +153,7 @@ export default function TaxesSettingsPage() {
                 </p>
                 <div className="flex justify-center space-x-3">
                   <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={() => navigate("/settings/taxes/new")}
                     className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
                   >
                     Agregar Impuesto
@@ -156,12 +164,6 @@ export default function TaxesSettingsPage() {
           </div>
         </div>
       </main>
-
-      <TaxPresetModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveTax}
-      />
     </div>
   );
 }

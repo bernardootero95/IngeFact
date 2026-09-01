@@ -8,9 +8,11 @@ import Dashboard from "./modules/dashboard/pages/Dashboard";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
+import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
 import ResolutionSettingsPage from "./modules/settings/pages/ResolutionSettingsPage";
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
+import TaxPresetFormPage from "./modules/settings/pages/TaxPresetFormPage";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore();
@@ -90,6 +92,24 @@ export default function App() {
         />
 
         <Route
+          path="/products/new"
+          element={
+            <ProtectedRoute>
+              <ProductFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/products/:id/edit"
+          element={
+            <ProtectedRoute>
+              <ProductFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/settings/company"
           element={
             <ProtectedRoute>
@@ -112,6 +132,24 @@ export default function App() {
           element={
             <ProtectedRoute>
               <TaxesSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/taxes/new"
+          element={
+            <ProtectedRoute>
+              <TaxPresetFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/taxes/:id/edit"
+          element={
+            <ProtectedRoute>
+              <TaxPresetFormPage />
             </ProtectedRoute>
           }
         />
