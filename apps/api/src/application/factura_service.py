@@ -150,6 +150,7 @@ class FacturaService:
             lineas.append(
                 FacturaLinea(
                     producto_id=producto.id,
+                    codigo=producto.codigo,
                     descripcion=producto.nombre,
                     unidad_medida=producto.unidad_medida,
                     cantidad=cantidad,

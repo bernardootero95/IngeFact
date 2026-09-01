@@ -49,6 +49,7 @@ class EnviarFacturaRequest(BaseModel):
 class FacturaLineaResponse(BaseModel):
     id: str
     producto_id: str
+    codigo: str | None
     descripcion: str
     unidad_medida: str
     cantidad: float
@@ -64,6 +65,7 @@ class FacturaLineaResponse(BaseModel):
         return FacturaLineaResponse(
             id=str(linea.id),
             producto_id=str(linea.producto_id),
+            codigo=linea.codigo,
             descripcion=linea.descripcion,
             unidad_medida=linea.unidad_medida,
             cantidad=float(linea.cantidad),
