@@ -56,3 +56,12 @@ export {
   updateImpuestoEmpresa,
   deleteImpuestoEmpresa,
 } from "./services/impuestosEmpresa.js";
+export {
+  listFacturas,
+  getFactura,
+  crearBorradorFactura,
+  actualizarBorradorFactura,
+  eliminarBorradorFactura,
+  enviarFactura,
+  obtenerUrlXmlFactura,
+} from "./services/facturas.js";
