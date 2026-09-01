@@ -21,11 +21,19 @@ export { getDashboardKpis } from "./services/dashboard.js";
 export { listUsuariosAdmin, crearUsuarioAdmin, actualizarUsuarioAdmin } from "./services/adminUsuarios.js";
 export {
   listReferenceTable,
+  listPublicReferenceTable,
   crearReferenceRecord,
   actualizarReferenceRecord,
   sincronizarReferenceTable,
 } from "./services/referenceTables.js";
-export { listClientes, createCliente } from "./services/clientes.js";
+export {
+  listClientes,
+  getCliente,
+  createCliente,
+  updateCliente,
+  deleteCliente,
+  consultarClienteDian,
+} from "./services/clientes.js";
 export { listProductos, createProducto } from "./services/productos.js";
 export {
   listImpuestosEmpresa,

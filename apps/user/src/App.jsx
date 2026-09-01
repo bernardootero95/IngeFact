@@ -6,6 +6,7 @@ import { EmpresaProvider } from "./context/EmpresaProvider";
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
+import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
 import ResolutionSettingsPage from "./modules/settings/pages/ResolutionSettingsPage";
@@ -57,6 +58,24 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CustomersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/customers/new"
+          element={
+            <ProtectedRoute>
+              <CustomerFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/customers/:id/edit"
+          element={
+            <ProtectedRoute>
+              <CustomerFormPage />
             </ProtectedRoute>
           }
         />

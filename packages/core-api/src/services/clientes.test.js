@@ -1,67 +1,69 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const order = vi.fn();
-const isFn = vi.fn(() => ({ order }));
-const eq = vi.fn(() => ({ is: isFn }));
-const selectList = vi.fn(() => ({ eq }));
+const apiRequest = vi.fn();
+vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args) }));
 
-const single = vi.fn();
-const selectInsert = vi.fn(() => ({ single }));
-const insert = vi.fn(() => ({ select: selectInsert }));
+import {
+  listClientes,
+  getCliente,
+  createCliente,
+  updateCliente,
+  deleteCliente,
+  consultarClienteDian,
+} from "./clientes.js";
 
-vi.mock("../supabase.js", () => ({
-  supabase: {
-    from: () => ({
-      select: selectList,
-      insert,
-    }),
-  },
-}));
-
-import { listClientes, createCliente } from "./clientes.js";
-
-describe("listClientes", () => {
+describe("clientes", () => {
   beforeEach(() => {
-    order.mockReset();
+    apiRequest.mockReset();
   });
 
-  it("devuelve la lista de clientes activos de la empresa", async () => {
-    order.mockResolvedValue({
-      data: [{ id: "c1", nombre: "Cliente Uno" }],
-      error: null,
+  it("listClientes sin busqueda no agrega query string", async () => {
+    apiRequest.mockResolvedValue([]);
+    await listClientes();
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/clientes");
+  });
+
+  it("listClientes con busqueda la codifica en la URL", async () => {
+    apiRequest.mockResolvedValue([]);
+    await listClientes("Acme SAS");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/clientes?search=Acme%20SAS");
+  });
+
+  it("getCliente hace GET al recurso", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await getCliente("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/clientes/1");
+  });
+
+  it("createCliente hace POST con el payload", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await createCliente({ nombre: "Cliente Uno" });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/clientes", {
+      method: "POST",
+      body: { nombre: "Cliente Uno" },
     });
-    const result = await listClientes("empresa-1");
-    expect(result).toEqual([{ id: "c1", nombre: "Cliente Uno" }]);
   });
 
-  it("devuelve un arreglo vacío si data es null", async () => {
-    order.mockResolvedValue({ data: null, error: null });
-    const result = await listClientes("empresa-1");
-    expect(result).toEqual([]);
-  });
-
-  it("lanza el error cuando supabase devuelve un error", async () => {
-    order.mockResolvedValue({ data: null, error: new Error("boom") });
-    await expect(listClientes("empresa-1")).rejects.toThrow("boom");
-  });
-});
-
-describe("createCliente", () => {
-  beforeEach(() => {
-    single.mockReset();
-  });
-
-  it("devuelve el cliente insertado", async () => {
-    single.mockResolvedValue({
-      data: { id: "c1", nombre: "Cliente Uno" },
-      error: null,
+  it("updateCliente hace PATCH al recurso", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await updateCliente("1", { nombre: "Cliente Editado" });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/clientes/1", {
+      method: "PATCH",
+      body: { nombre: "Cliente Editado" },
     });
-    const result = await createCliente({ nombre: "Cliente Uno" });
-    expect(result).toEqual({ id: "c1", nombre: "Cliente Uno" });
   });
 
-  it("lanza el error cuando supabase devuelve un error", async () => {
-    single.mockResolvedValue({ data: null, error: new Error("duplicado") });
-    await expect(createCliente({ nombre: "x" })).rejects.toThrow("duplicado");
+  it("deleteCliente hace DELETE al recurso", async () => {
+    apiRequest.mockResolvedValue(null);
+    await deleteCliente("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/clientes/1", { method: "DELETE" });
+  });
+
+  it("consultarClienteDian codifica tipo y numero de documento", async () => {
+    apiRequest.mockResolvedValue({ name: "Cliente SAS", email: "cliente@example.com" });
+    await consultarClienteDian("31", "900 123 456");
+    expect(apiRequest).toHaveBeenCalledWith(
+      "/api/v1/tenant/clientes/consultar-dian?tipo_identificacion=31&numero_identificacion=900%20123%20456",
+    );
   });
 });

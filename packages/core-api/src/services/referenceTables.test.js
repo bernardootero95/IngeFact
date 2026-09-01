@@ -5,6 +5,7 @@ vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args)
 
 import {
   listReferenceTable,
+  listPublicReferenceTable,
   crearReferenceRecord,
   actualizarReferenceRecord,
   sincronizarReferenceTable,
@@ -25,6 +26,12 @@ describe("referenceTables", () => {
     apiRequest.mockResolvedValue([]);
     await listReferenceTable("departamentos", "Bogotá");
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/admin/reference-tables/departamentos?search=Bogot%C3%A1");
+  });
+
+  it("listPublicReferenceTable llama el endpoint publico sin guard", async () => {
+    apiRequest.mockResolvedValue([]);
+    await listPublicReferenceTable("tipos_identificacion");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/public/reference-tables/tipos_identificacion");
   });
 
   it("crearReferenceRecord hace POST con el payload", async () => {

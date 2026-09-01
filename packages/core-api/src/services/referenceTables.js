@@ -1,5 +1,13 @@
 import { apiRequest } from "../apiClient.js";
 
+/**
+ * Lectura publica de un catalogo DIAN, sin guard de rol -- pensada para
+ * apps/user (el tenant no es staff interno, no puede usar el endpoint admin).
+ */
+export async function listPublicReferenceTable(tabla) {
+  return apiRequest(`/api/v1/public/reference-tables/${tabla}`);
+}
+
 export async function listReferenceTable(tabla, search) {
   const query = search ? `?search=${encodeURIComponent(search)}` : "";
   return apiRequest(`/api/v1/admin/reference-tables/${tabla}${query}`);
