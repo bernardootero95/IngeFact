@@ -63,7 +63,16 @@ class AuthService:
         token_hash = hash_opaque_token(refresh_token)
         record = self.db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).one_or_none()
 
-        if record is None or record.revoked_at is not None or record.expires_at.timestamp() < _now_ts():
+        if record is not None and record.revoked_at is not None:
+            # El token ya fue usado/rotado -- si alguien lo reutiliza es senal
+            # de que fue robado (el legitimo ya recibio uno nuevo). Se revocan
+            # todas las sesiones activas del usuario en vez de solo rechazar
+            # este intento.
+            self._revoke_all_refresh_tokens(user_id=record.user_id, user_type=record.user_type)
+            self.db.commit()
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token invalido o expirado.")
+
+        if record is None or record.expires_at.timestamp() < _now_ts():
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token invalido o expirado.")
 
         record.revoked_at = _now()
@@ -82,6 +91,20 @@ class AuthService:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario no activo.")
         return self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
 
+    def _revoke_all_refresh_tokens(self, *, user_id: uuid.UUID, user_type: str) -> None:
+        activos = (
+            self.db.query(RefreshToken)
+            .filter(
+                RefreshToken.user_id == user_id,
+                RefreshToken.user_type == user_type,
+                RefreshToken.revoked_at.is_(None),
+            )
+            .all()
+        )
+        for token in activos:
+            token.revoked_at = _now()
+            self.db.add(token)
+
     def logout(self, refresh_token: str) -> None:
         token_hash = hash_opaque_token(refresh_token)
         record = self.db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).one_or_none()
@@ -96,6 +119,19 @@ class AuthService:
         if user is None:
             # No revelar si el correo existe o no.
             return
+
+        tokens_previos = (
+            self.db.query(PasswordResetToken)
+            .filter(
+                PasswordResetToken.user_id == user.id,
+                PasswordResetToken.user_type == user_type,
+                PasswordResetToken.used_at.is_(None),
+            )
+            .all()
+        )
+        for token in tokens_previos:
+            token.used_at = _now()
+            self.db.add(token)
 
         reset_plain = generate_opaque_token()
         self.db.add(
