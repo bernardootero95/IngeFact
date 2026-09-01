@@ -8,6 +8,7 @@ import {
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import { validateField } from "./CustomerFormPage.validation";
 
 const emptyForm = {
   tipo_identificacion: "",
@@ -19,17 +20,6 @@ const emptyForm = {
   regimen: "",
   tributo: "",
 };
-
-function validateField(name, value) {
-  if (name === "tipo_identificacion" && !value) return "El tipo de documento es obligatorio.";
-  if (name === "numero_identificacion" && !value.trim()) return "La identificación es obligatoria.";
-  if (name === "nombre" && !value.trim()) return "La Razón Social / Nombre es obligatorio.";
-  if (name === "correo_electronico") {
-    if (!value.trim()) return "El correo es obligatorio.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Correo inválido.";
-  }
-  return "";
-}
 
 const REQUIRED_FIELDS = ["tipo_identificacion", "numero_identificacion", "nombre", "correo_electronico"];
 
