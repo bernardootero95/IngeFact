@@ -38,6 +38,9 @@ export default function InvoiceFormPage() {
   const [productos, setProductos] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
   const [metodosPago, setMetodosPago] = useState([]);
+  const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
+  const [regimenes, setRegimenes] = useState([]);
+  const [tributos, setTributos] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -50,16 +53,34 @@ export default function InvoiceFormPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [productosData, formasPagoData, metodosPagoData, factura] = await Promise.all([
+      const [
+        productosData,
+        formasPagoData,
+        metodosPagoData,
+        tiposOrganizacionData,
+        regimenesData,
+        tributosData,
+        factura,
+      ] = await Promise.all([
         listProductos(),
         listPublicReferenceTable("formas_pago"),
         listPublicReferenceTable("metodos_pago"),
+        listPublicReferenceTable("tipos_organizacion"),
+        listPublicReferenceTable("responsabilidades_fiscales"),
+        listPublicReferenceTable("tributos"),
         isEditing ? getFactura(id) : Promise.resolve(null),
       ]);
 
+      // Codigo "1" = "Instrumento no definido" -- un placeholder del catalogo
+      // DIAN, no una forma de pago real. Nunca debe quedar seleccionable.
+      const metodosPagoValidos = metodosPagoData.filter((m) => m.code !== "1");
+
       setProductos(productosData);
       setFormasPago(formasPagoData);
-      setMetodosPago(metodosPagoData);
+      setMetodosPago(metodosPagoValidos);
+      setTiposOrganizacion(tiposOrganizacionData);
+      setRegimenes(regimenesData);
+      setTributos(tributosData);
 
       if (factura) {
         if (factura.estado !== "borrador") {
@@ -70,13 +91,16 @@ export default function InvoiceFormPage() {
         setCliente(clienteCompleto);
         setFecha(factura.fecha);
         setFormaPago(factura.forma_pago || formasPagoData[0]?.code || "");
-        setMetodoPago(factura.metodo_pago || metodosPagoData[0]?.code || "");
+        setMetodoPago(
+          (factura.metodo_pago !== "1" ? factura.metodo_pago : null) || metodosPagoValidos[0]?.code || "",
+        );
         setLineas(
           factura.lineas.map((linea) => ({
             producto_id: linea.producto_id,
             cantidad: String(linea.cantidad),
             producto: {
               id: linea.producto_id,
+              codigo: linea.codigo,
               nombre: linea.descripcion,
               precio: linea.precio_unitario,
               tributo: linea.tributo,
@@ -86,7 +110,7 @@ export default function InvoiceFormPage() {
         );
       } else {
         setFormaPago(formasPagoData[0]?.code || "");
-        setMetodoPago(metodosPagoData[0]?.code || "");
+        setMetodoPago(metodosPagoValidos[0]?.code || "");
         setLineas([{ producto_id: "", cantidad: "1", producto: null }]);
       }
     } catch (error) {
@@ -213,6 +237,9 @@ export default function InvoiceFormPage() {
                   cliente={cliente}
                   fecha={fecha}
                   error={errors.cliente}
+                  tiposOrganizacion={tiposOrganizacion}
+                  regimenes={regimenes}
+                  tributos={tributos}
                   onSelectCliente={handleSelectCliente}
                   onFechaChange={setFecha}
                 />
