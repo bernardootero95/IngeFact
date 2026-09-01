@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { SearchableSelect } from "@ingefact/ui";
 
 const formatCOP = (value) =>
@@ -8,6 +7,7 @@ const formatCOP = (value) =>
 export default function SeccionLineas({
   lineas,
   productos,
+  productoPreseleccionadoId,
   formaPago,
   metodoPago,
   formasPago,
@@ -18,10 +18,21 @@ export default function SeccionLineas({
   onLineaCantidadChange,
   onFormaPagoChange,
   onMetodoPagoChange,
+  onCrearProducto,
 }) {
   const [productoId, setProductoId] = useState("");
   const [cantidad, setCantidad] = useState("1");
   const [addError, setAddError] = useState("");
+
+  // Al volver de "+ Nuevo Producto", el producto recien creado queda
+  // preseleccionado en el buscador -- el usuario solo confirma la cantidad
+  // y le da "+ Agregar".
+  useEffect(() => {
+    if (productoPreseleccionadoId) {
+      setProductoId(productoPreseleccionadoId);
+      setAddError("");
+    }
+  }, [productoPreseleccionadoId]);
 
   const productoOptions = productos.map((p) => ({ code: p.id, value: `${p.nombre} (${formatCOP(p.precio)})` }));
 
@@ -45,14 +56,13 @@ export default function SeccionLineas({
     <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-neutralCustom-800">Productos y Servicios</h3>
-        <Link
-          to="/products/new"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={onCrearProducto}
           className="text-xs font-medium text-brand-600 hover:text-brand-400"
         >
           + Nuevo Producto
-        </Link>
+        </button>
       </div>
 
       <div className="flex items-end gap-3 p-3 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md">

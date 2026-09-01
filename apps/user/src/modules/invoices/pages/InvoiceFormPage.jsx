@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   listProductos,
+  listClientes,
   listPublicReferenceTable,
   getFactura,
   getCliente,
@@ -23,9 +24,46 @@ import {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+const DRAFT_KEY = "ingefact:invoice-form-draft";
+
+/**
+ * El progreso en curso (cliente/lineas/pago) se guarda en sessionStorage
+ * justo antes de navegar a "+ Nuevo Cliente"/"+ Nuevo Producto" -- ambos
+ * navegan en la misma pestaña (no target="_blank"), así que el componente
+ * se desmonta. Al volver, se restaura desde aquí en vez de perder el
+ * progreso.
+ *
+ * React StrictMode duplica el efecto de montaje en dev: monta, corre el
+ * efecto, lo "desmonta" (cleanup) y lo vuelve a correr, todo sobre el mismo
+ * fiber/hooks -- mismo problema ya resuelto para restoreSession en
+ * authStore. La primera pasada consumía el borrador (lo limpiaba) y la
+ * segunda, que es la que realmente queda en pantalla, ya no encontraba nada
+ * y reseteaba las líneas a vacío. Se resuelve con un useRef (sobrevive
+ * entre las dos pasadas de un mismo montaje, a diferencia de un remount de
+ * verdad) que hace que solo la primera pasada real aplique el borrador.
+ */
+function guardarBorradorTemporal(datos) {
+  sessionStorage.setItem(DRAFT_KEY, JSON.stringify(datos));
+}
+
+function leerBorradorTemporal() {
+  const raw = sessionStorage.getItem(DRAFT_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function limpiarBorradorTemporal() {
+  sessionStorage.removeItem(DRAFT_KEY);
+}
+
 export default function InvoiceFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
   const isEditing = Boolean(id);
 
   const [cliente, setCliente] = useState(null);
@@ -34,8 +72,10 @@ export default function InvoiceFormPage() {
   const [formaPago, setFormaPago] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
   const [facturaId, setFacturaId] = useState(id || null);
+  const [productoPreseleccionado, setProductoPreseleccionado] = useState(null);
 
   const [productos, setProductos] = useState([]);
+  const [clientes, setClientes] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
   const [metodosPago, setMetodosPago] = useState([]);
   const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
@@ -49,12 +89,21 @@ export default function InvoiceFormPage() {
   const [isSending, setIsSending] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
+  const borradorTemporalAplicado = useRef(false);
+
   const cargarDatos = useCallback(async () => {
+    // Ver comentario de borradorTemporalAplicado arriba: evita que la
+    // segunda pasada de StrictMode en dev vuelva a consultar el borrador
+    // temporal (ya consumido por la primera) y resetee el formulario.
+    if (borradorTemporalAplicado.current) return;
+    borradorTemporalAplicado.current = true;
+
     setLoading(true);
     setLoadError(null);
     try {
       const [
         productosData,
+        clientesData,
         formasPagoData,
         metodosPagoData,
         tiposOrganizacionData,
@@ -63,6 +112,7 @@ export default function InvoiceFormPage() {
         factura,
       ] = await Promise.all([
         listProductos(),
+        listClientes(),
         listPublicReferenceTable("formas_pago"),
         listPublicReferenceTable("metodos_pago"),
         listPublicReferenceTable("tipos_organizacion"),
@@ -76,13 +126,37 @@ export default function InvoiceFormPage() {
       const metodosPagoValidos = metodosPagoData.filter((m) => m.code !== "1");
 
       setProductos(productosData);
+      setClientes(clientesData);
       setFormasPago(formasPagoData);
       setMetodosPago(metodosPagoValidos);
       setTiposOrganizacion(tiposOrganizacionData);
       setRegimenes(regimenesData);
       setTributos(tributosData);
 
-      if (factura) {
+      const borrador = leerBorradorTemporal();
+      const nuevoClienteId = location.state?.newClienteId;
+      const nuevoProductoId = location.state?.newProductoId;
+
+      if (borrador) {
+        // Se vuelve de crear un cliente/producto a mitad de la factura --
+        // esto tiene prioridad sobre lo que haya guardado en el servidor,
+        // porque puede incluir cambios que el usuario aun no habia guardado.
+        limpiarBorradorTemporal();
+        setFecha(borrador.fecha);
+        setFormaPago(borrador.formaPago || formasPagoData[0]?.code || "");
+        setMetodoPago(borrador.metodoPago || metodosPagoValidos[0]?.code || "");
+        setLineas(
+          borrador.lineas.map((linea) => ({
+            producto_id: linea.producto_id,
+            cantidad: linea.cantidad,
+            producto: productosData.find((p) => p.id === linea.producto_id) || null,
+          })),
+        );
+        const clienteIdFinal = nuevoClienteId || borrador.clienteId;
+        if (clienteIdFinal) {
+          setCliente(await getCliente(clienteIdFinal));
+        }
+      } else if (factura) {
         if (factura.estado !== "borrador") {
           navigate(`/invoices/${id}`, { replace: true });
           return;
@@ -112,13 +186,20 @@ export default function InvoiceFormPage() {
         setFormaPago(formasPagoData[0]?.code || "");
         setMetodoPago(metodosPagoValidos[0]?.code || "");
         setLineas([]);
+        if (nuevoClienteId) {
+          setCliente(await getCliente(nuevoClienteId));
+        }
+      }
+
+      if (nuevoProductoId) {
+        setProductoPreseleccionado(nuevoProductoId);
       }
     } catch (error) {
       setLoadError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [id, isEditing, navigate]);
+  }, [id, isEditing, navigate, location.state]);
 
   useEffect(() => {
     cargarDatos();
@@ -141,6 +222,17 @@ export default function InvoiceFormPage() {
 
   const handleLineaCantidadChange = (index, cantidad) => {
     setLineas((prev) => prev.map((linea, i) => (i === index ? { ...linea, cantidad } : linea)));
+  };
+
+  const irACrear = (destino) => {
+    guardarBorradorTemporal({
+      clienteId: cliente?.id || null,
+      fecha,
+      lineas: lineas.map((linea) => ({ producto_id: linea.producto_id, cantidad: linea.cantidad })),
+      formaPago,
+      metodoPago,
+    });
+    navigate(destino, { state: { returnTo: location.pathname } });
   };
 
   const validarTodo = () => {
@@ -232,6 +324,7 @@ export default function InvoiceFormPage() {
               <>
                 <SeccionCliente
                   cliente={cliente}
+                  clientes={clientes}
                   fecha={fecha}
                   error={errors.cliente}
                   tiposOrganizacion={tiposOrganizacion}
@@ -239,11 +332,13 @@ export default function InvoiceFormPage() {
                   tributos={tributos}
                   onSelectCliente={handleSelectCliente}
                   onFechaChange={setFecha}
+                  onCrearCliente={() => irACrear("/customers/new")}
                 />
 
                 <SeccionLineas
                   lineas={lineas}
                   productos={productos}
+                  productoPreseleccionadoId={productoPreseleccionado}
                   formaPago={formaPago}
                   metodoPago={metodoPago}
                   formasPago={formasPago}
@@ -254,6 +349,7 @@ export default function InvoiceFormPage() {
                   onLineaCantidadChange={handleLineaCantidadChange}
                   onFormaPagoChange={setFormaPago}
                   onMetodoPagoChange={setMetodoPago}
+                  onCrearProducto={() => irACrear("/products/new")}
                 />
 
                 <SeccionResumen

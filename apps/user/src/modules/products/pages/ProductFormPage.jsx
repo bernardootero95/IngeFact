@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   getProducto,
   createProducto,
@@ -33,6 +33,8 @@ const REQUIRED_FIELDS = ["codigo", "nombre", "precio", "unidad_medida"];
 export default function ProductFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo;
   const isEditing = Boolean(id);
 
   const [formData, setFormData] = useState(emptyForm);
@@ -133,10 +135,11 @@ export default function ProductFormPage() {
     try {
       if (isEditing) {
         await updateProducto(id, payload);
+        navigate(returnTo || "/products");
       } else {
-        await createProducto(payload);
+        const creado = await createProducto(payload);
+        navigate(returnTo || "/products", returnTo ? { state: { newProductoId: creado.id } } : undefined);
       }
-      navigate("/products");
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -162,7 +165,7 @@ export default function ProductFormPage() {
           </div>
           <button
             type="button"
-            onClick={() => navigate("/products")}
+            onClick={() => navigate(returnTo || "/products")}
             className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
           >
             Cancelar
@@ -325,7 +328,7 @@ export default function ProductFormPage() {
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
                   <button
                     type="button"
-                    onClick={() => navigate("/products")}
+                    onClick={() => navigate(returnTo || "/products")}
                     className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
                   >
                     Cancelar
