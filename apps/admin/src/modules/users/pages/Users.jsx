@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { listUsuariosAdmin } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import UserTable from "../components/UserTable";
-import UserModal from "../components/UserModal";
 
 export default function Users() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [toast, setToast] = useState({ message: null, type: "success" });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -17,7 +17,7 @@ export default function Users() {
       const data = await listUsuariosAdmin();
       setUsers(data);
     } catch (err) {
-      console.error("Error al obtener usuarios:", err.message);
+      setToast({ message: `Error al cargar usuarios: ${err.message}`, type: "error" });
     }
     setLoading(false);
   };
@@ -25,18 +25,6 @@ export default function Users() {
   useEffect(() => {
     fetchUsers();
   }, []);
-
-  const handleCreateClick = () => {
-    setIsEditing(false);
-    setCurrentUser(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditClick = (user) => {
-    setIsEditing(true);
-    setCurrentUser(user);
-    setIsModalOpen(true);
-  };
 
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
@@ -48,7 +36,7 @@ export default function Users() {
             Gestión de Usuarios
           </h2>
           <button
-            onClick={handleCreateClick}
+            onClick={() => navigate("/admin/users/new")}
             className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors"
           >
             Crear Usuario
@@ -56,16 +44,18 @@ export default function Users() {
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <UserTable users={users} loading={loading} onEdit={handleEditClick} />
+          <UserTable
+            users={users}
+            loading={loading}
+            onEdit={(user) => navigate(`/admin/users/${user.id}/edit`, { state: { user } })}
+          />
         </div>
       </main>
 
-      <UserModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        isEditing={isEditing}
-        currentUser={currentUser}
-        onSaveSuccess={fetchUsers}
+      <ToastAlert
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
       />
     </div>
   );

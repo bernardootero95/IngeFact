@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { listEmpresas, sincronizarEmpresasAlegra } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
-import CompanyModal from "../components/CompanyModal";
 import { SpinnerLoading, ToastAlert } from "@ingefact/ui";
 
 export default function Companies() {
+  const navigate = useNavigate();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentCompany, setCurrentCompany] = useState(null);
 
   // Estados centralizados para notificaciones Toast
   const [toast, setToast] = useState({ message: null, type: "success" });
@@ -35,16 +33,6 @@ export default function Companies() {
   useEffect(() => {
     fetchCompanies();
   }, []);
-
-  const handleCreateClick = () => {
-    setCurrentCompany(null);
-    setIsModalOpen(true);
-  };
-
-  const handleEditClick = (company) => {
-    setCurrentCompany(company);
-    setIsModalOpen(true);
-  };
 
   const handleSyncAlegra = async () => {
     if (
@@ -107,7 +95,7 @@ export default function Companies() {
             </button>
 
             <button
-              onClick={handleCreateClick}
+              onClick={() => navigate("/admin/companies/new")}
               className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors"
             >
               Aprovisionar Empresa
@@ -132,21 +120,11 @@ export default function Companies() {
             <CompanyTable
               companies={companies}
               loading={false}
-              onEdit={handleEditClick}
+              onEdit={(company) => navigate(`/admin/companies/${company.id}/edit`)}
             />
           )}
         </div>
       </main>
-
-      <CompanyModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        currentCompany={currentCompany}
-        onSaveSuccess={() => {
-          fetchCompanies();
-          showToast("Empresa gestionada y guardada correctamente.");
-        }}
-      />
 
       {/* Componente Global de Alertas Toast */}
       <ToastAlert

@@ -5,9 +5,12 @@ import { useAuthStore } from "./modules/auth/store/authStore";
 import Login from "./modules/auth/pages/Login";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import Users from "./modules/users/pages/Users";
+import UserFormPage from "./modules/users/pages/UserFormPage";
 import References from "./modules/references/pages/References";
 import ReferenceDetail from "./modules/references/pages/ReferenceDetail";
+import ReferenceFormPage from "./modules/references/pages/ReferenceFormPage";
 import Companies from "./modules/companies/pages/Companies";
+import CompanyFormPage from "./modules/companies/pages/CompanyFormPage";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore();
@@ -60,10 +63,46 @@ export default function App() {
         />
 
         <Route
+          path="/admin/companies/new"
+          element={
+            <ProtectedRoute>
+              <CompanyFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/companies/:id/edit"
+          element={
+            <ProtectedRoute>
+              <CompanyFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin/users"
           element={
             <ProtectedRoute>
               <Users />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users/new"
+          element={
+            <ProtectedRoute>
+              <UserFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users/:id/edit"
+          element={
+            <ProtectedRoute>
+              <UserFormPage />
             </ProtectedRoute>
           }
         />
@@ -82,6 +121,24 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReferenceDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/references/:tableName/new"
+          element={
+            <ProtectedRoute>
+              <ReferenceFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/references/:tableName/:id/edit"
+          element={
+            <ProtectedRoute>
+              <ReferenceFormPage />
             </ProtectedRoute>
           }
         />
