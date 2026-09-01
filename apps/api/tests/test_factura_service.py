@@ -265,7 +265,15 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
     fake = _FakeAlegraClient(
-        response={"invoice": {"id": "inv-1", "cufe": "cufe-123", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+        response={
+            "invoice": {
+                "id": "inv-1",
+                "cufe": "cufe-123",
+                "fullNumber": "SETP1",
+                "legalStatus": "ACCEPTED",
+                "qrCodeContent": "NumFac: SETP1\nCUFE: cufe-123",
+            }
+        }
     )
     service = FacturaService(db_session, alegra_client=fake)
     factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
@@ -274,6 +282,7 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
 
     assert enviada.estado == "aceptada"
     assert enviada.cufe == "cufe-123"
+    assert enviada.qr_code_content == "NumFac: SETP1\nCUFE: cufe-123"
     # incrementar_consecutivo es pre-incremento: con rango_minimo=1, el primer
     # numero realmente asignado es 2 (comportamiento ya probado en Sprint 5).
     assert enviada.consecutivo == 2
