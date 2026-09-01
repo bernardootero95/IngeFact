@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { actualizarDatosEmpresa } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
-
-const PHONE_REGEX = /^[0-9+()\-\s]{7,20}$/;
+import { validateField } from "./CompanyDataSettingsPage.validation";
 
 const emptyForm = { nombre_comercial: "", telefono: "", direccion: "" };
 
@@ -13,20 +12,6 @@ function formFromEmpresa(empresa) {
     telefono: empresa?.telefono || "",
     direccion: empresa?.direccion || "",
   };
-}
-
-function validateField(name, value) {
-  const trimmed = (value || "").trim();
-  if (name === "nombre_comercial" && trimmed.length > 200) {
-    return "El nombre comercial no puede superar 200 caracteres.";
-  }
-  if (name === "telefono" && trimmed && !PHONE_REGEX.test(trimmed)) {
-    return "Ingresa un teléfono válido.";
-  }
-  if (name === "direccion" && trimmed.length > 300) {
-    return "La dirección no puede superar 300 caracteres.";
-  }
-  return "";
 }
 
 export default function CompanyDataSettingsPage() {
