@@ -65,6 +65,7 @@ class FacturaLinea(Base):
     factura_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("facturas.id", ondelete="CASCADE"), nullable=False)
     producto_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("productos.id"), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(255), nullable=False)
+    unidad_medida: Mapped[str] = mapped_column(String(50), nullable=False)
     cantidad: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     precio_unitario: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     tributo: Mapped[str | None] = mapped_column(String(50))
