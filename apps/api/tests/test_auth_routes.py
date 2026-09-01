@@ -2,9 +2,11 @@ import uuid
 
 import pytest
 from fastapi import HTTPException
+from pydantic import ValidationError
 
 from src.application.auth_service import AuthService
 from src.core.security import hash_password
+from src.domain.auth import ResetPasswordRequest
 from src.infrastructure.db.models import Empresa, UsuarioAdmin, UsuarioEmpresa
 
 
@@ -107,6 +109,24 @@ def test_logout_revokes_refresh_token(db_session, admin_user):
         service.refresh(tokens.refresh_token)
 
 
+def test_refresh_token_reuse_revokes_all_sessions(db_session, admin_user):
+    service = AuthService(db_session)
+
+    session_a = service.login_admin("staff@ingefact.test", "Sandbox123!")
+    session_b = service.login_admin("staff@ingefact.test", "Sandbox123!")
+
+    # Uso normal de la sesion A: rota su refresh token.
+    service.refresh(session_a.refresh_token)
+
+    # Alguien reutiliza el refresh token viejo de la sesion A (robado) --
+    # ademas de rechazarlo, debe matar tambien la sesion B, que segia activa.
+    with pytest.raises(HTTPException):
+        service.refresh(session_a.refresh_token)
+
+    with pytest.raises(HTTPException):
+        service.refresh(session_b.refresh_token)
+
+
 def test_forgot_password_unknown_email_does_not_raise(db_session):
     # No debe revelar si el correo existe o no.
     AuthService(db_session).forgot_password("no-existe@ingefact.test", "admin")
@@ -115,6 +135,34 @@ def test_forgot_password_unknown_email_does_not_raise(db_session):
 def test_reset_password_with_invalid_token_fails(db_session):
     with pytest.raises(HTTPException):
         AuthService(db_session).reset_password(str(uuid.uuid4()), "NuevaClave123!")
+
+
+@pytest.mark.parametrize("weak_password", ["short1", "soloLetras", "12345678"])
+def test_reset_password_rejects_weak_passwords(weak_password):
+    with pytest.raises(ValidationError):
+        ResetPasswordRequest(token="cualquier-token", new_password=weak_password)
+
+
+def test_reset_password_accepts_strong_password():
+    request = ResetPasswordRequest(token="cualquier-token", new_password="ClaveNueva123!")
+    assert request.new_password == "ClaveNueva123!"
+
+
+def test_forgot_password_invalidates_previous_unused_tokens(db_session, admin_user, monkeypatch):
+    service = AuthService(db_session)
+
+    tokens_generados = iter(["token-viejo-sin-usar", "token-nuevo"])
+    monkeypatch.setattr(
+        "src.application.auth_service.generate_opaque_token", lambda: next(tokens_generados)
+    )
+
+    service.forgot_password("staff@ingefact.test", "admin")
+    service.forgot_password("staff@ingefact.test", "admin")
+
+    with pytest.raises(HTTPException):
+        service.reset_password("token-viejo-sin-usar", "ClaveNueva123!")
+
+    service.reset_password("token-nuevo", "ClaveNueva123!")
 
 
 def test_forgot_password_does_not_log_token_in_production(db_session, admin_user, monkeypatch, caplog):
