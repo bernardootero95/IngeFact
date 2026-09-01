@@ -173,6 +173,63 @@ Mismo patrón que `/invoices` pero con `conceptCode` (motivo de la nota, tabla D
 (`date`, `documentType`, `number`, `prefix`, `uuid`=CUFE). Se probarán en vivo en
 Sprint 9, cuando ya exista una factura real para referenciar.
 
+## Resolución de pruebas real (post-cierre Sprint 8) — ✅ verificado
+
+Hasta este punto, todas las facturas de prueba habían salido `REJECTED`
+(código `89`, "NIT no autorizado...") porque usábamos el `technicalKey`/
+resolución de ejemplo de la documentación oficial contra una empresa de
+sandbox con un NIT inventado. El usuario preguntó si existía una forma real
+de probar una factura **aceptada**. Se investigó contra la documentación
+oficial (`docs/entornos`) y se encontró la respuesta explícita:
+
+> "Para realizar pruebas de documentos aceptados en el ambiente sandbox
+> puedes usar el NIT (900559088) y DV (2) de Alegra con un prefijo único
+> para evitar respuestas de error por documento con número duplicado."
+
+Es decir: la resolución de ejemplo (`resolutionNumber: 18760000001`,
+`prefix: SETP`, `minNumber: 990000000`, `maxNumber: 995000000`,
+`technicalKey: fc8eac422eba16e22ffd8c6f94b3f40a6e38162c`) **es una
+resolución real**, registrada ante la DIAN a nombre del NIT público de
+pruebas de Alegra (900559088 / DV 2) — no un dato inventado. Cualquier
+empresa asociada que se cree en el sandbox **con ese mismo NIT** hereda esa
+resolución.
+
+**Verificado en vivo** (`scripts/explore_alegra_test_resolution.py`):
+1. Crear una empresa asociada nueva con `identification: "900559088"`,
+   `dv: "2"` (en vez de un NIT aleatorio).
+2. Habilitarla con el `test-set` de siempre.
+3. Enviar una factura usando el `prefix`/rango/`technicalKey` **exactos**
+   de la resolución de ejemplo (no se pueden inventar un prefijo o rango
+   propios — la DIAN los valida contra lo ya registrado para ese NIT;
+   probado y confirmado con las reglas `FAB10b`/`FAB11b`/`FAB12b`).
+
+Resultado real: `legalStatus: "ACCEPTED_WITH_OBSERVATIONS"`,
+`governmentResponse.code: "00"` ("Procesado Correctamente."), con solo 2
+notificaciones no bloqueantes (`FAZ09` y `FAJ43b`).
+
+**Hallazgo colateral importante — número duplicado**: el primer número del
+rango (`990000000`+1) ya estaba usado por otro desarrollador en algún lugar
+del mundo (NIT 900559088 es público y compartido por *todos* los que
+prueban con Alegra) → `Regla: 90, Rechazo: Documento procesado
+anteriormente.`. Arrancar el `number` en un punto aleatorio dentro del
+rango evita la colisión. **Aplica también a la app real**: si se usa esta
+resolución de pruebas desde `apps/user`, el consecutivo interno de la
+empresa de pruebas no debe arrancar en `rango_minimo` exacto.
+
+**Bug real de nuestro propio código encontrado en el camino**:
+`FacturaService._aplicar_respuesta_envio`/`webhooks.py` solo reconocían
+`legalStatus == "ACCEPTED"` — `ACCEPTED_WITH_OBSERVATIONS` (una aceptación
+real de la DIAN, solo con notificaciones no bloqueantes) caía al `else` y
+la factura quedaba encallada en `enviada` para siempre. Corregido para
+tratar ambos valores como aceptación real.
+
+**Fixture de desarrollo**: `scripts/seed_working_test_resolution.py`
+reconfigura la empresa del tenant de pruebas local (`tenant@example.com`)
+para usar esta resolución real — deja `id_alegra` apuntando a una empresa
+sandbox con NIT 900559088 y la `ResolucionDian` con los valores exactos de
+arriba (consecutivo arrancado en un punto aleatorio del rango, no en
+`rango_minimo`, por el hallazgo de arriba).
+
 ## `GET /invoices/{id}` — Sprint 8, investigación de PDF
 
 Antes de construir el botón "Descargar PDF" del mockup de detalle de
