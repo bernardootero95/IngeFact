@@ -11,9 +11,11 @@ class Settings(BaseSettings):
     alegra_env: str = "sandbox"
     alegra_base_url: str
     alegra_token: str
-    credentials_encryption_key: str = ""
     jwt_secret: str
     log_level: str = "INFO"
+    # apps/admin y apps/user corren en Vite con puerto variable en dev (ej.
+    # 5173/5174) -- en production, fijar el(los) origin(es) reales via env var.
+    cors_allow_origin_regex: str = r"http://localhost:\d+"
 
 
 @lru_cache

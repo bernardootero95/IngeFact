@@ -18,7 +18,7 @@ from src.domain.empresa import (
 )
 from src.infrastructure.db.session import get_db
 
-router = APIRouter(prefix="/api/v1/empresas", tags=["empresas"])
+router = APIRouter(prefix="/api/v1/admin/empresas", tags=["empresas"])
 
 
 @router.get("", response_model=list[EmpresaDetailResponse])
