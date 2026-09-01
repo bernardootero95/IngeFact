@@ -173,6 +173,31 @@ Mismo patrón que `/invoices` pero con `conceptCode` (motivo de la nota, tabla D
 (`date`, `documentType`, `number`, `prefix`, `uuid`=CUFE). Se probarán en vivo en
 Sprint 9, cuando ya exista una factura real para referenciar.
 
+## `GET /invoices/{id}` — Sprint 8, investigación de PDF
+
+Antes de construir el botón "Descargar PDF" del mockup de detalle de
+factura, se probó contra el sandbox real si existe un archivo PDF análogo al
+`files.xml` ya documentado (`apps/api/scripts/explore_alegra_invoice_detail.py`).
+
+**Resultado: no existe PDF en la API de e-provider.**
+- `GET /invoices/{id}` devuelve exactamente el mismo shape que la respuesta
+  de `POST /invoices` (`invoice.*` + `files.xml`) — **sin** `files.pdf` ni
+  ningún campo equivalente.
+- `GET /invoices/{id}/pdf` (probado por si existiera un endpoint dedicado no
+  documentado) → `404 {"message": "Not Found"}`.
+- El único archivo descargable es el XML (`files.xml`, URL S3 firmada que
+  expira en 1h — **no persistir esta URL**, hay que volver a pedir
+  `GET /invoices/{id}` cada vez que el usuario quiera descargar).
+- `invoice.qrCodeContent` sí incluye una URL de verificación del portal
+  público de la DIAN (`catalogo-vpfe-hab.dian.gov.co/document/searchqr?
+  documentkey=<CUFE>`) — sirve para que un tercero verifique el documento,
+  pero no es un PDF de la factura en sí.
+
+**Decisión Sprint 8**: el detalle de factura solo ofrece "Descargar XML".
+No se construye "Descargar PDF" — queda fuera de alcance (generar un PDF
+propio a partir del XML/CUFE sería trabajo nuevo no pedido por el roadmap,
+se deja como posible tarea futura si el usuario lo pide).
+
 ## Webhooks 📄 solo doc
 
 Se configuran por empresa dentro del payload de `POST /companies` /
