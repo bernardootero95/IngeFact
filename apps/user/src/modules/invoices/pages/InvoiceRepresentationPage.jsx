@@ -11,6 +11,8 @@ import {
 } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 
+const MONEDA = "COP";
+
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
@@ -25,6 +27,33 @@ const montoEnLetras = (total) => {
   return texto.toUpperCase().replace(" DE ", " ").replace(" 00/100 M.N.", "");
 };
 
+const formatFechaHora = (iso) => {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+};
+
+const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
+
+/** Agrupa las lineas por tributo+tarifa (ej. "IVA 19%") -- solo los impuestos
+ * que la factura realmente lleva, no una lista fija de tarifas posibles. */
+const agruparImpuestos = (lineas, tributos) => {
+  const grupos = new Map();
+  for (const linea of lineas) {
+    if (!linea.tributo || Number(linea.impuesto_linea) <= 0) continue;
+    const key = `${linea.tributo}-${linea.tarifa_impuesto}`;
+    const nombreTributo = nombreCatalogo(tributos, linea.tributo);
+    const existente = grupos.get(key);
+    if (existente) {
+      existente.monto += Number(linea.impuesto_linea);
+    } else {
+      grupos.set(key, { label: `${nombreTributo} ${linea.tarifa_impuesto}%`, monto: Number(linea.impuesto_linea) });
+    }
+  }
+  return Array.from(grupos.values());
+};
+
 export default function InvoiceRepresentationPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -36,6 +65,9 @@ export default function InvoiceRepresentationPage() {
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [departamentoNombre, setDepartamentoNombre] = useState(null);
   const [municipioNombre, setMunicipioNombre] = useState(null);
+  const [formaPagoNombre, setFormaPagoNombre] = useState(null);
+  const [metodoPagoNombre, setMetodoPagoNombre] = useState(null);
+  const [impuestos, setImpuestos] = useState([]);
   const [firmaDigital, setFirmaDigital] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -50,18 +82,25 @@ export default function InvoiceRepresentationPage() {
         return;
       }
 
-      const [clienteData, resolucionData, departamentos, municipios] = await Promise.all([
-        getCliente(facturaData.cliente_id),
-        getResolucionDian().catch(() => null),
-        listPublicReferenceTable("departamentos").catch(() => []),
-        listPublicReferenceTable("municipios").catch(() => []),
-      ]);
+      const [clienteData, resolucionData, departamentos, municipios, formasPago, metodosPago, tributos] =
+        await Promise.all([
+          getCliente(facturaData.cliente_id),
+          getResolucionDian().catch(() => null),
+          listPublicReferenceTable("departamentos").catch(() => []),
+          listPublicReferenceTable("municipios").catch(() => []),
+          listPublicReferenceTable("formas_pago").catch(() => []),
+          listPublicReferenceTable("metodos_pago").catch(() => []),
+          listPublicReferenceTable("tributos").catch(() => []),
+        ]);
 
       setFactura(facturaData);
       setCliente(clienteData);
       setResolucion(resolucionData);
-      setDepartamentoNombre(departamentos.find((d) => d.code === empresa?.departamento)?.value || null);
-      setMunicipioNombre(municipios.find((m) => m.code === empresa?.municipio)?.value || null);
+      setDepartamentoNombre(nombreCatalogo(departamentos, empresa?.departamento));
+      setMunicipioNombre(nombreCatalogo(municipios, empresa?.municipio));
+      setFormaPagoNombre(nombreCatalogo(formasPago, facturaData.forma_pago));
+      setMetodoPagoNombre(nombreCatalogo(metodosPago, facturaData.metodo_pago));
+      setImpuestos(agruparImpuestos(facturaData.lineas, tributos));
 
       if (facturaData.qr_code_content) {
         const dataUrl = await QRCode.toDataURL(facturaData.qr_code_content, { margin: 1, width: 180 });
@@ -125,24 +164,23 @@ export default function InvoiceRepresentationPage() {
           </h1>
           <div className="text-right text-xs text-neutralCustom-600 space-y-0.5">
             <p>
-              <span className="font-semibold">Forma de Pago:</span> {factura.forma_pago || "-"}
+              <span className="font-semibold">Forma de Pago:</span> {formaPagoNombre || "-"}
             </p>
             <p>
-              <span className="font-semibold">Método de Pago:</span> {factura.metodo_pago || "-"}
+              <span className="font-semibold">Método de Pago:</span> {metodoPagoNombre || "-"}
             </p>
             <p>
-              <span className="font-semibold">Moneda:</span> COP
+              <span className="font-semibold">Moneda:</span> {MONEDA}
             </p>
             <p>
               <span className="font-semibold">Total de Líneas:</span> {factura.lineas.length}
             </p>
             <p>
-              <span className="font-semibold">Fecha de Emisión:</span> {factura.fecha}
+              <span className="font-semibold">Fecha de Emisión:</span> {formatFechaHora(factura.fecha_envio)}
             </p>
             {factura.fecha_respuesta && (
               <p>
-                <span className="font-semibold">Fecha de Validación:</span>{" "}
-                {new Date(factura.fecha_respuesta).toLocaleString("es-CO")}
+                <span className="font-semibold">Fecha de Validación:</span> {formatFechaHora(factura.fecha_respuesta)}
               </p>
             )}
             <p>
@@ -161,9 +199,7 @@ export default function InvoiceRepresentationPage() {
             {empresa?.direccion && <p>{empresa.direccion}</p>}
             {empresa?.telefono && <p>Tel: {empresa.telefono}</p>}
             {empresa?.correo_electronico && <p>{empresa.correo_electronico}</p>}
-            <p>
-              {[departamentoNombre, municipioNombre, "Colombia"].filter(Boolean).join(" · ")}
-            </p>
+            <p>{[departamentoNombre, municipioNombre, "Colombia"].filter(Boolean).join(" · ")}</p>
           </div>
           <div className="flex-1">
             <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Adquiriente</p>
@@ -175,26 +211,17 @@ export default function InvoiceRepresentationPage() {
             {cliente?.telefono && <p>Tel: {cliente.telefono}</p>}
             {cliente?.tributo && <p>Responsabilidad Tributaria: {cliente.tributo}</p>}
           </div>
-          {qrDataUrl && (
-            <img src={qrDataUrl} alt="Código QR de verificación DIAN" className="w-28 h-28 shrink-0" />
-          )}
+          {qrDataUrl && <img src={qrDataUrl} alt="Código QR de verificación DIAN" className="w-28 h-28 shrink-0" />}
         </div>
-
-        {resolucion && (
-          <div className="text-xs text-neutralCustom-600 mb-4">
-            <span className="font-semibold">Resolución DIAN:</span> No. {resolucion.numero_resolucion} — Rango
-            autorizado {resolucion.prefijo}
-            {resolucion.rango_minimo} a {resolucion.prefijo}
-            {resolucion.rango_maximo} — Vigencia {resolucion.fecha_inicio} a {resolucion.fecha_fin}
-          </div>
-        )}
 
         <table className="w-full text-left text-xs mb-4">
           <thead>
             <tr className="border-b border-neutralCustom-300 text-neutralCustom-500 uppercase">
+              <th className="py-1.5 font-semibold">Cod</th>
               <th className="py-1.5 font-semibold">Descripción</th>
               <th className="py-1.5 text-right font-semibold">Cant.</th>
               <th className="py-1.5 text-right font-semibold">Precio Unit.</th>
+              <th className="py-1.5 text-right font-semibold">Subtotal</th>
               <th className="py-1.5 text-right font-semibold">IVA</th>
               <th className="py-1.5 text-right font-semibold">Total</th>
             </tr>
@@ -202,9 +229,11 @@ export default function InvoiceRepresentationPage() {
           <tbody className="divide-y divide-neutralCustom-100">
             {factura.lineas.map((linea) => (
               <tr key={linea.id}>
+                <td className="py-1.5">{linea.codigo || "-"}</td>
                 <td className="py-1.5">{linea.descripcion}</td>
                 <td className="py-1.5 text-right">{linea.cantidad}</td>
                 <td className="py-1.5 text-right">{formatCOP(linea.precio_unitario)}</td>
+                <td className="py-1.5 text-right">{formatCOP(linea.subtotal_linea)}</td>
                 <td className="py-1.5 text-right">{formatCOP(linea.impuesto_linea)}</td>
                 <td className="py-1.5 text-right font-medium">{formatCOP(linea.total_linea)}</td>
               </tr>
@@ -223,13 +252,17 @@ export default function InvoiceRepresentationPage() {
               <span>Subtotal</span>
               <span>{formatCOP(factura.subtotal)}</span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span>Monto IVA</span>
-              <span>{formatCOP(factura.total_impuestos)}</span>
-            </div>
+            {impuestos.map((impuesto) => (
+              <div key={impuesto.label} className="flex justify-between text-xs">
+                <span>{impuesto.label}</span>
+                <span>{formatCOP(impuesto.monto)}</span>
+              </div>
+            ))}
             <div className="flex justify-between font-bold text-sm border-t border-brand-200 pt-1">
               <span>Total a Pagar</span>
-              <span>{formatCOP(factura.total)}</span>
+              <span>
+                {formatCOP(factura.total)} {MONEDA}
+              </span>
             </div>
           </div>
         </div>
