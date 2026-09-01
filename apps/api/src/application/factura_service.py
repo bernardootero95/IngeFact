@@ -222,7 +222,10 @@ class FacturaService:
         factura.fecha_envio = datetime.now(timezone.utc)
 
         legal_status = invoice.get("legalStatus")
-        if legal_status == "ACCEPTED":
+        if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
+            # ACCEPTED_WITH_OBSERVATIONS = la DIAN acepto el documento con
+            # notificaciones no bloqueantes (ej. reglas FAZ09/FAJ43b) -- es
+            # una aceptacion real, no un estado intermedio ni un rechazo.
             factura.estado = "aceptada"
             factura.fecha_respuesta = datetime.now(timezone.utc)
         elif legal_status == "REJECTED":

@@ -77,7 +77,7 @@ async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
         return
 
     legal_status = invoice.get("legalStatus")
-    if legal_status == "ACCEPTED":
+    if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
         factura.estado = "aceptada"
         factura.cufe = invoice.get("cufe") or factura.cufe
         factura.fecha_respuesta = datetime.now(timezone.utc)
