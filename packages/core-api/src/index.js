@@ -1,4 +1,3 @@
-export { supabase } from "./supabase.js";
 export { configureApiClient, apiRequest, publicRequest } from "./apiClient.js";
 export { createAuthStore } from "./authStore.js";
 export { loginAdmin, loginTenant, refreshSession, logoutSession, getMe } from "./services/auth.js";
