@@ -81,6 +81,7 @@ export default function InvoiceFormPage() {
   const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
   const [regimenes, setRegimenes] = useState([]);
   const [tributos, setTributos] = useState([]);
+  const [tiposIdentificacion, setTiposIdentificacion] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -109,6 +110,7 @@ export default function InvoiceFormPage() {
         tiposOrganizacionData,
         regimenesData,
         tributosData,
+        tiposIdentificacionData,
         factura,
       ] = await Promise.all([
         listProductos(),
@@ -118,6 +120,7 @@ export default function InvoiceFormPage() {
         listPublicReferenceTable("tipos_organizacion"),
         listPublicReferenceTable("responsabilidades_fiscales"),
         listPublicReferenceTable("tributos"),
+        listPublicReferenceTable("tipos_identificacion"),
         isEditing ? getFactura(id) : Promise.resolve(null),
       ]);
 
@@ -132,6 +135,7 @@ export default function InvoiceFormPage() {
       setTiposOrganizacion(tiposOrganizacionData);
       setRegimenes(regimenesData);
       setTributos(tributosData);
+      setTiposIdentificacion(tiposIdentificacionData);
 
       const borrador = leerBorradorTemporal();
       const nuevoClienteId = location.state?.newClienteId;
@@ -330,6 +334,7 @@ export default function InvoiceFormPage() {
                   tiposOrganizacion={tiposOrganizacion}
                   regimenes={regimenes}
                   tributos={tributos}
+                  tiposIdentificacion={tiposIdentificacion}
                   onSelectCliente={handleSelectCliente}
                   onFechaChange={setFecha}
                   onCrearCliente={() => irACrear("/customers/new")}

@@ -34,6 +34,7 @@ class Cliente(Base):
     correo_electronico: Mapped[str] = mapped_column(String(150), nullable=False)
     telefono: Mapped[str | None] = mapped_column(String(50))
     tipo_organizacion: Mapped[str | None] = mapped_column(String(50))
+    regimen_fiscal: Mapped[str | None] = mapped_column(String(2))
     regimen: Mapped[str | None] = mapped_column(String(50))
     tributo: Mapped[str | None] = mapped_column(String(50))
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")

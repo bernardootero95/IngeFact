@@ -17,11 +17,18 @@ const emptyForm = {
   correo_electronico: "",
   telefono: "",
   tipo_organizacion: "",
+  regimen_fiscal: "",
   regimen: "",
   tributo: "",
 };
 
-const REQUIRED_FIELDS = ["tipo_identificacion", "numero_identificacion", "nombre", "correo_electronico"];
+const REQUIRED_FIELDS = [
+  "tipo_identificacion",
+  "numero_identificacion",
+  "nombre",
+  "correo_electronico",
+  "regimen_fiscal",
+];
 
 export default function CustomerFormPage() {
   const navigate = useNavigate();
@@ -68,6 +75,7 @@ export default function CustomerFormPage() {
           correo_electronico: cliente.correo_electronico,
           telefono: cliente.telefono || "",
           tipo_organizacion: cliente.tipo_organizacion || "",
+          regimen_fiscal: cliente.regimen_fiscal || "",
           regimen: cliente.regimen || "",
           tributo: cliente.tributo || "",
         });
@@ -77,7 +85,6 @@ export default function CustomerFormPage() {
           tipo_identificacion: identificationTypes[0]?.code || "",
           tipo_organizacion: organizationTypes[0]?.code || "",
           regimen: regimes[0]?.code || "",
-          tributo: taxes[0]?.code || "",
         });
       }
     } catch (error) {
@@ -149,6 +156,7 @@ export default function CustomerFormPage() {
       correo_electronico: formData.correo_electronico.trim(),
       telefono: formData.telefono.trim() || null,
       tipo_organizacion: formData.tipo_organizacion || null,
+      regimen_fiscal: formData.regimen_fiscal || null,
       regimen: formData.regimen || null,
       tributo: formData.tributo || null,
     };
@@ -349,7 +357,27 @@ export default function CustomerFormPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-neutralCustom-100 pt-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-neutralCustom-100 pt-5">
+                  <div>
+                    <label htmlFor="regimen_fiscal" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                      Régimen Fiscal <span className="text-fiscal-danger">*</span>
+                    </label>
+                    <select
+                      id="regimen_fiscal"
+                      name="regimen_fiscal"
+                      value={formData.regimen_fiscal}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none ${
+                        errors.regimen_fiscal ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      }`}
+                    >
+                      <option value="">Seleccione...</option>
+                      <option value="48">48 - Responsable de IVA</option>
+                      <option value="49">49 - No responsable de IVA</option>
+                    </select>
+                    {errors.regimen_fiscal && <p className="mt-1 text-xs text-fiscal-danger">{errors.regimen_fiscal}</p>}
+                  </div>
+
                   <div>
                     <label htmlFor="tipo_organizacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
                       Tipo de Organización
@@ -370,7 +398,9 @@ export default function CustomerFormPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="regimen" className="block text-sm font-medium text-neutralCustom-600 mb-1">Régimen</label>
+                    <label htmlFor="regimen" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                      Responsabilidad Fiscal
+                    </label>
                     <select
                       id="regimen"
                       name="regimen"
@@ -388,7 +418,7 @@ export default function CustomerFormPage() {
 
                   <div>
                     <label htmlFor="tributo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Responsabilidad (Tributo)
+                      Responsabilidad Tributaria
                     </label>
                     <select
                       id="tributo"
@@ -397,6 +427,7 @@ export default function CustomerFormPage() {
                       onChange={handleChange}
                       className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                     >
+                      <option value="">Sin responsabilidad tributaria</option>
                       {catalogs.taxes.map((tax) => (
                         <option key={tax.code} value={tax.code}>
                           {tax.code} - {tax.value}

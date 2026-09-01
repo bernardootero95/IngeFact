@@ -38,7 +38,7 @@ def consultar_adquiriente(
         data = AlegraClient().get_acquirer_info(tipo_identificacion, numero_identificacion)
     except AlegraApiError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body))
-    return ConsultarAdquirienteResponse(name=data.get("name"), email=data.get("email"))
+    return ConsultarAdquirienteResponse(name=data.get("receiverName"), email=data.get("receiverEmail"))
 
 
 @router.get("/{cliente_id}", response_model=ClienteResponse)
