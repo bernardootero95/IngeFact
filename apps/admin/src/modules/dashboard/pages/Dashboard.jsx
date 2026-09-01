@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getDashboardKpis } from "@ingefact/core-api";
 import { useAuthStore } from "../../auth/store/authStore";
 import Sidebar from "../../../components/Sidebar";
@@ -8,13 +8,20 @@ export default function Dashboard() {
   const { profile } = useAuthStore();
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchKpis = useCallback(() => {
+    setLoading(true);
+    setError(null);
     getDashboardKpis()
       .then(setKpis)
-      .catch((err) => console.error("Error al cargar KPIs del dashboard:", err))
+      .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchKpis();
+  }, [fetchKpis]);
 
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
@@ -29,6 +36,18 @@ export default function Dashboard() {
         </header>
 
         <div className="p-8 space-y-8 flex-1 overflow-y-auto">
+          {error && (
+            <div className="p-4 bg-red-50 border border-fiscal-danger rounded-brand-lg flex items-center justify-between">
+              <p className="text-sm text-fiscal-danger">No se pudieron cargar las métricas: {error}</p>
+              <button
+                onClick={fetchKpis}
+                className="px-3 py-1.5 bg-white border border-fiscal-danger text-fiscal-danger text-xs font-medium rounded-brand-md hover:bg-red-100 transition-colors shrink-0 ml-4"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
           {loading ? (
             <SpinnerLoading fullScreen={false} text="Cargando métricas..." />
           ) : (

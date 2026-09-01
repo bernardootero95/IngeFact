@@ -1,23 +1,27 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listClientes, deleteCliente } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function CustomersPage() {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [toast, setToast] = useState({ message: null, type: "success" });
   const debounceRef = useRef(null);
 
   const fetchCustomers = useCallback(async (term) => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await listClientes(term || undefined);
       setCustomers(data);
     } catch (error) {
-      console.error("Error al obtener clientes:", error.message);
+      setLoadError(error.message);
     } finally {
       setLoading(false);
     }
@@ -41,7 +45,7 @@ export default function CustomersPage() {
       await deleteCliente(cliente.id);
       setCustomers((prev) => prev.filter((c) => c.id !== cliente.id));
     } catch (error) {
-      window.alert(error.message);
+      setToast({ message: error.message, type: "error" });
     } finally {
       setDeletingId(null);
     }
@@ -112,6 +116,18 @@ export default function CustomersPage() {
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando clientes...
+              </div>
+            ) : loadError ? (
+              <div className="p-12 text-center">
+                <p className="text-sm text-fiscal-danger mb-3">
+                  No se pudieron cargar los clientes: {loadError}
+                </p>
+                <button
+                  onClick={() => fetchCustomers(search)}
+                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                >
+                  Reintentar
+                </button>
               </div>
             ) : customers.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -199,6 +215,12 @@ export default function CustomersPage() {
           </div>
         </div>
       </main>
+
+      <ToastAlert
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
+      />
     </div>
   );
 }
