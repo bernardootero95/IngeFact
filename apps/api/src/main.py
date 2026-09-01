@@ -29,11 +29,12 @@ app = FastAPI(title="IngeFact API", version="0.1.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# apps/admin y apps/user corren en Vite (puerto variable, ej. 5173/5174) --
-# se permite cualquier origin localhost en vez de fijar un puerto.
+# Configurable via CORS_ALLOW_ORIGIN_REGEX -- en dev, cualquier origin
+# localhost (apps/admin y apps/user corren en Vite con puerto variable); en
+# production debe fijarse a los dominios reales del frontend.
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"http://localhost:\d+",
+    allow_origin_regex=settings.cors_allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
