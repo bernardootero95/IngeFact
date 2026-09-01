@@ -14,6 +14,7 @@ from src.presentation.routes import (
     tenant_clientes,
     tenant_dashboard,
     tenant_empresa,
+    tenant_facturas,
     tenant_impuestos,
     tenant_productos,
     tenant_resolucion,
@@ -52,6 +53,7 @@ app.include_router(tenant_resolucion.router)
 app.include_router(tenant_clientes.router)
 app.include_router(tenant_productos.router)
 app.include_router(tenant_impuestos.router)
+app.include_router(tenant_facturas.router)
 app.include_router(webhooks.router)
 
 

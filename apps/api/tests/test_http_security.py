@@ -10,10 +10,12 @@ bypaseaba por completo la verificacion del token -- ver hallazgo de la
 auditoria de 2026-08-31.
 """
 
+from datetime import date
+
 import pytest
 
 from src.core.security import hash_password
-from src.infrastructure.db.models import Cliente, Empresa, UsuarioAdmin, UsuarioEmpresa
+from src.infrastructure.db.models import Cliente, Empresa, Factura, Producto, UsuarioAdmin, UsuarioEmpresa
 
 
 @pytest.fixture
@@ -51,7 +53,27 @@ def empresa_a(db_session):
     db_session.commit()
     db_session.refresh(cliente)
 
-    return empresa, cliente
+    producto = Producto(
+        empresa_id=empresa.id, codigo="PROD-A", nombre="Producto de Empresa A", precio=1000, unidad_medida="94"
+    )
+    db_session.add(producto)
+    db_session.commit()
+    db_session.refresh(producto)
+
+    factura = Factura(
+        empresa_id=empresa.id,
+        cliente_id=cliente.id,
+        fecha=date.today(),
+        estado="borrador",
+        subtotal=1000,
+        total_impuestos=0,
+        total=1000,
+    )
+    db_session.add(factura)
+    db_session.commit()
+    db_session.refresh(factura)
+
+    return empresa, cliente, producto, factura
 
 
 @pytest.fixture
@@ -135,7 +157,7 @@ def test_tampered_jwt_is_rejected(api_client, empresa_a):
 
 
 def test_tenant_cannot_read_another_tenants_cliente(api_client, empresa_a, empresa_b):
-    _empresa_a, cliente_a = empresa_a
+    _empresa_a, cliente_a, _producto_a, _factura_a = empresa_a
     token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
 
     response = api_client.get(
@@ -147,7 +169,7 @@ def test_tenant_cannot_read_another_tenants_cliente(api_client, empresa_a, empre
 
 
 def test_tenant_can_read_its_own_cliente(api_client, empresa_a):
-    _empresa, cliente = empresa_a
+    _empresa, cliente, _producto, _factura = empresa_a
     token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
 
     response = api_client.get(
@@ -156,6 +178,42 @@ def test_tenant_can_read_its_own_cliente(api_client, empresa_a):
 
     assert response.status_code == 200
     assert response.json()["id"] == str(cliente.id)
+
+
+def test_tenant_cannot_read_another_tenants_factura(api_client, empresa_a, empresa_b):
+    _empresa_a, _cliente_a, _producto_a, factura_a = empresa_a
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/facturas/{factura_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_cannot_send_another_tenants_factura(api_client, empresa_a, empresa_b):
+    _empresa_a, _cliente_a, _producto_a, factura_a = empresa_a
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.post(
+        f"/api/v1/tenant/facturas/{factura_a.id}/enviar",
+        json={"forma_pago": "1", "metodo_pago": "10"},
+        headers=_auth_headers(token_b),
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_factura(api_client, empresa_a):
+    _empresa, _cliente, _producto, factura = empresa_a
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/facturas/{factura.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(factura.id)
 
 
 def test_admin_token_can_call_admin_routes(api_client, admin_user):
