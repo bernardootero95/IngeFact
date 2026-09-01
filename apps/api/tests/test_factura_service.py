@@ -128,6 +128,7 @@ def test_crear_borrador_calcula_totales_en_servidor_y_no_asigna_consecutivo(db_s
     assert float(factura.total) == 238000
     assert len(factura.lineas) == 1
     assert factura.lineas[0].descripcion == producto.nombre
+    assert factura.lineas[0].codigo == producto.codigo
     assert factura.lineas[0].unidad_medida == producto.unidad_medida
 
 
