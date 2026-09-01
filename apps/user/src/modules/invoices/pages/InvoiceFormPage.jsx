@@ -111,7 +111,7 @@ export default function InvoiceFormPage() {
       } else {
         setFormaPago(formasPagoData[0]?.code || "");
         setMetodoPago(metodosPagoValidos[0]?.code || "");
-        setLineas([{ producto_id: "", cantidad: "1", producto: null }]);
+        setLineas([]);
       }
     } catch (error) {
       setLoadError(error.message);
@@ -129,17 +129,14 @@ export default function InvoiceFormPage() {
     setErrors((prev) => ({ ...prev, cliente: nuevoCliente ? "" : prev.cliente }));
   };
 
-  const handleAddLinea = () => {
-    setLineas((prev) => [...prev, { producto_id: "", cantidad: "1", producto: null }]);
+  const handleAddLinea = (productoId, cantidad) => {
+    const producto = productos.find((p) => p.id === productoId) || null;
+    setLineas((prev) => [...prev, { producto_id: productoId, cantidad: String(cantidad), producto }]);
+    setErrors((prev) => ({ ...prev, lineas: "" }));
   };
 
   const handleRemoveLinea = (index) => {
     setLineas((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleLineaProductoChange = (index, productoId) => {
-    const producto = productos.find((p) => p.id === productoId) || null;
-    setLineas((prev) => prev.map((linea, i) => (i === index ? { ...linea, producto_id: productoId, producto } : linea)));
   };
 
   const handleLineaCantidadChange = (index, cantidad) => {
@@ -254,7 +251,6 @@ export default function InvoiceFormPage() {
                   errores={errors}
                   onAddLinea={handleAddLinea}
                   onRemoveLinea={handleRemoveLinea}
-                  onLineaProductoChange={handleLineaProductoChange}
                   onLineaCantidadChange={handleLineaCantidadChange}
                   onFormaPagoChange={setFormaPago}
                   onMetodoPagoChange={setMetodoPago}
