@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 
 from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.infrastructure.db.session import Base
@@ -37,6 +37,7 @@ class Factura(Base):
     qr_code_content: Mapped[str | None] = mapped_column(Text)
     firma_digital: Mapped[str | None] = mapped_column(Text)
     razon_rechazo: Mapped[str | None] = mapped_column(Text)
+    notificaciones_dian: Mapped[list | None] = mapped_column(JSONB)
     fecha_envio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     fecha_respuesta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

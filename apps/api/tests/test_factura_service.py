@@ -355,6 +355,122 @@ def test_enviar_rechazada_guarda_razon_mapeada(db_session):
     assert "Resolucion DIAN" in enviada.razon_rechazo
 
 
+def test_enviar_accepted_with_observations_guarda_notificaciones_dian(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {
+                "id": "inv-1",
+                "cufe": "cufe-123",
+                "fullNumber": "SETP1",
+                "legalStatus": "ACCEPTED_WITH_OBSERVATIONS",
+                "governmentResponse": {
+                    "code": "00",
+                    "message": "Procesado Correctamente.",
+                    "errorMessages": ["FAZ09: observacion no bloqueante", "FAJ43b: otra observacion"],
+                },
+            }
+        }
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert enviada.estado == "aceptada"
+    assert enviada.notificaciones_dian == ["FAZ09: observacion no bloqueante", "FAJ43b: otra observacion"]
+
+
+def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_session):
+    """Una factura rechazada no es un callejon sin salida: el usuario corrige
+    los datos (PUT), la factura vuelve a 'borrador' con los datos del intento
+    fallido limpios, y un reenvio pide un consecutivo nuevo (no se puede
+    reusar el numero rechazado ante la DIAN)."""
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    otro_producto = _crear_producto(db_session, empresa.id, codigo="PROD-002", precio=50000, tarifa_impuesto=0)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {
+                "id": "inv-1",
+                "cufe": "cufe-rechazada",
+                "fullNumber": "SETP1",
+                "legalStatus": "REJECTED",
+                "governmentResponse": {
+                    "code": "89",
+                    "message": "NIT no autorizado",
+                    "errorMessages": ["Regla FAB10b violada"],
+                },
+            }
+        }
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    rechazada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    assert rechazada.estado == "rechazada"
+    assert rechazada.consecutivo == 2
+
+    corregida = service.actualizar_borrador(
+        empresa.id,
+        factura.id,
+        ActualizarFacturaRequest(
+            cliente_id=cliente.id,
+            fecha=date.today(),
+            lineas=[LineaFacturaRequest(producto_id=otro_producto.id, cantidad=1)],
+        ),
+    )
+    assert corregida.estado == "borrador"
+    assert corregida.consecutivo is None
+    assert corregida.numero_completo is None
+    assert corregida.cufe is None
+    assert corregida.razon_rechazo is None
+    assert corregida.notificaciones_dian is None
+
+    fake._response = {
+        "invoice": {
+            "id": "inv-2",
+            "cufe": "cufe-aceptada",
+            "fullNumber": "SETP2",
+            "legalStatus": "ACCEPTED",
+        }
+    }
+    reenviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert reenviada.estado == "aceptada"
+    assert reenviada.cufe == "cufe-aceptada"
+    assert reenviada.razon_rechazo is None
+    # consecutivo nuevo, no se reutiliza el 2 ya rechazado ante la DIAN.
+    assert reenviada.consecutivo == 3
+
+
+def test_eliminar_factura_rechazada_es_soft_delete(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {
+                "id": "inv-1",
+                "legalStatus": "REJECTED",
+                "governmentResponse": {"code": "89", "message": "NIT no autorizado"},
+            }
+        }
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    service.eliminar_borrador(empresa.id, factura.id)
+
+    assert service.listar(empresa.id) == []
+
+
 def test_enviar_error_alegra_se_mapea_y_no_queda_en_estado_intermedio(db_session):
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)

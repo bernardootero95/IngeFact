@@ -94,6 +94,7 @@ class FacturaResponse(BaseModel):
     cufe: str | None
     qr_code_content: str | None
     razon_rechazo: str | None
+    notificaciones_dian: list | None
     fecha_envio: datetime | None
     fecha_respuesta: datetime | None
     creado: datetime
@@ -117,6 +118,7 @@ class FacturaResponse(BaseModel):
             cufe=factura.cufe,
             qr_code_content=factura.qr_code_content,
             razon_rechazo=factura.razon_rechazo,
+            notificaciones_dian=factura.notificaciones_dian,
             fecha_envio=factura.fecha_envio,
             fecha_respuesta=factura.fecha_respuesta,
             creado=factura.creado,

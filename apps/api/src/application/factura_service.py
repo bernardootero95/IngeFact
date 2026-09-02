@@ -111,9 +111,17 @@ class FacturaService:
         return firma
 
     def _obtener_editable(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
+        """Editable/reenviable en 'borrador' y tambien en 'rechazada' -- una
+        factura rechazada por la DIAN no es un estado terminal: el usuario
+        debe poder corregir cliente/lineas y volver a enviar (con un
+        consecutivo nuevo, ver enviar()). 'enviada'/'aceptada' si son
+        terminales -- una vez aceptada no se puede editar (Notas
+        Credito/Debito, Sprint 9)."""
         factura = self.obtener(empresa_id, factura_id)
-        if factura.estado != "borrador":
-            raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede editar una factura en estado borrador.")
+        if factura.estado not in ("borrador", "rechazada"):
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Solo se puede editar una factura en estado borrador o rechazada."
+            )
         return factura
 
     def _validar_cliente(self, empresa_id: uuid.UUID, cliente_id: uuid.UUID) -> Cliente:
@@ -198,6 +206,24 @@ class FacturaService:
         lineas = self._construir_lineas(empresa_id, data.lineas)
         subtotal, total_impuestos, total = self._totales(lineas)
 
+        if factura.estado == "rechazada":
+            # Corregir una factura rechazada la vuelve a dejar como borrador
+            # -- el intento anterior (consecutivo/CUFE/razon de rechazo) ya
+            # no aplica, un reenvio pedira un consecutivo nuevo (ver
+            # enviar()). No se puede reutilizar el numero rechazado ante la
+            # DIAN, asi que no tiene sentido conservar esos datos.
+            factura.estado = "borrador"
+            factura.consecutivo = None
+            factura.numero_completo = None
+            factura.alegra_invoice_id = None
+            factura.cufe = None
+            factura.qr_code_content = None
+            factura.firma_digital = None
+            factura.razon_rechazo = None
+            factura.notificaciones_dian = None
+            factura.fecha_envio = None
+            factura.fecha_respuesta = None
+
         factura.cliente_id = data.cliente_id
         factura.fecha = data.fecha
         factura.subtotal = subtotal
@@ -260,6 +286,16 @@ class FacturaService:
         factura.cufe = invoice.get("cufe")
         factura.qr_code_content = invoice.get("qrCodeContent")
         factura.fecha_envio = datetime.now(timezone.utc)
+        # Cada envio es un documento nuevo ante Alegra/la DIAN (invoice.id
+        # nuevo) -- la firma cacheada de un intento anterior (rechazado o no)
+        # ya no corresponde a este documento.
+        factura.firma_digital = None
+
+        government_response = invoice.get("governmentResponse") or {}
+        # errorMessages trae el detalle completo (notificaciones no
+        # bloqueantes en ACCEPTED_WITH_OBSERVATIONS, o las reglas violadas en
+        # REJECTED) -- se guarda crudo, no solo el mensaje unico ya mapeado.
+        factura.notificaciones_dian = government_response.get("errorMessages") or None
 
         legal_status = invoice.get("legalStatus")
         if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
@@ -267,10 +303,12 @@ class FacturaService:
             # notificaciones no bloqueantes (ej. reglas FAZ09/FAJ43b) -- es
             # una aceptacion real, no un estado intermedio ni un rechazo.
             factura.estado = "aceptada"
+            # Limpia el rechazo de un intento anterior si este reenvio si
+            # fue aceptado.
+            factura.razon_rechazo = None
             factura.fecha_respuesta = datetime.now(timezone.utc)
         elif legal_status == "REJECTED":
             factura.estado = "rechazada"
-            government_response = invoice.get("governmentResponse") or {}
             factura.razon_rechazo = map_government_response(
                 government_response.get("code", ""),
                 government_response.get("message") or "La DIAN rechazo la factura.",
@@ -278,6 +316,7 @@ class FacturaService:
             factura.fecha_respuesta = datetime.now(timezone.utc)
         else:
             factura.estado = "enviada"
+            factura.razon_rechazo = None
 
     @staticmethod
     def _construir_payload_alegra(
