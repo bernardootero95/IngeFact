@@ -323,6 +323,14 @@ class FacturaService:
         empresa: Empresa, resolucion, factura: Factura, consecutivo: int, forma_pago: str, metodo_pago: str
     ) -> dict:
         items = []
+        # taxableTotal ("Base Imponible") de la DIAN debe ser exactamente la
+        # suma de los taxableAmount de las lineas que SI llevan impuesto, no
+        # el subtotal de todas las lineas -- si se mezclan lineas con y sin
+        # impuesto, incluir las sin impuesto ahi produce el rechazo real
+        # "Regla FAU04: Base Imponible es distinto a la suma de los valores
+        # de las bases imponibles de todas lineas de detalle" (verificado
+        # contra el sandbox).
+        taxable_total = 0.0
         for linea in factura.lineas:
             item = {
                 "description": linea.descripcion,
@@ -341,6 +349,7 @@ class FacturaService:
                         "taxableAmount": float(linea.subtotal_linea),
                     }
                 ]
+                taxable_total += float(linea.subtotal_linea)
             items.append(item)
 
         return {
@@ -366,7 +375,7 @@ class FacturaService:
             "items": items,
             "totalAmounts": {
                 "grossTotal": float(factura.subtotal),
-                "taxableTotal": float(factura.subtotal),
+                "taxableTotal": round(taxable_total, 2),
                 "taxTotal": float(factura.total_impuestos),
                 "discountTotal": 0,
                 "chargeTotal": 0,
