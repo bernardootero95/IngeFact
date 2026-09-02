@@ -135,26 +135,47 @@ export default function InvoiceDetailPage() {
                 )}
 
                 {factura.estado === "rechazada" && factura.razon_rechazo && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-4">
-                    {factura.razon_rechazo}
+                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
+                    <p className="font-medium">{factura.razon_rechazo}</p>
+                  </div>
+                )}
+
+                {factura.notificaciones_dian && factura.notificaciones_dian.length > 0 && (
+                  <div
+                    className={`p-3 border text-sm rounded-brand-md mb-4 ${
+                      factura.estado === "rechazada"
+                        ? "bg-red-50 border-fiscal-danger text-fiscal-danger"
+                        : "bg-amber-50 border-amber-300 text-amber-700"
+                    }`}
+                  >
+                    <p className="font-medium mb-1">Detalle de la DIAN</p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      {factura.notificaciones_dian.map((item, index) => (
+                        <li key={index}>{typeof item === "string" ? item : item.message || JSON.stringify(item)}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 
                 <div className="flex flex-wrap gap-3">
-                  {factura.estado === "borrador" && (
+                  {(factura.estado === "borrador" || factura.estado === "rechazada") && (
                     <>
                       <button
                         onClick={() => navigate(`/invoices/${id}/edit`)}
                         className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
                       >
-                        Continuar Editando
+                        {factura.estado === "rechazada" ? "Corregir y Reenviar" : "Continuar Editando"}
                       </button>
                       <button
                         onClick={handleEliminar}
                         disabled={isDeleting}
                         className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                       >
-                        {isDeleting ? "Eliminando..." : "Eliminar Borrador"}
+                        {isDeleting
+                          ? "Eliminando..."
+                          : factura.estado === "rechazada"
+                            ? "Eliminar Factura"
+                            : "Eliminar Borrador"}
                       </button>
                     </>
                   )}

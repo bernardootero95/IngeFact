@@ -135,6 +135,30 @@ def test_webhook_invoices_marca_rechazada_con_razon_mapeada(api_client, db_sessi
     assert "Resolucion DIAN" in factura.razon_rechazo
 
 
+def test_webhook_invoices_guarda_notificaciones_dian(api_client, db_session):
+    empresa = _crear_empresa(db_session, id_alegra="alegra-inv-2b")
+    factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-2b")
+
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/invoices",
+        json={
+            "invoice": {
+                "id": "inv-2b",
+                "legalStatus": "REJECTED",
+                "governmentResponse": {
+                    "code": "89",
+                    "message": "NIT no autorizado",
+                    "errorMessages": ["Regla FAB10b violada"],
+                },
+            }
+        },
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(factura)
+    assert factura.notificaciones_dian == ["Regla FAB10b violada"]
+
+
 def test_webhook_invoices_no_sobreescribe_estado_final(api_client, db_session):
     empresa = _crear_empresa(db_session, id_alegra="alegra-inv-3")
     factura = _crear_factura_enviada(

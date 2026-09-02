@@ -73,6 +73,7 @@ export default function InvoiceFormPage() {
   const [metodoPago, setMetodoPago] = useState("");
   const [facturaId, setFacturaId] = useState(id || null);
   const [productoPreseleccionado, setProductoPreseleccionado] = useState(null);
+  const [razonRechazo, setRazonRechazo] = useState(null);
 
   const [productos, setProductos] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -161,9 +162,12 @@ export default function InvoiceFormPage() {
           setCliente(await getCliente(clienteIdFinal));
         }
       } else if (factura) {
-        if (factura.estado !== "borrador") {
+        if (factura.estado !== "borrador" && factura.estado !== "rechazada") {
           navigate(`/invoices/${id}`, { replace: true });
           return;
+        }
+        if (factura.estado === "rechazada") {
+          setRazonRechazo(factura.razon_rechazo);
         }
         const clienteCompleto = await getCliente(factura.cliente_id);
         setCliente(clienteCompleto);
@@ -326,6 +330,16 @@ export default function InvoiceFormPage() {
               </div>
             ) : (
               <>
+                {razonRechazo && (
+                  <div className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                    <p className="font-semibold mb-1">Esta factura fue rechazada por la DIAN</p>
+                    <p>{razonRechazo}</p>
+                    <p className="mt-1 text-xs">
+                      Corrige los datos que hagan falta y vuelve a enviar — se te asignará un número nuevo (el
+                      rechazado no se puede reutilizar).
+                    </p>
+                  </div>
+                )}
                 <SeccionCliente
                   cliente={cliente}
                   clientes={clientes}
