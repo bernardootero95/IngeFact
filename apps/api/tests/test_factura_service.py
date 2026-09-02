@@ -95,8 +95,10 @@ class _FakeAlegraClient:
         self._response = response
         self._error = error
         self._raw_response = raw_response
+        self.last_payload = None
 
     def create_invoice(self, payload: dict) -> dict:
+        self.last_payload = payload
         if self._error:
             raise self._error
         return self._response or {}
@@ -469,6 +471,45 @@ def test_eliminar_factura_rechazada_es_soft_delete(db_session):
     service.eliminar_borrador(empresa.id, factura.id)
 
     assert service.listar(empresa.id) == []
+
+
+def test_enviar_con_lineas_mixtas_taxable_total_solo_suma_lineas_con_impuesto(db_session):
+    """Bug real reproducido contra el sandbox: si la factura mezcla lineas
+    con y sin impuesto, totalAmounts.taxableTotal (Base Imponible) debe ser
+    solo la suma de las lineas CON impuesto -- incluir las lineas sin
+    impuesto ahi produce el rechazo 'Regla FAU04: Base Imponible es
+    distinto a la suma de los valores de las bases imponibles de todas
+    lineas de detalle'."""
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto_sin_iva = _crear_producto(
+        db_session, empresa.id, codigo="SIN-IVA", precio=25000, tributo=None, tarifa_impuesto=0
+    )
+    producto_con_iva = _crear_producto(
+        db_session, empresa.id, codigo="CON-IVA", precio=100000, tributo="01", tarifa_impuesto=19
+    )
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(
+        empresa.id,
+        CrearFacturaRequest(
+            cliente_id=cliente.id,
+            fecha=date.today(),
+            lineas=[
+                LineaFacturaRequest(producto_id=producto_sin_iva.id, cantidad=1),
+                LineaFacturaRequest(producto_id=producto_con_iva.id, cantidad=1),
+            ],
+        ),
+    )
+
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    totales = fake.last_payload["totalAmounts"]
+    assert totales["grossTotal"] == 125000  # 25000 + 100000, todas las lineas
+    assert totales["taxableTotal"] == 100000  # solo la linea con IVA
 
 
 def test_enviar_error_alegra_se_mapea_y_no_queda_en_estado_intermedio(db_session):
