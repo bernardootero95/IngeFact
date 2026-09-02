@@ -17,6 +17,7 @@ const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
 const ESTADO_LABEL = {
+  borrador: "Borrador — aún no enviada a la DIAN",
   aceptada: "Aceptada por la DIAN",
   rechazada: "Rechazada por la DIAN",
   enviada: "Enviada, esperando respuesta de la DIAN",
@@ -77,10 +78,6 @@ export default function InvoiceRepresentationPage() {
     setLoadError(null);
     try {
       const facturaData = await getFactura(id);
-      if (!facturaData.cufe) {
-        navigate(`/invoices/${id}`, { replace: true });
-        return;
-      }
 
       const [clienteData, resolucionData, departamentos, municipios, formasPago, metodosPago, tributos] =
         await Promise.all([
@@ -107,15 +104,17 @@ export default function InvoiceRepresentationPage() {
         setQrDataUrl(dataUrl);
       }
 
-      obtenerFirmaDigitalFactura(id)
-        .then((data) => setFirmaDigital(data.firma_digital))
-        .catch(() => setFirmaDigital(null));
+      if (facturaData.cufe) {
+        obtenerFirmaDigitalFactura(id)
+          .then((data) => setFirmaDigital(data.firma_digital))
+          .catch(() => setFirmaDigital(null));
+      }
     } catch (error) {
       setLoadError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [id, navigate, empresa]);
+  }, [id, empresa]);
 
   useEffect(() => {
     cargarDatos();
@@ -154,10 +153,29 @@ export default function InvoiceRepresentationPage() {
         </button>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white shadow-sm print:shadow-none my-6 print:my-0 p-8 text-sm text-neutralCustom-800">
+      <div className="relative max-w-4xl mx-auto bg-white shadow-sm print:shadow-none my-6 print:my-0 p-8 text-sm text-neutralCustom-800 overflow-hidden">
+        {!factura.cufe && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0"
+          >
+            <span className="text-[110px] font-extrabold text-fiscal-danger/10 -rotate-45 whitespace-nowrap">
+              BORRADOR
+            </span>
+          </div>
+        )}
+
+        <div className="relative z-10">
+        {!factura.cufe && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-300 text-amber-700 text-xs rounded-brand-md print:bg-transparent print:border-amber-500">
+            Este documento es un <strong>borrador sin validez fiscal</strong> — todavía no se ha enviado a la DIAN.
+            No tiene CUFE, código QR ni firma digital.
+          </div>
+        )}
+
         <div className="flex justify-between items-start border-b border-neutralCustom-200 pb-3 mb-3">
           <h1 className="text-base font-bold">
-            Factura Electrónica de Venta No. {factura.numero_completo}
+            Factura Electrónica de Venta {factura.numero_completo ? `No. ${factura.numero_completo}` : "(Borrador)"}
             <span className="block text-xs font-normal text-neutralCustom-500 uppercase tracking-wide">
               Representación Gráfica
             </span>
@@ -176,7 +194,8 @@ export default function InvoiceRepresentationPage() {
               <span className="font-semibold">Total de Líneas:</span> {factura.lineas.length}
             </p>
             <p>
-              <span className="font-semibold">Fecha de Emisión:</span> {formatFechaHora(factura.fecha_envio)}
+              <span className="font-semibold">{factura.fecha_envio ? "Fecha de Emisión:" : "Fecha del Documento:"}</span>{" "}
+              {factura.fecha_envio ? formatFechaHora(factura.fecha_envio) : factura.fecha}
             </p>
             {factura.fecha_respuesta && (
               <p>
@@ -267,10 +286,12 @@ export default function InvoiceRepresentationPage() {
           </div>
         </div>
 
-        <div className="text-xs text-neutralCustom-600 mb-4">
-          <p className="font-semibold">CUFE:</p>
-          <p className="break-all font-mono">{factura.cufe}</p>
-        </div>
+        {factura.cufe && (
+          <div className="text-xs text-neutralCustom-600 mb-4">
+            <p className="font-semibold">CUFE:</p>
+            <p className="break-all font-mono">{factura.cufe}</p>
+          </div>
+        )}
 
         {firmaDigital && (
           <div className="text-xs text-neutralCustom-500 mb-4 border-t border-neutralCustom-200 pt-3">
@@ -288,7 +309,12 @@ export default function InvoiceRepresentationPage() {
               {resolucion.fecha_fin}.
             </p>
           )}
-          <p>Documento generado por IngeFact — XML generado y firmado por el proveedor tecnológico: Alegra.</p>
+          <p>
+            {factura.cufe
+              ? "Documento generado por IngeFact — XML generado y firmado por el proveedor tecnológico: Alegra."
+              : "Documento generado por IngeFact — vista previa de borrador, aún no enviado al proveedor tecnológico."}
+          </p>
+        </div>
         </div>
       </div>
     </div>
