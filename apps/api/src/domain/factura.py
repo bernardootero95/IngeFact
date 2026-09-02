@@ -135,6 +135,7 @@ class FacturaListItemResponse(BaseModel):
     numero_completo: str | None
     estado: str
     total: float
+    cufe: str | None
 
     @staticmethod
     def from_model(factura) -> "FacturaListItemResponse":
@@ -145,4 +146,5 @@ class FacturaListItemResponse(BaseModel):
             numero_completo=factura.numero_completo,
             estado=factura.estado,
             total=float(factura.total),
+            cufe=factura.cufe,
         )
