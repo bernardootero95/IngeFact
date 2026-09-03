@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getFactura, eliminarBorradorFactura, obtenerUrlXmlFactura } from "@ingefact/core-api";
+import {
+  getFactura,
+  eliminarBorradorFactura,
+  obtenerUrlXmlFactura,
+  listNotasCredito,
+  anularFactura,
+} from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
@@ -12,6 +18,21 @@ const ESTADO_INFO = {
   enviada: { icon: "⏳", label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
   aceptada: { icon: "✅", label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
   rechazada: { icon: "❌", label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  anulada: { icon: "🚫", label: "Anulada", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+};
+
+const NOTA_ESTADO_BADGE = {
+  borrador: "bg-neutralCustom-100 text-neutralCustom-600",
+  enviada: "bg-fiscal-info/10 text-fiscal-info",
+  aceptada: "bg-brand-50 text-brand-600",
+  rechazada: "bg-fiscal-danger/10 text-fiscal-danger",
+};
+
+const NOTA_ESTADO_LABEL = {
+  borrador: "Borrador",
+  enviada: "Enviada",
+  aceptada: "Aceptada",
+  rechazada: "Rechazada",
 };
 
 export default function InvoiceDetailPage() {
@@ -19,18 +40,21 @@ export default function InvoiceDetailPage() {
   const { id } = useParams();
 
   const [factura, setFactura] = useState(null);
+  const [notasCredito, setNotasCredito] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloadingXml, setIsDownloadingXml] = useState(false);
+  const [isAnulando, setIsAnulando] = useState(false);
   const [toast, setToast] = useState({ message: null, type: "success" });
 
   const cargarFactura = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await getFactura(id);
+      const [data, notas] = await Promise.all([getFactura(id), listNotasCredito({ facturaId: id })]);
       setFactura(data);
+      setNotasCredito(notas);
     } catch (error) {
       setLoadError(error.message);
     } finally {
@@ -41,6 +65,23 @@ export default function InvoiceDetailPage() {
   useEffect(() => {
     cargarFactura();
   }, [cargarFactura]);
+
+  const handleAnular = async () => {
+    if (!window.confirm("¿Anular esta factura? Se creará y enviará una Nota Crédito por el 100% del valor.")) return;
+    setIsAnulando(true);
+    try {
+      const nota = await anularFactura(id);
+      navigate(`/credit-notes/${nota.id}`);
+    } catch (error) {
+      setToast({ message: error.message, type: "error" });
+    } finally {
+      setIsAnulando(false);
+    }
+  };
+
+  const creditoAcumulado = notasCredito
+    .filter((n) => n.estado === "aceptada")
+    .reduce((total, n) => total + n.total, 0);
 
   const handleEliminar = async () => {
     if (!window.confirm("¿Eliminar este borrador de factura?")) return;
@@ -196,6 +237,23 @@ export default function InvoiceDetailPage() {
                       </button>
                     </>
                   )}
+                  {factura.estado === "aceptada" && (
+                    <>
+                      <button
+                        onClick={() => navigate(`/invoices/${id}/credit-notes/new`)}
+                        className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors"
+                      >
+                        Crear Nota Crédito
+                      </button>
+                      <button
+                        onClick={handleAnular}
+                        disabled={isAnulando}
+                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      >
+                        {isAnulando ? "Anulando..." : "Anular Factura"}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -271,6 +329,54 @@ export default function InvoiceDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {notasCredito.length > 0 && (
+                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+                  <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Notas Crédito asociadas</h3>
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-100">
+                        <th className="pb-2 font-semibold">Número</th>
+                        <th className="pb-2 font-semibold">Fecha</th>
+                        <th className="pb-2 font-semibold">Estado</th>
+                        <th className="pb-2 text-right font-semibold">Monto</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutralCustom-100">
+                      {notasCredito.map((n) => (
+                        <tr
+                          key={n.id}
+                          onClick={() => navigate(`/credit-notes/${n.id}`)}
+                          className="cursor-pointer hover:bg-neutralCustom-50"
+                        >
+                          <td className="py-2.5 font-medium text-neutralCustom-800">
+                            {n.numero_completo || "Sin enviar"}
+                          </td>
+                          <td className="py-2.5">{n.fecha}</td>
+                          <td className="py-2.5">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                NOTA_ESTADO_BADGE[n.estado] || NOTA_ESTADO_BADGE.borrador
+                              }`}
+                            >
+                              {NOTA_ESTADO_LABEL[n.estado] || n.estado}
+                            </span>
+                          </td>
+                          <td className="py-2.5 text-right font-medium text-neutralCustom-800">
+                            {formatCOP(n.total)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {factura.estado === "aceptada" && creditoAcumulado > 0 && (
+                    <p className="text-xs text-neutralCustom-500 mt-3">
+                      Crédito acumulado: {formatCOP(creditoAcumulado)} de {formatCOP(factura.total)} (
+                      {Math.round((creditoAcumulado / factura.total) * 100)}%) — la factura sigue vigente.
+                    </p>
+                  )}
+                </div>
+              )}
 
               {historial.length > 0 && (
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">

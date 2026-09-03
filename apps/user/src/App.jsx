@@ -11,6 +11,9 @@ import InvoicesListPage from "./modules/invoices/pages/InvoicesListPage";
 import InvoiceFormPage from "./modules/invoices/pages/InvoiceFormPage";
 import InvoiceDetailPage from "./modules/invoices/pages/InvoiceDetailPage";
 import InvoiceRepresentationPage from "./modules/invoices/pages/InvoiceRepresentationPage";
+import CreditNotesListPage from "./modules/creditNotes/pages/CreditNotesListPage";
+import CreditNoteFormPage from "./modules/creditNotes/pages/CreditNoteFormPage";
+import CreditNoteDetailPage from "./modules/creditNotes/pages/CreditNoteDetailPage";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
@@ -104,6 +107,42 @@ export default function App() {
           element={
             <ProtectedRoute>
               <InvoiceRepresentationPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/invoices/:facturaId/credit-notes/new"
+          element={
+            <ProtectedRoute>
+              <CreditNoteFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/credit-notes"
+          element={
+            <ProtectedRoute>
+              <CreditNotesListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/credit-notes/:id/edit"
+          element={
+            <ProtectedRoute>
+              <CreditNoteFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/credit-notes/:id"
+          element={
+            <ProtectedRoute>
+              <CreditNoteDetailPage />
             </ProtectedRoute>
           }
         />
