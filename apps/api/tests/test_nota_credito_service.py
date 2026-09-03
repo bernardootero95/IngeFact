@@ -392,6 +392,24 @@ def test_listar_no_mezcla_notas_de_otro_tenant(db_session):
     assert len(service.listar(empresa_b.id)) == 0
 
 
+def test_listar_filtra_por_factura_id(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura_1 = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.invoice_response = {
+        "invoice": {"id": "inv-2", "cufe": "cufe-factura-2", "fullNumber": "SETP2", "legalStatus": "ACCEPTED"}
+    }
+    factura_2 = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    service.crear_borrador(empresa.id, factura_1.id, _nota_payload(factura_1.lineas[0].id))
+    service.crear_borrador(empresa.id, factura_2.id, _nota_payload(factura_2.lineas[0].id))
+
+    assert len(service.listar(empresa.id, factura_id=factura_1.id)) == 1
+    assert len(service.listar(empresa.id)) == 2
+
+
 def test_obtener_url_xml_pide_una_url_fresca_a_alegra(db_session):
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)

@@ -56,10 +56,11 @@ def anular_factura(
 @router.get("/notas-credito", response_model=list[NotaCreditoListItemResponse])
 def listar_notas_credito(
     estado: str | None = None,
+    factura_id: uuid.UUID | None = None,
     db: Session = Depends(get_db),
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
-    notas = NotaCreditoService(db).listar(tenant.empresa_id, estado=estado)
+    notas = NotaCreditoService(db).listar(tenant.empresa_id, estado=estado, factura_id=factura_id)
     return [NotaCreditoListItemResponse.from_model(n) for n in notas]
 
 
