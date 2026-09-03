@@ -166,12 +166,46 @@ probar el Sprint 8 sin tener una resolución real todavía.
 (el texto que va codificado en el QR del PDF), y un bloque `files.xml` con una URL
 S3 firmada (temporal) para descargar el XML generado.
 
-## `POST /credit-notes` y `POST /debit-notes` 📄 solo doc
+## `POST /credit-notes` y `POST /debit-notes` — ✅ verificado (Sprint 9)
 
 Mismo patrón que `/invoices` pero con `conceptCode` (motivo de la nota, tabla DIAN
 1-6 para crédito) y `associatedDocuments[]` referenciando la factura original
-(`date`, `documentType`, `number`, `prefix`, `uuid`=CUFE). Se probarán en vivo en
-Sprint 9, cuando ya exista una factura real para referenciar.
+(`date`, `documentType`, `number`, `prefix`, `uuid`=CUFE).
+
+Probado en vivo contra el sandbox real (`scripts/explore_alegra_credit_note.py`),
+referenciando una factura ya `ACCEPTED_WITH_OBSERVATIONS` (SETP991453316):
+
+- **No exigen un bloque `resolution` propio** como `/invoices` — el consecutivo
+  (`number`) es enteramente nuestro, sin rango/`technicalKey` que registrar ante
+  la DIAN. `prefix` no se valida: si no se envía, Alegra lo devuelve vacío
+  (`""`). IngeFact controla su propio prefijo visual (`NC-000001`) sin
+  comunicárselo a Alegra.
+- **Exigen `invoicePeriod`** (`{startDate, endDate}`) — no documentado en la doc
+  oficial, el primer intento sin este campo respondió 400
+  (`instance requires property "invoicePeriod"`).
+- Deben salir de la **misma empresa/NIT** que emitió la factura original —
+  mismo patrón de aislamiento ya conocido de facturas (probar con la empresa
+  principal del token en vez de la asociada dueña de la factura dio
+  `REJECTED` código 89 "NIT no autorizado").
+- Respuesta 201 real: `creditNote.{id, cude, date, prefix, number, fullNumber,
+  status, legalStatus, governmentResponse, qrCodeContent, xmlFileName,
+  zipFileName}` + `files.{xml, attachedDocument, zip}` (a diferencia de
+  `/invoices`, que solo trae `files.xml`). El campo equivalente al CUFE se
+  llama `cude`, no `cufe`.
+- `/debit-notes` respondió con la misma estructura y también
+  `ACCEPTED_WITH_OBSERVATIONS` real, con la única diferencia de que
+  `debitNote.number` volvió como **string** ("474021") mientras que
+  `creditNote.number` volvió como **entero** (373350) — inconsistencia de
+  tipos del lado de Alegra, no confiar en el tipo de ese campo en la
+  respuesta si se llega a implementar Notas Débito.
+- El catálogo `conceptos_nota_credito` (ya sincronizado desde Sprint 2+3) trae
+  el código **"2" = "Anulación del documento equivalente electrónico"** —
+  usado como motivo fijo del atajo "Anular Factura".
+
+Alcance implementado en Sprint 9: solo Notas Crédito (+ el atajo "Anular
+Factura", que es una Nota Crédito 100%/motivo fijo). Notas Débito quedan
+para un sprint aparte, aunque el hallazgo de arriba ya deja documentado que
+el mismo patrón de payload aplica.
 
 ## Resolución de pruebas real (post-cierre Sprint 8) — ✅ verificado
 

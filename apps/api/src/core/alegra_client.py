@@ -98,6 +98,19 @@ class AlegraClient:
         que Alegra no lo expone (ver docs/alegra-investigacion.md)."""
         return self._request("GET", f"/invoices/{invoice_id}")
 
+    def create_credit_note(self, payload: dict) -> dict:
+        """POST /credit-notes. Verificado en vivo contra el sandbox (Sprint
+        9): a diferencia de /invoices, no exige un bloque "resolution"
+        propio -- si exige "invoicePeriod" (no documentado oficialmente) y
+        "associatedDocuments[]" referenciando la factura original. Debe
+        salir de la misma empresa/NIT que emitio esa factura."""
+        return self._request("POST", "/credit-notes", json=payload)
+
+    def get_credit_note(self, credit_note_id: str) -> dict:
+        """GET /credit-notes/{id} -- usado para re-pedir la URL S3 firmada
+        del XML, mismo patron que get_invoice."""
+        return self._request("GET", f"/credit-notes/{credit_note_id}")
+
     @staticmethod
     def fetch_raw(url: str) -> bytes:
         """GET plano a una URL fuera de la API de Alegra (ej. la URL S3
