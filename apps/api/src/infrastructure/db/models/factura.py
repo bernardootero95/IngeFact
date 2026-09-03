@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.infrastructure.db.session import Base
 
-ESTADOS_FACTURA = ("borrador", "enviada", "aceptada", "rechazada")
+ESTADOS_FACTURA = ("borrador", "enviada", "aceptada", "rechazada", "anulada")
 
 
 class Factura(Base):
@@ -17,7 +17,9 @@ class Factura(Base):
 
     __tablename__ = "facturas"
     __table_args__ = (
-        CheckConstraint("estado IN ('borrador', 'enviada', 'aceptada', 'rechazada')", name="ck_facturas_estado"),
+        CheckConstraint(
+            "estado IN ('borrador', 'enviada', 'aceptada', 'rechazada', 'anulada')", name="ck_facturas_estado"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
