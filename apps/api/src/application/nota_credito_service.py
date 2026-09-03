@@ -27,7 +27,9 @@ class NotaCreditoService:
         self.db = db
         self._alegra_client = alegra_client or AlegraClient()
 
-    def listar(self, empresa_id: uuid.UUID, estado: str | None = None) -> list[NotaCredito]:
+    def listar(
+        self, empresa_id: uuid.UUID, estado: str | None = None, factura_id: uuid.UUID | None = None
+    ) -> list[NotaCredito]:
         query = (
             select(NotaCredito)
             .where(NotaCredito.empresa_id == empresa_id, NotaCredito.eliminado.is_(None))
@@ -36,6 +38,8 @@ class NotaCreditoService:
         )
         if estado:
             query = query.where(NotaCredito.estado == estado)
+        if factura_id:
+            query = query.where(NotaCredito.factura_id == factura_id)
         return list(self.db.execute(query).scalars().all())
 
     def obtener(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> NotaCredito:
