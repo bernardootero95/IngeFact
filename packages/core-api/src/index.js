@@ -66,3 +66,14 @@ export {
   obtenerUrlXmlFactura,
   obtenerFirmaDigitalFactura,
 } from "./services/facturas.js";
+export {
+  listNotasCredito,
+  getNotaCredito,
+  obtenerLineasDisponiblesFactura,
+  crearBorradorNotaCredito,
+  actualizarBorradorNotaCredito,
+  eliminarBorradorNotaCredito,
+  enviarNotaCredito,
+  anularFactura,
+  obtenerUrlXmlNotaCredito,
+} from "./services/notasCredito.js";
