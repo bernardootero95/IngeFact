@@ -76,4 +76,15 @@ export {
   enviarNotaCredito,
   anularFactura,
   obtenerUrlXmlNotaCredito,
+  obtenerFirmaDigitalNotaCredito,
 } from "./services/notasCredito.js";
+export {
+  listNotasDebito,
+  getNotaDebito,
+  crearBorradorNotaDebito,
+  actualizarBorradorNotaDebito,
+  eliminarBorradorNotaDebito,
+  enviarNotaDebito,
+  obtenerUrlXmlNotaDebito,
+  obtenerFirmaDigitalNotaDebito,
+} from "./services/notasDebito.js";

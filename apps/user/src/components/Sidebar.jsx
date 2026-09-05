@@ -31,6 +31,7 @@ const navItems = [
     children: [
       { name: "Facturas", path: "/invoices" },
       { name: "Notas Crédito", path: "/credit-notes" },
+      { name: "Notas Débito", path: "/debit-notes" },
     ],
   },
   {

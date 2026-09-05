@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { listNotasCredito } from "@ingefact/core-api";
+import { listNotasDebito } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -41,7 +41,7 @@ function IconButton({ title, onClick, children }) {
   );
 }
 
-export default function CreditNotesListPage() {
+export default function DebitNotesListPage() {
   const navigate = useNavigate();
   const [notas, setNotas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export default function CreditNotesListPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await listNotasCredito({ estado: estadoFiltro || undefined });
+      const data = await listNotasDebito({ estado: estadoFiltro || undefined });
       setNotas(data);
     } catch (error) {
       setLoadError(error.message);
@@ -72,8 +72,8 @@ export default function CreditNotesListPage() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
-            <h2 className="text-lg font-medium text-neutralCustom-800">Notas Crédito</h2>
-            <p className="text-xs text-neutralCustom-500">Consulta las notas crédito emitidas contra tus facturas.</p>
+            <h2 className="text-lg font-medium text-neutralCustom-800">Notas Débito</h2>
+            <p className="text-xs text-neutralCustom-500">Consulta las notas débito emitidas contra tus facturas.</p>
           </div>
         </header>
 
@@ -95,7 +95,7 @@ export default function CreditNotesListPage() {
 
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando notas crédito...
+                Cargando notas débito...
               </div>
             ) : loadError ? (
               <div className="p-12 text-center">
@@ -124,7 +124,7 @@ export default function CreditNotesListPage() {
                   {notas.map((n) => (
                     <tr
                       key={n.id}
-                      onClick={() => navigate(`/credit-notes/${n.id}`)}
+                      onClick={() => navigate(`/debit-notes/${n.id}`)}
                       className="hover:bg-neutralCustom-50 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-4 font-medium text-neutralCustom-800">
@@ -159,7 +159,7 @@ export default function CreditNotesListPage() {
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <IconButton
                             title={n.cude ? "Ver representación gráfica" : "Vista previa (borrador)"}
-                            onClick={() => navigate(`/credit-notes/${n.id}/representacion`)}
+                            onClick={() => navigate(`/debit-notes/${n.id}/representacion`)}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path
@@ -173,7 +173,7 @@ export default function CreditNotesListPage() {
                           {(n.estado === "borrador" || n.estado === "rechazada") && (
                             <IconButton
                               title={n.estado === "rechazada" ? "Corregir y reenviar" : "Continuar editando"}
-                              onClick={() => navigate(`/credit-notes/${n.id}/edit`)}
+                              onClick={() => navigate(`/debit-notes/${n.id}/edit`)}
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -185,7 +185,7 @@ export default function CreditNotesListPage() {
                               </svg>
                             </IconButton>
                           )}
-                          <IconButton title="Ver detalle" onClick={() => navigate(`/credit-notes/${n.id}`)}>
+                          <IconButton title="Ver detalle" onClick={() => navigate(`/debit-notes/${n.id}`)}>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path
                                 strokeLinecap="round"
@@ -220,12 +220,12 @@ export default function CreditNotesListPage() {
                   </svg>
                 </div>
                 <h3 className="text-base font-bold text-neutralCustom-800 mb-1">
-                  {estado ? "No se encontraron notas crédito" : "No tienes notas crédito registradas"}
+                  {estado ? "No se encontraron notas débito" : "No tienes notas débito registradas"}
                 </h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
                   {estado
                     ? "Prueba con otro filtro."
-                    : "Crea una nota crédito desde el detalle de una factura aceptada."}
+                    : "Crea una nota débito desde el detalle de una factura aceptada."}
                 </p>
               </div>
             )}
