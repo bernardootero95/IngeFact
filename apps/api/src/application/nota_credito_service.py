@@ -246,7 +246,7 @@ class NotaCreditoService:
         # esta misma nota (la sesion de test usa autoflush=False).
         self.db.flush()
         if nota.estado == "aceptada":
-            self._revisar_anulacion(factura)
+            self.revisar_anulacion(factura)
             self.db.add(factura)
 
         self.db.commit()
@@ -272,7 +272,7 @@ class NotaCreditoService:
         )
         return self.enviar(empresa_id, nota.id)
 
-    def _revisar_anulacion(self, factura: Factura) -> None:
+    def revisar_anulacion(self, factura: Factura) -> None:
         disponibilidad = self.disponibilidad_lineas(factura)
         if all(cantidad <= 0 for cantidad in disponibilidad.values()):
             factura.estado = "anulada"

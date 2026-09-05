@@ -3,10 +3,11 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
+from src.application.nota_credito_service import NotaCreditoService
 from src.core.alegra_errors import map_government_response
-from src.infrastructure.db.models import CompanyStatus, Empresa, Factura
+from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito
 from src.infrastructure.db.session import get_db
 
 logger = logging.getLogger(__name__)
@@ -96,4 +97,67 @@ async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
         return
 
     db.add(factura)
+    db.commit()
+
+
+@router.post("/credit-notes", status_code=204)
+async def webhook_credit_notes(request: Request, db: Session = Depends(get_db)):
+    """
+    Webhook creditNotes.emissionFinished -- mismo criterio que
+    webhook_invoices (Sprint 8): la respuesta sincrona de
+    `NotaCreditoService.enviar` ya resuelve el estado en la mayoria de los
+    casos, este webhook solo reconcilia si Alegra tarda en resolver. No
+    sobreescribe una nota ya en estado final (aceptada/rechazada).
+    """
+    payload = await request.json()
+    logger.info("Webhook Alegra creditNotes.emissionFinished recibido: %s", payload)
+
+    credit_note = payload.get("creditNote") or {}
+    credit_note_id = credit_note.get("id")
+    if not credit_note_id:
+        logger.warning("Webhook credit-notes sin creditNote.id identificable, se descarta.")
+        return
+
+    nota = db.execute(
+        select(NotaCredito)
+        .where(NotaCredito.alegra_credit_note_id == credit_note_id)
+        .options(selectinload(NotaCredito.factura).selectinload(Factura.lineas))
+    ).scalar_one_or_none()
+    if nota is None:
+        logger.warning(
+            "Webhook credit-notes para creditNote.id=%s no corresponde a ninguna nota conocida.", credit_note_id
+        )
+        return
+
+    if nota.estado in ("aceptada", "rechazada"):
+        logger.info("Nota credito %s ya esta en estado final (%s), webhook ignorado.", nota.id, nota.estado)
+        return
+
+    government_response = credit_note.get("governmentResponse") or {}
+    legal_status = credit_note.get("legalStatus")
+    if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
+        nota.estado = "aceptada"
+        nota.cude = credit_note.get("cude") or nota.cude
+        nota.razon_rechazo = None
+        nota.notificaciones_dian = government_response.get("errorMessages") or None
+        nota.fecha_respuesta = datetime.now(timezone.utc)
+        db.add(nota)
+        # flush (sin commit) para que revisar_anulacion -- que consulta
+        # NotaCredito.estado por SQL -- vea el "aceptada" recien asignado a
+        # esta misma nota (mismo hallazgo ya resuelto en NotaCreditoService.enviar).
+        db.flush()
+        NotaCreditoService(db).revisar_anulacion(nota.factura)
+        db.add(nota.factura)
+    elif legal_status == "REJECTED":
+        nota.estado = "rechazada"
+        nota.razon_rechazo = map_government_response(
+            government_response.get("code", ""), government_response.get("message") or "La DIAN rechazo la nota."
+        )
+        nota.notificaciones_dian = government_response.get("errorMessages") or None
+        nota.fecha_respuesta = datetime.now(timezone.utc)
+    else:
+        logger.info("Webhook credit-notes con legalStatus=%s, sin cambio de estado para nota %s.", legal_status, nota.id)
+        return
+
+    db.add(nota)
     db.commit()
