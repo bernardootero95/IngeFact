@@ -3,6 +3,7 @@ from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
 from src.infrastructure.db.models.factura import Factura, FacturaLinea
 from src.infrastructure.db.models.impuesto_empresa import ImpuestoEmpresa
 from src.infrastructure.db.models.nota_credito import ConsecutivoNota, NotaCredito, NotaCreditoLinea
+from src.infrastructure.db.models.nota_debito import NotaDebito, NotaDebitoLinea
 from src.infrastructure.db.models.plan import Plan
 from src.infrastructure.db.models.producto import Producto
 from src.infrastructure.db.models.reference_table import REFERENCE_TABLE_MODELS, REFERENCE_TABLE_NAMES
@@ -24,6 +25,8 @@ __all__ = [
     "FacturaLinea",
     "NotaCredito",
     "NotaCreditoLinea",
+    "NotaDebito",
+    "NotaDebitoLinea",
     "ConsecutivoNota",
     "ImpuestoEmpresa",
     "Suscripcion",

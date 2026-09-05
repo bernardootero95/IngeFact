@@ -74,6 +74,7 @@ class _FakeAlegraClient:
         self.credit_note_response: dict | None = None
         self.credit_note_error: AlegraApiError | None = None
         self.last_credit_note_payload: dict | None = None
+        self.raw_response: bytes = b""
 
     def create_invoice(self, payload: dict) -> dict:
         return self.invoice_response
@@ -88,6 +89,11 @@ class _FakeAlegraClient:
         if self.credit_note_error:
             raise self.credit_note_error
         return self.credit_note_response or {}
+
+    def fetch_raw(self, url: str) -> bytes:
+        if self.credit_note_error:
+            raise self.credit_note_error
+        return self.raw_response
 
 
 def _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2):
@@ -455,3 +461,116 @@ def test_disponibilidad_lineas_por_factura_refleja_lo_acreditado(db_session):
     disponibilidad = service.disponibilidad_lineas_por_factura(empresa.id, factura.id)
 
     assert disponibilidad[factura.lineas[0].id] == 1
+
+
+def test_editar_nota_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    fake.credit_note_response = {
+        "creditNote": {
+            "id": "cn-1",
+            "legalStatus": "REJECTED",
+            "governmentResponse": {"code": "89", "message": "NIT no autorizado", "errorMessages": ["Regla FAU04"]},
+        }
+    }
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id, cantidad=1))
+    rechazada = service.enviar(empresa.id, nota.id)
+    assert rechazada.estado == "rechazada"
+    assert rechazada.consecutivo == 1
+
+    corregida = service.actualizar_borrador(
+        empresa.id,
+        nota.id,
+        ActualizarNotaCreditoRequest(
+            motivo_codigo="3",
+            lineas=[LineaNotaCreditoRequest(factura_linea_id=factura.lineas[0].id, cantidad=2)],
+        ),
+    )
+    assert corregida.estado == "borrador"
+    assert corregida.consecutivo is None
+    assert corregida.numero_completo is None
+    assert corregida.cude is None
+    assert corregida.razon_rechazo is None
+    assert corregida.notificaciones_dian is None
+
+    fake.credit_note_response = {"creditNote": {"id": "cn-2", "cude": "cude-aceptada", "legalStatus": "ACCEPTED"}}
+    reenviada = service.enviar(empresa.id, nota.id)
+
+    assert reenviada.estado == "aceptada"
+    assert reenviada.cude == "cude-aceptada"
+    assert reenviada.razon_rechazo is None
+    # consecutivo nuevo, no se reutiliza el 1 ya rechazado ante la DIAN.
+    assert reenviada.consecutivo == 2
+    assert reenviada.numero_completo == "NC-000002"
+
+
+def test_eliminar_nota_rechazada_es_soft_delete(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_response = {"creditNote": {"id": "cn-1", "legalStatus": "REJECTED"}}
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+    service.enviar(empresa.id, nota.id)
+
+    service.eliminar_borrador(empresa.id, nota.id)
+
+    assert service.listar(empresa.id) == []
+
+
+_XML_CON_FIRMA = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<CreditNote xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+    b'<ds:SignatureValue Id="xmldsig-1-sigvalue">firma-base64-de-prueba</ds:SignatureValue>'
+    b"</CreditNote>"
+)
+_XML_SIN_FIRMA = b'<?xml version="1.0" encoding="UTF-8"?><CreditNote></CreditNote>'
+
+
+def test_obtener_firma_digital_la_extrae_del_xml_y_la_cachea(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_response = {"creditNote": {"id": "cn-1", "cude": "cude-1", "legalStatus": "ACCEPTED"}}
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+    service.enviar(empresa.id, nota.id)
+
+    fake.credit_note_response = {"files": {"xml": "https://s3.example.com/nota.xml"}}
+    fake.raw_response = _XML_CON_FIRMA
+    firma = service.obtener_firma_digital(empresa.id, nota.id)
+    assert firma == "firma-base64-de-prueba"
+
+    actualizada = service.obtener(empresa.id, nota.id)
+    assert actualizada.firma_digital == "firma-base64-de-prueba"
+
+    # Segunda llamada no vuelve a pedirle nada a Alegra -- usa el cache.
+    fake.credit_note_error = AlegraApiError(500, {})
+    assert service.obtener_firma_digital(empresa.id, nota.id) == "firma-base64-de-prueba"
+
+
+def test_obtener_firma_digital_sin_firma_en_el_xml_falla_404(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_response = {"creditNote": {"id": "cn-1", "cude": "cude-1", "legalStatus": "ACCEPTED"}}
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+    service.enviar(empresa.id, nota.id)
+
+    fake.credit_note_response = {"files": {"xml": "https://s3.example.com/nota.xml"}}
+    fake.raw_response = _XML_SIN_FIRMA
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.obtener_firma_digital(empresa.id, nota.id)
+    assert exc_info.value.status_code == 404

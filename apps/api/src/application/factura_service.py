@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto
 
@@ -22,18 +23,6 @@ def _tarifa_a_string(tarifa: float) -> str:
     validacion que ya vive en el catalogo de Impuestos (Sprint 7)."""
     entero = int(round(tarifa))
     return str(entero) if float(entero) == tarifa else str(tarifa)
-
-
-def _extraer_firma_digital(xml_bytes: bytes) -> str | None:
-    """Busca <ds:SignatureValue> en el XML firmado por namespace-agnostic
-    local-name (el prefijo puede variar) -- verificado contra un XML real de
-    Alegra en sandbox."""
-    root = ET.fromstring(xml_bytes)
-    for elem in root.iter():
-        local_name = elem.tag.rsplit("}", 1)[-1]
-        if local_name == "SignatureValue" and elem.text:
-            return elem.text.strip()
-    return None
 
 
 class FacturaService:
@@ -98,7 +87,7 @@ class FacturaService:
         url = self.obtener_url_xml(empresa_id, factura_id)
         try:
             xml_bytes = self._alegra_client.fetch_raw(url)
-            firma = _extraer_firma_digital(xml_bytes)
+            firma = extraer_firma_digital(xml_bytes)
         except (httpx.HTTPError, ET.ParseError) as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo obtener la firma digital del XML.") from exc
 

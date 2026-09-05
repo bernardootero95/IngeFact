@@ -112,3 +112,13 @@ def obtener_url_xml(
 ):
     url = NotaCreditoService(db).obtener_url_xml(tenant.empresa_id, nota_id)
     return {"url": url}
+
+
+@router.get("/notas-credito/{nota_id}/firma-digital")
+def obtener_firma_digital(
+    nota_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    firma = NotaCreditoService(db).obtener_firma_digital(tenant.empresa_id, nota_id)
+    return {"firma_digital": firma}

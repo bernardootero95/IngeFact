@@ -4,7 +4,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, field_validator
 
 
-class LineaNotaCreditoRequest(BaseModel):
+class LineaNotaDebitoRequest(BaseModel):
     factura_linea_id: uuid.UUID
     cantidad: float
 
@@ -16,9 +16,9 @@ class LineaNotaCreditoRequest(BaseModel):
         return v
 
 
-class CrearNotaCreditoRequest(BaseModel):
+class CrearNotaDebitoRequest(BaseModel):
     motivo_codigo: str
-    lineas: list[LineaNotaCreditoRequest]
+    lineas: list[LineaNotaDebitoRequest]
 
     @field_validator("motivo_codigo")
     @classmethod
@@ -30,17 +30,17 @@ class CrearNotaCreditoRequest(BaseModel):
 
     @field_validator("lineas")
     @classmethod
-    def al_menos_una_linea(cls, v: list[LineaNotaCreditoRequest]) -> list[LineaNotaCreditoRequest]:
+    def al_menos_una_linea(cls, v: list[LineaNotaDebitoRequest]) -> list[LineaNotaDebitoRequest]:
         if not v:
-            raise ValueError("La nota credito debe tener al menos una linea.")
+            raise ValueError("La nota debito debe tener al menos una linea.")
         return v
 
 
-class ActualizarNotaCreditoRequest(CrearNotaCreditoRequest):
+class ActualizarNotaDebitoRequest(CrearNotaDebitoRequest):
     pass
 
 
-class NotaCreditoLineaResponse(BaseModel):
+class NotaDebitoLineaResponse(BaseModel):
     id: str
     factura_linea_id: str
     codigo: str | None
@@ -55,8 +55,8 @@ class NotaCreditoLineaResponse(BaseModel):
     total_linea: float
 
     @staticmethod
-    def from_model(linea) -> "NotaCreditoLineaResponse":
-        return NotaCreditoLineaResponse(
+    def from_model(linea) -> "NotaDebitoLineaResponse":
+        return NotaDebitoLineaResponse(
             id=str(linea.id),
             factura_linea_id=str(linea.factura_linea_id),
             codigo=linea.codigo,
@@ -72,7 +72,7 @@ class NotaCreditoLineaResponse(BaseModel):
         )
 
 
-class NotaCreditoResponse(BaseModel):
+class NotaDebitoResponse(BaseModel):
     id: str
     factura_id: str
     factura_numero_completo: str | None
@@ -94,11 +94,11 @@ class NotaCreditoResponse(BaseModel):
     fecha_envio: datetime | None
     fecha_respuesta: datetime | None
     creado: datetime
-    lineas: list[NotaCreditoLineaResponse]
+    lineas: list[NotaDebitoLineaResponse]
 
     @staticmethod
-    def from_model(nota: "NotaCredito") -> "NotaCreditoResponse":  # noqa: F821
-        return NotaCreditoResponse(
+    def from_model(nota: "NotaDebito") -> "NotaDebitoResponse":  # noqa: F821
+        return NotaDebitoResponse(
             id=str(nota.id),
             factura_id=str(nota.factura_id),
             factura_numero_completo=nota.factura.numero_completo,
@@ -120,11 +120,11 @@ class NotaCreditoResponse(BaseModel):
             fecha_envio=nota.fecha_envio,
             fecha_respuesta=nota.fecha_respuesta,
             creado=nota.creado,
-            lineas=[NotaCreditoLineaResponse.from_model(linea) for linea in nota.lineas],
+            lineas=[NotaDebitoLineaResponse.from_model(linea) for linea in nota.lineas],
         )
 
 
-class NotaCreditoListItemResponse(BaseModel):
+class NotaDebitoListItemResponse(BaseModel):
     """Version liviana para el listado -- sin lineas."""
 
     id: str
@@ -139,8 +139,8 @@ class NotaCreditoListItemResponse(BaseModel):
     cude: str | None
 
     @staticmethod
-    def from_model(nota: "NotaCredito") -> "NotaCreditoListItemResponse":  # noqa: F821
-        return NotaCreditoListItemResponse(
+    def from_model(nota: "NotaDebito") -> "NotaDebitoListItemResponse":  # noqa: F821
+        return NotaDebitoListItemResponse(
             id=str(nota.id),
             factura_id=str(nota.factura_id),
             factura_numero_completo=nota.factura.numero_completo,
@@ -152,12 +152,3 @@ class NotaCreditoListItemResponse(BaseModel):
             total=float(nota.total),
             cude=nota.cude,
         )
-
-
-class DisponibilidadLineaResponse(BaseModel):
-    """Cuanto de una linea de factura todavia se puede acreditar -- la
-    cantidad original menos lo ya acreditado por notas credito ACEPTADAS
-    (varias notas parciales pueden coexistir sobre la misma factura)."""
-
-    factura_linea_id: str
-    cantidad_disponible: float

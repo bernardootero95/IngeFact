@@ -8,6 +8,7 @@ from src.infrastructure.db.models import (
     FacturaLinea,
     NotaCredito,
     NotaCreditoLinea,
+    NotaDebito,
     Producto,
 )
 
@@ -335,5 +336,99 @@ def test_webhook_credit_notes_nota_desconocida_no_falla(api_client):
 
 def test_webhook_credit_notes_sin_id_identificable_no_falla(api_client):
     response = api_client.post("/api/v1/webhooks/alegra/credit-notes", json={"foo": "bar"})
+
+    assert response.status_code == 204
+
+
+def _crear_nota_debito_enviada(db_session, factura, **overrides):
+    data = {
+        "empresa_id": factura.empresa_id,
+        "factura_id": factura.id,
+        "cliente_id": factura.cliente_id,
+        "fecha": date.today(),
+        "motivo_codigo": "1",
+        "estado": "enviada",
+        "subtotal": 1000,
+        "total_impuestos": 0,
+        "total": 1000,
+        "alegra_debit_note_id": "dn-1",
+        "consecutivo": 1,
+        "numero_completo": "ND-000001",
+    }
+    data.update(overrides)
+    nota = NotaDebito(**data)
+    db_session.add(nota)
+    db_session.commit()
+    db_session.refresh(nota)
+    return nota
+
+
+def test_webhook_debit_notes_marca_aceptada_y_guarda_cude(api_client, db_session):
+    empresa = _crear_empresa(db_session, id_alegra="alegra-dn-1")
+    factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-dn-1", estado="aceptada")
+    nota = _crear_nota_debito_enviada(db_session, factura)
+
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/debit-notes",
+        json={"debitNote": {"id": "dn-1", "cude": "cude-abc", "legalStatus": "ACCEPTED"}},
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(nota)
+    assert nota.estado == "aceptada"
+    assert nota.cude == "cude-abc"
+
+
+def test_webhook_debit_notes_marca_rechazada_con_razon_mapeada(api_client, db_session):
+    empresa = _crear_empresa(db_session, id_alegra="alegra-dn-2")
+    factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-dn-2", estado="aceptada")
+    nota = _crear_nota_debito_enviada(db_session, factura, alegra_debit_note_id="dn-2")
+
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/debit-notes",
+        json={
+            "debitNote": {
+                "id": "dn-2",
+                "legalStatus": "REJECTED",
+                "governmentResponse": {"code": "89", "message": "NIT no autorizado"},
+            }
+        },
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(nota)
+    assert nota.estado == "rechazada"
+    assert "Resolucion DIAN" in nota.razon_rechazo
+
+
+def test_webhook_debit_notes_no_sobreescribe_estado_final(api_client, db_session):
+    empresa = _crear_empresa(db_session, id_alegra="alegra-dn-3")
+    factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-dn-3", estado="aceptada")
+    nota = _crear_nota_debito_enviada(
+        db_session, factura, alegra_debit_note_id="dn-3", estado="aceptada", cude="cude-original"
+    )
+
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/debit-notes",
+        json={"debitNote": {"id": "dn-3", "cude": "cude-nuevo", "legalStatus": "REJECTED"}},
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(nota)
+    assert nota.estado == "aceptada"
+    assert nota.cude == "cude-original"
+
+
+def test_webhook_debit_notes_nota_desconocida_no_falla(api_client):
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/debit-notes",
+        json={"debitNote": {"id": "dn-que-no-existe", "legalStatus": "ACCEPTED"}},
+    )
+
+    assert response.status_code == 204
+
+
+def test_webhook_debit_notes_sin_id_identificable_no_falla(api_client):
+    response = api_client.post("/api/v1/webhooks/alegra/debit-notes", json={"foo": "bar"})
 
     assert response.status_code == 204
