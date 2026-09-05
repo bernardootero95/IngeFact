@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getNotaCredito, eliminarBorradorNotaCredito, obtenerUrlXmlNotaCredito } from "@ingefact/core-api";
+import { getNotaDebito, eliminarBorradorNotaDebito, obtenerUrlXmlNotaDebito } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
@@ -14,7 +14,7 @@ const ESTADO_INFO = {
   rechazada: { icon: "❌", label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
 };
 
-export default function CreditNoteDetailPage() {
+export default function DebitNoteDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -29,7 +29,7 @@ export default function CreditNoteDetailPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const data = await getNotaCredito(id);
+      const data = await getNotaDebito(id);
       setNota(data);
     } catch (error) {
       setLoadError(error.message);
@@ -43,11 +43,11 @@ export default function CreditNoteDetailPage() {
   }, [cargarNota]);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este borrador de nota crédito?")) return;
+    if (!window.confirm("¿Eliminar este borrador de nota débito?")) return;
     setIsDeleting(true);
     try {
-      await eliminarBorradorNotaCredito(id);
-      navigate("/credit-notes");
+      await eliminarBorradorNotaDebito(id);
+      navigate("/debit-notes");
     } catch (error) {
       setToast({ message: error.message, type: "error" });
     } finally {
@@ -58,7 +58,7 @@ export default function CreditNoteDetailPage() {
   const handleDescargarXml = async () => {
     setIsDownloadingXml(true);
     try {
-      const { url } = await obtenerUrlXmlNotaCredito(id);
+      const { url } = await obtenerUrlXmlNotaDebito(id);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
       setToast({ message: error.message, type: "error" });
@@ -75,14 +75,14 @@ export default function CreditNoteDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/credit-notes")} className="text-brand-600 hover:underline font-medium">
-                Notas Crédito
+              <button onClick={() => navigate("/debit-notes")} className="text-brand-600 hover:underline font-medium">
+                Notas Débito
               </button>
               <span>/</span>
               <span>{nota?.numero_completo || "Borrador"}</span>
             </div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
-              Nota Crédito {nota?.numero_completo || "(borrador)"}
+              Nota Débito {nota?.numero_completo || "(borrador)"}
             </h2>
           </div>
         </header>
@@ -163,7 +163,7 @@ export default function CreditNoteDetailPage() {
                   {(nota.estado === "borrador" || nota.estado === "rechazada") && (
                     <>
                       <button
-                        onClick={() => navigate(`/credit-notes/${id}/edit`)}
+                        onClick={() => navigate(`/debit-notes/${id}/edit`)}
                         className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
                       >
                         {nota.estado === "rechazada" ? "Corregir y Reenviar" : "Continuar Editando"}
@@ -182,7 +182,7 @@ export default function CreditNoteDetailPage() {
                     </>
                   )}
                   <button
-                    onClick={() => navigate(`/credit-notes/${id}/representacion`)}
+                    onClick={() => navigate(`/debit-notes/${id}/representacion`)}
                     className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
                   >
                     {nota.cude ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
@@ -225,7 +225,7 @@ export default function CreditNoteDetailPage() {
               </div>
 
               <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
-                <h3 className="text-sm font-semibold text-neutralCustom-800 px-6 pt-6 mb-3">Líneas acreditadas</h3>
+                <h3 className="text-sm font-semibold text-neutralCustom-800 px-6 pt-6 mb-3">Líneas</h3>
                 <table className="w-full text-left text-sm text-neutralCustom-600">
                   <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
                     <tr>

@@ -39,3 +39,7 @@ export async function anularFactura(facturaId) {
 export async function obtenerUrlXmlNotaCredito(id) {
   return apiRequest(`/api/v1/tenant/notas-credito/${id}/xml`);
 }
+
+export async function obtenerFirmaDigitalNotaCredito(id) {
+  return apiRequest(`/api/v1/tenant/notas-credito/${id}/firma-digital`);
+}

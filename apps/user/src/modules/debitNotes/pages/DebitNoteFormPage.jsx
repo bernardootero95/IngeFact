@@ -2,21 +2,20 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getFactura,
-  obtenerLineasDisponiblesFactura,
-  getNotaCredito,
-  crearBorradorNotaCredito,
-  actualizarBorradorNotaCredito,
-  enviarNotaCredito,
+  getNotaDebito,
+  crearBorradorNotaDebito,
+  actualizarBorradorNotaDebito,
+  enviarNotaDebito,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import SeccionLineasCredito from "../components/SeccionLineasCredito";
-import { validateMotivo, validateLineasCredito, calcularTotalesNota } from "./CreditNoteFormPage.validation";
+import SeccionLineasDebito from "../components/SeccionLineasDebito";
+import { validateMotivo, validateLineasDebito, calcularTotalesNota } from "./DebitNoteFormPage.validation";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
-export default function CreditNoteFormPage() {
+export default function DebitNoteFormPage() {
   const navigate = useNavigate();
   const { facturaId: facturaIdParam, id } = useParams();
   const isEditing = Boolean(id);
@@ -39,16 +38,16 @@ export default function CreditNoteFormPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const motivosData = await listPublicReferenceTable("conceptos_nota_credito");
+      const motivosData = await listPublicReferenceTable("conceptos_nota_debito");
       setMotivos(motivosData);
 
       let facturaId = facturaIdParam;
       let cantidadesPorLinea = {};
 
       if (isEditing) {
-        const nota = await getNotaCredito(id);
+        const nota = await getNotaDebito(id);
         if (nota.estado !== "borrador" && nota.estado !== "rechazada") {
-          navigate(`/credit-notes/${id}`, { replace: true });
+          navigate(`/debit-notes/${id}`, { replace: true });
           return;
         }
         if (nota.estado === "rechazada") {
@@ -63,22 +62,14 @@ export default function CreditNoteFormPage() {
         setMotivoCodigo(motivosData[0]?.code || "");
       }
 
-      const [facturaData, disponibilidadData] = await Promise.all([
-        getFactura(facturaId),
-        obtenerLineasDisponiblesFactura(facturaId),
-      ]);
+      const facturaData = await getFactura(facturaId);
       setFactura(facturaData);
-
-      const disponibilidadPorLinea = Object.fromEntries(
-        disponibilidadData.map((item) => [item.factura_linea_id, item.cantidad_disponible]),
-      );
 
       setSeleccion(
         facturaData.lineas.map((facturaLinea) => {
           const cantidadPreexistente = cantidadesPorLinea[facturaLinea.id];
           return {
             facturaLinea,
-            disponible: disponibilidadPorLinea[facturaLinea.id] ?? 0,
             incluida: Boolean(cantidadPreexistente),
             cantidad: cantidadPreexistente || "",
           };
@@ -99,7 +90,7 @@ export default function CreditNoteFormPage() {
     setSeleccion((prev) =>
       prev.map((linea) =>
         linea.facturaLinea.id === facturaLineaId
-          ? { ...linea, incluida, cantidad: incluida ? String(linea.disponible) : "" }
+          ? { ...linea, incluida, cantidad: incluida ? String(linea.facturaLinea.cantidad) : "" }
           : linea,
       ),
     );
@@ -115,7 +106,7 @@ export default function CreditNoteFormPage() {
   const validarTodo = () => {
     const nuevosErrores = {
       motivo: validateMotivo(motivoCodigo),
-      lineas: validateLineasCredito(seleccion),
+      lineas: validateLineasDebito(seleccion),
     };
     setErrors(nuevosErrores);
     return !Object.values(nuevosErrores).some(Boolean);
@@ -131,9 +122,9 @@ export default function CreditNoteFormPage() {
   const guardarBorrador = async () => {
     const payload = buildPayload();
     if (notaId) {
-      return actualizarBorradorNotaCredito(notaId, payload);
+      return actualizarBorradorNotaDebito(notaId, payload);
     }
-    const creada = await crearBorradorNotaCredito(facturaIdParam, payload);
+    const creada = await crearBorradorNotaDebito(facturaIdParam, payload);
     setNotaId(creada.id);
     return creada;
   };
@@ -144,7 +135,7 @@ export default function CreditNoteFormPage() {
     setSaveError(null);
     try {
       const guardada = await guardarBorrador();
-      navigate(`/credit-notes/${guardada.id}`);
+      navigate(`/debit-notes/${guardada.id}`);
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -158,8 +149,8 @@ export default function CreditNoteFormPage() {
     setSaveError(null);
     try {
       const guardada = await guardarBorrador();
-      await enviarNotaCredito(guardada.id);
-      navigate(`/credit-notes/${guardada.id}`);
+      await enviarNotaDebito(guardada.id);
+      navigate(`/debit-notes/${guardada.id}`);
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -193,10 +184,10 @@ export default function CreditNoteFormPage() {
                 </>
               )}
               <span>/</span>
-              <span>{isEditing ? "Editar" : "Nueva"} Nota Crédito</span>
+              <span>{isEditing ? "Editar" : "Nueva"} Nota Débito</span>
             </div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
-              {isEditing ? "Editar Nota Crédito" : "Nueva Nota Crédito"}
+              {isEditing ? "Editar Nota Débito" : "Nueva Nota Débito"}
             </h2>
           </div>
         </header>
@@ -213,7 +204,7 @@ export default function CreditNoteFormPage() {
               <>
                 {razonRechazo && (
                   <div className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
-                    <p className="font-semibold mb-1">Esta nota crédito fue rechazada por la DIAN</p>
+                    <p className="font-semibold mb-1">Esta nota débito fue rechazada por la DIAN</p>
                     <p>{razonRechazo}</p>
                     <p className="mt-1 text-xs">
                       Corrige los datos que hagan falta y vuelve a enviar — se te asignará un número nuevo (el
@@ -222,7 +213,9 @@ export default function CreditNoteFormPage() {
                   </div>
                 )}
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
-                  <h3 className="text-base font-semibold text-neutralCustom-800 mb-3">Factura Original</h3>
+                  <h3 style={{ marginBottom: "14px" }} className="text-base font-semibold text-neutralCustom-800">
+                    Factura Original
+                  </h3>
                   <div className="grid grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-xs text-neutralCustom-500">Número</p>
@@ -241,7 +234,7 @@ export default function CreditNoteFormPage() {
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   <h3 className="text-base font-semibold text-neutralCustom-800 mb-1">Motivo</h3>
-                  <p className="text-xs text-neutralCustom-500 mb-3">Catálogo DIAN de conceptos de nota crédito</p>
+                  <p className="text-xs text-neutralCustom-500 mb-3">Catálogo DIAN de conceptos de nota débito</p>
                   <select
                     value={motivoCodigo}
                     onChange={(e) => setMotivoCodigo(e.target.value)}
@@ -258,7 +251,7 @@ export default function CreditNoteFormPage() {
                   {errors.motivo && <p className="mt-1 text-xs text-fiscal-danger">{errors.motivo}</p>}
                 </div>
 
-                <SeccionLineasCredito
+                <SeccionLineasDebito
                   seleccion={seleccion}
                   error={errors.lineas}
                   onToggleLinea={handleToggleLinea}

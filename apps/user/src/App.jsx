@@ -14,6 +14,11 @@ import InvoiceRepresentationPage from "./modules/invoices/pages/InvoiceRepresent
 import CreditNotesListPage from "./modules/creditNotes/pages/CreditNotesListPage";
 import CreditNoteFormPage from "./modules/creditNotes/pages/CreditNoteFormPage";
 import CreditNoteDetailPage from "./modules/creditNotes/pages/CreditNoteDetailPage";
+import CreditNoteRepresentationPage from "./modules/creditNotes/pages/CreditNoteRepresentationPage";
+import DebitNotesListPage from "./modules/debitNotes/pages/DebitNotesListPage";
+import DebitNoteFormPage from "./modules/debitNotes/pages/DebitNoteFormPage";
+import DebitNoteDetailPage from "./modules/debitNotes/pages/DebitNoteDetailPage";
+import DebitNoteRepresentationPage from "./modules/debitNotes/pages/DebitNoteRepresentationPage";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
@@ -139,10 +144,64 @@ export default function App() {
         />
 
         <Route
+          path="/credit-notes/:id/representacion"
+          element={
+            <ProtectedRoute>
+              <CreditNoteRepresentationPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/credit-notes/:id"
           element={
             <ProtectedRoute>
               <CreditNoteDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/invoices/:facturaId/debit-notes/new"
+          element={
+            <ProtectedRoute>
+              <DebitNoteFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/debit-notes"
+          element={
+            <ProtectedRoute>
+              <DebitNotesListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/debit-notes/:id/edit"
+          element={
+            <ProtectedRoute>
+              <DebitNoteFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/debit-notes/:id/representacion"
+          element={
+            <ProtectedRoute>
+              <DebitNoteRepresentationPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/debit-notes/:id"
+          element={
+            <ProtectedRoute>
+              <DebitNoteDetailPage />
             </ProtectedRoute>
           }
         />
