@@ -111,6 +111,18 @@ class AlegraClient:
         del XML, mismo patron que get_invoice."""
         return self._request("GET", f"/credit-notes/{credit_note_id}")
 
+    def create_debit_note(self, payload: dict) -> dict:
+        """POST /debit-notes. Mismo patron que create_credit_note (payload
+        identico salvo el endpoint), verificado en vivo contra el sandbox
+        en Sprint 9. Nota: la respuesta real trae `debitNote.number` como
+        string, a diferencia de `creditNote.number` (entero) -- no confiar
+        en el tipo de ese campo si se llega a usar."""
+        return self._request("POST", "/debit-notes", json=payload)
+
+    def get_debit_note(self, debit_note_id: str) -> dict:
+        """GET /debit-notes/{id} -- mismo patron que get_credit_note."""
+        return self._request("GET", f"/debit-notes/{debit_note_id}")
+
     @staticmethod
     def fetch_raw(url: str) -> bytes:
         """GET plano a una URL fuera de la API de Alegra (ej. la URL S3

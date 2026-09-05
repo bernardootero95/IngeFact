@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.application.nota_credito_service import NotaCreditoService
 from src.core.alegra_errors import map_government_response
-from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito
+from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito, NotaDebito
 from src.infrastructure.db.session import get_db
 
 logger = logging.getLogger(__name__)
@@ -157,6 +157,58 @@ async def webhook_credit_notes(request: Request, db: Session = Depends(get_db)):
         nota.fecha_respuesta = datetime.now(timezone.utc)
     else:
         logger.info("Webhook credit-notes con legalStatus=%s, sin cambio de estado para nota %s.", legal_status, nota.id)
+        return
+
+    db.add(nota)
+    db.commit()
+
+
+@router.post("/debit-notes", status_code=204)
+async def webhook_debit_notes(request: Request, db: Session = Depends(get_db)):
+    """
+    Webhook debitNotes.emissionFinished -- mismo criterio que
+    webhook_credit_notes, sin la reconciliacion de anulacion de factura (una
+    nota debito no reduce nada de la factura original).
+    """
+    payload = await request.json()
+    logger.info("Webhook Alegra debitNotes.emissionFinished recibido: %s", payload)
+
+    debit_note = payload.get("debitNote") or {}
+    debit_note_id = debit_note.get("id")
+    if not debit_note_id:
+        logger.warning("Webhook debit-notes sin debitNote.id identificable, se descarta.")
+        return
+
+    nota = db.execute(
+        select(NotaDebito).where(NotaDebito.alegra_debit_note_id == debit_note_id)
+    ).scalar_one_or_none()
+    if nota is None:
+        logger.warning(
+            "Webhook debit-notes para debitNote.id=%s no corresponde a ninguna nota conocida.", debit_note_id
+        )
+        return
+
+    if nota.estado in ("aceptada", "rechazada"):
+        logger.info("Nota debito %s ya esta en estado final (%s), webhook ignorado.", nota.id, nota.estado)
+        return
+
+    government_response = debit_note.get("governmentResponse") or {}
+    legal_status = debit_note.get("legalStatus")
+    if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
+        nota.estado = "aceptada"
+        nota.cude = debit_note.get("cude") or nota.cude
+        nota.razon_rechazo = None
+        nota.notificaciones_dian = government_response.get("errorMessages") or None
+        nota.fecha_respuesta = datetime.now(timezone.utc)
+    elif legal_status == "REJECTED":
+        nota.estado = "rechazada"
+        nota.razon_rechazo = map_government_response(
+            government_response.get("code", ""), government_response.get("message") or "La DIAN rechazo la nota."
+        )
+        nota.notificaciones_dian = government_response.get("errorMessages") or None
+        nota.fecha_respuesta = datetime.now(timezone.utc)
+    else:
+        logger.info("Webhook debit-notes con legalStatus=%s, sin cambio de estado para nota %s.", legal_status, nota.id)
         return
 
     db.add(nota)
