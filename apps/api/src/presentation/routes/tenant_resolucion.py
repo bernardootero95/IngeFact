@@ -3,7 +3,11 @@ from sqlalchemy.orm import Session
 
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.core.dependencies import CurrentTenant, get_current_tenant
-from src.domain.resolucion_dian import GuardarResolucionDianRequest, ResolucionDianResponse
+from src.domain.resolucion_dian import (
+    CargarResolucionAlegraResponse,
+    GuardarResolucionDianRequest,
+    ResolucionDianResponse,
+)
 from src.infrastructure.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/tenant/resolucion", tags=["tenant"])
@@ -16,6 +20,14 @@ def obtener_resolucion(
 ):
     resolucion = ResolucionDianService(db).obtener_o_404(tenant.empresa_id)
     return ResolucionDianResponse.from_model(resolucion)
+
+
+@router.get("/cargar-alegra", response_model=CargarResolucionAlegraResponse)
+def cargar_resolucion_desde_alegra(
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    return ResolucionDianService(db).cargar_desde_alegra(tenant.empresa_id)
 
 
 @router.put("", response_model=ResolucionDianResponse)

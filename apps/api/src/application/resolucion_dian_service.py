@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error
-from src.domain.resolucion_dian import GuardarResolucionDianRequest
+from src.domain.resolucion_dian import CargarResolucionAlegraResponse, GuardarResolucionDianRequest
 from src.infrastructure.db.models import Empresa, ResolucionDian
 
 
@@ -66,6 +66,37 @@ class ResolucionDianService:
         self.db.commit()
         self.db.refresh(resolucion)
         return resolucion
+
+    def cargar_desde_alegra(self, empresa_id: uuid.UUID) -> CargarResolucionAlegraResponse:
+        """GET /resolutions/{nit} (solo produccion) -- trae la primera
+        resolucion que Alegra tiene registrada para el NIT del tenant, para
+        precargar el formulario sin escribirla a mano. No persiste nada;
+        el tenant confirma con "Guardar Cambios" (mismo patron que
+        "Consultar DIAN" en Clientes)."""
+        empresa = self.db.get(Empresa, empresa_id)
+
+        try:
+            data = self._alegra_client.get_resolution(empresa.numero_identificacion)
+        except AlegraApiError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
+
+        resoluciones = data.get("resolutions") or []
+        if not resoluciones:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                "Alegra no tiene ninguna resolucion DIAN registrada todavia para esta empresa.",
+            )
+
+        primera = resoluciones[0]
+        return CargarResolucionAlegraResponse(
+            numero_resolucion=primera["resolutionNumber"],
+            prefijo=primera["prefix"],
+            rango_minimo=primera["minNumber"],
+            rango_maximo=primera["maxNumber"],
+            fecha_inicio=primera["startDate"],
+            fecha_fin=primera["endDate"],
+            technical_key=primera["technicalKey"],
+        )
 
     def validar_ante_alegra(self, empresa_id: uuid.UUID) -> ResolucionDian:
         resolucion = self.obtener_o_404(empresa_id)
