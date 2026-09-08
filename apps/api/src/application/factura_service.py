@@ -12,7 +12,7 @@ from src.application.resolucion_dian_service import ResolucionDianService
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.xml_utils import extraer_firma_digital
-from src.domain.factura import ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
+from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto
 
 
@@ -23,6 +23,16 @@ def _tarifa_a_string(tarifa: float) -> str:
     validacion que ya vive en el catalogo de Impuestos (Sprint 7)."""
     entero = int(round(tarifa))
     return str(entero) if float(entero) == tarifa else str(tarifa)
+
+
+def _construir_pago(forma_pago: str, metodo_pago: str, monto: float, fecha_vencimiento: date_cls | None) -> dict:
+    """Alegra exige payments[].paymentDueDate cuando paymentForm es credito
+    ("2") -- la validacion de que venga presente ya vive en
+    EnviarFacturaRequest, aqui solo se traduce al nombre de campo real."""
+    pago = {"paymentForm": forma_pago, "paymentMethod": metodo_pago, "amount": monto}
+    if forma_pago == FORMA_PAGO_CREDITO and fecha_vencimiento:
+        pago["paymentDueDate"] = fecha_vencimiento.isoformat()
+    return pago
 
 
 class FacturaService:
@@ -139,7 +149,9 @@ class FacturaService:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, f"Producto {linea_data.producto_id} no encontrado.")
 
             cantidad = linea_data.cantidad
-            precio_unitario = float(producto.precio)
+            precio_unitario = (
+                float(linea_data.precio_unitario) if linea_data.precio_unitario is not None else float(producto.precio)
+            )
             tarifa = float(producto.tarifa_impuesto)
             subtotal_linea = round(cantidad * precio_unitario, 2)
             impuesto_linea = round(subtotal_linea * tarifa / 100, 2)
@@ -148,7 +160,7 @@ class FacturaService:
                 FacturaLinea(
                     producto_id=producto.id,
                     codigo=producto.codigo,
-                    descripcion=producto.nombre,
+                    descripcion=producto.descripcion or producto.nombre,
                     unidad_medida=producto.unidad_medida,
                     cantidad=cantidad,
                     precio_unitario=precio_unitario,
@@ -231,7 +243,14 @@ class FacturaService:
         self.db.add(factura)
         self.db.commit()
 
-    def enviar(self, empresa_id: uuid.UUID, factura_id: uuid.UUID, forma_pago: str, metodo_pago: str) -> Factura:
+    def enviar(
+        self,
+        empresa_id: uuid.UUID,
+        factura_id: uuid.UUID,
+        forma_pago: str,
+        metodo_pago: str,
+        fecha_vencimiento: date_cls | None = None,
+    ) -> Factura:
         factura = self._obtener_editable(empresa_id, factura_id)
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
@@ -243,14 +262,16 @@ class FacturaService:
             raise HTTPException(status.HTTP_409_CONFLICT, "La Resolucion DIAN configurada ya esta vencida.")
 
         consecutivo = resolucion_service.incrementar_consecutivo(empresa_id)
-        payload = self._construir_payload_alegra(empresa, resolucion, factura, consecutivo, forma_pago, metodo_pago)
+        payload = self._construir_payload_alegra(
+            empresa, resolucion, factura, consecutivo, forma_pago, metodo_pago, fecha_vencimiento
+        )
 
         try:
             respuesta = self._alegra_client.create_invoice(payload)
         except AlegraApiError as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body))
 
-        self._aplicar_respuesta_envio(factura, resolucion, consecutivo, forma_pago, metodo_pago, respuesta)
+        self._aplicar_respuesta_envio(factura, resolucion, consecutivo, forma_pago, metodo_pago, fecha_vencimiento, respuesta)
 
         self.db.add(factura)
         self.db.commit()
@@ -264,6 +285,7 @@ class FacturaService:
         consecutivo: int,
         forma_pago: str,
         metodo_pago: str,
+        fecha_vencimiento: date_cls | None,
         respuesta: dict,
     ) -> None:
         invoice = respuesta.get("invoice") or {}
@@ -271,6 +293,7 @@ class FacturaService:
         factura.numero_completo = invoice.get("fullNumber") or f"{resolucion.prefijo}{consecutivo}"
         factura.forma_pago = forma_pago
         factura.metodo_pago = metodo_pago
+        factura.fecha_vencimiento = fecha_vencimiento
         factura.alegra_invoice_id = invoice.get("id")
         factura.cufe = invoice.get("cufe")
         factura.qr_code_content = invoice.get("qrCodeContent")
@@ -309,7 +332,13 @@ class FacturaService:
 
     @staticmethod
     def _construir_payload_alegra(
-        empresa: Empresa, resolucion, factura: Factura, consecutivo: int, forma_pago: str, metodo_pago: str
+        empresa: Empresa,
+        resolucion,
+        factura: Factura,
+        consecutivo: int,
+        forma_pago: str,
+        metodo_pago: str,
+        fecha_vencimiento: date_cls | None = None,
     ) -> dict:
         items = []
         # taxableTotal ("Base Imponible") de la DIAN debe ser exactamente la
@@ -372,5 +401,5 @@ class FacturaService:
                 "payableTotal": float(factura.total),
                 "currencyCode": "COP",
             },
-            "payments": [{"paymentForm": forma_pago, "paymentMethod": metodo_pago, "amount": float(factura.total)}],
+            "payments": [_construir_pago(forma_pago, metodo_pago, float(factura.total), fecha_vencimiento)],
         }

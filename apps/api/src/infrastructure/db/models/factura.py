@@ -34,6 +34,7 @@ class Factura(Base):
     total: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False, default=0)
     forma_pago: Mapped[str | None] = mapped_column(String(10))
     metodo_pago: Mapped[str | None] = mapped_column(String(10))
+    fecha_vencimiento: Mapped[date | None] = mapped_column(Date)
     alegra_invoice_id: Mapped[str | None] = mapped_column(String(50))
     cufe: Mapped[str | None] = mapped_column(String(200))
     qr_code_content: Mapped[str | None] = mapped_column(Text)

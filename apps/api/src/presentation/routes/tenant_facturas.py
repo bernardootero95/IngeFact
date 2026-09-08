@@ -75,7 +75,9 @@ def enviar_factura(
     db: Session = Depends(get_db),
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
-    factura = FacturaService(db).enviar(tenant.empresa_id, factura_id, body.forma_pago, body.metodo_pago)
+    factura = FacturaService(db).enviar(
+        tenant.empresa_id, factura_id, body.forma_pago, body.metodo_pago, body.fecha_vencimiento
+    )
     return FacturaResponse.from_model(factura)
 
 

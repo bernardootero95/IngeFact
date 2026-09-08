@@ -1,18 +1,28 @@
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
+
+FORMA_PAGO_CREDITO = "2"
 
 
 class LineaFacturaRequest(BaseModel):
     producto_id: uuid.UUID
     cantidad: float
+    precio_unitario: float | None = None
 
     @field_validator("cantidad")
     @classmethod
     def cantidad_positiva(cls, v: float) -> float:
         if v <= 0:
             raise ValueError("La cantidad debe ser mayor a 0.")
+        return v
+
+    @field_validator("precio_unitario")
+    @classmethod
+    def precio_positivo(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("El precio debe ser mayor a 0.")
         return v
 
 
@@ -36,6 +46,7 @@ class ActualizarFacturaRequest(CrearFacturaRequest):
 class EnviarFacturaRequest(BaseModel):
     forma_pago: str
     metodo_pago: str
+    fecha_vencimiento: date | None = None
 
     @field_validator("forma_pago", "metodo_pago")
     @classmethod
@@ -44,6 +55,15 @@ class EnviarFacturaRequest(BaseModel):
         if not v:
             raise ValueError("El campo no puede estar vacio.")
         return v
+
+    @model_validator(mode="after")
+    def fecha_vencimiento_si_credito(self) -> "EnviarFacturaRequest":
+        """Alegra exige payments[].paymentDueDate cuando paymentForm es
+        credito ("2") -- confirmado en la documentacion oficial, no es
+        opcional en ese caso."""
+        if self.forma_pago == FORMA_PAGO_CREDITO and self.fecha_vencimiento is None:
+            raise ValueError("La fecha de vencimiento es obligatoria para facturas a credito.")
+        return self
 
 
 class FacturaLineaResponse(BaseModel):
@@ -91,6 +111,7 @@ class FacturaResponse(BaseModel):
     total: float
     forma_pago: str | None
     metodo_pago: str | None
+    fecha_vencimiento: date | None
     cufe: str | None
     qr_code_content: str | None
     razon_rechazo: str | None
@@ -115,6 +136,7 @@ class FacturaResponse(BaseModel):
             total=float(factura.total),
             forma_pago=factura.forma_pago,
             metodo_pago=factura.metodo_pago,
+            fecha_vencimiento=factura.fecha_vencimiento,
             cufe=factura.cufe,
             qr_code_content=factura.qr_code_content,
             razon_rechazo=factura.razon_rechazo,
