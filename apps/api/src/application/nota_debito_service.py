@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.factura_service import _construir_pago
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.xml_utils import extraer_firma_digital
@@ -336,10 +337,8 @@ class NotaDebitoService:
                 "currencyCode": "COP",
             },
             "payments": [
-                {
-                    "paymentForm": factura.forma_pago or "1",
-                    "paymentMethod": factura.metodo_pago or "10",
-                    "amount": float(nota.total),
-                }
+                _construir_pago(
+                    factura.forma_pago or "1", factura.metodo_pago or "10", float(nota.total), factura.fecha_vencimiento
+                )
             ],
         }
