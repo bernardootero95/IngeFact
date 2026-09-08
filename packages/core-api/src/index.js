@@ -15,6 +15,7 @@ export {
   getResolucionDian,
   guardarResolucionDian,
   validarResolucionDian,
+  cargarResolucionDesdeAlegra,
 } from "./services/resolucionDian.js";
 export { getTenantDashboardKpis } from "./services/tenantDashboard.js";
 export {

@@ -3,6 +3,7 @@ import {
   getResolucionDian,
   guardarResolucionDian,
   validarResolucionDian,
+  cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./ResolutionSettingsPage.validation";
@@ -58,6 +59,7 @@ export default function ResolutionSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [isLoadingAlegra, setIsLoadingAlegra] = useState(false);
 
   const fetchResolucion = useCallback(async () => {
     setLoading(true);
@@ -121,6 +123,28 @@ export default function ResolutionSettingsPage() {
       setSaveError(error.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCargarAlegra = async () => {
+    setIsLoadingAlegra(true);
+    setSaveError(null);
+    try {
+      const datos = await cargarResolucionDesdeAlegra();
+      setFormData({
+        numero_resolucion: datos.numero_resolucion,
+        prefijo: datos.prefijo,
+        rango_minimo: String(datos.rango_minimo),
+        rango_maximo: String(datos.rango_maximo),
+        fecha_inicio: datos.fecha_inicio,
+        fecha_fin: datos.fecha_fin,
+        technical_key: datos.technical_key,
+      });
+      setErrors({});
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setIsLoadingAlegra(false);
     }
   };
 
@@ -245,7 +269,8 @@ export default function ResolutionSettingsPage() {
                   </h3>
                   <p className="text-xs text-neutralCustom-500 mb-6">
                     Estos valores los emite la DIAN. Guárdalos tal como
-                    aparecen en tu resolución.
+                    aparecen en tu resolución, o cárgalos automáticamente
+                    desde Alegra si ya están registrados ahí.
                   </p>
 
                   {saveError && (
@@ -424,6 +449,14 @@ export default function ResolutionSettingsPage() {
                   </div>
 
                   <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+                    <button
+                      type="button"
+                      onClick={handleCargarAlegra}
+                      disabled={isLoadingAlegra || isValidating || isSaving}
+                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoadingAlegra ? "Cargando..." : "Cargar desde Alegra"}
+                    </button>
                     <button
                       type="button"
                       onClick={handleValidar}
