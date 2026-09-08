@@ -4,6 +4,8 @@ import { SearchableSelect } from "@ingefact/ui";
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
+const FORMA_PAGO_CREDITO = "2";
+
 export default function SeccionLineas({
   lineas,
   productos,
@@ -12,12 +14,15 @@ export default function SeccionLineas({
   metodoPago,
   formasPago,
   metodosPago,
+  fechaVencimiento,
   errores,
   onAddLinea,
   onRemoveLinea,
   onLineaCantidadChange,
+  onLineaPrecioChange,
   onFormaPagoChange,
   onMetodoPagoChange,
+  onFechaVencimientoChange,
   onCrearProducto,
 }) {
   const [productoId, setProductoId] = useState("");
@@ -118,7 +123,8 @@ export default function SeccionLineas({
             <tbody className="divide-y divide-neutralCustom-100">
               {lineas.map((linea, index) => {
                 const cantidadInvalida = linea.cantidad !== "" && Number(linea.cantidad) <= 0;
-                const subtotalLinea = (Number(linea.cantidad) || 0) * (Number(linea.producto?.precio) || 0);
+                const precioInvalido = linea.precio_unitario !== "" && Number(linea.precio_unitario) <= 0;
+                const subtotalLinea = (Number(linea.cantidad) || 0) * (Number(linea.precio_unitario) || 0);
                 const impuestoLinea = subtotalLinea * ((Number(linea.producto?.tarifa_impuesto) || 0) / 100);
 
                 return (
@@ -146,7 +152,18 @@ export default function SeccionLineas({
                         }`}
                       />
                     </td>
-                    <td className="py-2 pr-2 text-right align-top">{formatCOP(linea.producto?.precio || 0)}</td>
+                    <td className="py-2 pr-2 align-top">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={linea.precio_unitario}
+                        onChange={(e) => onLineaPrecioChange(index, e.target.value)}
+                        className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none ${
+                          precioInvalido ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        }`}
+                      />
+                    </td>
                     <td className="py-2 pr-2 text-right align-top">{formatCOP(subtotalLinea)}</td>
                     <td className="py-2 pr-2 text-right align-top">{formatCOP(impuestoLinea)}</td>
                     <td className="py-2 pr-2 text-right font-medium align-top">
@@ -214,6 +231,24 @@ export default function SeccionLineas({
           </select>
           {errores.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errores.metodoPago}</p>}
         </div>
+
+        {formaPago === FORMA_PAGO_CREDITO && (
+          <div>
+            <label htmlFor="fecha_vencimiento" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+              Fecha de vencimiento <span className="text-fiscal-danger">*</span>
+            </label>
+            <input
+              type="date"
+              id="fecha_vencimiento"
+              value={fechaVencimiento}
+              onChange={(e) => onFechaVencimientoChange(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
+                errores.fechaVencimiento ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+              }`}
+            />
+            {errores.fechaVencimiento && <p className="mt-1 text-xs text-fiscal-danger">{errores.fechaVencimiento}</p>}
+          </div>
+        )}
       </div>
     </div>
   );

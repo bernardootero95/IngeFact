@@ -20,7 +20,10 @@ import {
   validateLineas,
   validateFormaPago,
   validateMetodoPago,
+  validateFechaVencimiento,
 } from "./InvoiceFormPage.validation";
+
+const FORMA_PAGO_CREDITO = "2";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -71,6 +74,7 @@ export default function InvoiceFormPage() {
   const [lineas, setLineas] = useState([]);
   const [formaPago, setFormaPago] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
+  const [fechaVencimiento, setFechaVencimiento] = useState("");
   const [facturaId, setFacturaId] = useState(id || null);
   const [productoPreseleccionado, setProductoPreseleccionado] = useState(null);
   const [razonRechazo, setRazonRechazo] = useState(null);
@@ -150,12 +154,17 @@ export default function InvoiceFormPage() {
         setFecha(borrador.fecha);
         setFormaPago(borrador.formaPago || formasPagoData[0]?.code || "");
         setMetodoPago(borrador.metodoPago || metodosPagoValidos[0]?.code || "");
+        setFechaVencimiento(borrador.fechaVencimiento || "");
         setLineas(
-          borrador.lineas.map((linea) => ({
-            producto_id: linea.producto_id,
-            cantidad: linea.cantidad,
-            producto: productosData.find((p) => p.id === linea.producto_id) || null,
-          })),
+          borrador.lineas.map((linea) => {
+            const producto = productosData.find((p) => p.id === linea.producto_id) || null;
+            return {
+              producto_id: linea.producto_id,
+              cantidad: linea.cantidad,
+              precio_unitario: linea.precio_unitario ?? String(producto?.precio ?? ""),
+              producto,
+            };
+          }),
         );
         const clienteIdFinal = nuevoClienteId || borrador.clienteId;
         if (clienteIdFinal) {
@@ -176,10 +185,12 @@ export default function InvoiceFormPage() {
         setMetodoPago(
           (factura.metodo_pago !== "1" ? factura.metodo_pago : null) || metodosPagoValidos[0]?.code || "",
         );
+        setFechaVencimiento(factura.fecha_vencimiento || "");
         setLineas(
           factura.lineas.map((linea) => ({
             producto_id: linea.producto_id,
             cantidad: String(linea.cantidad),
+            precio_unitario: String(linea.precio_unitario),
             producto: {
               id: linea.producto_id,
               codigo: linea.codigo,
@@ -193,6 +204,7 @@ export default function InvoiceFormPage() {
       } else {
         setFormaPago(formasPagoData[0]?.code || "");
         setMetodoPago(metodosPagoValidos[0]?.code || "");
+        setFechaVencimiento("");
         setLineas([]);
         if (nuevoClienteId) {
           setCliente(await getCliente(nuevoClienteId));
@@ -220,7 +232,10 @@ export default function InvoiceFormPage() {
 
   const handleAddLinea = (productoId, cantidad) => {
     const producto = productos.find((p) => p.id === productoId) || null;
-    setLineas((prev) => [...prev, { producto_id: productoId, cantidad: String(cantidad), producto }]);
+    setLineas((prev) => [
+      ...prev,
+      { producto_id: productoId, cantidad: String(cantidad), precio_unitario: String(producto?.precio ?? ""), producto },
+    ]);
     setErrors((prev) => ({ ...prev, lineas: "" }));
   };
 
@@ -232,13 +247,36 @@ export default function InvoiceFormPage() {
     setLineas((prev) => prev.map((linea, i) => (i === index ? { ...linea, cantidad } : linea)));
   };
 
+  const handleLineaPrecioChange = (index, precioUnitario) => {
+    setLineas((prev) => prev.map((linea, i) => (i === index ? { ...linea, precio_unitario: precioUnitario } : linea)));
+  };
+
+  const handleFormaPagoChange = (value) => {
+    setFormaPago(value);
+    setErrors((prev) => ({
+      ...prev,
+      formaPago: validateFormaPago(value),
+      fechaVencimiento: validateFechaVencimiento(value, fechaVencimiento, fecha),
+    }));
+  };
+
+  const handleFechaVencimientoChange = (value) => {
+    setFechaVencimiento(value);
+    setErrors((prev) => ({ ...prev, fechaVencimiento: validateFechaVencimiento(formaPago, value, fecha) }));
+  };
+
   const irACrear = (destino) => {
     guardarBorradorTemporal({
       clienteId: cliente?.id || null,
       fecha,
-      lineas: lineas.map((linea) => ({ producto_id: linea.producto_id, cantidad: linea.cantidad })),
+      lineas: lineas.map((linea) => ({
+        producto_id: linea.producto_id,
+        cantidad: linea.cantidad,
+        precio_unitario: linea.precio_unitario,
+      })),
       formaPago,
       metodoPago,
+      fechaVencimiento,
     });
     navigate(destino, { state: { returnTo: location.pathname } });
   };
@@ -250,6 +288,7 @@ export default function InvoiceFormPage() {
       lineas: validateLineas(lineas),
       formaPago: validateFormaPago(formaPago),
       metodoPago: validateMetodoPago(metodoPago),
+      fechaVencimiento: validateFechaVencimiento(formaPago, fechaVencimiento, fecha),
     };
     setErrors(nuevosErrores);
     return !Object.values(nuevosErrores).some(Boolean);
@@ -258,7 +297,11 @@ export default function InvoiceFormPage() {
   const buildPayload = () => ({
     cliente_id: cliente.id,
     fecha,
-    lineas: lineas.map((linea) => ({ producto_id: linea.producto_id, cantidad: Number(linea.cantidad) })),
+    lineas: lineas.map((linea) => ({
+      producto_id: linea.producto_id,
+      cantidad: Number(linea.cantidad),
+      precio_unitario: Number(linea.precio_unitario),
+    })),
   });
 
   const guardarBorrador = async () => {
@@ -291,7 +334,11 @@ export default function InvoiceFormPage() {
     setSaveError(null);
     try {
       const guardada = await guardarBorrador();
-      await enviarFactura(guardada.id, { forma_pago: formaPago, metodo_pago: metodoPago });
+      await enviarFactura(guardada.id, {
+        forma_pago: formaPago,
+        metodo_pago: metodoPago,
+        fecha_vencimiento: formaPago === FORMA_PAGO_CREDITO ? fechaVencimiento : null,
+      });
       navigate(`/invoices/${guardada.id}`);
     } catch (error) {
       setSaveError(error.message);
@@ -366,8 +413,11 @@ export default function InvoiceFormPage() {
                   onAddLinea={handleAddLinea}
                   onRemoveLinea={handleRemoveLinea}
                   onLineaCantidadChange={handleLineaCantidadChange}
-                  onFormaPagoChange={setFormaPago}
+                  onLineaPrecioChange={handleLineaPrecioChange}
+                  onFormaPagoChange={handleFormaPagoChange}
                   onMetodoPagoChange={setMetodoPago}
+                  fechaVencimiento={fechaVencimiento}
+                  onFechaVencimientoChange={handleFechaVencimientoChange}
                   onCrearProducto={() => irACrear("/products/new")}
                 />
 
