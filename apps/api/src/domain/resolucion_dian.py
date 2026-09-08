@@ -36,6 +36,20 @@ class GuardarResolucionDianRequest(BaseModel):
         return self
 
 
+class CargarResolucionAlegraResponse(BaseModel):
+    """Datos de la primera resolucion que Alegra tiene registrada para el NIT
+    del tenant (GET /resolutions/{nit}, solo produccion). El tenant revisa y
+    confirma con "Guardar Cambios" -- no se persiste automaticamente."""
+
+    numero_resolucion: str
+    prefijo: str
+    rango_minimo: int
+    rango_maximo: int
+    fecha_inicio: date
+    fecha_fin: date
+    technical_key: str
+
+
 class ResolucionDianResponse(BaseModel):
     id: str
     numero_resolucion: str
