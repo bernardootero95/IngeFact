@@ -3,9 +3,11 @@ import {
   validateCliente,
   validateFecha,
   validateLineaCantidad,
+  validateLineaPrecio,
   validateLineas,
   validateFormaPago,
   validateMetodoPago,
+  validateFechaVencimiento,
   calcularTotales,
 } from "./InvoiceFormPage.validation.js";
 
@@ -27,20 +29,33 @@ describe("InvoiceWizardPage validation", () => {
     expect(validateLineaCantidad("2")).toBe("");
   });
 
+  it("requiere precio mayor a 0 por linea", () => {
+    expect(validateLineaPrecio("")).toMatch(/mayor a 0/i);
+    expect(validateLineaPrecio("0")).toMatch(/mayor a 0/i);
+    expect(validateLineaPrecio("-1")).toMatch(/mayor a 0/i);
+    expect(validateLineaPrecio("50000")).toBe("");
+  });
+
   it("requiere al menos una linea", () => {
     expect(validateLineas([])).toMatch(/al menos una l[ií]nea/i);
   });
 
   it("requiere producto seleccionado en todas las lineas", () => {
-    expect(validateLineas([{ producto_id: "", cantidad: "1" }])).toMatch(/selecciona un producto/i);
+    expect(validateLineas([{ producto_id: "", cantidad: "1", precio_unitario: "1000" }])).toMatch(
+      /selecciona un producto/i,
+    );
   });
 
   it("requiere cantidades validas en todas las lineas", () => {
-    expect(validateLineas([{ producto_id: "p1", cantidad: "0" }])).toMatch(/cantidades/i);
+    expect(validateLineas([{ producto_id: "p1", cantidad: "0", precio_unitario: "1000" }])).toMatch(/cantidades/i);
+  });
+
+  it("requiere precios validos en todas las lineas", () => {
+    expect(validateLineas([{ producto_id: "p1", cantidad: "2", precio_unitario: "0" }])).toMatch(/precios/i);
   });
 
   it("pasa con lineas validas", () => {
-    expect(validateLineas([{ producto_id: "p1", cantidad: "2" }])).toBe("");
+    expect(validateLineas([{ producto_id: "p1", cantidad: "2", precio_unitario: "50000" }])).toBe("");
   });
 
   it("requiere forma y metodo de pago", () => {
@@ -48,6 +63,13 @@ describe("InvoiceWizardPage validation", () => {
     expect(validateFormaPago("1")).toBe("");
     expect(validateMetodoPago("")).toMatch(/m[ée]todo de pago/i);
     expect(validateMetodoPago("10")).toBe("");
+  });
+
+  it("exige fecha de vencimiento solo cuando la forma de pago es credito", () => {
+    expect(validateFechaVencimiento("1", "", "2026-09-01")).toBe("");
+    expect(validateFechaVencimiento("2", "", "2026-09-01")).toMatch(/obligatoria/i);
+    expect(validateFechaVencimiento("2", "2026-08-01", "2026-09-01")).toMatch(/anterior/i);
+    expect(validateFechaVencimiento("2", "2026-10-01", "2026-09-01")).toBe("");
   });
 
   it("calcula subtotal, impuestos y total de las lineas", () => {
@@ -61,6 +83,11 @@ describe("InvoiceWizardPage validation", () => {
     expect(totales.subtotal).toBe(250000);
     expect(totales.totalImpuestos).toBe(38000);
     expect(totales.total).toBe(288000);
+  });
+
+  it("usa el precio_unitario de la linea por encima del precio del catalogo", () => {
+    const lineas = [{ cantidad: "2", precio_unitario: "80000", producto: { precio: 100000, tarifa_impuesto: 0 } }];
+    expect(calcularTotales(lineas)).toEqual({ subtotal: 160000, totalImpuestos: 0, total: 160000 });
   });
 
   it("calcula totales en cero sin lineas o sin producto seleccionado", () => {

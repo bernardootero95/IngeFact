@@ -187,6 +187,11 @@ export default function InvoiceRepresentationPage() {
             <p>
               <span className="font-semibold">Método de Pago:</span> {metodoPagoNombre || "-"}
             </p>
+            {factura.fecha_vencimiento && (
+              <p>
+                <span className="font-semibold">Fecha de Vencimiento:</span> {factura.fecha_vencimiento}
+              </p>
+            )}
             <p>
               <span className="font-semibold">Moneda:</span> {MONEDA}
             </p>
@@ -233,28 +238,36 @@ export default function InvoiceRepresentationPage() {
           {qrDataUrl && <img src={qrDataUrl} alt="Código QR de verificación DIAN" className="w-28 h-28 shrink-0" />}
         </div>
 
-        <table className="w-full text-left text-xs mb-4">
+        <table className="w-full text-left text-xs mb-4 border-collapse border border-neutralCustom-300">
           <thead>
-            <tr className="border-b border-neutralCustom-300 text-neutralCustom-500 uppercase">
-              <th className="py-1.5 font-semibold">Cod</th>
-              <th className="py-1.5 font-semibold">Descripción</th>
-              <th className="py-1.5 text-right font-semibold">Cant.</th>
-              <th className="py-1.5 text-right font-semibold">Precio Unit.</th>
-              <th className="py-1.5 text-right font-semibold">Subtotal</th>
-              <th className="py-1.5 text-right font-semibold">IVA</th>
-              <th className="py-1.5 text-right font-semibold">Total</th>
+            <tr className="bg-neutralCustom-50 text-neutralCustom-500 uppercase">
+              <th className="py-1.5 px-2 border border-neutralCustom-300 font-semibold">Cod</th>
+              <th className="py-1.5 px-2 border border-neutralCustom-300 font-semibold">Descripción</th>
+              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Cant.</th>
+              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Precio Unit.</th>
+              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Subtotal</th>
+              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">IVA</th>
+              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Total</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutralCustom-100">
+          <tbody>
             {factura.lineas.map((linea) => (
               <tr key={linea.id}>
-                <td className="py-1.5">{linea.codigo || "-"}</td>
-                <td className="py-1.5">{linea.descripcion}</td>
-                <td className="py-1.5 text-right">{linea.cantidad}</td>
-                <td className="py-1.5 text-right">{formatCOP(linea.precio_unitario)}</td>
-                <td className="py-1.5 text-right">{formatCOP(linea.subtotal_linea)}</td>
-                <td className="py-1.5 text-right">{formatCOP(linea.impuesto_linea)}</td>
-                <td className="py-1.5 text-right font-medium">{formatCOP(linea.total_linea)}</td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 align-top">{linea.codigo || "-"}</td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 align-top">{linea.descripcion}</td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 text-right align-top">{linea.cantidad}</td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 text-right align-top">
+                  {formatCOP(linea.precio_unitario)}
+                </td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 text-right align-top">
+                  {formatCOP(linea.subtotal_linea)}
+                </td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 text-right align-top">
+                  {formatCOP(linea.impuesto_linea)}
+                </td>
+                <td className="py-1.5 px-2 border border-neutralCustom-300 text-right font-medium align-top">
+                  {formatCOP(linea.total_linea)}
+                </td>
               </tr>
             ))}
           </tbody>
