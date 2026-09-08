@@ -5,6 +5,11 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+    @field_validator("email")
+    @classmethod
+    def email_minusculas(cls, v: str) -> str:
+        return v.lower()
+
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -22,6 +27,11 @@ class LogoutRequest(BaseModel):
 
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def email_minusculas(cls, v: str) -> str:
+        return v.lower()
 
 
 class ResetPasswordRequest(BaseModel):

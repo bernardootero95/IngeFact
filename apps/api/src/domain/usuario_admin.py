@@ -9,6 +9,11 @@ class CrearUsuarioAdminRequest(BaseModel):
     email: EmailStr
     estado: str = "activo"
 
+    @field_validator("email")
+    @classmethod
+    def email_minusculas(cls, v: str) -> str:
+        return v.lower()
+
     @field_validator("nombre")
     @classmethod
     def nombre_no_vacio(cls, v: str) -> str:
