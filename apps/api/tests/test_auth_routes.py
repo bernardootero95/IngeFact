@@ -8,6 +8,7 @@ from src.application.auth_service import AuthService
 from src.core.security import hash_password
 from src.domain.auth import ResetPasswordRequest
 from src.infrastructure.db.models import Empresa, UsuarioAdmin, UsuarioEmpresa
+from tests.conftest import FakeEmailClient
 
 
 @pytest.fixture
@@ -149,7 +150,7 @@ def test_reset_password_accepts_strong_password():
 
 
 def test_forgot_password_invalidates_previous_unused_tokens(db_session, admin_user, monkeypatch):
-    service = AuthService(db_session)
+    service = AuthService(db_session, email_client=FakeEmailClient())
 
     tokens_generados = iter(["token-viejo-sin-usar", "token-nuevo"])
     monkeypatch.setattr(
@@ -169,7 +170,7 @@ def test_forgot_password_does_not_log_token_in_production(db_session, admin_user
     monkeypatch.setattr(
         "src.application.auth_service.generate_opaque_token", lambda: "token-secreto-no-debe-salir"
     )
-    service = AuthService(db_session, environment="production")
+    service = AuthService(db_session, environment="production", email_client=FakeEmailClient())
 
     with caplog.at_level("INFO"):
         service.forgot_password("staff@ingefact.test", "admin")
@@ -182,7 +183,7 @@ def test_forgot_password_logs_token_in_development(db_session, admin_user, monke
     monkeypatch.setattr(
         "src.application.auth_service.generate_opaque_token", lambda: "token-de-prueba-visible"
     )
-    service = AuthService(db_session, environment="development")
+    service = AuthService(db_session, environment="development", email_client=FakeEmailClient())
 
     with caplog.at_level("INFO"):
         service.forgot_password("staff@ingefact.test", "admin")
@@ -190,8 +191,28 @@ def test_forgot_password_logs_token_in_development(db_session, admin_user, monke
     assert "token-de-prueba-visible" in caplog.text
 
 
+def test_forgot_password_sends_email_with_reset_link(db_session, admin_user, monkeypatch):
+    monkeypatch.setattr("src.application.auth_service.generate_opaque_token", lambda: "token-del-correo")
+    fake_email = FakeEmailClient()
+    service = AuthService(db_session, email_client=fake_email)
+
+    service.forgot_password("staff@ingefact.test", "admin")
+
+    assert len(fake_email.sent) == 1
+    enviado = fake_email.sent[0]
+    assert enviado["to"] == "staff@ingefact.test"
+    assert "token-del-correo" in enviado["html"]
+
+
+def test_forgot_password_email_failure_does_not_raise(db_session, admin_user):
+    service = AuthService(db_session, email_client=FakeEmailClient(fail=True))
+
+    # Un fallo de Resend se loguea, nunca debe tumbar el flujo de reset.
+    service.forgot_password("staff@ingefact.test", "admin")
+
+
 def test_forgot_and_reset_password_flow(db_session, admin_user, monkeypatch):
-    service = AuthService(db_session)
+    service = AuthService(db_session, email_client=FakeEmailClient())
 
     captured = {}
 
