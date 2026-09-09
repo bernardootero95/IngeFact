@@ -13,6 +13,19 @@ export function validateField(name, value, formData) {
     }
     return "";
   }
+  if (name === "consecutivo_actual") {
+    if (value === "" || value === null) return "";
+    if (isNaN(value) || !Number.isInteger(Number(value)) || Number(value) <= 0) {
+      return "Debe ser un número entero mayor a 0.";
+    }
+    if (formData.rango_minimo !== "" && Number(value) < Number(formData.rango_minimo)) {
+      return "No puede ser menor al rango mínimo.";
+    }
+    if (formData.rango_maximo !== "" && Number(value) > Number(formData.rango_maximo)) {
+      return "No puede ser mayor al rango máximo.";
+    }
+    return "";
+  }
   if (name === "fecha_inicio" || name === "fecha_fin") {
     if (!value) return "Este campo es obligatorio.";
     if (formData.fecha_inicio && formData.fecha_fin && formData.fecha_fin <= formData.fecha_inicio) {

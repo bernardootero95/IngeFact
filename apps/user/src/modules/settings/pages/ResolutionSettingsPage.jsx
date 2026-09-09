@@ -16,6 +16,7 @@ const emptyForm = {
   fecha_inicio: "",
   fecha_fin: "",
   technical_key: "",
+  consecutivo_actual: "",
 };
 
 function formFromResolucion(resolucion) {
@@ -28,6 +29,7 @@ function formFromResolucion(resolucion) {
     fecha_inicio: resolucion.fecha_inicio,
     fecha_fin: resolucion.fecha_fin,
     technical_key: resolucion.technical_key,
+    consecutivo_actual: String(resolucion.consecutivo_actual),
   };
 }
 
@@ -116,6 +118,7 @@ export default function ResolutionSettingsPage() {
         fecha_inicio: formData.fecha_inicio,
         fecha_fin: formData.fecha_fin,
         technical_key: formData.technical_key.trim(),
+        consecutivo_actual: formData.consecutivo_actual === "" ? null : Number(formData.consecutivo_actual),
       });
       setResolucion(guardada);
       setFormData(formFromResolucion(guardada));
@@ -131,7 +134,8 @@ export default function ResolutionSettingsPage() {
     setSaveError(null);
     try {
       const datos = await cargarResolucionDesdeAlegra();
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         numero_resolucion: datos.numero_resolucion,
         prefijo: datos.prefijo,
         rango_minimo: String(datos.rango_minimo),
@@ -139,7 +143,7 @@ export default function ResolutionSettingsPage() {
         fecha_inicio: datos.fecha_inicio,
         fecha_fin: datos.fecha_fin,
         technical_key: datos.technical_key,
-      });
+      }));
       setErrors({});
     } catch (error) {
       setSaveError(error.message);
@@ -446,6 +450,36 @@ export default function ResolutionSettingsPage() {
                         <p className="mt-1 text-xs text-fiscal-danger">{errors.technical_key}</p>
                       )}
                     </div>
+
+                    <div>
+                      <label htmlFor="consecutivo_actual" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                        Consecutivo Actual
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        id="consecutivo_actual"
+                        name="consecutivo_actual"
+                        value={formData.consecutivo_actual}
+                        onChange={handleChange}
+                        placeholder={formData.rango_minimo || "Rango mínimo"}
+                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                          errors.consecutivo_actual
+                            ? "border-fiscal-danger focus:border-fiscal-danger"
+                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        }`}
+                      />
+                      {errors.consecutivo_actual ? (
+                        <p className="mt-1 text-xs text-fiscal-danger">{errors.consecutivo_actual}</p>
+                      ) : (
+                        <p className="mt-1 text-xs text-neutralCustom-500">
+                          Déjalo vacío para iniciar en el rango mínimo. Solo
+                          cámbialo si esta numeración ya tiene documentos
+                          emitidos fuera de IngeFact (por ejemplo, al
+                          cargarla desde Alegra).
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
@@ -493,8 +527,10 @@ export default function ResolutionSettingsPage() {
                     El consecutivo interno
                     {resolucion ? ` (${resolucion.consecutivo_actual})` : ""}{" "}
                     lo calcula y controla IngeFact automáticamente al emitir
-                    cada factura. No es editable para evitar duplicar
-                    números ya usados.
+                    cada factura. Puedes ajustarlo manualmente en el campo
+                    "Consecutivo Actual" de arriba, pero una vez que IngeFact
+                    emita documentos con esta numeración no podrás
+                    retrocederlo, para evitar duplicar números ya usados.
                   </p>
                 </div>
               </>
