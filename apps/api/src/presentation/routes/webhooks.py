@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.factura_service import notificar_factura_aceptada
 from src.application.nota_credito_service import NotaCreditoService
 from src.core.alegra_errors import map_government_response
 from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito, NotaDebito
@@ -98,6 +99,7 @@ async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
 
     db.add(factura)
     db.commit()
+    notificar_factura_aceptada(db, factura)
 
 
 @router.post("/credit-notes", status_code=204)

@@ -1,5 +1,7 @@
 from datetime import date
 
+import pytest
+
 from src.infrastructure.db.models import (
     Cliente,
     CompanyStatus,
@@ -11,6 +13,26 @@ from src.infrastructure.db.models import (
     NotaDebito,
     Producto,
 )
+
+
+class _NoOpAlegraClient:
+    """El webhook de facturas dispara notificar_factura_aceptada, que pide
+    el XML a Alegra para armar el correo al cliente -- sin un fake, eso
+    golpearia el sandbox real de Alegra en cada test. Cualquier llamada
+    aqui falla a proposito; notificar_factura_aceptada la atrapa y sigue
+    (best-effort), y estos tests no verifican el envio de correo, solo el
+    cambio de estado de la factura."""
+
+    def get_invoice(self, invoice_id):
+        raise RuntimeError("AlegraClient real no debe llamarse en tests")
+
+    def fetch_raw(self, url):
+        raise RuntimeError("AlegraClient real no debe llamarse en tests")
+
+
+@pytest.fixture(autouse=True)
+def _no_real_alegra(monkeypatch):
+    monkeypatch.setattr("src.application.factura_service.AlegraClient", _NoOpAlegraClient)
 
 
 def _crear_empresa(db_session, *, id_alegra):
