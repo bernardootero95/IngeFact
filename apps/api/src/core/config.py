@@ -20,6 +20,14 @@ class Settings(BaseSettings):
     # 5173/5174) -- en production, fijar el(los) origin(es) reales via env var.
     cors_allow_origin_regex: str = r"http://localhost:\d+"
 
+    # Resend (https://resend.com) -- proveedor de correo transaccional.
+    resend_api_key: str = ""
+    email_from: str = "IngeFact <notificaciones@ingefact.com>"
+    # URLs base de apps/user y apps/admin, usadas para armar links de
+    # login/reset dentro de los correos (ej. {user_app_url}/reset-password?token=...).
+    user_app_url: str = "http://localhost:3001"
+    admin_app_url: str = "http://localhost:5173"
+
 
 @lru_cache
 def get_settings() -> Settings:

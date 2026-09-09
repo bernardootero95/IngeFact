@@ -16,6 +16,41 @@ from src.main import app  # noqa: E402
 
 TEST_DATABASE_URL = get_settings().database_url.rsplit("/", 1)[0] + "/ingefact_test"
 
+# Modulos de src/application que importan EmailClient -- se agregan aqui a
+# medida que mas servicios envian correo, para que ningun test golpee la red
+# real de Resend por construir un EmailClient() default sin querer.
+_MODULOS_CON_EMAIL_CLIENT = ("src.application.auth_service",)
+
+
+class FakeEmailClient:
+    """Nunca golpea la red -- registra los correos "enviados" para poder
+    inspeccionarlos en el test, mismo patron que FakeAlegraClient."""
+
+    def __init__(self, fail: bool = False):
+        self.fail = fail
+        self.sent = []
+
+    def send(self, to, subject, html, attachments=None):
+        from src.core.email_client import EmailSendError
+
+        if self.fail:
+            raise EmailSendError("fallo simulado de Resend")
+        self.sent.append({"to": to, "subject": subject, "html": html, "attachments": attachments})
+
+
+@pytest.fixture(autouse=True)
+def _no_real_emails(monkeypatch):
+    """Parchea la clase EmailClient en cada modulo que la usa, para que toda
+    instancia creada sin `email_client` explicito (el default de cada
+    servicio) use un fake en memoria en vez de llamar a Resend de verdad."""
+    for modulo in _MODULOS_CON_EMAIL_CLIENT:
+        monkeypatch.setattr(f"{modulo}.EmailClient", FakeEmailClient)
+
+
+@pytest.fixture
+def fake_email_client():
+    return FakeEmailClient()
+
 _engine = create_engine(TEST_DATABASE_URL)
 _TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
 
