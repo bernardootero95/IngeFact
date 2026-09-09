@@ -238,20 +238,21 @@ export default function CreditNoteDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
-                  <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Información general</h3>
-                  <dl className="text-sm space-y-2">
-                    <div className="flex justify-between">
-                      <dt className="text-neutralCustom-500">Fecha</dt>
-                      <dd className="font-medium text-neutralCustom-800">{nota.fecha}</dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-neutralCustom-500">Motivo</dt>
-                      <dd className="font-medium text-neutralCustom-800">{nota.motivo_codigo}</dd>
-                    </div>
-                  </dl>
-                </div>
+              <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+                <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Información general</h3>
+                <dl className="text-sm space-y-2">
+                  <div className="flex justify-between">
+                    <dt className="text-neutralCustom-500">Fecha</dt>
+                    <dd className="font-medium text-neutralCustom-800">{nota.fecha}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-neutralCustom-500">Motivo</dt>
+                    <dd className="font-medium text-neutralCustom-800">{nota.motivo_codigo}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <InfoEmisor
                   empresa={empresa}
                   tiposOrganizacion={tiposOrganizacion}

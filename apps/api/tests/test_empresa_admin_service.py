@@ -3,6 +3,7 @@ from datetime import date
 
 import pytest
 from fastapi import HTTPException
+from pydantic import ValidationError
 
 from src.application.empresa_admin_service import EmpresaAdminService
 from src.domain.empresa import ActualizarDatosContactoRequest, ActualizarEmpresaRequest, CambiarPlanRequest
@@ -59,6 +60,20 @@ def test_actualizar_no_toca_nit_ni_correo(db_session):
     assert actualizada.estado == "inactivo"
     assert actualizada.numero_identificacion == original_nit
     assert actualizada.correo_electronico == original_correo
+
+
+def test_actualizar_persiste_regimen_fiscal(db_session):
+    empresa = _crear_empresa(db_session)
+
+    data = ActualizarEmpresaRequest(razon_social=empresa.razon_social, regimen_fiscal="48", estado="activo")
+    actualizada = EmpresaAdminService(db_session).actualizar(empresa.id, data)
+
+    assert actualizada.regimen_fiscal == "48"
+
+
+def test_actualizar_regimen_fiscal_invalido_falla_validacion():
+    with pytest.raises(ValidationError):
+        ActualizarEmpresaRequest(razon_social="Empresa Demo", regimen_fiscal="99", estado="activo")
 
 
 def test_actualizar_datos_contacto_no_toca_razon_social_ni_nit(db_session):
