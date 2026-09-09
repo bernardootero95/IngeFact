@@ -11,6 +11,7 @@ class GuardarResolucionDianRequest(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     technical_key: str
+    consecutivo_actual: int | None = None
 
     @field_validator("numero_resolucion", "prefijo", "technical_key")
     @classmethod
@@ -27,12 +28,23 @@ class GuardarResolucionDianRequest(BaseModel):
             raise ValueError("El rango debe ser mayor a 0.")
         return v
 
+    @field_validator("consecutivo_actual")
+    @classmethod
+    def consecutivo_positivo(cls, v: int | None) -> int | None:
+        if v is not None and v <= 0:
+            raise ValueError("El consecutivo actual debe ser mayor a 0.")
+        return v
+
     @model_validator(mode="after")
     def rangos_y_fechas_coherentes(self) -> "GuardarResolucionDianRequest":
         if self.rango_maximo <= self.rango_minimo:
             raise ValueError("El rango maximo debe ser mayor al rango minimo.")
         if self.fecha_fin <= self.fecha_inicio:
             raise ValueError("La fecha fin debe ser posterior a la fecha inicio.")
+        if self.consecutivo_actual is not None and not (
+            self.rango_minimo <= self.consecutivo_actual <= self.rango_maximo
+        ):
+            raise ValueError("El consecutivo actual debe estar entre el rango minimo y el rango maximo.")
         return self
 
 

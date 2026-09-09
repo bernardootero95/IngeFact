@@ -32,11 +32,18 @@ class ResolucionDianService:
         return resolucion
 
     def guardar(self, empresa_id: uuid.UUID, data: GuardarResolucionDianRequest) -> ResolucionDian:
-        """Upsert. El consecutivo solo se resetea a rango_minimo mientras no
-        se haya incrementado todavia (consecutivo_actual == rango_minimo) --
+        """Upsert. El consecutivo se resetea a rango_minimo mientras no se
+        haya incrementado todavia (consecutivo_actual == rango_minimo) --
         una vez `incrementar_consecutivo` avanzo el contador (Sprint 8,
-        emision de facturas), ya no se toca en cada guardado para no repetir
-        numeracion ya usada, y rango_minimo queda bloqueado para edicion."""
+        emision de facturas), ya no se toca solo en cada guardado, y
+        rango_minimo queda bloqueado para edicion.
+
+        El tenant puede fijar `consecutivo_actual` a mano (caso real:
+        resolucion que ya tenia documentos emitidos fuera de IngeFact antes
+        de cargarla, ej. via "Cargar desde Alegra") -- una vez IngeFact ya
+        incremento el contador emitiendo sus propios documentos, no se
+        permite retroceder (evita repetir numeracion ya usada), pero si
+        avanzarlo."""
         resolucion = self.obtener(empresa_id)
         if resolucion is None:
             resolucion = ResolucionDian(empresa_id=empresa_id)
@@ -50,6 +57,13 @@ class ResolucionDianService:
                 "No se puede modificar el rango minimo: ya se emitieron documentos con la numeracion actual.",
             )
 
+        if consecutivo_iniciado and data.consecutivo_actual is not None:
+            if data.consecutivo_actual < resolucion.consecutivo_actual:
+                raise HTTPException(
+                    status.HTTP_409_CONFLICT,
+                    "No se puede retroceder el consecutivo actual: ya se emitieron documentos con esta numeracion.",
+                )
+
         resolucion.numero_resolucion = data.numero_resolucion
         resolucion.prefijo = data.prefijo
         resolucion.rango_minimo = data.rango_minimo
@@ -57,7 +71,9 @@ class ResolucionDianService:
         resolucion.fecha_inicio = data.fecha_inicio
         resolucion.fecha_fin = data.fecha_fin
         resolucion.technical_key = data.technical_key
-        if not consecutivo_iniciado:
+        if data.consecutivo_actual is not None:
+            resolucion.consecutivo_actual = data.consecutivo_actual
+        elif not consecutivo_iniciado:
             resolucion.consecutivo_actual = data.rango_minimo
         resolucion.estado_validacion = "pendiente"
         resolucion.mensaje_validacion = None

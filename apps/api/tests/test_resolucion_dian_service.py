@@ -103,6 +103,48 @@ def test_guardar_no_resetea_consecutivo_una_vez_incrementado(db_session):
     assert actualizada.technical_key == "otra-clave-tecnica"
 
 
+def test_guardar_permite_fijar_consecutivo_actual_manualmente(db_session):
+    """Caso real: resolucion cargada desde Alegra que ya tenia documentos
+    emitidos fuera de IngeFact -- el tenant debe poder arrancar el contador
+    interno mas adelante que rango_minimo para no repetir numeracion real."""
+    empresa = _crear_empresa(db_session)
+
+    resolucion = ResolucionDianService(db_session).guardar(
+        empresa.id, _payload(rango_minimo=1, rango_maximo=1000, consecutivo_actual=250)
+    )
+
+    assert resolucion.consecutivo_actual == 250
+
+
+def test_guardar_bloquea_retroceder_consecutivo_ya_incrementado(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=1000))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual pasa a 2
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=1000, consecutivo_actual=1))
+    assert exc_info.value.status_code == 409
+
+
+def test_guardar_permite_avanzar_consecutivo_ya_incrementado(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=1000))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual pasa a 2
+
+    actualizada = service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=1000, consecutivo_actual=500))
+
+    assert actualizada.consecutivo_actual == 500
+
+
+def test_consecutivo_actual_fuera_de_rango_es_invalido():
+    with pytest.raises(ValueError):
+        _payload(rango_minimo=1, rango_maximo=100, consecutivo_actual=101)
+    with pytest.raises(ValueError):
+        _payload(rango_minimo=10, rango_maximo=100, consecutivo_actual=1)
+
+
 def test_validar_ante_alegra_exito_marca_validada(db_session):
     empresa = _crear_empresa(db_session)
     service = ResolucionDianService(db_session, alegra_client=_FakeAlegraClient(response={"resolution": {}}))
