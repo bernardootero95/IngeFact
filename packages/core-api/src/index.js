@@ -1,4 +1,4 @@
-export { configureApiClient, apiRequest, publicRequest } from "./apiClient.js";
+export { configureApiClient, apiRequest, apiRequestBlob, publicRequest } from "./apiClient.js";
 export { createAuthStore } from "./authStore.js";
 export {
   loginAdmin,
@@ -68,6 +68,7 @@ export {
   obtenerUrlXmlFactura,
   obtenerFirmaDigitalFactura,
   enviarFacturaPorCorreo,
+  obtenerRepresentacionPdfFactura,
 } from "./services/facturas.js";
 export {
   listNotasCredito,
