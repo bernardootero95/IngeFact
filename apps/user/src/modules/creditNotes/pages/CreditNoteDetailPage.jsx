@@ -1,8 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getNotaCredito, eliminarBorradorNotaCredito, obtenerUrlXmlNotaCredito } from "@ingefact/core-api";
+import {
+  getNotaCredito,
+  getCliente,
+  eliminarBorradorNotaCredito,
+  obtenerUrlXmlNotaCredito,
+  obtenerRepresentacionPdfNotaCredito,
+  listPublicReferenceTable,
+} from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
+import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -17,12 +27,18 @@ const ESTADO_INFO = {
 export default function CreditNoteDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { empresa } = useCurrentEmpresa();
 
   const [nota, setNota] = useState(null);
+  const [cliente, setCliente] = useState(null);
+  const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
+  const [responsabilidadesFiscales, setResponsabilidadesFiscales] = useState([]);
+  const [tributos, setTributos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloadingXml, setIsDownloadingXml] = useState(false);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [toast, setToast] = useState({ message: null, type: "success" });
 
   const cargarNota = useCallback(async () => {
@@ -30,13 +46,35 @@ export default function CreditNoteDetailPage() {
     setLoadError(null);
     try {
       const data = await getNotaCredito(id);
+      const [clienteData, tiposOrgData, respFiscalesData, tributosData] = await Promise.all([
+        getCliente(data.cliente_id),
+        listPublicReferenceTable("tipos_organizacion"),
+        listPublicReferenceTable("responsabilidades_fiscales"),
+        listPublicReferenceTable("tributos"),
+      ]);
       setNota(data);
+      setCliente(clienteData);
+      setTiposOrganizacion(tiposOrgData);
+      setResponsabilidadesFiscales(respFiscalesData);
+      setTributos(tributosData);
     } catch (error) {
       setLoadError(error.message);
     } finally {
       setLoading(false);
     }
   }, [id]);
+
+  const handleVerRepresentacion = async () => {
+    setIsLoadingPdf(true);
+    await abrirRepresentacion({
+      tieneDocumentoValido: Boolean(nota.cude),
+      obtenerPdf: () => obtenerRepresentacionPdfNotaCredito(id),
+      navigate,
+      rutaPreview: `/credit-notes/${id}/representacion`,
+      onError: (message) => setToast({ message, type: "error" }),
+    });
+    setIsLoadingPdf(false);
+  };
 
   useEffect(() => {
     cargarNota();
@@ -182,10 +220,11 @@ export default function CreditNoteDetailPage() {
                     </>
                   )}
                   <button
-                    onClick={() => navigate(`/credit-notes/${id}/representacion`)}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                    onClick={handleVerRepresentacion}
+                    disabled={isLoadingPdf}
+                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                   >
-                    {nota.cude ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
+                    {isLoadingPdf ? "Generando PDF..." : nota.cude ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
                   </button>
                   {nota.cude && (
                     <button
@@ -199,7 +238,7 @@ export default function CreditNoteDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Información general</h3>
                   <dl className="text-sm space-y-2">
@@ -213,15 +252,17 @@ export default function CreditNoteDetailPage() {
                     </div>
                   </dl>
                 </div>
-                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
-                  <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Cliente</h3>
-                  <dl className="text-sm space-y-2">
-                    <div className="flex justify-between">
-                      <dt className="text-neutralCustom-500">Nombre</dt>
-                      <dd className="font-medium text-neutralCustom-800">{nota.cliente_nombre}</dd>
-                    </div>
-                  </dl>
-                </div>
+                <InfoEmisor
+                  empresa={empresa}
+                  tiposOrganizacion={tiposOrganizacion}
+                  responsabilidadesFiscales={responsabilidadesFiscales}
+                />
+                <InfoReceptor
+                  cliente={cliente}
+                  tiposOrganizacion={tiposOrganizacion}
+                  responsabilidadesFiscales={responsabilidadesFiscales}
+                  tributos={tributos}
+                />
               </div>
 
               <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
