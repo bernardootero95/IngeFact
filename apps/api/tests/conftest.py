@@ -56,6 +56,20 @@ def _no_real_emails(monkeypatch):
 def fake_email_client():
     return FakeEmailClient()
 
+
+@pytest.fixture(autouse=True)
+def _no_real_pdf(monkeypatch):
+    """generar_representacion_pdf usa WeasyPrint, que necesita librerias de
+    sistema (Pango/GObject) ausentes en Windows sin GTK3 instalado -- se
+    fakea siempre en tests (deterministico y rapido de paso, la calidad
+    real del PDF se verifica aparte, en Docker) en vez de depender de que
+    la maquina donde corren los tests tenga esas librerias."""
+    monkeypatch.setattr(
+        "src.application.factura_service.generar_representacion_pdf",
+        lambda db, factura, firma_digital: b"%PDF-fake%",
+    )
+
+
 _engine = create_engine(TEST_DATABASE_URL)
 _TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
 
