@@ -67,6 +67,7 @@ export {
   enviarFactura,
   obtenerUrlXmlFactura,
   obtenerFirmaDigitalFactura,
+  enviarFacturaPorCorreo,
 } from "./services/facturas.js";
 export {
   listNotasCredito,
