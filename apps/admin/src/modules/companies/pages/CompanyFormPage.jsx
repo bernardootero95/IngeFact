@@ -20,6 +20,7 @@ const emptyForm = {
   departamento: "",
   municipio: "",
   regimen: "",
+  regimenFiscal: "",
   telefono: "",
   correoElectronico: "",
   nombreUsuario: "",
@@ -82,6 +83,7 @@ export default function CompanyFormPage() {
           departamento: empresa.departamento || "",
           municipio: empresa.municipio || "",
           regimen: empresa.regimen || "",
+          regimenFiscal: empresa.regimen_fiscal || "",
           telefono: empresa.telefono || "",
           correoElectronico: empresa.correo_electronico || "",
           notificacionCorreo: empresa.notificacion_correo ?? true,
@@ -221,6 +223,7 @@ export default function CompanyFormPage() {
           departamento: form.departamento || null,
           municipio: form.municipio || null,
           regimen: form.regimen || null,
+          regimen_fiscal: form.regimenFiscal || null,
           tipo_organizacion: form.tipoOrganizacion || null,
           telefono: form.telefono || null,
           notificacion_correo: form.notificacionCorreo,
@@ -237,6 +240,7 @@ export default function CompanyFormPage() {
           departamento: form.departamento || null,
           municipio: form.municipio || null,
           regimen: form.regimen,
+          regimen_fiscal: form.regimenFiscal || null,
           tipo_organizacion: form.tipoOrganizacion || null,
           telefono: form.telefono || null,
           correo_electronico: form.correoElectronico,
@@ -499,6 +503,22 @@ export default function CompanyFormPage() {
                           {errors.tipoOrganizacion && (
                             <p className="mt-1 text-[10px] text-fiscal-danger">{errors.tipoOrganizacion}</p>
                           )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="cf-regimen-fiscal" className="block text-sm font-medium text-neutralCustom-700 mb-1">
+                            Régimen Fiscal
+                          </label>
+                          <select
+                            id="cf-regimen-fiscal"
+                            value={form.regimenFiscal}
+                            onChange={handleChange("regimenFiscal")}
+                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                          >
+                            <option value="">Seleccione...</option>
+                            <option value="48">48 - Responsable de IVA</option>
+                            <option value="49">49 - No responsable de IVA</option>
+                          </select>
                         </div>
 
                         <div>

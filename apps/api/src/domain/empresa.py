@@ -5,6 +5,17 @@ from pydantic import BaseModel, EmailStr, field_validator, model_validator
 from src.core.nit import is_valid_dv
 
 
+def _regimen_fiscal_valido(v: str | None) -> str | None:
+    if v is None:
+        return None
+    v = v.strip()
+    if not v:
+        return None
+    if v not in ("48", "49"):
+        raise ValueError("El regimen fiscal debe ser 48 (responsable de IVA) o 49 (no responsable).")
+    return v
+
+
 class CrearEmpresaRequest(BaseModel):
     razon_social: str
     nombre_comercial: str | None = None
@@ -15,11 +26,17 @@ class CrearEmpresaRequest(BaseModel):
     departamento: str | None = None
     municipio: str | None = None
     regimen: str = "R-99-PN"
+    regimen_fiscal: str | None = None
     tipo_organizacion: str | None = None
     telefono: str | None = None
     correo_electronico: EmailStr
     notificacion_correo: bool = True
     nombre_usuario: str
+
+    @field_validator("regimen_fiscal")
+    @classmethod
+    def regimen_fiscal_valido(cls, v: str | None) -> str | None:
+        return _regimen_fiscal_valido(v)
 
     @field_validator("razon_social")
     @classmethod
@@ -87,6 +104,7 @@ class EmpresaDetailResponse(BaseModel):
     departamento: str | None
     municipio: str | None
     regimen: str | None
+    regimen_fiscal: str | None
     tipo_organizacion: str | None
     telefono: str | None
     correo_electronico: str | None
@@ -122,6 +140,7 @@ class EmpresaDetailResponse(BaseModel):
             departamento=empresa.departamento,
             municipio=empresa.municipio,
             regimen=empresa.regimen,
+            regimen_fiscal=empresa.regimen_fiscal,
             tipo_organizacion=empresa.tipo_organizacion,
             telefono=empresa.telefono,
             correo_electronico=empresa.correo_electronico,
@@ -140,10 +159,16 @@ class ActualizarEmpresaRequest(BaseModel):
     departamento: str | None = None
     municipio: str | None = None
     regimen: str | None = None
+    regimen_fiscal: str | None = None
     tipo_organizacion: str | None = None
     telefono: str | None = None
     notificacion_correo: bool = True
     estado: str = "activo"
+
+    @field_validator("regimen_fiscal")
+    @classmethod
+    def regimen_fiscal_valido(cls, v: str | None) -> str | None:
+        return _regimen_fiscal_valido(v)
 
     @field_validator("razon_social")
     @classmethod

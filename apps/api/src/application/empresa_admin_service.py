@@ -70,6 +70,7 @@ class EmpresaAdminService:
         empresa.departamento = data.departamento
         empresa.municipio = data.municipio
         empresa.regimen = data.regimen
+        empresa.regimen_fiscal = data.regimen_fiscal
         empresa.tipo_organizacion = data.tipo_organizacion
         empresa.telefono = data.telefono
         empresa.notificacion_correo = data.notificacion_correo

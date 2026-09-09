@@ -16,32 +16,48 @@ MONEDA = "COP"
 # tributaria), mismo mapa fijo que ya usa SeccionCliente.jsx en el frontend.
 REGIMEN_FISCAL_LABELS = {"48": "Responsable de IVA", "49": "No responsable de IVA"}
 
-CSS = """
-  @page { size: A4; margin: 1.5cm; }
-  body { font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: #1e293b; }
-  h1 { font-size: 13px; margin: 0; }
-  .encabezado { display: flex; justify-content: space-between; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 8px; }
-  .encabezado-datos { text-align: right; font-size: 9px; color: #475569; }
-  .afectado { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; padding: 8px; margin-bottom: 10px; }
-  .afectado .label { font-size: 8px; font-weight: bold; color: #1d4ed8; text-transform: uppercase; margin-bottom: 3px; }
-  .partes { display: flex; gap: 16px; border-bottom: 1px solid #cbd5e1; padding-bottom: 10px; margin-bottom: 10px; }
-  .parte { flex: 1; }
-  .parte .label { font-size: 8px; font-weight: bold; color: #64748b; text-transform: uppercase; margin-bottom: 3px; }
-  .qr { width: 90px; height: 90px; }
-  table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 10px; }
-  th, td { border: 1px solid #cbd5e1; padding: 4px 6px; text-align: left; }
-  th { background: #f8fafc; text-transform: uppercase; color: #64748b; }
-  .num { text-align: right; }
-  .total-linea { font-weight: bold; }
-  .resumen { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
-  .son { flex: 1; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 4px; padding: 8px; }
-  .detalle { width: 220px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 4px; padding: 8px; }
-  .fila { display: flex; justify-content: space-between; }
-  .fila-total { display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; border-top: 1px solid #bbf7d0; padding-top: 4px; margin-top: 4px; }
-  .cufe { font-size: 9px; margin-bottom: 10px; }
-  .mono { font-family: monospace; word-break: break-all; }
-  .firma { font-size: 8px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-bottom: 10px; }
-  .pie { font-size: 7px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+# Codigo "generico" del catalogo responsabilidades_fiscales cuyo valor real
+# es literalmente "No aplica - Otros" -- no aporta informacion, se omite en
+# vez de mostrarlo (a diferencia de un codigo real como "Gran contribuyente").
+CODIGO_RESPONSABILIDAD_FISCAL_NO_APLICA = "R-99-PN"
+
+# Paleta oficial de IngeFact (apps/user/tailwind.config.js) -- el PDF no usa
+# Tailwind, se referencian los mismos hex a mano para no salirse de la
+# paleta (ej. no usar azules/verdes genericos que no son parte del diseno).
+COLOR_BRAND_50 = "#EAF5E9"
+COLOR_BRAND_400 = "#3D9E3A"
+COLOR_BRAND_600 = "#1E7A1B"
+COLOR_NEUTRAL_50 = "#F7F8F9"
+COLOR_NEUTRAL_100 = "#EEEEF0"
+COLOR_NEUTRAL_500 = "#6B6E7A"
+COLOR_NEUTRAL_800 = "#1A1C23"
+
+CSS = f"""
+  @page {{ size: A4; margin: 1.5cm; }}
+  body {{ font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: {COLOR_NEUTRAL_800}; }}
+  h1 {{ font-size: 13px; margin: 0; }}
+  .encabezado {{ display: flex; justify-content: space-between; border-bottom: 1px solid {COLOR_NEUTRAL_100}; padding-bottom: 8px; margin-bottom: 8px; }}
+  .encabezado-datos {{ text-align: right; font-size: 9px; color: {COLOR_NEUTRAL_500}; }}
+  .afectado {{ background: {COLOR_BRAND_50}; border: 1px solid {COLOR_BRAND_400}; border-radius: 4px; padding: 8px; margin-bottom: 10px; }}
+  .afectado .label {{ font-size: 8px; font-weight: bold; color: {COLOR_BRAND_600}; text-transform: uppercase; margin-bottom: 3px; }}
+  .partes {{ display: flex; gap: 16px; border-bottom: 1px solid {COLOR_NEUTRAL_100}; padding-bottom: 10px; margin-bottom: 10px; }}
+  .parte {{ flex: 1; }}
+  .parte .label {{ font-size: 8px; font-weight: bold; color: {COLOR_NEUTRAL_500}; text-transform: uppercase; margin-bottom: 3px; }}
+  .qr {{ width: 90px; height: 90px; }}
+  table {{ width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 10px; }}
+  th, td {{ border: 1px solid {COLOR_NEUTRAL_100}; padding: 4px 6px; text-align: left; }}
+  th {{ background: {COLOR_NEUTRAL_50}; text-transform: uppercase; color: {COLOR_NEUTRAL_500}; }}
+  .num {{ text-align: right; }}
+  .total-linea {{ font-weight: bold; }}
+  .resumen {{ display: flex; justify-content: space-between; gap: 16px; margin-bottom: 10px; }}
+  .son {{ flex: 1; background: {COLOR_NEUTRAL_50}; border: 1px solid {COLOR_NEUTRAL_100}; border-radius: 4px; padding: 8px; }}
+  .detalle {{ width: 220px; background: {COLOR_BRAND_50}; border: 1px solid {COLOR_BRAND_400}; border-radius: 4px; padding: 8px; }}
+  .fila {{ display: flex; justify-content: space-between; }}
+  .fila-total {{ display: flex; justify-content: space-between; font-weight: bold; font-size: 11px; border-top: 1px solid {COLOR_BRAND_400}; padding-top: 4px; margin-top: 4px; }}
+  .cufe {{ font-size: 9px; margin-bottom: 10px; }}
+  .mono {{ font-family: monospace; word-break: break-all; }}
+  .firma {{ font-size: 8px; color: {COLOR_NEUTRAL_500}; border-top: 1px solid {COLOR_NEUTRAL_100}; padding-top: 8px; margin-bottom: 10px; }}
+  .pie {{ font-size: 7px; color: {COLOR_NEUTRAL_500}; text-align: center; border-top: 1px solid {COLOR_NEUTRAL_100}; padding-top: 8px; }}
 """
 
 
@@ -64,6 +80,15 @@ def nombre_regimen_fiscal(code: str | None) -> str | None:
     if not code:
         return None
     return REGIMEN_FISCAL_LABELS.get(code, code)
+
+
+def nombre_responsabilidad_fiscal(registros, code: str | None) -> str | None:
+    """None si no hay codigo o si es el generico "No aplica - Otros" -- ese
+    valor no aporta nada, se omite la fila en vez de mostrarlo (a diferencia
+    de un codigo real como Gran contribuyente/Autorretenedor/etc.)."""
+    if not code or code == CODIGO_RESPONSABILIDAD_FISCAL_NO_APLICA:
+        return None
+    return nombre_catalogo(registros, code)
 
 
 def formatear_fecha_hora(dt: datetime | None) -> str:
@@ -121,7 +146,8 @@ def render_emisor_html(empresa, catalogos: dict) -> str:
     departamento_nombre = nombre_catalogo(catalogos["departamentos"], empresa.departamento)
     municipio_nombre = nombre_catalogo(catalogos["municipios"], empresa.municipio)
     tipo_organizacion_nombre = nombre_catalogo(catalogos["tipos_organizacion"], empresa.tipo_organizacion)
-    responsabilidad_fiscal_nombre = nombre_catalogo(catalogos["responsabilidades_fiscales"], empresa.regimen)
+    responsabilidad_fiscal_nombre = nombre_responsabilidad_fiscal(catalogos["responsabilidades_fiscales"], empresa.regimen)
+    regimen_fiscal_nombre = nombre_regimen_fiscal(empresa.regimen_fiscal)
 
     return f"""
     <div class="parte">
@@ -133,6 +159,7 @@ def render_emisor_html(empresa, catalogos: dict) -> str:
       {f"<p>{empresa.correo_electronico}</p>" if empresa.correo_electronico else ""}
       <p>{", ".join(filter(None, [departamento_nombre, municipio_nombre, "Colombia"]))}</p>
       {f"<p>Tipo de Organizacion: {tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}
+      {f"<p>Regimen Fiscal: {regimen_fiscal_nombre}</p>" if regimen_fiscal_nombre else ""}
       {f"<p>Responsabilidad Fiscal: {responsabilidad_fiscal_nombre}</p>" if responsabilidad_fiscal_nombre else ""}
     </div>
     """
@@ -140,11 +167,9 @@ def render_emisor_html(empresa, catalogos: dict) -> str:
 
 def render_adquiriente_html(cliente, catalogos: dict) -> str:
     tipo_organizacion_nombre = nombre_catalogo(catalogos["tipos_organizacion"], cliente.tipo_organizacion)
-    responsabilidad_fiscal_nombre = nombre_catalogo(catalogos["responsabilidades_fiscales"], cliente.regimen)
+    responsabilidad_fiscal_nombre = nombre_responsabilidad_fiscal(catalogos["responsabilidades_fiscales"], cliente.regimen)
     regimen_fiscal_nombre = nombre_regimen_fiscal(cliente.regimen_fiscal)
-    responsabilidad_tributaria_nombre = (
-        nombre_catalogo(catalogos["tributos"], cliente.tributo) if cliente.tributo else "Sin responsabilidad tributaria"
-    )
+    responsabilidad_tributaria_nombre = nombre_catalogo(catalogos["tributos"], cliente.tributo) if cliente.tributo else None
 
     return f"""
     <div class="parte">
@@ -156,6 +181,6 @@ def render_adquiriente_html(cliente, catalogos: dict) -> str:
       {f"<p>Tipo de Organizacion: {tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}
       {f"<p>Regimen Fiscal: {regimen_fiscal_nombre}</p>" if regimen_fiscal_nombre else ""}
       {f"<p>Responsabilidad Fiscal: {responsabilidad_fiscal_nombre}</p>" if responsabilidad_fiscal_nombre else ""}
-      <p>Responsabilidad Tributaria: {responsabilidad_tributaria_nombre}</p>
+      {f"<p>Responsabilidad Tributaria: {responsabilidad_tributaria_nombre}</p>" if responsabilidad_tributaria_nombre else ""}
     </div>
     """

@@ -21,6 +21,7 @@ class Empresa(Base):
     departamento: Mapped[str | None] = mapped_column(String(2))
     municipio: Mapped[str | None] = mapped_column(String(5))
     regimen: Mapped[str | None] = mapped_column(String(20))
+    regimen_fiscal: Mapped[str | None] = mapped_column(String(2))
     tipo_organizacion: Mapped[str | None] = mapped_column(String(10))
     telefono: Mapped[str | None] = mapped_column(String(20))
     correo_electronico: Mapped[str | None] = mapped_column(String(200))
