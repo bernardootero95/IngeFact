@@ -16,6 +16,7 @@ import {
   forgotPasswordAdmin,
   forgotPasswordTenant,
   resetPassword,
+  changePassword,
 } from "./auth.js";
 
 describe("auth", () => {
@@ -90,6 +91,15 @@ describe("auth", () => {
     expect(publicRequest).toHaveBeenCalledWith("/api/v1/auth/reset-password", {
       method: "POST",
       body: { token: "token-123", new_password: "ClaveNueva123!" },
+    });
+  });
+
+  it("changePassword usa apiRequest (requiere sesion activa)", async () => {
+    apiRequest.mockResolvedValue(null);
+    await changePassword("ClaveTemporal1", "ClaveNueva123!");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/auth/change-password", {
+      method: "POST",
+      body: { current_password: "ClaveTemporal1", new_password: "ClaveNueva123!" },
     });
   });
 });

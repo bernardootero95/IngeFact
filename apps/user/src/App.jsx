@@ -6,6 +6,7 @@ import { EmpresaProvider } from "./context/EmpresaProvider";
 import Login from "./modules/auth/pages/Login";
 import ForgotPassword from "./modules/auth/pages/ForgotPassword";
 import ResetPassword from "./modules/auth/pages/ResetPassword";
+import ChangePasswordPage from "./modules/auth/pages/ChangePasswordPage";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import InvoicesListPage from "./modules/invoices/pages/InvoicesListPage";
 import InvoiceFormPage from "./modules/invoices/pages/InvoiceFormPage";
@@ -28,24 +29,38 @@ import ResolutionSettingsPage from "./modules/settings/pages/ResolutionSettingsP
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
 import TaxPresetFormPage from "./modules/settings/pages/TaxPresetFormPage";
 
-const ProtectedRoute = ({ children }) => {
+const VerifyingSessionScreen = () => (
+  <div className="min-h-screen flex items-center justify-center bg-neutralCustom-50">
+    <p className="text-sm text-neutralCustom-500 animate-pulse">
+      Verificando sesión...
+    </p>
+  </div>
+);
+
+// Requiere sesion activa, sin exigir que la clave temporal ya se haya
+// cambiado -- usado solo por /change-password, que es la unica pantalla a la
+// que un usuario con debeCambiarPassword puede entrar.
+const RequireSession = ({ children }) => {
   const { user, loading } = useAuthStore();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutralCustom-50">
-        <p className="text-sm text-neutralCustom-500 animate-pulse">
-          Verificando sesión...
-        </p>
-      </div>
-    );
-  }
+  if (loading) return <VerifyingSessionScreen />;
+  if (!user) return <Navigate to="/login" replace />;
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  return children;
+};
 
-  return <EmpresaProvider>{children}</EmpresaProvider>;
+const ProtectedRoute = ({ children }) => {
+  const { debeCambiarPassword } = useAuthStore();
+
+  return (
+    <RequireSession>
+      {debeCambiarPassword ? (
+        <Navigate to="/change-password" replace />
+      ) : (
+        <EmpresaProvider>{children}</EmpresaProvider>
+      )}
+    </RequireSession>
+  );
 };
 
 export default function App() {
@@ -61,6 +76,15 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+
+        <Route
+          path="/change-password"
+          element={
+            <RequireSession>
+              <ChangePasswordPage />
+            </RequireSession>
+          }
+        />
 
         <Route
           path="/dashboard"

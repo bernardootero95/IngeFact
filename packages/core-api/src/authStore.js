@@ -17,6 +17,7 @@ export function createAuthStore({ apiUrl, login: loginFn, refreshTokenKey }) {
     user: null,
     profile: null,
     loading: true,
+    debeCambiarPassword: false,
 
     login: async (email, password) => {
       const tokens = await loginFn(email, password);
@@ -24,8 +25,15 @@ export function createAuthStore({ apiUrl, login: loginFn, refreshTokenKey }) {
       localStorage.setItem(refreshTokenKey, tokens.refresh_token);
 
       const profile = await getMe();
-      set({ user: { id: profile.id, email: profile.email }, profile, loading: false });
+      set({
+        user: { id: profile.id, email: profile.email },
+        profile,
+        loading: false,
+        debeCambiarPassword: Boolean(tokens.debe_cambiar_password),
+      });
     },
+
+    markPasswordChanged: () => set({ debeCambiarPassword: false }),
 
     // El refresh token es de un solo uso (se rota en cada llamada), asi que dos
     // invocaciones concurrentes (ej. el doble efecto de React StrictMode en dev)
@@ -47,7 +55,12 @@ export function createAuthStore({ apiUrl, login: loginFn, refreshTokenKey }) {
           localStorage.setItem(refreshTokenKey, tokens.refresh_token);
 
           const profile = await getMe();
-          set({ user: { id: profile.id, email: profile.email }, profile, loading: false });
+          set({
+            user: { id: profile.id, email: profile.email },
+            profile,
+            loading: false,
+            debeCambiarPassword: Boolean(tokens.debe_cambiar_password),
+          });
         } catch {
           accessToken = null;
           localStorage.removeItem(refreshTokenKey);
@@ -65,7 +78,7 @@ export function createAuthStore({ apiUrl, login: loginFn, refreshTokenKey }) {
     clearSession: () => {
       accessToken = null;
       localStorage.removeItem(refreshTokenKey);
-      set({ user: null, profile: null, loading: false });
+      set({ user: null, profile: null, loading: false, debeCambiarPassword: false });
     },
 
     logout: async () => {
