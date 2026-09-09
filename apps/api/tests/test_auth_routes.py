@@ -211,6 +211,42 @@ def test_forgot_password_email_failure_does_not_raise(db_session, admin_user):
     service.forgot_password("staff@ingefact.test", "admin")
 
 
+def test_change_password_success_clears_debe_cambiar_password(db_session, tenant_user):
+    user, _empresa = tenant_user
+    user.debe_cambiar_password = True
+    db_session.add(user)
+    db_session.commit()
+
+    service = AuthService(db_session, email_client=FakeEmailClient())
+    service.change_password(user.id, "Sandbox123!", "ClaveNueva123!")
+
+    db_session.refresh(user)
+    assert user.debe_cambiar_password is False
+    tokens = service.login_tenant("tenant@ingefact.test", "ClaveNueva123!")
+    assert tokens.debe_cambiar_password is False
+
+
+def test_change_password_wrong_current_password_fails(db_session, tenant_user):
+    user, _empresa = tenant_user
+    service = AuthService(db_session, email_client=FakeEmailClient())
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.change_password(user.id, "clave-incorrecta", "ClaveNueva123!")
+    assert exc_info.value.status_code == 401
+
+
+def test_login_tenant_reports_debe_cambiar_password(db_session, tenant_user):
+    user, _empresa = tenant_user
+    user.debe_cambiar_password = True
+    db_session.add(user)
+    db_session.commit()
+
+    tokens = AuthService(db_session, email_client=FakeEmailClient()).login_tenant(
+        "tenant@ingefact.test", "Sandbox123!"
+    )
+    assert tokens.debe_cambiar_password is True
+
+
 def test_forgot_and_reset_password_flow(db_session, admin_user, monkeypatch):
     service = AuthService(db_session, email_client=FakeEmailClient())
 

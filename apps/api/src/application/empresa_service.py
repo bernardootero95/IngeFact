@@ -3,13 +3,17 @@ import time
 import uuid
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error
 from src.core.config import get_settings
+from src.core.email_client import EmailClient, EmailSendError
+from src.core.email_templates import plantilla_invitacion_tenant
+from src.core.security import generate_temp_password, hash_password
 from src.domain.empresa import CrearEmpresaRequest
-from src.infrastructure.db.models import CompanyStatus, Empresa
+from src.infrastructure.db.models import CompanyStatus, Empresa, UsuarioEmpresa
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +22,10 @@ BACKOFF_SECONDS = [1, 2, 4, 8, 16]
 
 
 class CreateEmpresaAlegraService:
-    def __init__(self, db: Session, alegra_client: AlegraClient | None = None):
+    def __init__(self, db: Session, alegra_client: AlegraClient | None = None, email_client: EmailClient | None = None):
         self.db = db
         self.alegra = alegra_client or AlegraClient()
+        self.email_client = email_client or EmailClient()
 
     def _log_status(self, empresa_id: uuid.UUID, estado: str, detalle: dict | None = None) -> None:
         self.db.add(CompanyStatus(empresa_id=empresa_id, estado=estado, detalle=detalle))
@@ -74,9 +79,37 @@ class CreateEmpresaAlegraService:
         self.db.commit()
         self.db.refresh(empresa)
 
+        self._provisionar_usuario_tenant(empresa, data)
         self._provisionar_en_alegra(empresa, data)
         self.db.refresh(empresa)
         return empresa
+
+    def _provisionar_usuario_tenant(self, empresa: Empresa, data: CrearEmpresaRequest) -> None:
+        """Crea el UsuarioEmpresa con una clave temporal y se la envia por
+        correo. Va antes de _provisionar_en_alegra (no depende de que Alegra
+        responda) para que crear() solo lo llame una vez -- reintentar() no
+        pasa por aqui, asi que no hace falta chequear si ya existe."""
+        password_temporal = generate_temp_password()
+        usuario = UsuarioEmpresa(
+            empresa_id=empresa.id,
+            nombre=data.nombre_usuario,
+            email=data.correo_electronico,
+            password_hash=hash_password(password_temporal),
+            debe_cambiar_password=True,
+        )
+        self.db.add(usuario)
+        try:
+            self.db.commit()
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise HTTPException(status.HTTP_409_CONFLICT, "Ya existe un usuario con ese correo.") from exc
+
+        login_url = f"{get_settings().user_app_url}/login"
+        subject, html = plantilla_invitacion_tenant(data.nombre_usuario, data.correo_electronico, password_temporal, login_url)
+        try:
+            self.email_client.send(to=data.correo_electronico, subject=subject, html=html)
+        except EmailSendError as exc:
+            logger.error("No se pudo enviar el correo de invitacion a %s: %s", data.correo_electronico, exc)
 
     def reintentar(self, empresa_id: uuid.UUID) -> Empresa:
         empresa = self.db.get(Empresa, empresa_id)
@@ -85,6 +118,11 @@ class CreateEmpresaAlegraService:
         if empresa.estado != "error_alegra":
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Esta empresa no esta en estado de error.")
 
+        # El usuario tenant ya se creo en crear() (antes de saber si Alegra
+        # iba a responder bien) -- aqui solo se reusa su nombre para poder
+        # reconstruir el CrearEmpresaRequest, que lo exige como campo
+        # obligatorio aunque _provisionar_en_alegra no lo use.
+        usuario_tenant = self.db.query(UsuarioEmpresa).filter(UsuarioEmpresa.empresa_id == empresa.id).one_or_none()
         data = CrearEmpresaRequest(
             razon_social=empresa.razon_social,
             nombre_comercial=empresa.nombre_comercial,
@@ -99,6 +137,7 @@ class CreateEmpresaAlegraService:
             telefono=empresa.telefono,
             correo_electronico=empresa.correo_electronico,
             notificacion_correo=empresa.notificacion_correo,
+            nombre_usuario=usuario_tenant.nombre if usuario_tenant else empresa.razon_social,
         )
         self._provisionar_en_alegra(empresa, data)
         self.db.refresh(empresa)

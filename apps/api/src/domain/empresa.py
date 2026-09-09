@@ -19,6 +19,7 @@ class CrearEmpresaRequest(BaseModel):
     telefono: str | None = None
     correo_electronico: EmailStr
     notificacion_correo: bool = True
+    nombre_usuario: str
 
     @field_validator("razon_social")
     @classmethod
@@ -28,6 +29,19 @@ class CrearEmpresaRequest(BaseModel):
             raise ValueError("La razon social es obligatoria.")
         if len(v) > 200:
             raise ValueError("La razon social no puede superar 200 caracteres.")
+        return v
+
+    @field_validator("correo_electronico")
+    @classmethod
+    def correo_minusculas(cls, v: str) -> str:
+        return v.lower()
+
+    @field_validator("nombre_usuario")
+    @classmethod
+    def nombre_usuario_no_vacio(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("El nombre del usuario administrador es obligatorio.")
         return v
 
     @field_validator("numero_identificacion")
