@@ -52,3 +52,10 @@ export async function resetPassword(token, newPassword) {
     body: { token, new_password: newPassword },
   });
 }
+
+export async function changePassword(currentPassword, newPassword) {
+  return apiRequest("/api/v1/auth/change-password", {
+    method: "POST",
+    body: { current_password: currentPassword, new_password: newPassword },
+  });
+}

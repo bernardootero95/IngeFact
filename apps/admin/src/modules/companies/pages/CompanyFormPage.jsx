@@ -22,6 +22,7 @@ const emptyForm = {
   regimen: "",
   telefono: "",
   correoElectronico: "",
+  nombreUsuario: "",
   notificacionCorreo: true,
   tipoOrganizacion: "",
   estadoEmpresa: "activo",
@@ -120,6 +121,9 @@ export default function CompanyFormPage() {
         if (!value.trim()) errorMsg = "El correo es obligatorio.";
         else if (!isValidEmail(value)) errorMsg = "Correo inválido.";
         break;
+      case "nombreUsuario":
+        if (!isEditing && !value.trim()) errorMsg = "El nombre del usuario es obligatorio.";
+        break;
       case "departamento":
         if (!value) errorMsg = "Seleccione un departamento.";
         break;
@@ -179,6 +183,7 @@ export default function CompanyFormPage() {
       "numeroIdentificacion",
       "digitoVerificacion",
       "correoElectronico",
+      "nombreUsuario",
       "departamento",
       "municipio",
       "regimen",
@@ -236,12 +241,17 @@ export default function CompanyFormPage() {
           telefono: form.telefono || null,
           correo_electronico: form.correoElectronico,
           notificacion_correo: form.notificacionCorreo,
+          nombre_usuario: form.nombreUsuario,
         });
         empresaId = creada.id;
       }
 
       await cambiarPlanEmpresa(empresaId, planPayload);
-      navigate("/admin/companies");
+      navigate("/admin/companies", {
+        state: isEditing
+          ? undefined
+          : { successMessage: `Empresa creada. Se enviaron las credenciales de acceso a ${form.correoElectronico}.` },
+      });
     } catch (err) {
       setSaveError(err.message);
     } finally {
@@ -260,7 +270,7 @@ export default function CompanyFormPage() {
       errors.tipoOrganizacion,
   );
   const suscripcionTabHasErrors = Boolean(
-    errors.maxDocumentos || errors.fechaInicio || errors.fechaFin || errors.correoElectronico,
+    errors.maxDocumentos || errors.fechaInicio || errors.fechaFin || errors.correoElectronico || errors.nombreUsuario,
   );
 
   return (
@@ -527,6 +537,28 @@ export default function CompanyFormPage() {
                           />
                           {errors.correoElectronico && (
                             <p className="mt-1 text-xs text-fiscal-danger">{errors.correoElectronico}</p>
+                          )}
+                        </div>
+
+                        <div className="mt-3">
+                          <label htmlFor="cf-nombre-usuario" className="block text-sm font-medium text-neutralCustom-700 mb-1">
+                            Nombre del Usuario Administrador *
+                          </label>
+                          <input
+                            id="cf-nombre-usuario"
+                            type="text"
+                            disabled={isEditing}
+                            value={form.nombreUsuario}
+                            onChange={handleChange("nombreUsuario")}
+                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
+                          />
+                          {errors.nombreUsuario && (
+                            <p className="mt-1 text-xs text-fiscal-danger">{errors.nombreUsuario}</p>
+                          )}
+                          {!isEditing && (
+                            <p className="mt-1 text-xs text-brand-600">
+                              Se le enviara una clave temporal a este correo para su primer inicio de sesion.
+                            </p>
                           )}
                         </div>
 

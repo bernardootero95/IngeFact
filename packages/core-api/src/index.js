@@ -9,6 +9,7 @@ export {
   forgotPasswordAdmin,
   forgotPasswordTenant,
   resetPassword,
+  changePassword,
 } from "./services/auth.js";
 export { getMiEmpresa, actualizarDatosEmpresa } from "./services/tenantEmpresa.js";
 export {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { listEmpresas, sincronizarEmpresasAlegra } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
@@ -7,6 +7,7 @@ import { SpinnerLoading, ToastAlert } from "@ingefact/ui";
 
 export default function Companies() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
@@ -17,6 +18,13 @@ export default function Companies() {
   const showToast = (message, type = "success") => {
     setToast({ message, type });
   };
+
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      showToast(location.state.successMessage, "success");
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const fetchCompanies = async () => {
     setLoading(true);
