@@ -35,3 +35,7 @@ export async function obtenerUrlXmlFactura(id) {
 export async function obtenerFirmaDigitalFactura(id) {
   return apiRequest(`/api/v1/tenant/facturas/${id}/firma-digital`);
 }
+
+export async function enviarFacturaPorCorreo(id) {
+  return apiRequest(`/api/v1/tenant/facturas/${id}/enviar-correo`, { method: "POST" });
+}

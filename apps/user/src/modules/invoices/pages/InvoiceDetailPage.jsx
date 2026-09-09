@@ -4,6 +4,7 @@ import {
   getFactura,
   eliminarBorradorFactura,
   obtenerUrlXmlFactura,
+  enviarFacturaPorCorreo,
   listNotasCredito,
   listNotasDebito,
   anularFactura,
@@ -52,6 +53,7 @@ export default function InvoiceDetailPage() {
   const [loadError, setLoadError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloadingXml, setIsDownloadingXml] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isAnulando, setIsAnulando] = useState(false);
   const [toast, setToast] = useState({ message: null, type: "success" });
 
@@ -121,6 +123,18 @@ export default function InvoiceDetailPage() {
       setToast({ message: error.message, type: "error" });
     } finally {
       setIsDownloadingXml(false);
+    }
+  };
+
+  const handleEnviarCorreo = async () => {
+    setIsSendingEmail(true);
+    try {
+      await enviarFacturaPorCorreo(id);
+      setToast({ message: "Factura enviada por correo al cliente.", type: "success" });
+    } catch (error) {
+      setToast({ message: error.message, type: "error" });
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -251,6 +265,15 @@ export default function InvoiceDetailPage() {
                       >
                         {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
                       </button>
+                      {factura.estado === "aceptada" && (
+                        <button
+                          onClick={handleEnviarCorreo}
+                          disabled={isSendingEmail}
+                          className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        >
+                          {isSendingEmail ? "Enviando..." : "Reenviar por Correo"}
+                        </button>
+                      )}
                     </>
                   )}
                   {factura.estado === "aceptada" && (
