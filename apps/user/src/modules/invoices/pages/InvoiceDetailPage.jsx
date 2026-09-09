@@ -7,12 +7,15 @@ import {
   listNotasCredito,
   listNotasDebito,
   anularFactura,
+  listPublicReferenceTable,
 } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
+
+const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
 const ESTADO_INFO = {
   borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
@@ -43,6 +46,8 @@ export default function InvoiceDetailPage() {
   const [factura, setFactura] = useState(null);
   const [notasCredito, setNotasCredito] = useState([]);
   const [notasDebito, setNotasDebito] = useState([]);
+  const [formasPago, setFormasPago] = useState([]);
+  const [metodosPago, setMetodosPago] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -54,14 +59,18 @@ export default function InvoiceDetailPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [data, notas, notasDeb] = await Promise.all([
+      const [data, notas, notasDeb, formasPagoData, metodosPagoData] = await Promise.all([
         getFactura(id),
         listNotasCredito({ facturaId: id }),
         listNotasDebito({ facturaId: id }),
+        listPublicReferenceTable("formas_pago"),
+        listPublicReferenceTable("metodos_pago"),
       ]);
       setFactura(data);
       setNotasCredito(notas);
       setNotasDebito(notasDeb);
+      setFormasPago(formasPagoData);
+      setMetodosPago(metodosPagoData);
     } catch (error) {
       setLoadError(error.message);
     } finally {
@@ -280,11 +289,15 @@ export default function InvoiceDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-neutralCustom-500">Forma de pago</dt>
-                      <dd className="font-medium text-neutralCustom-800">{factura.forma_pago || "-"}</dd>
+                      <dd className="font-medium text-neutralCustom-800">
+                        {factura.forma_pago ? nombreCatalogo(formasPago, factura.forma_pago) : "-"}
+                      </dd>
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-neutralCustom-500">Método de pago</dt>
-                      <dd className="font-medium text-neutralCustom-800">{factura.metodo_pago || "-"}</dd>
+                      <dd className="font-medium text-neutralCustom-800">
+                        {factura.metodo_pago ? nombreCatalogo(metodosPago, factura.metodo_pago) : "-"}
+                      </dd>
                     </div>
                   </dl>
                 </div>
