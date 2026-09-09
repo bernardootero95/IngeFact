@@ -31,6 +31,7 @@ export default function DebitNoteDetailPage() {
 
   const [nota, setNota] = useState(null);
   const [cliente, setCliente] = useState(null);
+  const [tiposIdentificacion, setTiposIdentificacion] = useState([]);
   const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
   const [responsabilidadesFiscales, setResponsabilidadesFiscales] = useState([]);
   const [tributos, setTributos] = useState([]);
@@ -46,14 +47,16 @@ export default function DebitNoteDetailPage() {
     setLoadError(null);
     try {
       const data = await getNotaDebito(id);
-      const [clienteData, tiposOrgData, respFiscalesData, tributosData] = await Promise.all([
+      const [clienteData, tiposIdData, tiposOrgData, respFiscalesData, tributosData] = await Promise.all([
         getCliente(data.cliente_id),
+        listPublicReferenceTable("tipos_identificacion"),
         listPublicReferenceTable("tipos_organizacion"),
         listPublicReferenceTable("responsabilidades_fiscales"),
         listPublicReferenceTable("tributos"),
       ]);
       setNota(data);
       setCliente(clienteData);
+      setTiposIdentificacion(tiposIdData);
       setTiposOrganizacion(tiposOrgData);
       setResponsabilidadesFiscales(respFiscalesData);
       setTributos(tributosData);
@@ -252,7 +255,7 @@ export default function DebitNoteDetailPage() {
                 </dl>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <InfoEmisor
                   empresa={empresa}
                   tiposOrganizacion={tiposOrganizacion}
@@ -260,6 +263,7 @@ export default function DebitNoteDetailPage() {
                 />
                 <InfoReceptor
                   cliente={cliente}
+                  tiposIdentificacion={tiposIdentificacion}
                   tiposOrganizacion={tiposOrganizacion}
                   responsabilidadesFiscales={responsabilidadesFiscales}
                   tributos={tributos}

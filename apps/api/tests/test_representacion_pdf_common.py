@@ -7,6 +7,7 @@ from src.core.representacion_pdf_common import (
     render_emisor_html,
 )
 
+_TIPOS_IDENTIFICACION = [SimpleNamespace(code="13", value="Cedula de ciudadania")]
 _RESPONSABILIDADES_FISCALES = [
     SimpleNamespace(code="O-13", value="Gran contribuyente"),
     SimpleNamespace(code="R-99-PN", value="No aplica – Otros *"),
@@ -21,6 +22,7 @@ def _catalogos(**overrides):
     base = {
         "departamentos": _DEPARTAMENTOS,
         "municipios": _MUNICIPIOS,
+        "tipos_identificacion": _TIPOS_IDENTIFICACION,
         "tipos_organizacion": _TIPOS_ORGANIZACION,
         "responsabilidades_fiscales": _RESPONSABILIDADES_FISCALES,
         "tributos": _TRIBUTOS,
@@ -41,7 +43,7 @@ def test_nombre_regimen_fiscal_mapea_48_49():
     assert nombre_regimen_fiscal(None) is None
 
 
-def test_render_emisor_html_oculta_responsabilidad_fiscal_no_aplica_y_muestra_regimen():
+def test_render_emisor_html_no_muestra_etiquetas_ni_responsabilidad_no_aplica():
     empresa = SimpleNamespace(
         razon_social="Empresa Demo SAS",
         numero_identificacion="900618467",
@@ -57,11 +59,17 @@ def test_render_emisor_html_oculta_responsabilidad_fiscal_no_aplica_y_muestra_re
     )
     html = render_emisor_html(empresa, _catalogos())
 
+    # Sin etiquetas -- solo el valor resuelto.
+    assert "Tipo de Organizacion" not in html
+    assert "Regimen Fiscal" not in html
     assert "Responsabilidad Fiscal" not in html
-    assert "Regimen Fiscal: Responsable de IVA" in html
+    assert "Persona Juridica" in html
+    assert "Responsable de IVA" in html
+    # El codigo generico "no aplica" no debe aparecer para nada.
+    assert "No aplica" not in html
 
 
-def test_render_emisor_html_muestra_responsabilidad_fiscal_real():
+def test_render_emisor_html_muestra_responsabilidad_fiscal_real_sin_etiqueta():
     empresa = SimpleNamespace(
         razon_social="Empresa Demo SAS",
         numero_identificacion="900618467",
@@ -77,11 +85,11 @@ def test_render_emisor_html_muestra_responsabilidad_fiscal_real():
     )
     html = render_emisor_html(empresa, _catalogos())
 
-    assert "Responsabilidad Fiscal: Gran contribuyente" in html
-    assert "Regimen Fiscal" not in html
+    assert "Responsabilidad Fiscal" not in html
+    assert "Gran contribuyente" in html
 
 
-def test_render_adquiriente_html_oculta_filas_vacias():
+def test_render_adquiriente_html_resuelve_tipo_identificacion_y_oculta_filas_vacias():
     cliente = SimpleNamespace(
         nombre="Cliente Demo",
         tipo_identificacion="13",
@@ -95,12 +103,15 @@ def test_render_adquiriente_html_oculta_filas_vacias():
     )
     html = render_adquiriente_html(cliente, _catalogos())
 
+    # El codigo crudo "13" no debe aparecer, solo el nombre resuelto.
+    assert "Cedula de ciudadania 1000000000" in html
     assert "Responsabilidad Fiscal" not in html
     assert "Regimen Fiscal" not in html
     assert "Responsabilidad Tributaria" not in html
+    assert "No aplica" not in html
 
 
-def test_render_adquiriente_html_muestra_todo_cuando_hay_datos():
+def test_render_adquiriente_html_muestra_todo_sin_etiquetas():
     cliente = SimpleNamespace(
         nombre="Cliente Demo",
         tipo_identificacion="13",
@@ -114,6 +125,11 @@ def test_render_adquiriente_html_muestra_todo_cuando_hay_datos():
     )
     html = render_adquiriente_html(cliente, _catalogos())
 
-    assert "Responsabilidad Fiscal: Gran contribuyente" in html
-    assert "Regimen Fiscal: No responsable de IVA" in html
-    assert "Responsabilidad Tributaria: IVA" in html
+    assert "Tipo de Organizacion" not in html
+    assert "Regimen Fiscal" not in html
+    assert "Responsabilidad Fiscal" not in html
+    assert "Responsabilidad Tributaria" not in html
+    assert "Persona Juridica" in html
+    assert "No responsable de IVA" in html
+    assert "Gran contribuyente" in html
+    assert "IVA" in html
