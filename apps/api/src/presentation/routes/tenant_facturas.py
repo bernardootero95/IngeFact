@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from src.application.factura_service import FacturaService
@@ -79,6 +79,16 @@ def enviar_factura(
         tenant.empresa_id, factura_id, body.forma_pago, body.metodo_pago, body.fecha_vencimiento
     )
     return FacturaResponse.from_model(factura)
+
+
+@router.get("/{factura_id}/representacion.pdf")
+def obtener_representacion_pdf(
+    factura_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    pdf_bytes = FacturaService(db).generar_pdf_representacion(tenant.empresa_id, factura_id)
+    return Response(content=pdf_bytes, media_type="application/pdf")
 
 
 @router.post("/{factura_id}/enviar-correo", status_code=204)

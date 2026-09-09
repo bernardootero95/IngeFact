@@ -632,7 +632,7 @@ def test_notificar_factura_aceptada_envia_correo_con_qr_y_xml_adjunto(db_session
             },
             "files": {"xml": "https://s3.example.com/factura.xml"},
         },
-        raw_response=b"<xml>contenido de prueba</xml>",
+        raw_response=_XML_CON_FIRMA,
     )
     service = FacturaService(db_session, alegra_client=fake)
     factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
@@ -643,8 +643,10 @@ def test_notificar_factura_aceptada_envia_correo_con_qr_y_xml_adjunto(db_session
     assert len(fake_email_client.sent) == 1
     correo = fake_email_client.sent[0]
     assert correo["to"] == "cliente@example.com"
-    assert correo["attachments"][0]["filename"] == "SETP1.xml"
-    assert base64.b64decode(correo["attachments"][0]["content"]) == b"<xml>contenido de prueba</xml>"
+    adjuntos_por_nombre = {a["filename"]: a for a in correo["attachments"]}
+    assert set(adjuntos_por_nombre) == {"SETP1.png", "SETP1.pdf", "SETP1.xml"}
+    assert base64.b64decode(adjuntos_por_nombre["SETP1.xml"]["content"]) == _XML_CON_FIRMA
+    assert adjuntos_por_nombre["SETP1.png"]["content_id"] == "qr-code"
 
 
 def test_notificar_factura_aceptada_no_hace_nada_si_no_esta_aceptada(db_session, fake_email_client):
@@ -657,6 +659,40 @@ def test_notificar_factura_aceptada_no_hace_nada_si_no_esta_aceptada(db_session,
     notificar_factura_aceptada(db_session, factura, None, fake_email_client)
 
     assert fake_email_client.sent == []
+
+
+def test_generar_pdf_representacion_borrador_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = FacturaService(db_session)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.generar_pdf_representacion(empresa.id, factura.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_generar_pdf_representacion_factura_aceptada_devuelve_bytes(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {"id": "inv-1", "cufe": "cufe-123", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"},
+            "files": {"xml": "https://s3.example.com/factura.xml"},
+        },
+        raw_response=_XML_CON_FIRMA,
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    pdf_bytes = service.generar_pdf_representacion(empresa.id, factura.id)
+
+    assert isinstance(pdf_bytes, bytes)
+    assert len(pdf_bytes) > 0
 
 
 def test_enviar_por_correo_factura_no_aceptada_falla_409(db_session):
@@ -701,7 +737,7 @@ def test_enviar_por_correo_reporta_502_si_falla_el_envio(db_session, monkeypatch
             "invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"},
             "files": {"xml": "https://s3.example.com/factura.xml"},
         },
-        raw_response=b"<xml></xml>",
+        raw_response=_XML_CON_FIRMA,
     )
     service = FacturaService(db_session, alegra_client=fake)
     factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))

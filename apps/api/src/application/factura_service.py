@@ -15,7 +15,8 @@ from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.email_client import EmailClient, EmailSendError
-from src.core.email_templates import plantilla_factura_cliente
+from src.core.email_templates import QR_CONTENT_ID, plantilla_factura_cliente
+from src.core.factura_pdf import generar_representacion_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
@@ -120,6 +121,19 @@ class FacturaService:
         self.db.add(factura)
         self.db.commit()
         return firma
+
+    def generar_pdf_representacion(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> bytes:
+        """PDF real de la representacion grafica (mismo generador que arma
+        el adjunto del correo, ver _enviar_correo_factura) -- solo tiene
+        sentido para una factura ya aceptada (CUFE/QR/firma real); un
+        borrador se sigue viendo con la vista previa de React."""
+        factura = self.obtener(empresa_id, factura_id)
+        if not factura.cufe:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Solo se puede generar el PDF de una factura ya aceptada por la DIAN."
+            )
+        firma_digital = self.obtener_firma_digital(empresa_id, factura_id)
+        return generar_representacion_pdf(self.db, factura, firma_digital)
 
     def enviar_por_correo(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> None:
         """Reenvio manual (boton "Reenviar por correo" en el detalle) -- a
@@ -453,6 +467,8 @@ def _enviar_correo_factura(
     servicio = FacturaService(db, alegra_client)
     url_xml = servicio.obtener_url_xml(factura.empresa_id, factura.id)
     xml_bytes = servicio._alegra_client.fetch_raw(url_xml)
+    firma_digital = servicio.obtener_firma_digital(factura.empresa_id, factura.id)
+    pdf_bytes = generar_representacion_pdf(db, factura, firma_digital)
 
     empresa = db.get(Empresa, factura.empresa_id)
     fecha_mostrar = factura.fecha_envio or datetime.combine(factura.fecha, datetime.min.time())
@@ -463,13 +479,18 @@ def _enviar_correo_factura(
         fecha=fecha_mostrar.strftime("%d/%m/%Y"),
         total_formateado=_formatear_cop(float(factura.total)),
         cufe=factura.cufe or "",
-        qr_base64=generar_qr_png_base64(factura.qr_code_content or ""),
     )
-    attachment = {
-        "filename": f"{factura.numero_completo or factura.id}.xml",
-        "content": base64.b64encode(xml_bytes).decode("ascii"),
-    }
-    email_client.send(to=factura.cliente.correo_electronico, subject=subject, html=html, attachments=[attachment])
+    numero = factura.numero_completo or str(factura.id)
+    attachments = [
+        {
+            "filename": f"{numero}.png",
+            "content": generar_qr_png_base64(factura.qr_code_content or ""),
+            "content_id": QR_CONTENT_ID,
+        },
+        {"filename": f"{numero}.pdf", "content": base64.b64encode(pdf_bytes).decode("ascii")},
+        {"filename": f"{numero}.xml", "content": base64.b64encode(xml_bytes).decode("ascii")},
+    ]
+    email_client.send(to=factura.cliente.correo_electronico, subject=subject, html=html, attachments=attachments)
 
 
 def notificar_factura_aceptada(
