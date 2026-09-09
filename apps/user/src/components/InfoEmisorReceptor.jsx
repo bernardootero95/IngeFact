@@ -45,14 +45,23 @@ export function InfoEmisor({ empresa, tiposOrganizacion = [], responsabilidadesF
   );
 }
 
-export function InfoReceptor({ cliente, tiposOrganizacion = [], responsabilidadesFiscales = [], tributos = [] }) {
+export function InfoReceptor({
+  cliente,
+  tiposIdentificacion = [],
+  tiposOrganizacion = [],
+  responsabilidadesFiscales = [],
+  tributos = [],
+}) {
   if (!cliente) return null;
   return (
     <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
       <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Cliente</h3>
       <dl className="text-sm space-y-2">
         <Fila label="Nombre" value={cliente.nombre} />
-        <Fila label="Identificación" value={`${cliente.tipo_identificacion} ${cliente.numero_identificacion}`} />
+        <Fila
+          label="Identificación"
+          value={`${nombreCatalogo(tiposIdentificacion, cliente.tipo_identificacion)} ${cliente.numero_identificacion}`}
+        />
         <Fila label="Correo" value={cliente.correo_electronico} />
         <Fila label="Teléfono" value={cliente.telefono} />
         <Fila label="Tipo de Organización" value={nombreCatalogo(tiposOrganizacion, cliente.tipo_organizacion)} />

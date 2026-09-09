@@ -56,6 +56,7 @@ export default function InvoiceDetailPage() {
   const [notasDebito, setNotasDebito] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
   const [metodosPago, setMetodosPago] = useState([]);
+  const [tiposIdentificacion, setTiposIdentificacion] = useState([]);
   const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
   const [responsabilidadesFiscales, setResponsabilidadesFiscales] = useState([]);
   const [tributos, setTributos] = useState([]);
@@ -73,23 +74,34 @@ export default function InvoiceDetailPage() {
     setLoadError(null);
     try {
       const data = await getFactura(id);
-      const [clienteData, notas, notasDeb, formasPagoData, metodosPagoData, tiposOrgData, respFiscalesData, tributosData] =
-        await Promise.all([
-          getCliente(data.cliente_id),
-          listNotasCredito({ facturaId: id }),
-          listNotasDebito({ facturaId: id }),
-          listPublicReferenceTable("formas_pago"),
-          listPublicReferenceTable("metodos_pago"),
-          listPublicReferenceTable("tipos_organizacion"),
-          listPublicReferenceTable("responsabilidades_fiscales"),
-          listPublicReferenceTable("tributos"),
-        ]);
+      const [
+        clienteData,
+        notas,
+        notasDeb,
+        formasPagoData,
+        metodosPagoData,
+        tiposIdData,
+        tiposOrgData,
+        respFiscalesData,
+        tributosData,
+      ] = await Promise.all([
+        getCliente(data.cliente_id),
+        listNotasCredito({ facturaId: id }),
+        listNotasDebito({ facturaId: id }),
+        listPublicReferenceTable("formas_pago"),
+        listPublicReferenceTable("metodos_pago"),
+        listPublicReferenceTable("tipos_identificacion"),
+        listPublicReferenceTable("tipos_organizacion"),
+        listPublicReferenceTable("responsabilidades_fiscales"),
+        listPublicReferenceTable("tributos"),
+      ]);
       setFactura(data);
       setCliente(clienteData);
       setNotasCredito(notas);
       setNotasDebito(notasDeb);
       setFormasPago(formasPagoData);
       setMetodosPago(metodosPagoData);
+      setTiposIdentificacion(tiposIdData);
       setTiposOrganizacion(tiposOrgData);
       setResponsabilidadesFiscales(respFiscalesData);
       setTributos(tributosData);
@@ -357,7 +369,7 @@ export default function InvoiceDetailPage() {
                 </dl>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <InfoEmisor
                   empresa={empresa}
                   tiposOrganizacion={tiposOrganizacion}
@@ -365,6 +377,7 @@ export default function InvoiceDetailPage() {
                 />
                 <InfoReceptor
                   cliente={cliente}
+                  tiposIdentificacion={tiposIdentificacion}
                   tiposOrganizacion={tiposOrganizacion}
                   responsabilidadesFiscales={responsabilidadesFiscales}
                   tributos={tributos}

@@ -119,6 +119,7 @@ def cargar_catalogos_comunes(db) -> dict:
     return {
         "departamentos": tabla_ref.listar("departamentos"),
         "municipios": tabla_ref.listar("municipios"),
+        "tipos_identificacion": tabla_ref.listar("tipos_identificacion"),
         "tipos_organizacion": tabla_ref.listar("tipos_organizacion"),
         "responsabilidades_fiscales": tabla_ref.listar("responsabilidades_fiscales"),
         "tributos": tabla_ref.listar("tributos"),
@@ -158,14 +159,15 @@ def render_emisor_html(empresa, catalogos: dict) -> str:
       {f"<p>Tel: {empresa.telefono}</p>" if empresa.telefono else ""}
       {f"<p>{empresa.correo_electronico}</p>" if empresa.correo_electronico else ""}
       <p>{", ".join(filter(None, [departamento_nombre, municipio_nombre, "Colombia"]))}</p>
-      {f"<p>Tipo de Organizacion: {tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}
-      {f"<p>Regimen Fiscal: {regimen_fiscal_nombre}</p>" if regimen_fiscal_nombre else ""}
-      {f"<p>Responsabilidad Fiscal: {responsabilidad_fiscal_nombre}</p>" if responsabilidad_fiscal_nombre else ""}
+      {f"<p>{tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}
+      {f"<p>{regimen_fiscal_nombre}</p>" if regimen_fiscal_nombre else ""}
+      {f"<p>{responsabilidad_fiscal_nombre}</p>" if responsabilidad_fiscal_nombre else ""}
     </div>
     """
 
 
 def render_adquiriente_html(cliente, catalogos: dict) -> str:
+    tipo_identificacion_nombre = nombre_catalogo(catalogos["tipos_identificacion"], cliente.tipo_identificacion)
     tipo_organizacion_nombre = nombre_catalogo(catalogos["tipos_organizacion"], cliente.tipo_organizacion)
     responsabilidad_fiscal_nombre = nombre_responsabilidad_fiscal(catalogos["responsabilidades_fiscales"], cliente.regimen)
     regimen_fiscal_nombre = nombre_regimen_fiscal(cliente.regimen_fiscal)
@@ -175,12 +177,12 @@ def render_adquiriente_html(cliente, catalogos: dict) -> str:
     <div class="parte">
       <p class="label">Adquiriente</p>
       <p><strong>{cliente.nombre}</strong></p>
-      <p>{cliente.tipo_identificacion} {cliente.numero_identificacion}</p>
+      <p>{tipo_identificacion_nombre} {cliente.numero_identificacion}</p>
       {f"<p>{cliente.correo_electronico}</p>" if cliente.correo_electronico else ""}
       {f"<p>Tel: {cliente.telefono}</p>" if cliente.telefono else ""}
-      {f"<p>Tipo de Organizacion: {tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}
-      {f"<p>Regimen Fiscal: {regimen_fiscal_nombre}</p>" if regimen_fiscal_nombre else ""}
-      {f"<p>Responsabilidad Fiscal: {responsabilidad_fiscal_nombre}</p>" if responsabilidad_fiscal_nombre else ""}
-      {f"<p>Responsabilidad Tributaria: {responsabilidad_tributaria_nombre}</p>" if responsabilidad_tributaria_nombre else ""}
+      {f"<p>{tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}
+      {f"<p>{regimen_fiscal_nombre}</p>" if regimen_fiscal_nombre else ""}
+      {f"<p>{responsabilidad_fiscal_nombre}</p>" if responsabilidad_fiscal_nombre else ""}
+      {f"<p>{responsabilidad_tributaria_nombre}</p>" if responsabilidad_tributaria_nombre else ""}
     </div>
     """
