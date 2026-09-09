@@ -37,8 +37,13 @@ def _valid_request(**overrides):
     return CrearEmpresaRequest(**data)
 
 
-def test_crear_empresa_exitosa(db_session, monkeypatch):
+def test_crear_empresa_exitosa(db_session, monkeypatch, request):
     monkeypatch.setattr("src.application.empresa_service.time.sleep", lambda _: None)
+    monkeypatch.setenv("ALEGRA_ENV", "sandbox")
+    from src.core.config import get_settings
+
+    get_settings.cache_clear()
+    request.addfinalizer(get_settings.cache_clear)
     fake_client = FakeAlegraClient()
     service = CreateEmpresaAlegraService(db_session, alegra_client=fake_client)
 
