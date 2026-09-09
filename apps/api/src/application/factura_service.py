@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_dian_service import ResolucionDianService
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.email_client import EmailClient, EmailSendError
@@ -494,3 +495,8 @@ def notificar_factura_aceptada(
         _enviar_correo_factura(db, factura, alegra_client, email_client or EmailClient())
     except Exception as exc:  # noqa: BLE001 -- best-effort, ver docstring.
         logger.error("No se pudo notificar la factura %s por correo: %s", factura.id, exc)
+
+    try:
+        revisar_alerta_cuota_por_empresa(db, factura.empresa_id, email_client)
+    except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el flujo del llamador.
+        logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", factura.empresa_id, exc)

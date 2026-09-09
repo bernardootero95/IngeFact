@@ -29,8 +29,9 @@ def listar_empresas(
     db: Session = Depends(get_db),
     _admin: CurrentAdmin = Depends(get_current_admin),
 ):
-    empresas = EmpresaAdminService(db).listar(estado=estado, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta)
-    return [EmpresaDetailResponse.from_empresa(e) for e in empresas]
+    servicio = EmpresaAdminService(db)
+    empresas = servicio.listar(estado=estado, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta)
+    return [servicio.construir_respuesta_detalle(e) for e in empresas]
 
 
 @router.post("", response_model=EmpresaResponse, status_code=201)
@@ -64,8 +65,9 @@ def obtener_empresa(
     db: Session = Depends(get_db),
     _admin: CurrentAdmin = Depends(get_current_admin),
 ):
-    empresa = EmpresaAdminService(db).obtener(empresa_id)
-    return EmpresaDetailResponse.from_empresa(empresa)
+    servicio = EmpresaAdminService(db)
+    empresa = servicio.obtener(empresa_id)
+    return servicio.construir_respuesta_detalle(empresa)
 
 
 @router.patch("/{empresa_id}", response_model=EmpresaDetailResponse)
@@ -75,8 +77,9 @@ def actualizar_empresa(
     db: Session = Depends(get_db),
     _admin: CurrentAdmin = Depends(get_current_admin),
 ):
-    empresa = EmpresaAdminService(db).actualizar(empresa_id, body)
-    return EmpresaDetailResponse.from_empresa(empresa)
+    servicio = EmpresaAdminService(db)
+    empresa = servicio.actualizar(empresa_id, body)
+    return servicio.construir_respuesta_detalle(empresa)
 
 
 @router.patch("/{empresa_id}/plan", response_model=SuscripcionResponse)

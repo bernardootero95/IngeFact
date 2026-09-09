@@ -23,6 +23,7 @@ _MODULOS_CON_EMAIL_CLIENT = (
     "src.application.auth_service",
     "src.application.empresa_service",
     "src.application.factura_service",
+    "src.application.suscripcion_service",
 )
 
 
