@@ -19,7 +19,7 @@ TEST_DATABASE_URL = get_settings().database_url.rsplit("/", 1)[0] + "/ingefact_t
 # Modulos de src/application que importan EmailClient -- se agregan aqui a
 # medida que mas servicios envian correo, para que ningun test golpee la red
 # real de Resend por construir un EmailClient() default sin querer.
-_MODULOS_CON_EMAIL_CLIENT = ("src.application.auth_service",)
+_MODULOS_CON_EMAIL_CLIENT = ("src.application.auth_service", "src.application.empresa_service")
 
 
 class FakeEmailClient:

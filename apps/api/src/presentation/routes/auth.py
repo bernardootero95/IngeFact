@@ -5,9 +5,10 @@ from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from src.application.auth_service import AuthService
-from src.core.dependencies import bearer_scheme, decode_or_401
+from src.core.dependencies import CurrentTenant, bearer_scheme, decode_or_401, get_current_tenant
 from src.core.rate_limit import limiter
 from src.domain.auth import (
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
     LogoutRequest,
@@ -59,6 +60,15 @@ def forgot_password_tenant(request: Request, body: ForgotPasswordRequest, db: Se
 @router.post("/reset-password", status_code=204)
 def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
     AuthService(db).reset_password(body.token, body.new_password)
+
+
+@router.post("/change-password", status_code=204)
+def change_password(
+    body: ChangePasswordRequest,
+    tenant: CurrentTenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    AuthService(db).change_password(tenant.id, body.current_password, body.new_password)
 
 
 @router.get("/me", response_model=MeResponse)

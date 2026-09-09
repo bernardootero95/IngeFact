@@ -2,8 +2,9 @@ import pytest
 
 from src.application.empresa_service import CreateEmpresaAlegraService
 from src.core.alegra_client import AlegraApiError, AlegraTransientError
+from src.core.security import verify_password
 from src.domain.empresa import CrearEmpresaRequest
-from src.infrastructure.db.models import CompanyStatus, Empresa
+from src.infrastructure.db.models import CompanyStatus, Empresa, UsuarioEmpresa
 
 
 class FakeAlegraClient:
@@ -32,6 +33,7 @@ def _valid_request(**overrides):
         "numero_identificacion": "900618467",
         "digito_verificacion": "4",
         "correo_electronico": "demo@example.com",
+        "nombre_usuario": "Persona Demo",
     }
     data.update(overrides)
     return CrearEmpresaRequest(**data)
@@ -112,6 +114,58 @@ def test_crear_empresa_agota_reintentos(db_session, monkeypatch):
 
     empresa = db_session.query(Empresa).filter(Empresa.numero_identificacion == "900618467").one()
     assert empresa.estado == "error_alegra"
+
+
+def test_crear_empresa_provisiona_usuario_tenant_con_clave_temporal(db_session, monkeypatch, fake_email_client):
+    monkeypatch.setattr("src.application.empresa_service.time.sleep", lambda _: None)
+    service = CreateEmpresaAlegraService(db_session, alegra_client=FakeAlegraClient(), email_client=fake_email_client)
+
+    empresa = service.crear(_valid_request())
+
+    usuario = db_session.query(UsuarioEmpresa).filter(UsuarioEmpresa.empresa_id == empresa.id).one()
+    assert usuario.nombre == "Persona Demo"
+    assert usuario.email == "demo@example.com"
+    assert usuario.debe_cambiar_password is True
+
+    assert len(fake_email_client.sent) == 1
+    correo = fake_email_client.sent[0]
+    assert correo["to"] == "demo@example.com"
+    # La clave temporal viaja en el cuerpo del correo -- confirma que el hash
+    # guardado corresponde a la misma clave que se envio.
+    import re
+
+    clave_temporal = re.search(r"font-family:monospace;\">([^<]+)</td>", correo["html"]).group(1)
+    assert verify_password(clave_temporal, usuario.password_hash)
+
+
+def test_crear_empresa_email_usuario_duplicado(db_session, monkeypatch):
+    monkeypatch.setattr("src.application.empresa_service.time.sleep", lambda _: None)
+    otra_empresa = Empresa(
+        razon_social="Otra Empresa",
+        numero_identificacion="900000001",
+        digito_verificacion="1",
+        correo_electronico="demo@example.com",
+        estado="activo",
+    )
+    db_session.add(otra_empresa)
+    db_session.commit()
+    db_session.add(
+        UsuarioEmpresa(
+            empresa_id=otra_empresa.id,
+            nombre="Ya Existe",
+            email="demo@example.com",
+            password_hash="hash-cualquiera",
+        )
+    )
+    db_session.commit()
+
+    service = CreateEmpresaAlegraService(db_session, alegra_client=FakeAlegraClient())
+
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.crear(_valid_request())
+    assert exc_info.value.status_code == 409
 
 
 def test_reintentar_manual_tras_error(db_session, monkeypatch):

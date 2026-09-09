@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -19,6 +19,10 @@ class UsuarioEmpresa(Base):
     email: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
+    # True al crearse con una clave temporal (onboarding) -- el login lo
+    # refleja en TokenResponse para que el frontend fuerce el cambio antes de
+    # dejar usar el resto de la app.
+    debe_cambiar_password: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     actualizado: Mapped[datetime] = mapped_column(

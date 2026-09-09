@@ -53,3 +53,13 @@ def refresh_token_expiry() -> datetime:
 
 def reset_token_expiry() -> datetime:
     return datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+
+
+_TEMP_PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789"
+
+
+def generate_temp_password(length: int = 12) -> str:
+    """Password temporal tipeable a mano (sin 0/O/1/l/I, que se confunden al
+    copiarla de un correo) -- a diferencia de generate_opaque_token, que es
+    para links, no para que una persona la escriba."""
+    return "".join(secrets.choice(_TEMP_PASSWORD_ALPHABET) for _ in range(length))

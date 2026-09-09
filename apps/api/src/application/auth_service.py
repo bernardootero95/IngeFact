@@ -60,7 +60,9 @@ class AuthService:
         user = self.db.query(UsuarioEmpresa).filter(UsuarioEmpresa.email == email).one_or_none()
         if user is None or user.estado != "activo" or not verify_password(password, user.password_hash):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, INVALID_CREDENTIALS)
-        return self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
+        tokens = self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
+        tokens.debe_cambiar_password = user.debe_cambiar_password
+        return tokens
 
     def refresh(self, refresh_token: str) -> TokenResponse:
         token_hash = hash_opaque_token(refresh_token)
@@ -92,7 +94,9 @@ class AuthService:
         if user is None or user.estado != "activo":
             self.db.commit()
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario no activo.")
-        return self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
+        tokens = self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
+        tokens.debe_cambiar_password = user.debe_cambiar_password
+        return tokens
 
     def _revoke_all_refresh_tokens(self, *, user_id: uuid.UUID, user_type: str) -> None:
         activos = (
@@ -180,6 +184,19 @@ class AuthService:
         user.password_hash = hash_password(new_password)
         record.used_at = _now()
         self.db.add_all([user, record])
+        self.db.commit()
+
+    def change_password(self, user_id: uuid.UUID, current_password: str, new_password: str) -> None:
+        """Cambio de contrasena con sesion activa (usado por el onboarding de
+        tenant con clave temporal) -- a diferencia de reset_password, exige
+        conocer la contrasena actual en vez de un token por correo."""
+        user = self.db.get(UsuarioEmpresa, user_id)
+        if user is None or not verify_password(current_password, user.password_hash):
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Contrasena actual incorrecta.")
+
+        user.password_hash = hash_password(new_password)
+        user.debe_cambiar_password = False
+        self.db.add(user)
         self.db.commit()
 
 
