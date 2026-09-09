@@ -115,3 +115,30 @@ export async function apiRequest(path, { method = "GET", body, headers } = {}) {
   }
   return data;
 }
+
+/**
+ * Igual que apiRequest (auth + reintento de un solo refresh en 401), pero
+ * para respuestas binarias (ej. un PDF) -- parseBody() leeria el cuerpo como
+ * texto y corromperia los bytes, aqui se devuelve un Blob directo.
+ */
+export async function apiRequestBlob(path, { method = "GET" } = {}) {
+  let response = await doFetch(path, { method, headers: {} });
+
+  if (response.status === 401) {
+    const refreshed = await tryRefresh();
+    if (!refreshed) {
+      onSessionExpired();
+      throw new Error("Sesion expirada.");
+    }
+    response = await doFetch(path, { method, headers: {} });
+  }
+
+  if (!response.ok) {
+    const data = await parseBody(response);
+    const message = (data && (data.detail || data.message)) || `Error ${response.status}`;
+    const error = new Error(typeof message === "string" ? message : JSON.stringify(message));
+    error.status = response.status;
+    throw error;
+  }
+  return response.blob();
+}

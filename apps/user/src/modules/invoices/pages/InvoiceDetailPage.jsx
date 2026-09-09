@@ -4,6 +4,7 @@ import {
   getFactura,
   eliminarBorradorFactura,
   obtenerUrlXmlFactura,
+  obtenerRepresentacionPdfFactura,
   enviarFacturaPorCorreo,
   listNotasCredito,
   listNotasDebito,
@@ -54,6 +55,7 @@ export default function InvoiceDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloadingXml, setIsDownloadingXml] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [isAnulando, setIsAnulando] = useState(false);
   const [toast, setToast] = useState({ message: null, type: "success" });
 
@@ -123,6 +125,24 @@ export default function InvoiceDetailPage() {
       setToast({ message: error.message, type: "error" });
     } finally {
       setIsDownloadingXml(false);
+    }
+  };
+
+  const handleVerRepresentacion = async () => {
+    if (!factura.cufe) {
+      navigate(`/invoices/${id}/representacion`);
+      return;
+    }
+    setIsLoadingPdf(true);
+    try {
+      const blob = await obtenerRepresentacionPdfFactura(id);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } catch (error) {
+      setToast({ message: error.message, type: "error" });
+    } finally {
+      setIsLoadingPdf(false);
     }
   };
 
@@ -251,10 +271,11 @@ export default function InvoiceDetailPage() {
                     </>
                   )}
                   <button
-                    onClick={() => navigate(`/invoices/${id}/representacion`)}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                    onClick={handleVerRepresentacion}
+                    disabled={isLoadingPdf}
+                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                   >
-                    {factura.cufe ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
+                    {isLoadingPdf ? "Generando PDF..." : factura.cufe ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
                   </button>
                   {factura.cufe && (
                     <>

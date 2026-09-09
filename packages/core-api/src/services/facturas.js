@@ -1,4 +1,4 @@
-import { apiRequest } from "../apiClient.js";
+import { apiRequest, apiRequestBlob } from "../apiClient.js";
 
 export async function listFacturas({ estado, clienteId } = {}) {
   const params = new URLSearchParams();
@@ -38,4 +38,8 @@ export async function obtenerFirmaDigitalFactura(id) {
 
 export async function enviarFacturaPorCorreo(id) {
   return apiRequest(`/api/v1/tenant/facturas/${id}/enviar-correo`, { method: "POST" });
+}
+
+export async function obtenerRepresentacionPdfFactura(id) {
+  return apiRequestBlob(`/api/v1/tenant/facturas/${id}/representacion.pdf`);
 }
