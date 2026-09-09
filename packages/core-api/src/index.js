@@ -81,6 +81,7 @@ export {
   anularFactura,
   obtenerUrlXmlNotaCredito,
   obtenerFirmaDigitalNotaCredito,
+  obtenerRepresentacionPdfNotaCredito,
 } from "./services/notasCredito.js";
 export {
   listNotasDebito,
@@ -91,4 +92,5 @@ export {
   enviarNotaDebito,
   obtenerUrlXmlNotaDebito,
   obtenerFirmaDigitalNotaDebito,
+  obtenerRepresentacionPdfNotaDebito,
 } from "./services/notasDebito.js";

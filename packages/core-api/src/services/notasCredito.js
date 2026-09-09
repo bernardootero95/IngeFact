@@ -1,4 +1,4 @@
-import { apiRequest } from "../apiClient.js";
+import { apiRequest, apiRequestBlob } from "../apiClient.js";
 
 export async function listNotasCredito({ estado, facturaId } = {}) {
   const params = new URLSearchParams();
@@ -42,4 +42,8 @@ export async function obtenerUrlXmlNotaCredito(id) {
 
 export async function obtenerFirmaDigitalNotaCredito(id) {
   return apiRequest(`/api/v1/tenant/notas-credito/${id}/firma-digital`);
+}
+
+export async function obtenerRepresentacionPdfNotaCredito(id) {
+  return apiRequestBlob(`/api/v1/tenant/notas-credito/${id}/representacion.pdf`);
 }

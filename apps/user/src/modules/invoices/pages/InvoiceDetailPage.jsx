@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getFactura,
+  getCliente,
   eliminarBorradorFactura,
   obtenerUrlXmlFactura,
   obtenerRepresentacionPdfFactura,
@@ -13,6 +14,9 @@ import {
 } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
+import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -44,12 +48,17 @@ const NOTA_ESTADO_LABEL = {
 export default function InvoiceDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { empresa } = useCurrentEmpresa();
 
   const [factura, setFactura] = useState(null);
+  const [cliente, setCliente] = useState(null);
   const [notasCredito, setNotasCredito] = useState([]);
   const [notasDebito, setNotasDebito] = useState([]);
   const [formasPago, setFormasPago] = useState([]);
   const [metodosPago, setMetodosPago] = useState([]);
+  const [tiposOrganizacion, setTiposOrganizacion] = useState([]);
+  const [responsabilidadesFiscales, setResponsabilidadesFiscales] = useState([]);
+  const [tributos, setTributos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -63,18 +72,27 @@ export default function InvoiceDetailPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [data, notas, notasDeb, formasPagoData, metodosPagoData] = await Promise.all([
-        getFactura(id),
-        listNotasCredito({ facturaId: id }),
-        listNotasDebito({ facturaId: id }),
-        listPublicReferenceTable("formas_pago"),
-        listPublicReferenceTable("metodos_pago"),
-      ]);
+      const data = await getFactura(id);
+      const [clienteData, notas, notasDeb, formasPagoData, metodosPagoData, tiposOrgData, respFiscalesData, tributosData] =
+        await Promise.all([
+          getCliente(data.cliente_id),
+          listNotasCredito({ facturaId: id }),
+          listNotasDebito({ facturaId: id }),
+          listPublicReferenceTable("formas_pago"),
+          listPublicReferenceTable("metodos_pago"),
+          listPublicReferenceTable("tipos_organizacion"),
+          listPublicReferenceTable("responsabilidades_fiscales"),
+          listPublicReferenceTable("tributos"),
+        ]);
       setFactura(data);
+      setCliente(clienteData);
       setNotasCredito(notas);
       setNotasDebito(notasDeb);
       setFormasPago(formasPagoData);
       setMetodosPago(metodosPagoData);
+      setTiposOrganizacion(tiposOrgData);
+      setResponsabilidadesFiscales(respFiscalesData);
+      setTributos(tributosData);
     } catch (error) {
       setLoadError(error.message);
     } finally {
@@ -129,21 +147,15 @@ export default function InvoiceDetailPage() {
   };
 
   const handleVerRepresentacion = async () => {
-    if (!factura.cufe) {
-      navigate(`/invoices/${id}/representacion`);
-      return;
-    }
     setIsLoadingPdf(true);
-    try {
-      const blob = await obtenerRepresentacionPdfFactura(id);
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch (error) {
-      setToast({ message: error.message, type: "error" });
-    } finally {
-      setIsLoadingPdf(false);
-    }
+    await abrirRepresentacion({
+      tieneDocumentoValido: Boolean(factura.cufe),
+      obtenerPdf: () => obtenerRepresentacionPdfFactura(id),
+      navigate,
+      rutaPreview: `/invoices/${id}/representacion`,
+      onError: (message) => setToast({ message, type: "error" }),
+    });
+    setIsLoadingPdf(false);
   };
 
   const handleEnviarCorreo = async () => {
@@ -323,7 +335,7 @@ export default function InvoiceDetailPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Información general</h3>
                   <dl className="text-sm space-y-2">
@@ -345,15 +357,17 @@ export default function InvoiceDetailPage() {
                     </div>
                   </dl>
                 </div>
-                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
-                  <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Cliente</h3>
-                  <dl className="text-sm space-y-2">
-                    <div className="flex justify-between">
-                      <dt className="text-neutralCustom-500">Nombre</dt>
-                      <dd className="font-medium text-neutralCustom-800">{factura.cliente_nombre}</dd>
-                    </div>
-                  </dl>
-                </div>
+                <InfoEmisor
+                  empresa={empresa}
+                  tiposOrganizacion={tiposOrganizacion}
+                  responsabilidadesFiscales={responsabilidadesFiscales}
+                />
+                <InfoReceptor
+                  cliente={cliente}
+                  tiposOrganizacion={tiposOrganizacion}
+                  responsabilidadesFiscales={responsabilidadesFiscales}
+                  tributos={tributos}
+                />
               </div>
 
               <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">

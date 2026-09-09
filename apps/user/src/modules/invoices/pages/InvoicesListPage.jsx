@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { listFacturas } from "@ingefact/core-api";
+import { listFacturas, obtenerRepresentacionPdfFactura } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", {
@@ -55,7 +57,17 @@ export default function InvoicesListPage() {
   const [loadError, setLoadError] = useState(null);
   const [search, setSearch] = useState("");
   const [estado, setEstado] = useState("");
+  const [toast, setToast] = useState({ message: null, type: "success" });
   const debounceRef = useRef(null);
+
+  const handleVerRepresentacion = (factura) =>
+    abrirRepresentacion({
+      tieneDocumentoValido: Boolean(factura.cufe),
+      obtenerPdf: () => obtenerRepresentacionPdfFactura(factura.id),
+      navigate,
+      rutaPreview: `/invoices/${factura.id}/representacion`,
+      onError: (message) => setToast({ message, type: "error" }),
+    });
 
   const fetchFacturas = useCallback(async (estadoFiltro) => {
     setLoading(true);
@@ -198,7 +210,7 @@ export default function InvoicesListPage() {
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <IconButton
                             title={f.cufe ? "Ver representación gráfica" : "Vista previa (borrador)"}
-                            onClick={() => navigate(`/invoices/${f.id}/representacion`)}
+                            onClick={() => handleVerRepresentacion(f)}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path
@@ -279,6 +291,7 @@ export default function InvoicesListPage() {
           </div>
         </div>
       </main>
+      <ToastAlert message={toast.message} type={toast.type} onClose={() => setToast({ message: null, type: "success" })} />
     </div>
   );
 }

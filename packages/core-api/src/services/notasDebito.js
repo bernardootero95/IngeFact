@@ -1,4 +1,4 @@
-import { apiRequest } from "../apiClient.js";
+import { apiRequest, apiRequestBlob } from "../apiClient.js";
 
 export async function listNotasDebito({ estado, facturaId } = {}) {
   const params = new URLSearchParams();
@@ -34,4 +34,8 @@ export async function obtenerUrlXmlNotaDebito(id) {
 
 export async function obtenerFirmaDigitalNotaDebito(id) {
   return apiRequest(`/api/v1/tenant/notas-debito/${id}/firma-digital`);
+}
+
+export async function obtenerRepresentacionPdfNotaDebito(id) {
+  return apiRequestBlob(`/api/v1/tenant/notas-debito/${id}/representacion.pdf`);
 }

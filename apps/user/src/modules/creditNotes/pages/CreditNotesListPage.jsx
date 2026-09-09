@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { listNotasCredito } from "@ingefact/core-api";
+import { listNotasCredito, obtenerRepresentacionPdfNotaCredito } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -47,6 +49,16 @@ export default function CreditNotesListPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [estado, setEstado] = useState("");
+  const [toast, setToast] = useState({ message: null, type: "success" });
+
+  const handleVerRepresentacion = (nota) =>
+    abrirRepresentacion({
+      tieneDocumentoValido: Boolean(nota.cude),
+      obtenerPdf: () => obtenerRepresentacionPdfNotaCredito(nota.id),
+      navigate,
+      rutaPreview: `/credit-notes/${nota.id}/representacion`,
+      onError: (message) => setToast({ message, type: "error" }),
+    });
 
   const fetchNotas = useCallback(async (estadoFiltro) => {
     setLoading(true);
@@ -159,7 +171,7 @@ export default function CreditNotesListPage() {
                         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                           <IconButton
                             title={n.cude ? "Ver representación gráfica" : "Vista previa (borrador)"}
-                            onClick={() => navigate(`/credit-notes/${n.id}/representacion`)}
+                            onClick={() => handleVerRepresentacion(n)}
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path
@@ -232,6 +244,7 @@ export default function CreditNotesListPage() {
           </div>
         </div>
       </main>
+      <ToastAlert message={toast.message} type={toast.type} onClose={() => setToast({ message: null, type: "success" })} />
     </div>
   );
 }
