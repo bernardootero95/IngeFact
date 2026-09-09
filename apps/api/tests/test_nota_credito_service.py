@@ -574,3 +574,38 @@ def test_obtener_firma_digital_sin_firma_en_el_xml_falla_404(db_session):
     with pytest.raises(HTTPException) as exc_info:
         service.obtener_firma_digital(empresa.id, nota.id)
     assert exc_info.value.status_code == 404
+
+
+def test_generar_pdf_representacion_borrador_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.generar_pdf_representacion(empresa.id, nota.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_generar_pdf_representacion_nota_aceptada_devuelve_bytes(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_response = {
+        "creditNote": {"id": "cn-1", "cude": "cude-1", "legalStatus": "ACCEPTED"},
+        "files": {"xml": "https://s3.example.com/nota.xml"},
+    }
+    fake.raw_response = _XML_CON_FIRMA
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+    service.enviar(empresa.id, nota.id)
+
+    pdf_bytes = service.generar_pdf_representacion(empresa.id, nota.id)
+
+    assert isinstance(pdf_bytes, bytes)
+    assert len(pdf_bytes) > 0

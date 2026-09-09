@@ -68,6 +68,14 @@ def _no_real_pdf(monkeypatch):
         "src.application.factura_service.generar_representacion_pdf",
         lambda db, factura, firma_digital: b"%PDF-fake%",
     )
+    monkeypatch.setattr(
+        "src.application.nota_credito_service.generar_representacion_pdf_nota_credito",
+        lambda db, nota, firma_digital: b"%PDF-fake%",
+    )
+    monkeypatch.setattr(
+        "src.application.nota_debito_service.generar_representacion_pdf_nota_debito",
+        lambda db, nota, firma_digital: b"%PDF-fake%",
+    )
 
 
 _engine = create_engine(TEST_DATABASE_URL)

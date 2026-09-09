@@ -13,6 +13,7 @@ from src.application.factura_service import _construir_pago
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.nota_debito_pdf import generar_representacion_pdf_nota_debito
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.nota_debito import ActualizarNotaDebitoRequest, CrearNotaDebitoRequest, LineaNotaDebitoRequest
 from src.infrastructure.db.models import ConsecutivoNota, Empresa, Factura, NotaDebito, NotaDebitoLinea
@@ -92,6 +93,17 @@ class NotaDebitoService:
         self.db.add(nota)
         self.db.commit()
         return firma
+
+    def generar_pdf_representacion(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> bytes:
+        """PDF real de la representacion grafica -- solo tiene sentido para
+        una nota ya aceptada (CUDE/QR/firma real)."""
+        nota = self.obtener(empresa_id, nota_id)
+        if not nota.cude:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Solo se puede generar el PDF de una nota ya aceptada por la DIAN."
+            )
+        firma_digital = self.obtener_firma_digital(empresa_id, nota_id)
+        return generar_representacion_pdf_nota_debito(self.db, nota, firma_digital)
 
     def _obtener_factura_aceptada(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
         factura = self.db.execute(

@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from src.application.nota_credito_service import NotaCreditoService
@@ -112,6 +112,16 @@ def obtener_url_xml(
 ):
     url = NotaCreditoService(db).obtener_url_xml(tenant.empresa_id, nota_id)
     return {"url": url}
+
+
+@router.get("/notas-credito/{nota_id}/representacion.pdf")
+def obtener_representacion_pdf(
+    nota_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    pdf_bytes = NotaCreditoService(db).generar_pdf_representacion(tenant.empresa_id, nota_id)
+    return Response(content=pdf_bytes, media_type="application/pdf")
 
 
 @router.get("/notas-credito/{nota_id}/firma-digital")
