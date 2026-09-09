@@ -9,6 +9,7 @@ const baseForm = {
   fecha_inicio: "",
   fecha_fin: "",
   technical_key: "",
+  consecutivo_actual: "",
 };
 
 describe("ResolutionSettingsPage validateField", () => {
@@ -53,5 +54,16 @@ describe("ResolutionSettingsPage validateField", () => {
 
     const formValido = { ...baseForm, fecha_inicio: "2026-01-01", fecha_fin: "2026-12-31" };
     expect(validateField("fecha_fin", "2026-12-31", formValido)).toBe("");
+  });
+
+  it("consecutivo_actual es opcional, pero si se llena debe ser un entero positivo dentro del rango", () => {
+    expect(validateField("consecutivo_actual", "", baseForm)).toBe("");
+
+    const form = { ...baseForm, rango_minimo: "100", rango_maximo: "500" };
+    expect(validateField("consecutivo_actual", "no-numero", form)).toMatch(/entero mayor a 0/i);
+    expect(validateField("consecutivo_actual", "0", form)).toMatch(/entero mayor a 0/i);
+    expect(validateField("consecutivo_actual", "99", form)).toMatch(/menor al rango m[ií]nimo/i);
+    expect(validateField("consecutivo_actual", "501", form)).toMatch(/mayor al rango m[áa]ximo/i);
+    expect(validateField("consecutivo_actual", "250", form)).toBe("");
   });
 });
