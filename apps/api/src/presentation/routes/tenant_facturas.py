@@ -81,6 +81,15 @@ def enviar_factura(
     return FacturaResponse.from_model(factura)
 
 
+@router.post("/{factura_id}/enviar-correo", status_code=204)
+def enviar_factura_por_correo(
+    factura_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    FacturaService(db).enviar_por_correo(tenant.empresa_id, factura_id)
+
+
 @router.get("/{factura_id}/xml")
 def obtener_url_xml(
     factura_id: uuid.UUID,

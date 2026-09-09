@@ -3,7 +3,9 @@ from datetime import date
 import pytest
 from fastapi import HTTPException
 
-from src.application.factura_service import FacturaService
+import base64
+
+from src.application.factura_service import FacturaService, notificar_factura_aceptada
 from src.core.alegra_client import AlegraApiError
 from src.domain.factura import ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Producto, ResolucionDian
@@ -612,3 +614,107 @@ def test_obtener_firma_digital_sin_firma_en_el_xml_falla_404(db_session):
     with pytest.raises(HTTPException) as exc_info:
         service.obtener_firma_digital(empresa.id, factura.id)
     assert exc_info.value.status_code == 404
+
+
+def test_notificar_factura_aceptada_envia_correo_con_qr_y_xml_adjunto(db_session, fake_email_client):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {
+                "id": "inv-1",
+                "cufe": "cufe-123",
+                "fullNumber": "SETP1",
+                "legalStatus": "ACCEPTED",
+                "qrCodeContent": "contenido-qr",
+            },
+            "files": {"xml": "https://s3.example.com/factura.xml"},
+        },
+        raw_response=b"<xml>contenido de prueba</xml>",
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    notificar_factura_aceptada(db_session, enviada, fake, fake_email_client)
+
+    assert len(fake_email_client.sent) == 1
+    correo = fake_email_client.sent[0]
+    assert correo["to"] == "cliente@example.com"
+    assert correo["attachments"][0]["filename"] == "SETP1.xml"
+    assert base64.b64decode(correo["attachments"][0]["content"]) == b"<xml>contenido de prueba</xml>"
+
+
+def test_notificar_factura_aceptada_no_hace_nada_si_no_esta_aceptada(db_session, fake_email_client):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = FacturaService(db_session)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    notificar_factura_aceptada(db_session, factura, None, fake_email_client)
+
+    assert fake_email_client.sent == []
+
+
+def test_enviar_por_correo_factura_no_aceptada_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = FacturaService(db_session)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, factura.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_enviar_por_correo_cliente_sin_correo_falla_400(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id, correo_electronico="")
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}},
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, factura.id)
+    assert exc_info.value.status_code == 400
+
+
+def test_enviar_por_correo_reporta_502_si_falla_el_envio(db_session, monkeypatch):
+    """El reenvio manual (a diferencia del envio automatico best-effort) debe
+    reportar un fallo real de Resend al usuario en vez de fallar en
+    silencio."""
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"},
+            "files": {"xml": "https://s3.example.com/factura.xml"},
+        },
+        raw_response=b"<xml></xml>",
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    from src.core.email_client import EmailSendError
+
+    class _FailingEmailClient:
+        def send(self, **kwargs):
+            raise EmailSendError("fallo simulado de Resend")
+
+    monkeypatch.setattr("src.application.factura_service.EmailClient", _FailingEmailClient)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, factura.id)
+    assert exc_info.value.status_code == 502

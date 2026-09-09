@@ -1,3 +1,5 @@
+import base64
+import logging
 import uuid
 import xml.etree.ElementTree as ET
 from datetime import date as date_cls
@@ -11,9 +13,18 @@ from sqlalchemy.orm import Session, selectinload
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.email_client import EmailClient, EmailSendError
+from src.core.email_templates import plantilla_factura_cliente
+from src.core.qr_utils import generar_qr_png_base64
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto
+
+logger = logging.getLogger(__name__)
+
+
+def _formatear_cop(valor: float) -> str:
+    return f"${valor:,.0f}".replace(",", ".")
 
 
 def _tarifa_a_string(tarifa: float) -> str:
@@ -108,6 +119,26 @@ class FacturaService:
         self.db.add(factura)
         self.db.commit()
         return firma
+
+    def enviar_por_correo(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> None:
+        """Reenvio manual (boton "Reenviar por correo" en el detalle) -- a
+        diferencia del envio automatico de notificar_factura_aceptada, aqui
+        un problema real (factura sin aceptar, cliente sin correo, o un
+        fallo real de Resend/Alegra) debe reportarse al usuario en vez de
+        fallar en silencio."""
+        factura = self.obtener(empresa_id, factura_id)
+        if factura.estado != "aceptada":
+            raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una factura aceptada.")
+        if not factura.cliente or not factura.cliente.correo_electronico:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "El cliente de esta factura no tiene correo registrado.")
+        try:
+            _enviar_correo_factura(self.db, factura, self._alegra_client, EmailClient())
+        except EmailSendError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo enviar el correo. Intenta de nuevo.") from exc
+        except HTTPException:
+            raise
+        except Exception as exc:  # noqa: BLE001 -- errores inesperados al armar el XML/QR
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo preparar el correo de la factura.") from exc
 
     def _obtener_editable(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
         """Editable/reenviable en 'borrador' y tambien en 'rechazada' -- una
@@ -276,7 +307,10 @@ class FacturaService:
         self.db.add(factura)
         self.db.commit()
         self.db.refresh(factura)
-        return self.obtener(empresa_id, factura.id)
+
+        factura_actualizada = self.obtener(empresa_id, factura.id)
+        notificar_factura_aceptada(self.db, factura_actualizada, self._alegra_client)
+        return factura_actualizada
 
     @staticmethod
     def _aplicar_respuesta_envio(
@@ -403,3 +437,60 @@ class FacturaService:
             },
             "payments": [_construir_pago(forma_pago, metodo_pago, float(factura.total), fecha_vencimiento)],
         }
+
+
+def _enviar_correo_factura(
+    db: Session,
+    factura: Factura,
+    alegra_client: AlegraClient | None,
+    email_client: EmailClient,
+) -> None:
+    """Arma y envia el correo -- deja propagar cualquier error (XML no
+    disponible, EmailSendError, etc.) para que cada llamador decida si es
+    best-effort o debe reportarse. Asume que factura.estado == 'aceptada' y
+    que el cliente tiene correo -- eso ya lo valida el llamador."""
+    servicio = FacturaService(db, alegra_client)
+    url_xml = servicio.obtener_url_xml(factura.empresa_id, factura.id)
+    xml_bytes = servicio._alegra_client.fetch_raw(url_xml)
+
+    empresa = db.get(Empresa, factura.empresa_id)
+    fecha_mostrar = factura.fecha_envio or datetime.combine(factura.fecha, datetime.min.time())
+    subject, html = plantilla_factura_cliente(
+        razon_social_emisor=empresa.razon_social,
+        nombre_cliente=factura.cliente.nombre,
+        numero_completo=factura.numero_completo or "",
+        fecha=fecha_mostrar.strftime("%d/%m/%Y"),
+        total_formateado=_formatear_cop(float(factura.total)),
+        cufe=factura.cufe or "",
+        qr_base64=generar_qr_png_base64(factura.qr_code_content or ""),
+    )
+    attachment = {
+        "filename": f"{factura.numero_completo or factura.id}.xml",
+        "content": base64.b64encode(xml_bytes).decode("ascii"),
+    }
+    email_client.send(to=factura.cliente.correo_electronico, subject=subject, html=html, attachments=[attachment])
+
+
+def notificar_factura_aceptada(
+    db: Session,
+    factura: Factura,
+    alegra_client: AlegraClient | None = None,
+    email_client: EmailClient | None = None,
+) -> None:
+    """Envia al cliente el QR + XML de la factura ya aceptada, best-effort.
+    No atada a una instancia de FacturaService para poder llamarse tambien
+    desde webhooks.py (que trabaja directo con el modelo, sin pasar por el
+    servicio) -- se invoca desde los dos caminos por los que una factura
+    llega a 'aceptada': FacturaService.enviar() y la reconciliacion del
+    webhook. Nunca debe romper el flujo que la llama -- para el reenvio
+    manual, que si debe reportar un fallo real, ver
+    FacturaService.enviar_por_correo."""
+    if factura.estado != "aceptada":
+        return
+    if not factura.cliente or not factura.cliente.correo_electronico:
+        return
+
+    try:
+        _enviar_correo_factura(db, factura, alegra_client, email_client or EmailClient())
+    except Exception as exc:  # noqa: BLE001 -- best-effort, ver docstring.
+        logger.error("No se pudo notificar la factura %s por correo: %s", factura.id, exc)
