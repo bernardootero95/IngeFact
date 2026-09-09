@@ -97,8 +97,21 @@ class EmpresaDetailResponse(BaseModel):
     suscripcion: SuscripcionResponse | None = None
 
     @staticmethod
-    def from_empresa(empresa) -> "EmpresaDetailResponse":
+    def from_empresa(empresa, documentos_usados: int | None = None) -> "EmpresaDetailResponse":
+        """`documentos_usados` es el conteo real ya calculado por el llamador
+        (SuscripcionService.contar_documentos_usados, capa application -- este
+        modulo de dominio no debe depender de ella) -- si no se pasa, cae al
+        valor crudo de la columna (legacy, casi siempre desactualizado)."""
         activa = next((s for s in empresa.suscripciones if s.estado == "activa"), None)
+        suscripcion_response = None
+        if activa:
+            suscripcion_response = SuscripcionResponse(
+                max_documentos=activa.max_documentos,
+                documentos_usados=documentos_usados if documentos_usados is not None else activa.documentos_usados,
+                fecha_inicio=activa.fecha_inicio,
+                fecha_fin=activa.fecha_fin,
+                estado=activa.estado,
+            )
         return EmpresaDetailResponse(
             id=str(empresa.id),
             razon_social=empresa.razon_social,
@@ -116,7 +129,7 @@ class EmpresaDetailResponse(BaseModel):
             id_alegra=empresa.id_alegra,
             estado=empresa.estado,
             creado=empresa.creado,
-            suscripcion=SuscripcionResponse.model_validate(activa) if activa else None,
+            suscripcion=suscripcion_response,
         )
 
 

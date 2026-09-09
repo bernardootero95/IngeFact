@@ -8,12 +8,17 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 
+import logging
+
 from src.application.factura_service import _construir_pago
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.nota_credito import ActualizarNotaCreditoRequest, CrearNotaCreditoRequest, LineaNotaCreditoRequest
 from src.infrastructure.db.models import ConsecutivoNota, Empresa, Factura, NotaCredito, NotaCreditoLinea
+
+logger = logging.getLogger(__name__)
 
 # Motivo "Anulacion del documento equivalente electronico" del catalogo DIAN
 # conceptos_nota_credito -- usado por el atajo "Anular Factura".
@@ -301,6 +306,13 @@ class NotaCreditoService:
 
         self.db.commit()
         self.db.refresh(nota)
+
+        if nota.estado == "aceptada":
+            try:
+                revisar_alerta_cuota_por_empresa(self.db, empresa_id)
+            except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el envio.
+                logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", empresa_id, exc)
+
         return self.obtener(empresa_id, nota.id)
 
     def anular_factura(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> NotaCredito:

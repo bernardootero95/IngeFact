@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.application.factura_service import notificar_factura_aceptada
 from src.application.nota_credito_service import NotaCreditoService
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_errors import map_government_response
 from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito, NotaDebito
 from src.infrastructure.db.session import get_db
@@ -163,6 +164,11 @@ async def webhook_credit_notes(request: Request, db: Session = Depends(get_db)):
 
     db.add(nota)
     db.commit()
+    if nota.estado == "aceptada":
+        try:
+            revisar_alerta_cuota_por_empresa(db, nota.empresa_id)
+        except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el webhook.
+            logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", nota.empresa_id, exc)
 
 
 @router.post("/debit-notes", status_code=204)
@@ -215,3 +221,8 @@ async def webhook_debit_notes(request: Request, db: Session = Depends(get_db)):
 
     db.add(nota)
     db.commit()
+    if nota.estado == "aceptada":
+        try:
+            revisar_alerta_cuota_por_empresa(db, nota.empresa_id)
+        except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el webhook.
+            logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", nota.empresa_id, exc)

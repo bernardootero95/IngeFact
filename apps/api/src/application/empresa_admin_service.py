@@ -5,7 +5,13 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from src.domain.empresa import ActualizarDatosContactoRequest, ActualizarEmpresaRequest, CambiarPlanRequest
+from src.application.suscripcion_service import contar_documentos_usados
+from src.domain.empresa import (
+    ActualizarDatosContactoRequest,
+    ActualizarEmpresaRequest,
+    CambiarPlanRequest,
+    EmpresaDetailResponse,
+)
 from src.infrastructure.db.models import Empresa, Suscripcion
 
 
@@ -19,6 +25,15 @@ class EmpresaAdminService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    def construir_respuesta_detalle(self, empresa: Empresa) -> EmpresaDetailResponse:
+        """Wrapper de EmpresaDetailResponse.from_empresa que resuelve el
+        conteo real de documentos usados (requiere DB, por eso no vive en el
+        modulo de dominio) -- usado por todas las rutas admin/tenant que
+        exponen el detalle de una empresa."""
+        activa = next((s for s in empresa.suscripciones if s.estado == "activa"), None)
+        documentos_usados = contar_documentos_usados(self.db, activa) if activa else None
+        return EmpresaDetailResponse.from_empresa(empresa, documentos_usados=documentos_usados)
 
     def listar(
         self,
@@ -92,6 +107,10 @@ class EmpresaAdminService:
         activa.max_documentos = data.max_documentos
         activa.fecha_inicio = data.fecha_inicio
         activa.fecha_fin = data.fecha_fin
+        # Un cambio de plan (nuevo o ampliado) es motivo para volver a avisar
+        # si se vuelve a cruzar el umbral -- sin esto, una empresa que ya
+        # recibio el aviso una vez nunca mas se enteraria tras renovar.
+        activa.alerta_cuota_enviada = False
 
         self.db.add(activa)
         self.db.commit()

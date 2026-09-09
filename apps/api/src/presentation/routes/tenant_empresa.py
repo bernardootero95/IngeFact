@@ -14,8 +14,9 @@ def obtener_mi_empresa(
     db: Session = Depends(get_db),
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
-    empresa = EmpresaAdminService(db).obtener(tenant.empresa_id)
-    return EmpresaDetailResponse.from_empresa(empresa)
+    servicio = EmpresaAdminService(db)
+    empresa = servicio.obtener(tenant.empresa_id)
+    return servicio.construir_respuesta_detalle(empresa)
 
 
 @router.patch("", response_model=EmpresaDetailResponse)
@@ -24,5 +25,6 @@ def actualizar_mi_empresa(
     db: Session = Depends(get_db),
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
-    empresa = EmpresaAdminService(db).actualizar_datos_contacto(tenant.empresa_id, body)
-    return EmpresaDetailResponse.from_empresa(empresa)
+    servicio = EmpresaAdminService(db)
+    empresa = servicio.actualizar_datos_contacto(tenant.empresa_id, body)
+    return servicio.construir_respuesta_detalle(empresa)

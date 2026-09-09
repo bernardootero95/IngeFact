@@ -76,3 +76,16 @@ def plantilla_factura_cliente(
     </div>
     """
     return subject, html
+
+
+def plantilla_alerta_cuota(razon_social: str, documentos_usados: int, max_documentos: int) -> tuple[str, str]:
+    subject = "Tu cuota de documentos esta por agotarse"
+    html = f"""
+    <div style="font-family:sans-serif;color:#1e293b;max-width:480px;margin:0 auto;">
+      <h2>Hola, {razon_social}</h2>
+      <p>Ya usaste <strong>{documentos_usados} de {max_documentos}</strong> documentos electronicos de tu plan actual.</p>
+      <p>Cuando se agote tu cupo no podras emitir nuevas facturas ni notas hasta que se amplie el plan. Contacta a soporte de IngeFact para ampliarlo a tiempo.</p>
+      {_FOOTER}
+    </div>
+    """
+    return subject, html
