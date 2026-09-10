@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
-from src.core.alegra_client import AlegraApiError, AlegraClient
+from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import QR_CONTENT_ID, plantilla_factura_cliente
@@ -315,7 +315,16 @@ class FacturaService:
         try:
             respuesta = self._alegra_client.create_invoice(payload)
         except AlegraApiError as exc:
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body))
+            # Alegra respondio (rechazo por dato invalido, resolucion, etc.) --
+            # es un error del request, no una falla de infraestructura, por
+            # eso 400 y no 502 (que aqui confundia al frontend con una caida
+            # del gateway).
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
+        except AlegraTransientError as exc:
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY,
+                "Alegra no esta respondiendo en este momento. Intenta de nuevo en unos minutos.",
+            ) from exc
 
         self._aplicar_respuesta_envio(factura, resolucion, consecutivo, forma_pago, metodo_pago, fecha_vencimiento, respuesta)
 
