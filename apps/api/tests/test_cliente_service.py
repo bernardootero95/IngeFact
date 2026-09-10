@@ -4,6 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.application.cliente_service import ClienteService
+from src.core.nit import nit_check_digit
 from src.domain.cliente import ActualizarClienteRequest, CrearClienteRequest
 from src.infrastructure.db.models import Empresa
 
@@ -32,6 +33,7 @@ def _payload(**overrides) -> CrearClienteRequest:
         "correo_electronico": "cliente@example.com",
     }
     data.update(overrides)
+    data.setdefault("digito_verificacion", nit_check_digit(data["numero_identificacion"]))
     return CrearClienteRequest(**data)
 
 
@@ -44,6 +46,27 @@ def test_crear_y_listar(db_session):
     clientes = service.listar(empresa.id)
     assert len(clientes) == 1
     assert clientes[0].nombre == "Cliente Uno SAS"
+    assert clientes[0].digito_verificacion == nit_check_digit("900123456")
+
+
+def test_dv_obligatorio_cuando_tipo_identificacion_es_nit():
+    with pytest.raises(ValueError, match="digito de verificacion es obligatorio"):
+        CrearClienteRequest(
+            tipo_identificacion="31",
+            numero_identificacion="900123456",
+            nombre="Cliente Uno SAS",
+            correo_electronico="cliente@example.com",
+        )
+
+
+def test_dv_debe_corresponder_al_nit():
+    with pytest.raises(ValueError, match="no corresponde al NIT"):
+        _payload(digito_verificacion="0" if nit_check_digit("900123456") != "0" else "1")
+
+
+def test_dv_se_ignora_si_el_tipo_no_es_nit():
+    cliente = _payload(tipo_identificacion="13", numero_identificacion="1000000000", digito_verificacion="9")
+    assert cliente.digito_verificacion is None
 
 
 def test_crear_documento_duplicado_lanza_409(db_session):
@@ -106,6 +129,7 @@ def test_actualizar_cambia_los_datos(db_session):
         ActualizarClienteRequest(
             tipo_identificacion="31",
             numero_identificacion="900123456",
+            digito_verificacion="8",
             nombre="Cliente Uno Renombrado SAS",
             correo_electronico="nuevo@example.com",
             telefono="3001234567",
@@ -129,6 +153,7 @@ def test_actualizar_a_documento_de_otro_cliente_lanza_409(db_session):
             ActualizarClienteRequest(
                 tipo_identificacion="31",
                 numero_identificacion="900111111",
+                digito_verificacion="0",
                 nombre="Cliente B",
                 correo_electronico="b@example.com",
             ),

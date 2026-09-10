@@ -7,12 +7,14 @@ import {
   consultarClienteDian,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
+import { calculateNitDV } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
-import { validateField } from "./CustomerFormPage.validation";
+import { validateField, NIT_IDENTIFICATION_TYPE } from "./CustomerFormPage.validation";
 
 const emptyForm = {
   tipo_identificacion: "",
   numero_identificacion: "",
+  digito_verificacion: "",
   nombre: "",
   correo_electronico: "",
   telefono: "",
@@ -71,6 +73,7 @@ export default function CustomerFormPage() {
         setFormData({
           tipo_identificacion: cliente.tipo_identificacion,
           numero_identificacion: cliente.numero_identificacion,
+          digito_verificacion: cliente.digito_verificacion || "",
           nombre: cliente.nombre,
           correo_electronico: cliente.correo_electronico,
           telefono: cliente.telefono || "",
@@ -100,8 +103,30 @@ export default function CustomerFormPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value };
+
+      // El DV es un digito de verificacion derivable matematicamente del NIT
+      // (mismo algoritmo que apps/admin/CompanyFormPage) -- se recalcula solo,
+      // nunca se pide al usuario. Solo aplica cuando el tipo es NIT (31).
+      if (name === "tipo_identificacion") {
+        next.digito_verificacion = value === NIT_IDENTIFICATION_TYPE ? calculateNitDV(prev.numero_identificacion) : "";
+      } else if (name === "numero_identificacion" && prev.tipo_identificacion === NIT_IDENTIFICATION_TYPE) {
+        next.digito_verificacion = calculateNitDV(value);
+      }
+
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        [name]: validateField(name, value, next),
+        ...(next.digito_verificacion !== prev.digito_verificacion
+          ? { digito_verificacion: validateField("digito_verificacion", next.digito_verificacion, next) }
+          : {}),
+      }));
+
+      return next;
+    });
+
     if (name === "tipo_identificacion" || name === "numero_identificacion") setConsultMessage(null);
   };
 
@@ -142,8 +167,9 @@ export default function CustomerFormPage() {
 
     const newErrors = {};
     REQUIRED_FIELDS.forEach((field) => {
-      newErrors[field] = validateField(field, formData[field]);
+      newErrors[field] = validateField(field, formData[field], formData);
     });
+    newErrors.digito_verificacion = validateField("digito_verificacion", formData.digito_verificacion, formData);
     if (Object.values(newErrors).some(Boolean)) {
       setErrors(newErrors);
       return;
@@ -152,6 +178,7 @@ export default function CustomerFormPage() {
     const payload = {
       tipo_identificacion: formData.tipo_identificacion,
       numero_identificacion: formData.numero_identificacion.trim(),
+      digito_verificacion: formData.digito_verificacion || null,
       nombre: formData.nombre.trim(),
       correo_electronico: formData.correo_electronico.trim(),
       telefono: formData.telefono.trim() || null,
@@ -274,6 +301,21 @@ export default function CustomerFormPage() {
                             placeholder="Ej. 900123456"
                           />
                         </div>
+                        {formData.tipo_identificacion === NIT_IDENTIFICATION_TYPE && (
+                          <div className="w-16 shrink-0">
+                            <input
+                              type="text"
+                              id="digito_verificacion"
+                              name="digito_verificacion"
+                              readOnly
+                              value={formData.digito_verificacion}
+                              title="Dígito de verificación (calculado automáticamente)"
+                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${
+                                errors.digito_verificacion ? "border-fiscal-danger" : "border-neutralCustom-200"
+                              }`}
+                            />
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={handleConsultDIAN}
@@ -285,6 +327,9 @@ export default function CustomerFormPage() {
                       </div>
                       {errors.numero_identificacion && (
                         <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_identificacion}</p>
+                      )}
+                      {errors.digito_verificacion && (
+                        <p className="mt-1 text-xs text-fiscal-danger">{errors.digito_verificacion}</p>
                       )}
                     </div>
                   </div>

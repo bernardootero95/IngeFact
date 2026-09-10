@@ -525,7 +525,7 @@ def test_enviar_error_alegra_se_mapea_y_no_queda_en_estado_intermedio(db_session
 
     with pytest.raises(HTTPException) as exc_info:
         service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
-    assert exc_info.value.status_code == 502
+    assert exc_info.value.status_code == 400
 
     sin_cambios = service.obtener(empresa.id, factura.id)
     assert sin_cambios.estado == "borrador"

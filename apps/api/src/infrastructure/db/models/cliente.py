@@ -30,6 +30,10 @@ class Cliente(Base):
     empresa_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False)
     tipo_identificacion: Mapped[str] = mapped_column(String(20), nullable=False)
     numero_identificacion: Mapped[str] = mapped_column(String(50), nullable=False)
+    # Solo obligatorio/usado cuando tipo_identificacion es NIT ("31") -- Alegra
+    # rechaza el envio de facturas/notas ("instance.customer requires
+    # property 'dv'") si falta para ese tipo. No aplica a cedula/pasaporte/etc.
+    digito_verificacion: Mapped[str | None] = mapped_column(String(1))
     nombre: Mapped[str] = mapped_column(String(255), nullable=False)
     correo_electronico: Mapped[str] = mapped_column(String(150), nullable=False)
     telefono: Mapped[str | None] = mapped_column(String(50))

@@ -1,11 +1,14 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
+
+from src.core.nit import NIT_IDENTIFICATION_TYPE, is_valid_dv
 
 
 class ClienteRequestBase(BaseModel):
     tipo_identificacion: str
     numero_identificacion: str
+    digito_verificacion: str | None = None
     nombre: str
     correo_electronico: EmailStr
     telefono: str | None = None
@@ -13,6 +16,21 @@ class ClienteRequestBase(BaseModel):
     regimen_fiscal: str | None = None
     regimen: str | None = None
     tributo: str | None = None
+
+    @model_validator(mode="after")
+    def dv_obligatorio_y_valido_si_es_nit(self) -> "ClienteRequestBase":
+        """El DV solo aplica a clientes identificados con NIT ("31") -- Alegra
+        lo exige para poder facturarles (ver factura_service._construir_payload_alegra).
+        Para los demas tipos de identificacion se descarta cualquier valor
+        recibido, igual que ya se hace con otros campos opcionales."""
+        if self.tipo_identificacion == NIT_IDENTIFICATION_TYPE:
+            if not self.digito_verificacion or not self.digito_verificacion.strip():
+                raise ValueError("El digito de verificacion es obligatorio para clientes con NIT.")
+            if not is_valid_dv(self.numero_identificacion, self.digito_verificacion):
+                raise ValueError("El digito de verificacion no corresponde al NIT.")
+        else:
+            self.digito_verificacion = None
+        return self
 
     @field_validator("tipo_identificacion")
     @classmethod
@@ -71,6 +89,7 @@ class ClienteResponse(BaseModel):
     id: str
     tipo_identificacion: str
     numero_identificacion: str
+    digito_verificacion: str | None
     nombre: str
     correo_electronico: str
     telefono: str | None
@@ -87,6 +106,7 @@ class ClienteResponse(BaseModel):
             id=str(cliente.id),
             tipo_identificacion=cliente.tipo_identificacion,
             numero_identificacion=cliente.numero_identificacion,
+            digito_verificacion=cliente.digito_verificacion,
             nombre=cliente.nombre,
             correo_electronico=cliente.correo_electronico,
             telefono=cliente.telefono,

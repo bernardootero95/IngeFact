@@ -7,8 +7,7 @@ import {
   actualizarEmpresa,
   cambiarPlanEmpresa,
 } from "@ingefact/core-api";
-import { isValidEmail } from "@ingefact/utils";
-import { calculateColombianNITDV } from "../../../utils/dianHelpers";
+import { isValidEmail, calculateNitDV } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 
 const emptyForm = {
@@ -166,7 +165,7 @@ export default function CompanyFormPage() {
 
   const handleNitChange = (e) => {
     const val = e.target.value.replace(/\D/g, "");
-    const calculatedDV = val ? calculateColombianNITDV(val) : "";
+    const calculatedDV = val ? calculateNitDV(val) : "";
     setForm((prev) => ({ ...prev, numeroIdentificacion: val, digitoVerificacion: calculatedDV }));
     validateField("numeroIdentificacion", val);
     if (val) validateField("digitoVerificacion", calculatedDV);
