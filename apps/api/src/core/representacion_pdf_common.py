@@ -177,7 +177,7 @@ def render_adquiriente_html(cliente, catalogos: dict) -> str:
     <div class="parte">
       <p class="label">Adquiriente</p>
       <p><strong>{cliente.nombre}</strong></p>
-      <p>{tipo_identificacion_nombre} {cliente.numero_identificacion}</p>
+      <p>{tipo_identificacion_nombre} {cliente.numero_identificacion}{f"-{cliente.digito_verificacion}" if cliente.digito_verificacion else ""}</p>
       {f"<p>{cliente.correo_electronico}</p>" if cliente.correo_electronico else ""}
       {f"<p>Tel: {cliente.telefono}</p>" if cliente.telefono else ""}
       {f"<p>{tipo_organizacion_nombre}</p>" if tipo_organizacion_nombre else ""}

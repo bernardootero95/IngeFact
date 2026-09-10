@@ -17,6 +17,7 @@ from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import QR_CONTENT_ID, plantilla_factura_cliente
 from src.core.factura_pdf import generar_representacion_pdf
+from src.core.nit import dv_para_customer_alegra
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
@@ -36,6 +37,21 @@ def _tarifa_a_string(tarifa: float) -> str:
     validacion que ya vive en el catalogo de Impuestos (Sprint 7)."""
     entero = int(round(tarifa))
     return str(entero) if float(entero) == tarifa else str(tarifa)
+
+
+def _construir_customer_alegra(cliente: Cliente) -> dict:
+    customer = {
+        "name": cliente.nombre,
+        "identificationType": cliente.tipo_identificacion,
+        "identificationNumber": cliente.numero_identificacion,
+        "email": cliente.correo_electronico,
+    }
+    dv = cliente.digito_verificacion or dv_para_customer_alegra(
+        cliente.tipo_identificacion, cliente.numero_identificacion
+    )
+    if dv:
+        customer["dv"] = dv
+    return customer
 
 
 def _construir_pago(forma_pago: str, metodo_pago: str, monto: float, fecha_vencimiento: date_cls | None) -> dict:
@@ -442,12 +458,7 @@ class FacturaService:
                 "endDate": resolucion.fecha_fin.isoformat(),
                 "technicalKey": resolucion.technical_key,
             },
-            "customer": {
-                "name": factura.cliente.nombre,
-                "identificationType": factura.cliente.tipo_identificacion,
-                "identificationNumber": factura.cliente.numero_identificacion,
-                "email": factura.cliente.correo_electronico,
-            },
+            "customer": _construir_customer_alegra(factura.cliente),
             "items": items,
             "totalAmounts": {
                 "grossTotal": float(factura.subtotal),

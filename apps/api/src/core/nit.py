@@ -9,3 +9,18 @@ def nit_check_digit(nit: str) -> str:
 
 def is_valid_dv(nit: str, dv: str) -> bool:
     return nit.isdigit() and nit_check_digit(nit) == dv.strip()
+
+
+NIT_IDENTIFICATION_TYPE = "31"
+
+
+def dv_para_customer_alegra(tipo_identificacion: str, numero_identificacion: str) -> str | None:
+    """Alegra exige "dv" en el customer de facturas/notas cuando el
+    adquiriente se identifica con NIT (tipo "31") -- el DV es un digito de
+    verificacion derivable matematicamente del NIT (algoritmo DIAN), no un
+    dato independiente, asi que se calcula aqui en vez de pedirlo en el
+    formulario de Clientes. None para los demas tipos de identificacion
+    (cedula, pasaporte, etc.), que no lo requieren."""
+    if tipo_identificacion != NIT_IDENTIFICATION_TYPE or not numero_identificacion.isdigit():
+        return None
+    return nit_check_digit(numero_identificacion)

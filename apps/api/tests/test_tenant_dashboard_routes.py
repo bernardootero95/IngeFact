@@ -36,6 +36,7 @@ def test_clientes_registrados_refleja_el_conteo_real(db_session):
         CrearClienteRequest(
             tipo_identificacion="31",
             numero_identificacion="900123456",
+            digito_verificacion="8",
             nombre="Cliente Uno",
             correo_electronico="cliente@example.com",
         ),
@@ -54,6 +55,7 @@ def test_clientes_registrados_no_cuenta_clientes_de_otro_tenant(db_session):
         CrearClienteRequest(
             tipo_identificacion="31",
             numero_identificacion="900123456",
+            digito_verificacion="8",
             nombre="Cliente Uno",
             correo_electronico="cliente@example.com",
         ),

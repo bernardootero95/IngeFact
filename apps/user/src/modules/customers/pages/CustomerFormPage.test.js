@@ -33,4 +33,10 @@ describe("CustomerFormPage validateField", () => {
     expect(validateField("regimen_fiscal", "48")).toBe("");
     expect(validateField("regimen_fiscal", "49")).toBe("");
   });
+
+  it("requiere digito de verificacion solo cuando el tipo es NIT (31)", () => {
+    expect(validateField("digito_verificacion", "", { tipo_identificacion: "31" })).toMatch(/obligatorio/i);
+    expect(validateField("digito_verificacion", "8", { tipo_identificacion: "31" })).toBe("");
+    expect(validateField("digito_verificacion", "", { tipo_identificacion: "13" })).toBe("");
+  });
 });

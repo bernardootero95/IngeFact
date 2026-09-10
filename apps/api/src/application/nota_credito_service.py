@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, selectinload
 
 import logging
 
-from src.application.factura_service import _construir_pago
+from src.application.factura_service import _construir_customer_alegra, _construir_pago
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
@@ -418,12 +418,7 @@ class NotaCreditoService:
             "number": consecutivo,
             "conceptCode": nota.motivo_codigo,
             "company": {"id": empresa.id_alegra},
-            "customer": {
-                "name": factura.cliente.nombre,
-                "identificationType": factura.cliente.tipo_identificacion,
-                "identificationNumber": factura.cliente.numero_identificacion,
-                "email": factura.cliente.correo_electronico,
-            },
+            "customer": _construir_customer_alegra(factura.cliente),
             "associatedDocuments": [
                 {
                     "date": factura.fecha.isoformat(),
