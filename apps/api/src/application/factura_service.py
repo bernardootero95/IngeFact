@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_dian_service import ResolucionDianService
-from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
+from src.application.suscripcion_service import contar_documentos_usados, revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.email_client import EmailClient, EmailSendError
@@ -21,7 +21,7 @@ from src.core.nit import dv_para_customer_alegra
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
-from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto
+from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto, Suscripcion
 
 logger = logging.getLogger(__name__)
 
@@ -322,6 +322,14 @@ class FacturaService:
         resolucion = resolucion_service.obtener_o_404(empresa_id)
         if resolucion.fecha_fin < date_cls.today():
             raise HTTPException(status.HTTP_409_CONFLICT, "La Resolucion DIAN configurada ya esta vencida.")
+
+        suscripcion = self.db.execute(
+            select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
+        ).scalar_one_or_none()
+        if suscripcion is None:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa no tiene una suscripcion activa.")
+        if contar_documentos_usados(self.db, suscripcion) >= suscripcion.max_documentos:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
 
         consecutivo = resolucion_service.incrementar_consecutivo(empresa_id)
         payload = self._construir_payload_alegra(

@@ -97,7 +97,7 @@ class _FakeAlegraClient:
 
 
 def _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2):
-    from src.infrastructure.db.models import ResolucionDian
+    from src.infrastructure.db.models import ResolucionDian, Suscripcion
 
     resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one_or_none()
     if resolucion is None:
@@ -113,6 +113,22 @@ def _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantid
             consecutivo_actual=1,
         )
         db_session.add(resolucion)
+        db_session.commit()
+
+    suscripcion = (
+        db_session.query(Suscripcion)
+        .filter(Suscripcion.empresa_id == empresa.id, Suscripcion.estado == "activa")
+        .one_or_none()
+    )
+    if suscripcion is None:
+        suscripcion = Suscripcion(
+            empresa_id=empresa.id,
+            max_documentos=1000,
+            fecha_inicio=date(2026, 1, 1),
+            fecha_fin=date(2030, 1, 1),
+            estado="activa",
+        )
+        db_session.add(suscripcion)
         db_session.commit()
 
     factura_service = FacturaService(db_session, alegra_client=fake)
