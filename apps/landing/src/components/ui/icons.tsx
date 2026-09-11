@@ -98,6 +98,16 @@ export function RefundIcon({ className }: IconProps) {
   );
 }
 
+export function PlusCircleIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v8" />
+      <path d="M8 12h8" />
+    </svg>
+  );
+}
+
 export function XCircleIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
