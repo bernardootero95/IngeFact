@@ -8,7 +8,7 @@ import base64
 from src.application.factura_service import FacturaService, notificar_factura_aceptada
 from src.core.alegra_client import AlegraApiError
 from src.domain.factura import ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
-from src.infrastructure.db.models import Cliente, Empresa, Producto, ResolucionDian
+from src.infrastructure.db.models import Cliente, Empresa, Producto, ResolucionDian, Suscripcion
 
 
 def _crear_empresa(db_session, **overrides) -> Empresa:
@@ -80,6 +80,22 @@ def _crear_resolucion(db_session, empresa_id, **overrides) -> ResolucionDian:
     db_session.commit()
     db_session.refresh(resolucion)
     return resolucion
+
+
+def _crear_suscripcion(db_session, empresa_id, **overrides) -> Suscripcion:
+    data = {
+        "empresa_id": empresa_id,
+        "max_documentos": 1000,
+        "fecha_inicio": date(2026, 1, 1),
+        "fecha_fin": date(2030, 1, 1),
+        "estado": "activa",
+    }
+    data.update(overrides)
+    suscripcion = Suscripcion(**data)
+    db_session.add(suscripcion)
+    db_session.commit()
+    db_session.refresh(suscripcion)
+    return suscripcion
 
 
 def _payload(cliente_id, producto_id, **overrides) -> CrearFacturaRequest:
@@ -229,6 +245,7 @@ def test_actualizar_o_eliminar_factura_no_borrador_falla_409(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
     )
@@ -270,11 +287,58 @@ def test_enviar_resolucion_vencida_falla_409(db_session):
     assert exc_info.value.status_code == 409
 
 
+def test_enviar_sin_suscripcion_activa_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    assert exc_info.value.status_code == 409
+    assert fake.last_payload is None
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    assert resolucion.consecutivo_actual == 1  # no se gasto un consecutivo
+
+
+def test_enviar_con_cupo_agotado_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id, max_documentos=1)
+    fake_aceptada = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake_aceptada)
+    primera = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, primera.id, forma_pago="1", metodo_pago="10")
+
+    segunda = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    fake_no_debe_llamarse = _FakeAlegraClient()
+    service_segunda = FacturaService(db_session, alegra_client=fake_no_debe_llamarse)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service_segunda.enviar(empresa.id, segunda.id, forma_pago="1", metodo_pago="10")
+    assert exc_info.value.status_code == 409
+    assert fake_no_debe_llamarse.last_payload is None
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    assert resolucion.consecutivo_actual == 2  # solo avanzo con el primer envio, no con el bloqueado
+
+
 def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -314,6 +378,7 @@ def test_enviar_accepted_with_observations_marca_aceptada(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -339,6 +404,7 @@ def test_enviar_rechazada_guarda_razon_mapeada(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -364,6 +430,7 @@ def test_enviar_accepted_with_observations_guarda_notificaciones_dian(db_session
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -398,6 +465,7 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
     producto = _crear_producto(db_session, empresa.id)
     otro_producto = _crear_producto(db_session, empresa.id, codigo="PROD-002", precio=50000, tarifa_impuesto=0)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -457,6 +525,7 @@ def test_eliminar_factura_rechazada_es_soft_delete(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -491,6 +560,7 @@ def test_enviar_con_lineas_mixtas_taxable_total_solo_suma_lineas_con_impuesto(db
         db_session, empresa.id, codigo="CON-IVA", precio=100000, tributo="01", tarifa_impuesto=19
     )
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
     )
@@ -519,6 +589,7 @@ def test_enviar_error_alegra_se_mapea_y_no_queda_en_estado_intermedio(db_session
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(error=AlegraApiError(400, {"errors": [{"message": "instance requires x"}]}))
     service = FacturaService(db_session, alegra_client=fake)
     factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
@@ -538,6 +609,7 @@ def test_obtener_url_xml_pide_una_url_fresca_a_alegra(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
     )
@@ -577,6 +649,7 @@ def test_obtener_firma_digital_la_extrae_del_xml_y_la_cachea(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}},
         raw_response=_XML_CON_FIRMA,
@@ -602,6 +675,7 @@ def test_obtener_firma_digital_sin_firma_en_el_xml_falla_404(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}},
         raw_response=_XML_SIN_FIRMA,
@@ -621,6 +695,7 @@ def test_notificar_factura_aceptada_envia_correo_con_qr_y_xml_adjunto(db_session
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {
@@ -678,6 +753,7 @@ def test_generar_pdf_representacion_factura_aceptada_devuelve_bytes(db_session):
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {"id": "inv-1", "cufe": "cufe-123", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"},
@@ -712,6 +788,7 @@ def test_enviar_por_correo_cliente_sin_correo_falla_400(db_session):
     cliente = _crear_cliente(db_session, empresa.id, correo_electronico="")
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}},
     )
@@ -732,6 +809,7 @@ def test_enviar_por_correo_reporta_502_si_falla_el_envio(db_session, monkeypatch
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
     _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
     fake = _FakeAlegraClient(
         response={
             "invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"},
