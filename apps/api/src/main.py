@@ -11,6 +11,9 @@ from src.presentation.routes import (
     auth,
     dashboard,
     empresas,
+    external_clientes,
+    external_facturas,
+    external_productos,
     reference_tables,
     tenant_clientes,
     tenant_dashboard,
@@ -60,6 +63,9 @@ app.include_router(tenant_impuestos.router)
 app.include_router(tenant_facturas.router)
 app.include_router(tenant_notas_credito.router)
 app.include_router(tenant_notas_debito.router)
+app.include_router(external_clientes.router)
+app.include_router(external_productos.router)
+app.include_router(external_facturas.router)
 app.include_router(webhooks.router)
 
 
