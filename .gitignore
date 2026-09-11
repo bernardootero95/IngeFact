@@ -39,3 +39,8 @@ Thumbs.db
 *.pyc
 .pytest_cache/
 **/.pytest_cache/
+
+# Next.js (apps/landing)
+**/.next/
+**/next-env.d.ts
+*.tsbuildinfo

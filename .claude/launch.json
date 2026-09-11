@@ -19,6 +19,12 @@
       "runtimeExecutable": "apps/api/venv/Scripts/uvicorn.exe",
       "runtimeArgs": ["src.main:app", "--reload", "--app-dir", "apps/api", "--port", "8000"],
       "port": 8000
+    },
+    {
+      "name": "landing-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--workspace=landing"],
+      "port": 3002
     }
   ]
 }
