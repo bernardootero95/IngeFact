@@ -6,8 +6,12 @@ import {
   crearEmpresa,
   actualizarEmpresa,
   cambiarPlanEmpresa,
+  listApiKeys,
+  crearApiKey,
+  revocarApiKey,
 } from "@ingefact/core-api";
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const emptyForm = {
@@ -51,6 +55,14 @@ export default function CompanyFormPage() {
   const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+
+  const [apiKeys, setApiKeys] = useState([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyNameError, setNewKeyNameError] = useState("");
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState(null);
+  const [apiKeyToast, setApiKeyToast] = useState({ message: null, type: "success" });
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -103,6 +115,63 @@ export default function CompanyFormPage() {
   useEffect(() => {
     cargarDatos();
   }, [cargarDatos]);
+
+  const cargarApiKeys = useCallback(async () => {
+    if (!isEditing) return;
+    setApiKeysLoading(true);
+    try {
+      const data = await listApiKeys(id);
+      setApiKeys(data || []);
+    } catch (error) {
+      setApiKeyToast({ message: `Error al cargar las API keys: ${error.message}`, type: "error" });
+    } finally {
+      setApiKeysLoading(false);
+    }
+  }, [id, isEditing]);
+
+  useEffect(() => {
+    cargarApiKeys();
+  }, [cargarApiKeys]);
+
+  const handleGenerateKey = async (e) => {
+    e.preventDefault();
+    if (!newKeyName.trim()) {
+      setNewKeyNameError("El nombre de la key es obligatorio.");
+      return;
+    }
+    setIsGeneratingKey(true);
+    try {
+      const creada = await crearApiKey(id, newKeyName.trim());
+      setGeneratedKey(creada.api_key);
+      setNewKeyName("");
+      setNewKeyNameError("");
+      await cargarApiKeys();
+    } catch (error) {
+      setApiKeyToast({ message: error.message, type: "error" });
+    } finally {
+      setIsGeneratingKey(false);
+    }
+  };
+
+  const handleRevokeKey = async (apiKeyId, nombre) => {
+    if (!window.confirm(`¿Revocar la key "${nombre}"? Esta acción no se puede deshacer.`)) return;
+    try {
+      await revocarApiKey(id, apiKeyId);
+      setApiKeyToast({ message: "API key revocada.", type: "success" });
+      await cargarApiKeys();
+    } catch (error) {
+      setApiKeyToast({ message: error.message, type: "error" });
+    }
+  };
+
+  const handleCopyKey = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedKey);
+      setApiKeyToast({ message: "Key copiada al portapapeles.", type: "success" });
+    } catch {
+      setApiKeyToast({ message: "No se pudo copiar automaticamente. Selecciona el texto manualmente.", type: "error" });
+    }
+  };
 
   const validateField = (field, value) => {
     let errorMsg = "";
@@ -334,6 +403,19 @@ export default function CompanyFormPage() {
                     2. Suscripción y Accesos
                     {suscripcionTabHasErrors && <span className="ml-2 w-2 h-2 rounded-full bg-fiscal-danger" />}
                   </button>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("apiKeys")}
+                      className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === "apiKeys"
+                          ? "border-brand-600 text-brand-600"
+                          : "border-transparent text-neutralCustom-500 hover:text-neutralCustom-700"
+                      }`}
+                    >
+                      3. API Keys
+                    </button>
+                  )}
                 </div>
 
                 <div className="p-6">
@@ -663,6 +745,128 @@ export default function CompanyFormPage() {
                       </div>
                     </div>
                   </form>
+
+                  {isEditing && activeTab === "apiKeys" && (
+                    <div>
+                      <div className="bg-brand-50/30 border border-brand-100 rounded-brand-md p-4 mb-6">
+                        <h4 className="text-sm font-bold text-brand-800 mb-1">Integraciones externas</h4>
+                        <p className="text-xs text-brand-600">
+                          Las API keys permiten que un sistema externo hable con IngeFact (Facturas, Clientes y
+                          Productos) sin un usuario de la web. Cada key solo se muestra en claro una vez, al
+                          generarla.
+                        </p>
+                      </div>
+
+                      {generatedKey && (
+                        <div className="mb-6 p-4 bg-amber-50 border border-amber-300 rounded-brand-md">
+                          <p className="text-sm font-bold text-amber-800 mb-2">
+                            Copia esta key ahora — no se volverá a mostrar.
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 px-3 py-2 bg-white border border-amber-200 rounded-brand-md text-xs break-all">
+                              {generatedKey}
+                            </code>
+                            <button
+                              type="button"
+                              onClick={handleCopyKey}
+                              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded-brand-md transition-colors shrink-0"
+                            >
+                              Copiar
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setGeneratedKey(null)}
+                            className="mt-2 text-xs text-amber-700 hover:underline"
+                          >
+                            Ya la copié, ocultar
+                          </button>
+                        </div>
+                      )}
+
+                      <form onSubmit={handleGenerateKey} className="flex items-end gap-3 mb-6">
+                        <div className="flex-1">
+                          <label htmlFor="cf-nueva-key" className="block text-sm font-medium text-neutralCustom-700 mb-1">
+                            Nombre de la nueva key
+                          </label>
+                          <input
+                            id="cf-nueva-key"
+                            type="text"
+                            value={newKeyName}
+                            onChange={(e) => {
+                              setNewKeyName(e.target.value);
+                              if (e.target.value.trim()) setNewKeyNameError("");
+                            }}
+                            placeholder="Ej: Integracion Sistema de Pedidos"
+                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${newKeyNameError ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                          />
+                          {newKeyNameError && <p className="mt-1 text-xs text-fiscal-danger">{newKeyNameError}</p>}
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isGeneratingKey}
+                          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                        >
+                          {isGeneratingKey ? "Generando..." : "Generar key"}
+                        </button>
+                      </form>
+
+                      {apiKeysLoading ? (
+                        <p className="text-sm text-neutralCustom-500">Cargando keys...</p>
+                      ) : apiKeys.length === 0 ? (
+                        <p className="text-sm text-neutralCustom-500">Esta empresa todavía no tiene ninguna API key.</p>
+                      ) : (
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="text-left text-xs text-neutralCustom-500 border-b border-neutralCustom-100">
+                              <th className="py-2 font-medium">Nombre</th>
+                              <th className="py-2 font-medium">Prefijo</th>
+                              <th className="py-2 font-medium">Creada</th>
+                              <th className="py-2 font-medium">Último uso</th>
+                              <th className="py-2 font-medium">Estado</th>
+                              <th className="py-2 font-medium"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {apiKeys.map((k) => (
+                              <tr key={k.id} className="border-b border-neutralCustom-50">
+                                <td className="py-2">{k.nombre}</td>
+                                <td className="py-2 font-mono text-xs text-neutralCustom-500">{k.prefijo}…</td>
+                                <td className="py-2 text-neutralCustom-500">
+                                  {new Date(k.creado).toLocaleDateString()}
+                                </td>
+                                <td className="py-2 text-neutralCustom-500">
+                                  {k.ultimo_uso ? new Date(k.ultimo_uso).toLocaleString() : "Nunca"}
+                                </td>
+                                <td className="py-2">
+                                  {k.revocada ? (
+                                    <span className="px-2 py-0.5 bg-neutralCustom-100 text-neutralCustom-500 text-xs rounded-full">
+                                      Revocada
+                                    </span>
+                                  ) : (
+                                    <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">
+                                      Activa
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="py-2 text-right">
+                                  {!k.revocada && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRevokeKey(k.id, k.nombre)}
+                                      className="text-xs text-fiscal-danger hover:underline"
+                                    >
+                                      Revocar
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 border-t border-neutralCustom-100 flex justify-end space-x-3 shrink-0">
@@ -682,7 +886,7 @@ export default function CompanyFormPage() {
                     >
                       Siguiente →
                     </button>
-                  ) : (
+                  ) : activeTab === "suscripcion" ? (
                     <button
                       form="company-form"
                       type="submit"
@@ -691,13 +895,19 @@ export default function CompanyFormPage() {
                     >
                       {isSaving ? "Procesando..." : isEditing ? "Actualizar Tenant" : "Crear Tenant y Accesos"}
                     </button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )}
           </div>
         </div>
       </main>
+
+      <ToastAlert
+        message={apiKeyToast.message}
+        type={apiKeyToast.type}
+        onClose={() => setApiKeyToast({ message: null, type: "success" })}
+      />
     </div>
   );
 }
