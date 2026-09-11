@@ -60,15 +60,6 @@ export function WhatsAppIcon({ className }: IconProps) {
   );
 }
 
-export function MailIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3 7l9 6 9-6" />
-    </svg>
-  );
-}
-
 export function SearchIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...strokeProps}>

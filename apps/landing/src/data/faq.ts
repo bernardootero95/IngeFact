@@ -33,6 +33,6 @@ export const CONTACT_FAQ: FaqEntry[] = [
   },
   {
     question: "¿Cómo empiezo a usar IngeFact?",
-    answer: "Escríbenos por WhatsApp o correo y te ayudamos a configurar tu empresa paso a paso.",
+    answer: "Escríbenos por WhatsApp y te ayudamos a configurar tu empresa paso a paso.",
   },
 ];
