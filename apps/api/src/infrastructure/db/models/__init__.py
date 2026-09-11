@@ -1,3 +1,4 @@
+from src.infrastructure.db.models.api_key import ApiKey
 from src.infrastructure.db.models.cliente import Cliente
 from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
 from src.infrastructure.db.models.factura import Factura, FacturaLinea
@@ -14,6 +15,7 @@ from src.infrastructure.db.models.usuario_admin import UsuarioAdmin
 from src.infrastructure.db.models.usuario_empresa import UsuarioEmpresa
 
 __all__ = [
+    "ApiKey",
     "Cliente",
     "Empresa",
     "CompanyStatus",
