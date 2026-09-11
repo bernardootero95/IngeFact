@@ -2,8 +2,8 @@ import type { ComponentType } from "react";
 import {
   ChartIcon,
   ClockIcon,
-  DocumentIcon,
   InvoiceIcon,
+  KeyIcon,
   PencilIcon,
   RefundIcon,
   SearchIcon,
@@ -27,9 +27,9 @@ export const GUIDE_GROUPS: GuideGroup[] = [
   {
     title: "Primeros pasos",
     guides: [
-      { icon: DocumentIcon, title: "Crear tu empresa en IngeFact", description: "Qué información necesitas y cómo queda vinculada tu empresa a la plataforma." },
+      { icon: KeyIcon, title: "Inicia sesión por primera vez", description: "Tu cuenta la activa nuestro equipo; usa el enlace que te enviamos para crear tu contraseña." },
       { icon: PencilIcon, title: "Configurar tus datos fiscales", description: "NIT, régimen y demás datos que la DIAN exige antes de tu primera factura." },
-      { icon: UsersIcon, title: "Invitar a tu equipo", description: "Cómo dar acceso a otras personas de tu empresa para facturar contigo." },
+      { icon: ChartIcon, title: "Conoce tu panel principal", description: "Revisa cuántos documentos tienes disponibles y el estado de tu empresa de un vistazo." },
     ],
   },
   {

@@ -69,11 +69,13 @@ export function SearchIcon({ className }: IconProps) {
   );
 }
 
-export function DocumentIcon({ className }: IconProps) {
+export function KeyIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <path d="M3 9h18" />
+      <circle cx="8" cy="15" r="4" />
+      <path d="M10.5 12.5L20 3" />
+      <path d="M16 7l3 3" />
+      <path d="M13 10l3 3" />
     </svg>
   );
 }
