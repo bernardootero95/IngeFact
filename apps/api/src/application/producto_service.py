@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from src.domain.factura_externa import ItemFacturaExternaRequest
 from src.domain.producto import ActualizarProductoRequest, CrearProductoRequest
 from src.infrastructure.db.models import Producto
 
@@ -72,3 +73,40 @@ class ProductoService:
         producto.eliminado = datetime.now(timezone.utc)
         self.db.add(producto)
         self.db.commit()
+
+    def obtener_o_crear(self, empresa_id: uuid.UUID, data: ItemFacturaExternaRequest) -> Producto:
+        """Upsert por codigo -- usado por la API externa (/external/v1/facturas)
+        para que un sistema externo pueda mandar el item de la linea inline
+        (como lo recibe Alegra, sin catalogo previo) en vez de tener que
+        pre-registrar un Producto. El empresa_id ya aisla el catalogo por
+        tenant en todos los casos (lo use la web o la API externa), asi que
+        no hay riesgo de cruce -- el criterio es mantener el catalogo
+        sincronizado con lo ultimo que reporto el sistema externo."""
+        existente = self.db.execute(
+            select(Producto).where(
+                Producto.empresa_id == empresa_id, Producto.codigo == data.codigo, Producto.eliminado.is_(None)
+            )
+        ).scalar_one_or_none()
+
+        campos = {
+            "tipo": data.tipo,
+            "nombre": data.nombre,
+            "descripcion": data.descripcion,
+            "precio": data.precio_unitario,
+            "unidad_medida": data.unidad_medida,
+            "tributo": data.tributo,
+            "tarifa_impuesto": data.tarifa_impuesto,
+        }
+        if existente is not None:
+            for campo, valor in campos.items():
+                setattr(existente, campo, valor)
+            self.db.add(existente)
+            self.db.commit()
+            self.db.refresh(existente)
+            return existente
+
+        producto = Producto(empresa_id=empresa_id, codigo=data.codigo, **campos)
+        self.db.add(producto)
+        self.db.commit()
+        self.db.refresh(producto)
+        return producto

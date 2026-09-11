@@ -4,6 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.application.producto_service import ProductoService
+from src.domain.factura_externa import ItemFacturaExternaRequest
 from src.domain.producto import ActualizarProductoRequest, CrearProductoRequest
 from src.infrastructure.db.models import Empresa
 
@@ -34,6 +35,18 @@ def _payload(**overrides) -> CrearProductoRequest:
     }
     data.update(overrides)
     return CrearProductoRequest(**data)
+
+
+def _item_externo(**overrides) -> ItemFacturaExternaRequest:
+    data = {
+        "codigo": "EXT-001",
+        "nombre": "Item externo",
+        "unidad_medida": "94",
+        "cantidad": 1,
+        "precio_unitario": 20000,
+    }
+    data.update(overrides)
+    return ItemFacturaExternaRequest(**data)
 
 
 def test_crear_y_listar(db_session):
@@ -151,3 +164,44 @@ def test_eliminar_es_soft_delete_y_libera_el_codigo(db_session):
 
     nuevo = service.crear(empresa.id, _payload(nombre="Producto Reencarnado"))
     assert nuevo.codigo == "PROD-001"
+
+
+def test_obtener_o_crear_crea_si_no_existe(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ProductoService(db_session)
+
+    producto = service.obtener_o_crear(empresa.id, _item_externo())
+
+    assert producto.codigo == "EXT-001"
+    assert producto.nombre == "Item externo"
+    assert float(producto.precio) == 20000
+    assert len(service.listar(empresa.id)) == 1
+
+
+def test_obtener_o_crear_actualiza_si_el_codigo_ya_existe(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ProductoService(db_session)
+    primero = service.obtener_o_crear(empresa.id, _item_externo())
+
+    segundo = service.obtener_o_crear(
+        empresa.id, _item_externo(nombre="Item externo actualizado", precio_unitario=30000)
+    )
+
+    assert segundo.id == primero.id
+    assert segundo.nombre == "Item externo actualizado"
+    assert float(segundo.precio) == 30000
+    assert len(service.listar(empresa.id)) == 1  # no duplico el producto
+
+
+def test_obtener_o_crear_no_mezcla_codigos_entre_tenants(db_session):
+    empresa_a = _crear_empresa(db_session)
+    empresa_b = _crear_empresa(db_session, numero_identificacion="900222222", digito_verificacion="2")
+    service = ProductoService(db_session)
+
+    service.obtener_o_crear(empresa_a.id, _item_externo(nombre="De la empresa A"))
+    service.obtener_o_crear(empresa_b.id, _item_externo(nombre="De la empresa B"))
+
+    assert len(service.listar(empresa_a.id)) == 1
+    assert len(service.listar(empresa_b.id)) == 1
+    assert service.listar(empresa_a.id)[0].nombre == "De la empresa A"
+    assert service.listar(empresa_b.id)[0].nombre == "De la empresa B"
