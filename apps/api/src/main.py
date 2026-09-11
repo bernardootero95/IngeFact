@@ -7,6 +7,7 @@ from src.core.config import get_settings
 from src.core.logging import configure_logging
 from src.core.rate_limit import limiter
 from src.presentation.routes import (
+    admin_api_keys,
     auth,
     dashboard,
     empresas,
@@ -44,6 +45,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(admin_api_keys.router)
 app.include_router(empresas.router)
 app.include_router(dashboard.router)
 app.include_router(usuarios_admin.router)
