@@ -43,6 +43,16 @@ def generate_opaque_token() -> str:
     return secrets.token_urlsafe(48)
 
 
+def generate_api_key() -> tuple[str, str, str]:
+    """Genera una API key para integraciones externas. Devuelve
+    (key_en_claro, prefijo, hash) -- el prefijo queda visible siempre en
+    listados para identificar la key sin poder reconstruirla; el hash
+    (mismo sha256 de hash_opaque_token) es lo unico que se persiste."""
+    key_en_claro = f"ingf_{secrets.token_urlsafe(32)}"
+    prefijo = key_en_claro[:12]
+    return key_en_claro, prefijo, hash_opaque_token(key_en_claro)
+
+
 def hash_opaque_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
