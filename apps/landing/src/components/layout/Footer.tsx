@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { WHATSAPP_DISPLAY, buildWhatsAppLink } from "@/lib/whatsapp";
 
 export function Footer() {
@@ -7,19 +8,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-[1312px] grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4">
         <div>
           <div className="mb-3.5 flex items-center gap-2.5">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#3D9E3A"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-              <path d="M14 3v5h5" />
-            </svg>
+            <Image src="/logo-mark.png" alt="" width={18} height={24} className="h-6 w-auto" />
             <span className="text-lg font-extrabold text-white">IngeFact</span>
           </div>
           <p className="max-w-[280px] text-sm leading-relaxed text-neutralCustom-500">
