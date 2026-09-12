@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { NAV_ITEMS, type NavKey } from "@/data/nav";
 import { WhatsAppIcon } from "@/components/ui/icons";
@@ -14,21 +15,7 @@ export function Header({ active }: { active: NavKey }) {
     <header className="sticky top-0 z-40 border-b border-neutralCustom-100 bg-white">
       <div className="flex h-20 items-center justify-between px-6 md:px-16">
         <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <svg
-            width="26"
-            height="26"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#1E7A1B"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-            <path d="M14 3v5h5" />
-            <path d="M9 13h6" />
-            <path d="M9 17h6" />
-          </svg>
+          <Image src="/logo-mark.png" alt="" width={22} height={29} priority className="h-7 w-auto" />
           <span className="text-xl font-extrabold text-neutralCustom-800">
             Inge<span className="text-brand-600">Fact</span>
           </span>
