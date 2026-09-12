@@ -62,7 +62,7 @@ export const FEATURE_CATEGORIES: FeatureCategory[] = [
     items: [
       { title: "Resolución configurable", description: "Registra tu rango autorizado y IngeFact controla el consecutivo por ti." },
       { title: "XML y CUFE válidos", description: "Documentos generados según el estándar exigido por la DIAN." },
-      { title: "Alertas de vencimiento", description: "Te avisamos antes de que tu resolución o tu cupo se agoten." },
+      { title: "Alertas de cupo", description: "Te avisamos por correo cuando tu cupo de documentos esté por agotarse." },
       { title: "Estado por documento", description: "Consulta si cada factura fue aceptada, rechazada o está en proceso." },
     ],
   },
