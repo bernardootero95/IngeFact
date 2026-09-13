@@ -37,10 +37,21 @@ class _FakeAlegraClient:
     def fetch_raw(self, url: str) -> bytes:
         return b"<xml/>"
 
+    def create_credit_note(self, payload: dict) -> dict:
+        _FakeAlegraClient._contador += 1
+        return {
+            "creditNote": {
+                "id": f"cn-{_FakeAlegraClient._contador}",
+                "cude": f"cude-{_FakeAlegraClient._contador}",
+                "legalStatus": "ACCEPTED",
+            }
+        }
+
 
 @pytest.fixture(autouse=True)
 def _no_real_alegra(monkeypatch):
     monkeypatch.setattr("src.application.factura_service.AlegraClient", _FakeAlegraClient)
+    monkeypatch.setattr("src.application.nota_credito_service.AlegraClient", _FakeAlegraClient)
 
 
 def _crear_empresa(db_session, **overrides) -> Empresa:
@@ -284,3 +295,65 @@ def test_enviar_factura_con_cupo_agotado_falla_409(api_client, db_session):
         json={"forma_pago": "1", "metodo_pago": "10"},
     )
     assert bloqueada.status_code == 409
+
+
+def _crear_y_enviar_factura(api_client, key: str, cliente_id) -> dict:
+    creada = api_client.post(
+        "/api/v1/external/v1/facturas",
+        headers=_headers(key),
+        json={"cliente_id": str(cliente_id), "fecha": str(date.today()), "lineas": [_item_embebido()]},
+    ).json()
+    enviada = api_client.post(
+        f"/api/v1/external/v1/facturas/{creada['id']}/enviar",
+        headers=_headers(key),
+        json={"forma_pago": "1", "metodo_pago": "10"},
+    )
+    assert enviada.status_code == 200, enviada.text
+    return creada
+
+
+def test_anular_factura_crea_nota_credito_y_marca_la_factura_anulada(api_client, db_session):
+    empresa = _crear_empresa(db_session)
+    key = _crear_api_key(db_session, empresa)
+    cliente = _crear_cliente(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    factura = _crear_y_enviar_factura(api_client, key, cliente.id)
+
+    response = api_client.post(f"/api/v1/external/v1/facturas/{factura['id']}/anular", headers=_headers(key))
+
+    assert response.status_code == 200, response.text
+    assert response.json()["motivo_codigo"] == "2"
+    assert response.json()["estado"] == "aceptada"
+
+    factura_actualizada = api_client.get(f"/api/v1/external/v1/facturas/{factura['id']}", headers=_headers(key))
+    assert factura_actualizada.json()["estado"] == "anulada"
+
+
+def test_anular_factura_ya_anulada_falla_409(api_client, db_session):
+    empresa = _crear_empresa(db_session)
+    key = _crear_api_key(db_session, empresa)
+    cliente = _crear_cliente(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    factura = _crear_y_enviar_factura(api_client, key, cliente.id)
+    api_client.post(f"/api/v1/external/v1/facturas/{factura['id']}/anular", headers=_headers(key))
+
+    response = api_client.post(f"/api/v1/external/v1/facturas/{factura['id']}/anular", headers=_headers(key))
+
+    assert response.status_code == 409
+
+
+def test_anular_factura_de_otra_empresa_falla_404(api_client, db_session):
+    empresa_a = _crear_empresa(db_session)
+    empresa_b = _crear_empresa(db_session, numero_identificacion="900222222", digito_verificacion="2")
+    key_a = _crear_api_key(db_session, empresa_a)
+    key_b = _crear_api_key(db_session, empresa_b)
+    cliente_b = _crear_cliente(db_session, empresa_b.id)
+    _crear_resolucion(db_session, empresa_b.id)
+    _crear_suscripcion(db_session, empresa_b.id)
+    factura_b = _crear_y_enviar_factura(api_client, key_b, cliente_b.id)
+
+    response = api_client.post(f"/api/v1/external/v1/facturas/{factura_b['id']}/anular", headers=_headers(key_a))
+
+    assert response.status_code == 404

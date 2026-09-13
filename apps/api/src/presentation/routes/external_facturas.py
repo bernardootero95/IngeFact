@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from src.application.factura_service import FacturaService
+from src.application.nota_credito_service import NotaCreditoService
 from src.application.producto_service import ProductoService
 from src.core.dependencies import CurrentExternalClient, get_current_api_key
 from src.domain.factura import (
@@ -15,6 +16,7 @@ from src.domain.factura import (
     LineaFacturaRequest,
 )
 from src.domain.factura_externa import ActualizarFacturaExternaRequest, CrearFacturaExternaRequest
+from src.domain.nota_credito import NotaCreditoResponse
 from src.infrastructure.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/external/v1/facturas", tags=["external"])
@@ -99,6 +101,18 @@ def enviar_factura(
         client.empresa_id, factura_id, body.forma_pago, body.metodo_pago, body.fecha_vencimiento
     )
     return FacturaResponse.from_model(factura)
+
+
+@router.post("/{factura_id}/anular", response_model=NotaCreditoResponse)
+def anular_factura(
+    factura_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    client: CurrentExternalClient = Depends(get_current_api_key),
+):
+    """Atajo: crea y envia una nota credito por el 100% de la factura con el
+    motivo fijo de anulacion -- mismo servicio que usa /tenant/facturas/{id}/anular."""
+    nota = NotaCreditoService(db).anular_factura(client.empresa_id, factura_id)
+    return NotaCreditoResponse.from_model(nota)
 
 
 @router.get("/{factura_id}/representacion.pdf")
