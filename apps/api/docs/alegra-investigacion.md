@@ -315,13 +315,12 @@ Payload de `invoices.emissionFinished`:
 }
 ```
 
-## `POST /support-documents` — ⚠️ investigación PARCIAL (Fase 3, sin cerrar)
+## `POST /support-documents` — ✅ investigación concluyente (Fase 3)
 
 Investigación mixta: doc oficial (`https://e-provider-docs.alegra.com/reference/createsupportdocument`)
 + verificación en vivo contra el sandbox real (`scripts/explore_alegra_support_document.py`,
 empresa asociada NIT 900559088). A diferencia de Notas Crédito/Débito, **NO es
-el mismo patrón que `/invoices`** en varios puntos, y queda una pregunta real
-sin resolver antes de poder diseñar el modelo de datos con confianza.
+el mismo patrón que `/invoices`** en varios puntos.
 
 **Confirmado en vivo:**
 - Endpoint propio (`POST /support-documents`), no una variante de `/invoices`.
@@ -330,11 +329,17 @@ sin resolver antes de poder diseñar el modelo de datos con confianza.
   omitirlo no generó ningún error de schema en ninguno de los intentos.
 - `company` **debe mandarse completo** (no basta `{id}` como en `/invoices`) —
   el primer intento con solo `{id}` dio `instance.company requires property
-  "taxCode"`. Además `company.taxCode` debe ser un **objeto**, no el string
-  plano que se usa en `items[].taxes[].taxCode` — se probó `{"code":"01",
-  "value":"IVA"}` y el error cambió a `instance.company.taxCode requires
-  property "id"` (o sea, la forma correcta usa una clave `id`, no `code` —
-  **sin confirmar el resto del shape exacto todavía**).
+  "taxCode"`. Confirmado contra el schema OpenAPI crudo: `company` requiere
+  `id` + `taxCode` (`taxCode.id` string, enum `01|ZZ`, igual que en
+  `supplier.taxCode`); además admite opcionalmente `organizationType`,
+  `identificationNumber`, `dv` (obligatorio si `identificationType=31`),
+  `name`, `regimeCode` (patrón `O-(15|23|47|48|49)` o `R-99-PN`, separables
+  con `;`).
+- `resolution` **requeridos confirmados**: `resolutionNumber`, `minNumber`,
+  `maxNumber`, `startDate`, `endDate` (`prefix` es opcional, a diferencia de
+  Factura) — coincide con que no se vio error de schema al omitir
+  `technicalKey` (Documento Soporte no lo tiene como propiedad, a diferencia
+  de la resolución de Factura).
 - `supplier` se manda **inline sin pre-registro** (igual que `customer` en
   facturas) — confirmado.
 - `items[].standardCode` es **obligatorio** (`{identificationId, id}`, no
@@ -347,24 +352,59 @@ sin resolver antes de poder diseñar el modelo de datos con confianza.
   `files.{xml, applicationResponse}` — el equivalente al CUFE se llama
   **`cuds`**, no `cufe`/`cude`.
 
-**⚠️ Pregunta real SIN resolver, bloqueante para diseñar el modelo:**
-`supplier.identificationType` fue rechazado con
-`is not one of enum values: 21,22,31,41,42,47,50` en **todos** los intentos
-con cédula (`"13"`, el tipo de identificación más común de una persona
-natural no obligada a facturar — el caso de uso central del Documento
-Soporte). Con `organizationType=1` + `identificationType="31"` (NIT, persona
-jurídica) el error de `supplier` desapareció en un intento pero reapareció en
-otro corriendo el mismo payload (el validador de Alegra usa `allOf`/subschemas
-condicionales — los mensajes de error no fueron 100% estables entre corridas
-idénticas, posible artefacto del validador reportando la rama "más cercana"
-según qué otros campos ya estén resueltos). **No se debe fijar el modelo de
-`Proveedor`/`DocumentoSoporte` hasta encontrar la combinación real que Alegra
-acepta para un proveedor persona natural con cédula** — sin eso, Documento
-Soporte no podría cubrir su caso de uso principal. Próximo paso sugerido: leer
-`https://e-provider-docs.alegra.com/llms.txt` (índice completo de la doc) o el
-schema OpenAPI crudo en vez de seguir adivinando por prueba y error, o abrir
-un ticket con soporte de Alegra preguntando explícitamente por el enum válido
-de `supplier.identificationType` cuando `organizationType=2`.
+**✅ Pregunta de `supplier.identificationType` resuelta (2026-09-16), confirmada
+contra el schema OpenAPI crudo publicado por Alegra (no la página HTML
+renderizada, para evitar el ruido de mensajes de error inestables ya visto en
+las pruebas en vivo):**
+
+```json
+"identificationType": {
+  "type": "string",
+  "description": "Tipo de documento de identificación del proveedor. Se debe
+    colocar el Código que corresponda de la tabla de tipos de identificación
+    de la DIAN",
+  "maxLength": 2,
+  "enum": ["21", "22", "31", "41", "42", "47", "50"]
+}
+```
+
+Esto coincide exactamente con el enum que ya se había visto en los rechazos en
+vivo (`is not one of enum values: 21,22,31,41,42,47,50`) — confirma que **NO
+es un artefacto inestable del validador**, es una restricción real y
+permanente del schema. Traducción de los códigos DIAN presentes vs. ausentes:
+
+| Código | Significado                          | ¿En el enum? |
+|--------|---------------------------------------|--------------|
+| 11     | Registro civil                        | ❌ no        |
+| 12     | Tarjeta de identidad                  | ❌ no        |
+| **13** | **Cédula de ciudadanía**               | **❌ no**    |
+| 21     | Tarjeta de extranjería                | ✅ sí        |
+| 22     | Cédula de extranjería                 | ✅ sí        |
+| 31     | NIT                                    | ✅ sí        |
+| 41     | Pasaporte                              | ✅ sí        |
+| 42     | Documento de identificación extranjero | ✅ sí        |
+| 47     | PEP (Permiso Especial de Permanencia) | ✅ sí        |
+| 50     | NIT de otro país                       | ✅ sí        |
+| 91     | NUIP                                   | ❌ no        |
+
+**Implicación de negocio, no técnica**: Alegra exige que todo proveedor de un
+Documento Soporte tenga **NIT** (`31`) — no acepta cédula de ciudadanía
+directamente, aunque el caso de uso normativo central de la DIAN para este
+documento sea justamente comprarle a personas naturales no obligadas a
+facturar. Esto es consistente con la práctica real en Colombia: una persona
+natural sin negocio formal puede tramitar un **NIT personal** ante la DIAN
+(vía RUT) precisamente para poder ser proveedor de un Documento Soporte — el
+NIT no implica ser persona jurídica, `organizationType=2` (persona natural) +
+`identificationType="31"` es la combinación esperada para ese caso.
+
+**Decisión de producto que esto habilita (a confirmar con el usuario, no
+asumida aquí)**: el `Proveedor` de IngeFact ya permite hoy cualquier
+`tipo_identificacion` libre (incluida cédula, para Compras que no requieren
+Documento Soporte). Para que un proveedor sea elegible para un Documento
+Soporte, su `tipo_identificacion` debe estar en el subconjunto
+`{21,22,31,41,42,47,50}` — la UI debe guiar al tenant a pedirle el NIT
+personal al proveedor si solo tiene cédula, en vez de que el rechazo llegue
+como un error crudo de Alegra en el momento de emitir.
 
 **Tampoco confirmado** (no se llegó a esa etapa): si existe una resolución
 real de Documento Soporte ya registrada para el NIT público de pruebas
