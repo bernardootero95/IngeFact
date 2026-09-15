@@ -46,6 +46,15 @@ export {
   consultarClienteDian,
 } from "./services/clientes.js";
 export {
+  listProveedores,
+  getProveedor,
+  createProveedor,
+  updateProveedor,
+  deleteProveedor,
+  consultarProveedorDian,
+} from "./services/proveedores.js";
+export { listCompras, getCompra, createCompra, anularCompra, deleteCompra } from "./services/compras.js";
+export {
   listProductos,
   getProducto,
   createProducto,

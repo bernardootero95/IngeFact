@@ -22,6 +22,11 @@ import DebitNoteDetailPage from "./modules/debitNotes/pages/DebitNoteDetailPage"
 import DebitNoteRepresentationPage from "./modules/debitNotes/pages/DebitNoteRepresentationPage";
 import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
+import SuppliersPage from "./modules/suppliers/pages/SuppliersPage";
+import SupplierFormPage from "./modules/suppliers/pages/SupplierFormPage";
+import PurchasesListPage from "./modules/purchases/pages/PurchasesListPage";
+import PurchaseFormPage from "./modules/purchases/pages/PurchaseFormPage";
+import PurchaseDetailPage from "./modules/purchases/pages/PurchaseDetailPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
@@ -253,6 +258,60 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CustomerFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/suppliers"
+          element={
+            <ProtectedRoute>
+              <SuppliersPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/suppliers/new"
+          element={
+            <ProtectedRoute>
+              <SupplierFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/suppliers/:id/edit"
+          element={
+            <ProtectedRoute>
+              <SupplierFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/purchases"
+          element={
+            <ProtectedRoute>
+              <PurchasesListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/purchases/new"
+          element={
+            <ProtectedRoute>
+              <PurchaseFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/purchases/:id"
+          element={
+            <ProtectedRoute>
+              <PurchaseDetailPage />
             </ProtectedRoute>
           }
         />
