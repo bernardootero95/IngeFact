@@ -315,6 +315,120 @@ Payload de `invoices.emissionFinished`:
 }
 ```
 
+## `POST /support-documents` — ⚠️ investigación PARCIAL (Fase 3, sin cerrar)
+
+Investigación mixta: doc oficial (`https://e-provider-docs.alegra.com/reference/createsupportdocument`)
++ verificación en vivo contra el sandbox real (`scripts/explore_alegra_support_document.py`,
+empresa asociada NIT 900559088). A diferencia de Notas Crédito/Débito, **NO es
+el mismo patrón que `/invoices`** en varios puntos, y queda una pregunta real
+sin resolver antes de poder diseñar el modelo de datos con confianza.
+
+**Confirmado en vivo:**
+- Endpoint propio (`POST /support-documents`), no una variante de `/invoices`.
+- **Sí exige un bloque `resolution` propio** (a diferencia de Notas Crédito/
+  Débito) — pero, a diferencia del de `/invoices`, **sin `technicalKey`**:
+  omitirlo no generó ningún error de schema en ninguno de los intentos.
+- `company` **debe mandarse completo** (no basta `{id}` como en `/invoices`) —
+  el primer intento con solo `{id}` dio `instance.company requires property
+  "taxCode"`. Además `company.taxCode` debe ser un **objeto**, no el string
+  plano que se usa en `items[].taxes[].taxCode` — se probó `{"code":"01",
+  "value":"IVA"}` y el error cambió a `instance.company.taxCode requires
+  property "id"` (o sea, la forma correcta usa una clave `id`, no `code` —
+  **sin confirmar el resto del shape exacto todavía**).
+- `supplier` se manda **inline sin pre-registro** (igual que `customer` en
+  facturas) — confirmado.
+- `items[].standardCode` es **obligatorio** (`{identificationId, id}`, no
+  existe en Factura) — `id` es el código del *esquema* de clasificación, con
+  enum real confirmado: `001|010|020|999` (no el código del producto en sí,
+  que va en `identificationId`).
+- Respuesta esperada en éxito (según doc, sin confirmar en vivo porque no se
+  llegó a pasar la validación de schema): `supportDocument.{id, date, status,
+  legalStatus, cuds, prefix, number, fullNumber, governmentResponse}` +
+  `files.{xml, applicationResponse}` — el equivalente al CUFE se llama
+  **`cuds`**, no `cufe`/`cude`.
+
+**⚠️ Pregunta real SIN resolver, bloqueante para diseñar el modelo:**
+`supplier.identificationType` fue rechazado con
+`is not one of enum values: 21,22,31,41,42,47,50` en **todos** los intentos
+con cédula (`"13"`, el tipo de identificación más común de una persona
+natural no obligada a facturar — el caso de uso central del Documento
+Soporte). Con `organizationType=1` + `identificationType="31"` (NIT, persona
+jurídica) el error de `supplier` desapareció en un intento pero reapareció en
+otro corriendo el mismo payload (el validador de Alegra usa `allOf`/subschemas
+condicionales — los mensajes de error no fueron 100% estables entre corridas
+idénticas, posible artefacto del validador reportando la rama "más cercana"
+según qué otros campos ya estén resueltos). **No se debe fijar el modelo de
+`Proveedor`/`DocumentoSoporte` hasta encontrar la combinación real que Alegra
+acepta para un proveedor persona natural con cédula** — sin eso, Documento
+Soporte no podría cubrir su caso de uso principal. Próximo paso sugerido: leer
+`https://e-provider-docs.alegra.com/llms.txt` (índice completo de la doc) o el
+schema OpenAPI crudo en vez de seguir adivinando por prueba y error, o abrir
+un ticket con soporte de Alegra preguntando explícitamente por el enum válido
+de `supplier.identificationType` cuando `organizationType=2`.
+
+**Tampoco confirmado** (no se llegó a esa etapa): si existe una resolución
+real de Documento Soporte ya registrada para el NIT público de pruebas
+(900559088) como sí la hay para facturas (ver sección de abajo) — sin eso,
+incluso con el payload perfecto se esperaría un rechazo `89` de la DIAN igual
+que pasó las primeras veces con Facturas antes de encontrar la resolución de
+pruebas real.
+
+## `POST /events/from-cufe` — Eventos del Receptor ✅ investigación concluyente (Fase 4)
+
+Investigación mixta: doc oficial (`https://e-provider-docs.alegra.com/reference/createeventfromcufe`)
++ verificación en vivo contra el sandbox real (`scripts/explore_alegra_receiver_events.py`),
+usando el CUFE real de una factura ya aceptada. Esta es la investigación que
+resuelve la pregunta central de la Fase 4 ("¿cómo entra al sistema la factura
+recibida del proveedor?").
+
+**Confirmado en vivo:**
+- **`GET /invoices` no tiene ningún parámetro de rol/receptor/adquiriente** —
+  solo lista las facturas donde la empresa autenticada es la EMISORA. No
+  existe forma de que Alegra nos diga "estas son las facturas donde soy
+  comprador". **Se descarta la Hipótesis A** del plan original.
+- **`POST /events/from-cufe` solo necesita el CUFE** de la factura (`uuid`) +
+  `type` (código de evento) + `number` (número propio, alfanumérico) —
+  **no requiere pre-cargar ningún dato financiero/completo de la factura
+  recibida**. Confirma una tercera opción, más simple que las 2 hipótesis
+  originales del plan: el tenant solo necesita teclear el CUFE (que le da su
+  proveedor) — Alegra resuelve el resto server-side. `facturas_recibidas` (si
+  se modela) solo necesita guardar CUFE + datos de referencia mínimos que el
+  propio tenant escribe (proveedor asociado, número, fecha, monto — para su
+  propia UI, no para el request a Alegra).
+- **Códigos de evento reales confirmados**: `030`=Acuse de recibo,
+  `031`=Reclamo, `032`=Recibo del bien/servicio, `033`=Aceptación expresa,
+  `034`=Aceptación tácita. `issuerParty` (datos de quien firma el evento:
+  tipo/número de identificación, nombre, apellido) es **obligatorio para 030 y
+  032**, no para 031/033/034 en los intentos hechos (031 lleva `claimCode`
+  01-04 en su lugar).
+- **La DIAN sí valida que la empresa que registra el evento sea realmente la
+  receptora de esa factura** — probado a propósito con una empresa que NO era
+  la compradora real: `legalStatus: REJECTED`, código `89` (el mismo patrón
+  de "NIT no autorizado" ya conocido de Facturas/Notas). Esto confirma que no
+  se puede "falsear" ser el receptor de una factura ajena — coherente con que
+  la DIAN es quien valida, no Alegra. Importante para IngeFact: el evento
+  solo quedará realmente `ACCEPTED` cuando la empresa del tenant (su
+  `id_alegra`) sea efectivamente el `customer` real de esa factura ante la
+  DIAN — algo que solo se sabrá al intentarlo, no se puede validar antes.
+- **No hay bloqueo de idempotencia por reintento** (al menos en estado
+  `REJECTED`): registrar 2 veces el mismo `number`+`uuid` devolvió 201 ambas
+  veces con `id`/`cude` distintos, sin error 409/422 — sin confirmar si esto
+  cambia una vez el evento queda `ACCEPTED` de verdad.
+- Respuesta real confirmada:
+  `event.{id, cude, type:{code, value}, companyIdentification, date,
+  associatedDocumentId, receiver:{id, name, identificationType, dv}, number,
+  legalStatus, status, governmentResponse, qrCodeContent}` + `files.{xml,
+  attachedDocument}`.
+
+**Pendiente de decidir con el usuario (no técnico, de producto)**: el efecto
+real de un Reclamo (031) — la investigación no encontró ninguna consecuencia
+automática documentada ni observable vía API (no anula nada, no dispara nada
+del lado de Alegra). Recomendación: tratarlo como **puramente informativo**
+del lado de IngeFact (se registra el evento, se muestra su estado) — la
+corrección real (nueva factura, Nota Crédito, etc.) sigue siendo
+responsabilidad manual del proveedor/tenant, mismo criterio "MVP simple
+primero" ya aplicado en el resto del proyecto.
+
 ## Errores comunes observados/documentados
 
 | Código | Mensaje | Causa |
@@ -330,3 +444,10 @@ Payload de `invoices.emissionFinished`:
 `apps/api/scripts/explore_alegra.py` reproduce todo lo anterior contra el sandbox
 real (usa el token de `apps/api/.env`). Genera una empresa de prueba nueva cada vez
 que corre (NIT aleatorio con DV válido), así que es seguro re-ejecutarlo.
+
+`apps/api/scripts/explore_alegra_support_document.py` y
+`apps/api/scripts/explore_alegra_receiver_events.py` reproducen las
+investigaciones de Documento Soporte y Eventos del Receptor de la sección de
+arriba — ambos seguros de re-ejecutar (el primero nunca pasa de un 400 de
+validación de schema hoy; el segundo genera un `number` fijo cada corrida,
+pero Alegra no bloqueó reintentos en las pruebas hechas).
