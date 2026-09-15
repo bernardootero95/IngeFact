@@ -74,12 +74,9 @@ def main():
             "startDate": "2019-01-19",
             "endDate": "2030-01-19",
         },
-        # Company completa (no solo {id}) -- el intento 1 con solo {id} dio
-        # "instance.company requires property taxCode", asi que aqui se
-        # replica el objeto real que devuelve GET /companies para este id
-        # (ver hallazgo en docs/alegra-investigacion.md) + un taxCode de
-        # prueba (mismo catalogo de tributos "01"=IVA que ya se usa en
-        # lineas de factura, a falta de mejor pista de la doc).
+        # Confirmado contra el schema OpenAPI crudo (ver
+        # docs/alegra-investigacion.md, 2026-09-16): company.taxCode.id es
+        # el shape real ("01"|"ZZ"), no {code,value} como se probo antes.
         "company": {
             "id": COMPANY_ID,
             "organizationType": 1,
@@ -88,32 +85,37 @@ def main():
             "dv": "2",
             "name": "IngeFact Dev - Resolucion de pruebas",
             "regimeCode": "R-99-PN",
-            # El intento previo con taxCode="01" (string) dio "is not of a
-            # type(s) object" -- Alegra espera un objeto aqui, no el codigo
-            # crudo como en las lineas. Se prueba con la forma mas comun ya
-            # vista en otras respuestas de Alegra (code/value).
-            "taxCode": {"code": "01", "value": "IVA"},
+            "taxCode": {"id": "01"},
             "email": "dev-test-resolution@ingefact.dev",
-            "address": {"address": "Calle de prueba 123", "city": "11001", "department": "11", "country": "CO"},
+            "address": {
+                "address": "Calle de prueba 123",
+                "city": "11001",
+                "department": "11",
+                "country": "CO",
+                "postalCode": "110111",
+            },
         },
-        # organizationType=1 (juridica) + identificationType=31 (NIT) en vez
-        # de 2+13 -- el intento 1 con organizationType=2 (persona natural) +
-        # identificationType=13 (cedula) fallo con "identificationType is
-        # not one of enum values: 21,22,31,41,42,47,50" (justo el set de
-        # tipos de documento de EXTRANJEROS/NIT, sin cedula) -- hipotesis a
-        # confirmar: el schema de "supplier" en este endpoint no acepta
-        # cedula en la rama que probamos, hace falta otra ronda para
-        # encontrar la combinacion correcta para un proveedor persona
-        # natural (el caso de uso tipico real de Documento Soporte).
+        # organizationType=2 (persona natural) + identificationType=31
+        # (NIT) -- confirmado contra el schema OpenAPI crudo que el enum de
+        # supplier.identificationType (21,22,31,41,42,47,50) excluye cedula
+        # (13) de forma permanente. Una persona natural colombiana sin
+        # negocio formal puede tramitar un NIT personal ante la DIAN para
+        # este caso -- se prueba aqui esa combinacion (persona natural + NIT).
         "supplier": {
-            "name": "Proveedor de prueba Fase 3",
+            "name": "Proveedor Persona Natural de prueba",
             "origin": "10",
-            "organizationType": 1,
+            "organizationType": 2,
             "identificationType": "31",
-            "identificationNumber": "900123456",
-            "dv": "1",
+            "identificationNumber": "1000000000",
+            "dv": "4",
             "regimeCode": "R-99-PN",
-            "address": {"address": "Cra 1 # 2-3", "city": "11001", "department": "11", "country": "CO"},
+            "address": {
+                "address": "Cra 1 # 2-3",
+                "city": "11001",
+                "department": "11",
+                "country": "CO",
+                "postalCode": "110111",
+            },
         },
         "items": [
             {
@@ -147,25 +149,11 @@ def main():
         },
     }
 
-    print("\n\n########## Intento 1: company completa + supplier juridica (NIT) + standardCode ##########", file=sys.stderr)
-    resp1, body1 = call("POST", "/support-documents", json=payload)
-
-    if resp1.status_code >= 300:
-        print(
-            "\n\n########## Intento 2: mismo payload, supplier persona natural con cedula (13) ##########",
-            file=sys.stderr,
-        )
-        payload_v2 = json.loads(json.dumps(payload))  # deep copy
-        payload_v2["supplier"] = {
-            "name": "Proveedor Persona Natural de prueba",
-            "origin": "10",
-            "organizationType": 2,
-            "identificationType": "13",
-            "identificationNumber": "1000000000",
-            "regimeCode": "R-99-PN",
-            "address": {"address": "Cra 1 # 2-3", "city": "11001", "department": "11", "country": "CO"},
-        }
-        call("POST", "/support-documents", json=payload_v2)
+    print(
+        "\n\n########## Intento: company.taxCode.id + supplier persona natural con NIT ##########",
+        file=sys.stderr,
+    )
+    call("POST", "/support-documents", json=payload)
 
 
 if __name__ == "__main__":

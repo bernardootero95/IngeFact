@@ -406,12 +406,23 @@ Soporte, su `tipo_identificacion` debe estar en el subconjunto
 personal al proveedor si solo tiene cédula, en vez de que el rechazo llegue
 como un error crudo de Alegra en el momento de emitir.
 
-**Tampoco confirmado** (no se llegó a esa etapa): si existe una resolución
-real de Documento Soporte ya registrada para el NIT público de pruebas
-(900559088) como sí la hay para facturas (ver sección de abajo) — sin eso,
-incluso con el payload perfecto se esperaría un rechazo `89` de la DIAN igual
-que pasó las primeras veces con Facturas antes de encontrar la resolución de
-pruebas real.
+**✅ Confirmación final en vivo (2026-09-16)**: con el payload corregido
+(`company.taxCode: {"id": "01"}`, `supplier.organizationType=2` + persona
+natural + `identificationType="31"` con NIT de prueba, `address.postalCode`
+agregado) el request pasó **completo** el schema de Alegra —
+`HTTP 201`, `legalStatus: REJECTED` solo por datos de prueba inventados
+(`DSAJ24b`: DV del NIT incorrecto — se inventó el DV; `DSAB10b`: numeración
+sin habilitar — la resolución `18760000002` de prueba no está registrada de
+verdad para este NIT en el sandbox). Es el mismo patrón exacto que ya se vio
+con Factura al principio del Sprint 0: el schema del payload es correcto, lo
+que falta es una resolución de Documento Soporte real registrada para el NIT
+de pruebas — no bloquea el diseño del modelo, ya se puede seguir con la
+implementación. Respuesta real de éxito de schema confirmada:
+`supportDocument.{id, companyIdentification, supplierIdentification, type,
+cuds, date, prefix, number, fullNumber, status, legalStatus,
+governmentResponse, qrCodeContent, xmlFileName, zipFileName}` +
+`files.{xml}` (sin `applicationResponse`, a diferencia de lo que decía la
+doc).
 
 ## `POST /events/from-cufe` — Eventos del Receptor ✅ investigación concluyente (Fase 4)
 
