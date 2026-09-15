@@ -64,7 +64,12 @@ export default function PurchaseFormPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [productosData, proveedoresData] = await Promise.all([listProductos(), listProveedores()]);
+      const [productosCompletos, proveedoresData] = await Promise.all([listProductos(), listProveedores()]);
+      // Las compras solo alimentan inventario -- los servicios no manejan
+      // stock, asi que ni siquiera se muestran como opcion aqui (ver
+      // CompraService._construir_lineas, que rechaza servicios igual del
+      // lado del backend).
+      const productosData = productosCompletos.filter((p) => p.tipo === "bien");
       setProductos(productosData);
       setProveedores(proveedoresData);
 
