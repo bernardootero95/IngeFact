@@ -27,6 +27,9 @@ import SupplierFormPage from "./modules/suppliers/pages/SupplierFormPage";
 import PurchasesListPage from "./modules/purchases/pages/PurchasesListPage";
 import PurchaseFormPage from "./modules/purchases/pages/PurchaseFormPage";
 import PurchaseDetailPage from "./modules/purchases/pages/PurchaseDetailPage";
+import ReceivedInvoicesListPage from "./modules/receivedInvoices/pages/ReceivedInvoicesListPage";
+import ReceivedInvoiceFormPage from "./modules/receivedInvoices/pages/ReceivedInvoiceFormPage";
+import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/ReceivedInvoiceDetailPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
@@ -312,6 +315,33 @@ export default function App() {
           element={
             <ProtectedRoute>
               <PurchaseDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/received-invoices"
+          element={
+            <ProtectedRoute>
+              <ReceivedInvoicesListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/received-invoices/new"
+          element={
+            <ProtectedRoute>
+              <ReceivedInvoiceFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/received-invoices/:id"
+          element={
+            <ProtectedRoute>
+              <ReceivedInvoiceDetailPage />
             </ProtectedRoute>
           }
         />

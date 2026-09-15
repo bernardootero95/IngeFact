@@ -55,6 +55,13 @@ export {
 } from "./services/proveedores.js";
 export { listCompras, getCompra, createCompra, anularCompra, deleteCompra } from "./services/compras.js";
 export {
+  listFacturasRecibidas,
+  getFacturaRecibida,
+  crearFacturaRecibida,
+  eliminarFacturaRecibida,
+  registrarEventoReceptor,
+} from "./services/facturasRecibidas.js";
+export {
   listProductos,
   getProducto,
   createProducto,
