@@ -20,6 +20,8 @@ build
 !INGEFACT_ROADMAP.md
 !INGEFACT_VISTAS_Y_FLUJOS.md
 !apps/api/docs/*.md
+!apps/api/README.md
+!apps/user/README.md
 
 # Supabase temporales
 supabase/.temp
