@@ -1,0 +1,50 @@
+import uuid
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, Index, String, func, text
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
+from src.infrastructure.db.session import Base
+
+
+class Proveedor(Base):
+    """Directorio de proveedores de un tenant -- a quien le compra. Mismo
+    shape que Cliente (misma naturaleza de entidad DIAN, identificada con
+    NIT/cedula) aunque este modulo no envia nada a Alegra todavia -- se
+    mantienen regimen/tributo por si el Documento Soporte los necesita
+    luego, para no tener que migrar de nuevo."""
+
+    __tablename__ = "proveedores"
+    __table_args__ = (
+        # Documento unico por tenant solo entre proveedores activos -- indice
+        # parcial (no UniqueConstraint plano) para que eliminar un proveedor
+        # libere su numero de identificacion, mismo patron que "clientes".
+        Index(
+            "ix_proveedores_empresa_documento_activo",
+            "empresa_id",
+            "numero_identificacion",
+            unique=True,
+            postgresql_where=text("eliminado IS NULL"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    empresa_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False)
+    tipo_identificacion: Mapped[str] = mapped_column(String(20), nullable=False)
+    numero_identificacion: Mapped[str] = mapped_column(String(50), nullable=False)
+    digito_verificacion: Mapped[str | None] = mapped_column(String(1))
+    nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    correo_electronico: Mapped[str] = mapped_column(String(150), nullable=False)
+    telefono: Mapped[str | None] = mapped_column(String(50))
+    tipo_organizacion: Mapped[str | None] = mapped_column(String(50))
+    regimen_fiscal: Mapped[str | None] = mapped_column(String(2))
+    regimen: Mapped[str | None] = mapped_column(String(50))
+    tributo: Mapped[str | None] = mapped_column(String(50))
+    estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
+
+    creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    actualizado: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    eliminado: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -15,7 +15,16 @@ from datetime import date
 import pytest
 
 from src.core.security import hash_password
-from src.infrastructure.db.models import Cliente, Empresa, Factura, Producto, UsuarioAdmin, UsuarioEmpresa
+from src.infrastructure.db.models import (
+    Cliente,
+    Compra,
+    Empresa,
+    Factura,
+    Producto,
+    Proveedor,
+    UsuarioAdmin,
+    UsuarioEmpresa,
+)
 
 
 @pytest.fixture
@@ -74,6 +83,38 @@ def empresa_a(db_session):
     db_session.refresh(factura)
 
     return empresa, cliente, producto, factura
+
+
+@pytest.fixture
+def proveedor_y_compra_de_empresa_a(db_session, empresa_a):
+    empresa, _cliente, producto, _factura = empresa_a
+
+    proveedor = Proveedor(
+        empresa_id=empresa.id,
+        tipo_identificacion="13",
+        numero_identificacion="987654321",
+        nombre="Proveedor de Empresa A",
+        correo_electronico="proveedor-a@example.com",
+        estado="activo",
+    )
+    db_session.add(proveedor)
+    db_session.commit()
+    db_session.refresh(proveedor)
+
+    compra = Compra(
+        empresa_id=empresa.id,
+        proveedor_id=proveedor.id,
+        fecha=date.today(),
+        estado="registrada",
+        subtotal=1000,
+        total_impuestos=0,
+        total=1000,
+    )
+    db_session.add(compra)
+    db_session.commit()
+    db_session.refresh(compra)
+
+    return proveedor, compra
 
 
 @pytest.fixture
@@ -222,3 +263,49 @@ def test_admin_token_can_call_admin_routes(api_client, admin_user):
     response = api_client.get("/api/v1/admin/usuarios", headers=_auth_headers(token))
 
     assert response.status_code == 200
+
+
+def test_tenant_cannot_read_another_tenants_proveedor(api_client, empresa_a, empresa_b, proveedor_y_compra_de_empresa_a):
+    proveedor_a, _compra_a = proveedor_y_compra_de_empresa_a
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/proveedores/{proveedor_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_proveedor(api_client, empresa_a, proveedor_y_compra_de_empresa_a):
+    proveedor, _compra = proveedor_y_compra_de_empresa_a
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/proveedores/{proveedor.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(proveedor.id)
+
+
+def test_tenant_cannot_read_another_tenants_compra(api_client, empresa_a, empresa_b, proveedor_y_compra_de_empresa_a):
+    _proveedor_a, compra_a = proveedor_y_compra_de_empresa_a
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/compras/{compra_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_compra(api_client, empresa_a, proveedor_y_compra_de_empresa_a):
+    _proveedor, compra = proveedor_y_compra_de_empresa_a
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/compras/{compra.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(compra.id)
