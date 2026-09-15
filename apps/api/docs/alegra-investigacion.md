@@ -421,8 +421,20 @@ implementación. Respuesta real de éxito de schema confirmada:
 `supportDocument.{id, companyIdentification, supplierIdentification, type,
 cuds, date, prefix, number, fullNumber, status, legalStatus,
 governmentResponse, qrCodeContent, xmlFileName, zipFileName}` +
-`files.{xml}` (sin `applicationResponse`, a diferencia de lo que decía la
-doc).
+`files.{xml, applicationResponse}`.
+
+**✅ Aceptación real de la DIAN confirmada (mismo día)**: repitiendo el envío
+sin `address.postalCode` (para confirmar si de verdad es obligatorio, ya que
+no tiene sentido inventar un codigo postal falso para cada proveedor real) y
+con un NIT de proveedor + DV que sí coincidían, la respuesta fue
+`legalStatus: ACCEPTED_WITH_OBSERVATIONS`, `governmentResponse.code: "00"`
+("Procesado Correctamente") — **la DIAN real aceptó el documento**, la única
+observación (`DSAB10b`) fue no bloqueante (numeración de prueba vencida/sin
+habilitar, mismo tipo de aviso ya visto en Factura). Esto confirma:
+`address.postalCode` **no es obligatorio** (se omite del payload real), y
+todo el resto del shape (`company`, `supplier` persona natural con NIT,
+`items[].standardCode`, `payments` sin `amount`) es correcto de punta a
+punta contra la DIAN real, no solo contra el validador de schema de Alegra.
 
 ## `POST /events/from-cufe` — Eventos del Receptor ✅ investigación concluyente (Fase 4)
 
