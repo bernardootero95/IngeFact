@@ -20,6 +20,7 @@ from src.presentation.routes import (
     tenant_dashboard,
     tenant_empresa,
     tenant_facturas,
+    tenant_facturas_recibidas,
     tenant_impuestos,
     tenant_notas_credito,
     tenant_notas_debito,
@@ -65,6 +66,7 @@ app.include_router(tenant_compras.router)
 app.include_router(tenant_productos.router)
 app.include_router(tenant_impuestos.router)
 app.include_router(tenant_facturas.router)
+app.include_router(tenant_facturas_recibidas.router)
 app.include_router(tenant_notas_credito.router)
 app.include_router(tenant_notas_debito.router)
 app.include_router(external_clientes.router)

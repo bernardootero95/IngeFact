@@ -20,6 +20,7 @@ from src.infrastructure.db.models import (
     Compra,
     Empresa,
     Factura,
+    FacturaRecibida,
     Producto,
     Proveedor,
     UsuarioAdmin,
@@ -115,6 +116,24 @@ def proveedor_y_compra_de_empresa_a(db_session, empresa_a):
     db_session.refresh(compra)
 
     return proveedor, compra
+
+
+@pytest.fixture
+def factura_recibida_de_empresa_a(db_session, empresa_a, proveedor_y_compra_de_empresa_a):
+    empresa, _cliente, _producto, _factura = empresa_a
+    proveedor, _compra = proveedor_y_compra_de_empresa_a
+
+    factura_recibida = FacturaRecibida(
+        empresa_id=empresa.id,
+        proveedor_id=proveedor.id,
+        cufe="cufe-de-empresa-a-1234567890",
+        fecha=date.today(),
+    )
+    db_session.add(factura_recibida)
+    db_session.commit()
+    db_session.refresh(factura_recibida)
+
+    return factura_recibida
 
 
 @pytest.fixture
@@ -309,3 +328,26 @@ def test_tenant_can_read_its_own_compra(api_client, empresa_a, proveedor_y_compr
 
     assert response.status_code == 200
     assert response.json()["id"] == str(compra.id)
+
+
+def test_tenant_cannot_read_another_tenants_factura_recibida(
+    api_client, empresa_a, empresa_b, factura_recibida_de_empresa_a
+):
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/facturas-recibidas/{factura_recibida_de_empresa_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_factura_recibida(api_client, empresa_a, factura_recibida_de_empresa_a):
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/facturas-recibidas/{factura_recibida_de_empresa_a.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(factura_recibida_de_empresa_a.id)

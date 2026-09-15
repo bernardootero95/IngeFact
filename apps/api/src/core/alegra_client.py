@@ -132,6 +132,16 @@ class AlegraClient:
         resp.raise_for_status()
         return resp.content
 
+    def register_receiver_event(self, payload: dict) -> dict:
+        """POST /events/from-cufe. Verificado en vivo (Fase 4, ver
+        docs/alegra-investigacion.md): solo exige el CUFE de la factura
+        (`uuid`) + `type` (030-034) + `number` -- NO hace falta precargar
+        datos financieros de la factura recibida, Alegra los resuelve del
+        lado del CUFE. La DIAN valida de verdad que la empresa que llama sea
+        la receptora real de esa factura (confirmado con un caso REJECTED a
+        proposito)."""
+        return self._request("POST", "/events/from-cufe", json=payload)
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",
