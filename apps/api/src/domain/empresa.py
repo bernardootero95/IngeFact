@@ -109,6 +109,8 @@ class EmpresaDetailResponse(BaseModel):
     telefono: str | None
     correo_electronico: str | None
     notificacion_correo: bool
+    inventario_habilitado: bool
+    permitir_facturar_sin_stock: bool
     id_alegra: str | None
     estado: str
     creado: datetime
@@ -145,6 +147,8 @@ class EmpresaDetailResponse(BaseModel):
             telefono=empresa.telefono,
             correo_electronico=empresa.correo_electronico,
             notificacion_correo=empresa.notificacion_correo,
+            inventario_habilitado=empresa.inventario_habilitado,
+            permitir_facturar_sin_stock=empresa.permitir_facturar_sin_stock,
             id_alegra=empresa.id_alegra,
             estado=empresa.estado,
             creado=empresa.creado,
@@ -194,6 +198,8 @@ class ActualizarDatosContactoRequest(BaseModel):
     nombre_comercial: str | None = None
     telefono: str | None = None
     direccion: str | None = None
+    inventario_habilitado: bool = False
+    permitir_facturar_sin_stock: bool = False
 
     @field_validator("nombre_comercial", "telefono", "direccion")
     @classmethod

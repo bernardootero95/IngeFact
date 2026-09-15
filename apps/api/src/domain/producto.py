@@ -89,6 +89,10 @@ class ProductoResponse(BaseModel):
     tarifa_impuesto: float
     estado: str
     creado: datetime
+    # Solo tiene valor real para tipo='bien' -- None en servicios (no
+    # manejan inventario) y en bienes que todavia no tuvieron ningun
+    # movimiento (Compra/Factura).
+    stock_actual: float | None
 
     @staticmethod
     def from_model(producto) -> "ProductoResponse":
@@ -104,4 +108,5 @@ class ProductoResponse(BaseModel):
             tarifa_impuesto=float(producto.tarifa_impuesto),
             estado=producto.estado,
             creado=producto.creado,
+            stock_actual=float(producto.stock_actual) if producto.stock_actual is not None else None,
         )

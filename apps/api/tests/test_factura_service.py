@@ -832,3 +832,91 @@ def test_enviar_por_correo_reporta_502_si_falla_el_envio(db_session, monkeypatch
     with pytest.raises(HTTPException) as exc_info:
         service.enviar_por_correo(empresa.id, factura.id)
     assert exc_info.value.status_code == 502
+
+
+def _fake_aceptada() -> _FakeAlegraClient:
+    return _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+    )
+
+
+def test_enviar_no_bloquea_por_stock_si_inventario_deshabilitado(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    service = FacturaService(db_session, alegra_client=_fake_aceptada())
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert enviada.estado == "aceptada"
+    db_session.refresh(producto)
+    assert producto.stock_actual is None
+
+
+def test_enviar_bloquea_409_si_stock_insuficiente(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, stock_actual=1)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    service = FacturaService(db_session, alegra_client=_fake_aceptada())
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))  # cantidad=2 por default
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    assert exc_info.value.status_code == 409
+    assert "stock" in exc_info.value.detail.lower()
+
+
+def test_enviar_permite_sin_stock_si_flag_activo(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True, permitir_facturar_sin_stock=True)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, stock_actual=0)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    service = FacturaService(db_session, alegra_client=_fake_aceptada())
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert enviada.estado == "aceptada"
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == -2
+
+
+def test_enviar_descuenta_stock_al_aceptar(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, stock_actual=10)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    service = FacturaService(db_session, alegra_client=_fake_aceptada())
+    factura = service.crear_borrador(
+        empresa.id, _payload(cliente.id, producto.id, lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=3)])
+    )
+
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 7
+
+
+def test_enviar_ignora_servicios_para_inventario(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    cliente = _crear_cliente(db_session, empresa.id)
+    servicio = _crear_producto(db_session, empresa.id, tipo="servicio", codigo="SERV-001")
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    service = FacturaService(db_session, alegra_client=_fake_aceptada())
+    factura = service.crear_borrador(
+        empresa.id, _payload(cliente.id, servicio.id, lineas=[LineaFacturaRequest(producto_id=servicio.id, cantidad=1000)])
+    )
+
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert enviada.estado == "aceptada"
+    db_session.refresh(servicio)
+    assert servicio.stock_actual is None

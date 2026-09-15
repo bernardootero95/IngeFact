@@ -43,6 +43,10 @@ class Producto(Base):
     tributo: Mapped[str | None] = mapped_column(String(50))
     tarifa_impuesto: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
+    # Solo tiene sentido para tipo='bien' -- los servicios no manejan
+    # inventario. Nulo hasta el primer movimiento (Compra/Factura), ver
+    # InventarioService.
+    stock_actual: Mapped[float | None] = mapped_column(Numeric(12, 2))
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     actualizado: Mapped[datetime] = mapped_column(

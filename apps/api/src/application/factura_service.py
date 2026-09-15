@@ -10,6 +10,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.inventario_service import InventarioService
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.application.suscripcion_service import contar_documentos_usados, revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
@@ -185,6 +186,22 @@ class FacturaService:
             )
         return factura
 
+    def _validar_stock_suficiente(self, factura: Factura) -> None:
+        """Solo bloquea si `permitir_facturar_sin_stock` esta apagado (ver
+        enviar()) -- los servicios no manejan inventario, se ignoran aqui
+        igual que en CompraService."""
+        for linea in factura.lineas:
+            producto = self.db.get(Producto, linea.producto_id)
+            if not producto or producto.tipo != "bien":
+                continue
+            disponible = float(producto.stock_actual or 0)
+            if disponible < float(linea.cantidad):
+                raise HTTPException(
+                    status.HTTP_409_CONFLICT,
+                    f"Stock insuficiente para '{producto.nombre}' (disponible: {disponible}, "
+                    f"requerido: {float(linea.cantidad)}).",
+                )
+
     def _validar_cliente(self, empresa_id: uuid.UUID, cliente_id: uuid.UUID) -> Cliente:
         cliente = self.db.execute(
             select(Cliente).where(
@@ -331,6 +348,9 @@ class FacturaService:
         if contar_documentos_usados(self.db, suscripcion) >= suscripcion.max_documentos:
             raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
 
+        if empresa.inventario_habilitado and not empresa.permitir_facturar_sin_stock:
+            self._validar_stock_suficiente(factura)
+
         consecutivo = resolucion_service.incrementar_consecutivo(empresa_id)
         payload = self._construir_payload_alegra(
             empresa, resolucion, factura, consecutivo, forma_pago, metodo_pago, fecha_vencimiento
@@ -357,6 +377,7 @@ class FacturaService:
         self.db.refresh(factura)
 
         factura_actualizada = self.obtener(empresa_id, factura.id)
+        mover_inventario_factura_aceptada(self.db, factura_actualizada)
         notificar_factura_aceptada(self.db, factura_actualizada, self._alegra_client)
         return factura_actualizada
 
@@ -549,3 +570,31 @@ def notificar_factura_aceptada(
         revisar_alerta_cuota_por_empresa(db, factura.empresa_id, email_client)
     except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el flujo del llamador.
         logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", factura.empresa_id, exc)
+
+
+def mover_inventario_factura_aceptada(db: Session, factura: Factura) -> None:
+    """Descuenta stock de las lineas 'bien' (los servicios no manejan
+    inventario) cuando una factura queda realmente aceptada -- mismo
+    criterio y mismos 2 caminos de invocacion que notificar_factura_aceptada
+    (FacturaService.enviar() y la reconciliacion del webhook), asi que el
+    guard de estado ya evita descontar dos veces: solo uno de los dos
+    caminos transiciona realmente el estado a 'aceptada' para una factura
+    dada, el otro ya la encuentra en estado final y no llega a llamar esto."""
+    if factura.estado != "aceptada":
+        return
+    empresa = db.get(Empresa, factura.empresa_id)
+    if not empresa or not empresa.inventario_habilitado:
+        return
+
+    inventario = InventarioService(db)
+    for linea in factura.lineas:
+        producto = db.get(Producto, linea.producto_id)
+        if producto and producto.tipo == "bien":
+            inventario.registrar_movimiento(
+                empresa_id=factura.empresa_id,
+                producto_id=producto.id,
+                tipo="salida",
+                cantidad=float(linea.cantidad),
+                origen_tipo="factura",
+                origen_id=factura.id,
+            )

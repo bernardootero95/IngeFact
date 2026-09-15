@@ -87,6 +87,8 @@ class EmpresaAdminService:
         empresa.nombre_comercial = data.nombre_comercial
         empresa.telefono = data.telefono
         empresa.direccion = data.direccion
+        empresa.inventario_habilitado = data.inventario_habilitado
+        empresa.permitir_facturar_sin_stock = data.permitir_facturar_sin_stock
         self.db.add(empresa)
         self.db.commit()
         self.db.refresh(empresa)

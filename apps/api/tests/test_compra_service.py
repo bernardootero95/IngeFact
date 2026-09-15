@@ -188,3 +188,87 @@ def test_obtener_404_si_es_de_otro_tenant(db_session):
 
     with pytest.raises(HTTPException):
         service.obtener(empresa_a.id, uuid.uuid4())
+
+
+def test_rechaza_lineas_de_servicios(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    servicio = _crear_producto(db_session, empresa.id, tipo="servicio", codigo="SERV-001")
+    service = CompraService(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.crear(empresa.id, _payload(proveedor.id, servicio.id))
+    assert exc_info.value.status_code == 400
+    assert "servicio" in exc_info.value.detail.lower()
+
+
+def test_crear_no_mueve_inventario_si_esta_deshabilitado(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = CompraService(db_session)
+
+    service.crear(empresa.id, _payload(proveedor.id, producto.id))
+
+    db_session.refresh(producto)
+    assert producto.stock_actual is None
+
+
+def test_crear_suma_stock_si_inventario_habilitado(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = CompraService(db_session)
+
+    service.crear(empresa.id, _payload(proveedor.id, producto.id, lineas=[LineaCompraRequest(producto_id=producto.id, cantidad=5)]))
+
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 5
+
+
+def test_anular_revierte_el_stock_sumado(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = CompraService(db_session)
+    compra = service.crear(
+        empresa.id, _payload(proveedor.id, producto.id, lineas=[LineaCompraRequest(producto_id=producto.id, cantidad=5)])
+    )
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 5
+
+    service.anular(empresa.id, compra.id)
+
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 0
+
+
+def test_eliminar_revierte_el_stock_si_estaba_registrada(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = CompraService(db_session)
+    compra = service.crear(
+        empresa.id, _payload(proveedor.id, producto.id, lineas=[LineaCompraRequest(producto_id=producto.id, cantidad=3)])
+    )
+
+    service.eliminar(empresa.id, compra.id)
+
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 0
+
+
+def test_eliminar_no_revierte_dos_veces_si_ya_estaba_anulada(db_session):
+    empresa = _crear_empresa(db_session, inventario_habilitado=True)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = CompraService(db_session)
+    compra = service.crear(
+        empresa.id, _payload(proveedor.id, producto.id, lineas=[LineaCompraRequest(producto_id=producto.id, cantidad=3)])
+    )
+    service.anular(empresa.id, compra.id)
+
+    service.eliminar(empresa.id, compra.id)
+
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 0

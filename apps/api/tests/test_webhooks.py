@@ -208,6 +208,40 @@ def test_webhook_invoices_no_sobreescribe_estado_final(api_client, db_session):
     assert factura.cufe == "cufe-original"
 
 
+def test_webhook_invoices_descuenta_stock_si_inventario_habilitado(api_client, db_session):
+    empresa = _crear_empresa(db_session, id_alegra="alegra-inv-stock")
+    empresa.inventario_habilitado = True
+    db_session.add(empresa)
+    db_session.commit()
+
+    factura = _crear_factura_enviada(db_session, empresa, alegra_invoice_id="inv-stock")
+    producto = db_session.query(Producto).filter(Producto.empresa_id == empresa.id).one()
+    producto.stock_actual = 10
+    db_session.add(producto)
+    db_session.add(FacturaLinea(
+        factura_id=factura.id,
+        producto_id=producto.id,
+        codigo=producto.codigo,
+        descripcion=producto.nombre,
+        unidad_medida=producto.unidad_medida,
+        cantidad=4,
+        precio_unitario=1000,
+        subtotal_linea=4000,
+        impuesto_linea=0,
+        total_linea=4000,
+    ))
+    db_session.commit()
+
+    response = api_client.post(
+        "/api/v1/webhooks/alegra/invoices",
+        json={"invoice": {"id": "inv-stock", "cufe": "cufe-stock", "legalStatus": "ACCEPTED"}},
+    )
+
+    assert response.status_code == 204
+    db_session.refresh(producto)
+    assert float(producto.stock_actual) == 6
+
+
 def test_webhook_invoices_factura_desconocida_no_falla(api_client):
     response = api_client.post(
         "/api/v1/webhooks/alegra/invoices",
