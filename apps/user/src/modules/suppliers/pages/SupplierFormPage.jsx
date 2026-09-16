@@ -18,6 +18,10 @@ const emptyForm = {
   nombre: "",
   correo_electronico: "",
   telefono: "",
+  tipo_organizacion: "",
+  direccion: "",
+  departamento: "",
+  municipio: "",
 };
 
 const REQUIRED_FIELDS = ["tipo_identificacion", "numero_identificacion", "nombre", "correo_electronico"];
@@ -30,7 +34,12 @@ export default function SupplierFormPage() {
   const isEditing = Boolean(id);
 
   const [formData, setFormData] = useState(emptyForm);
-  const [catalogs, setCatalogs] = useState({ identificationTypes: [] });
+  const [catalogs, setCatalogs] = useState({
+    identificationTypes: [],
+    orgTypes: [],
+    departments: [],
+    municipalities: [],
+  });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -44,12 +53,15 @@ export default function SupplierFormPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [identificationTypes, proveedor] = await Promise.all([
+      const [identificationTypes, orgTypes, departments, municipalities, proveedor] = await Promise.all([
         listPublicReferenceTable("tipos_identificacion"),
+        listPublicReferenceTable("tipos_organizacion"),
+        listPublicReferenceTable("departamentos"),
+        listPublicReferenceTable("municipios"),
         isEditing ? getProveedor(id) : Promise.resolve(null),
       ]);
 
-      setCatalogs({ identificationTypes });
+      setCatalogs({ identificationTypes, orgTypes, departments, municipalities });
 
       if (proveedor) {
         setFormData({
@@ -59,6 +71,10 @@ export default function SupplierFormPage() {
           nombre: proveedor.nombre,
           correo_electronico: proveedor.correo_electronico,
           telefono: proveedor.telefono || "",
+          tipo_organizacion: proveedor.tipo_organizacion || "",
+          direccion: proveedor.direccion || "",
+          departamento: proveedor.departamento || "",
+          municipio: proveedor.municipio || "",
         });
       } else {
         setFormData({ ...emptyForm, tipo_identificacion: identificationTypes[0]?.code || "" });
@@ -84,6 +100,8 @@ export default function SupplierFormPage() {
         next.digito_verificacion = value === NIT_IDENTIFICATION_TYPE ? calculateNitDV(prev.numero_identificacion) : "";
       } else if (name === "numero_identificacion" && prev.tipo_identificacion === NIT_IDENTIFICATION_TYPE) {
         next.digito_verificacion = calculateNitDV(value);
+      } else if (name === "departamento") {
+        next.municipio = "";
       }
 
       setErrors((prevErrors) => ({
@@ -152,6 +170,10 @@ export default function SupplierFormPage() {
       nombre: formData.nombre.trim(),
       correo_electronico: formData.correo_electronico.trim(),
       telefono: formData.telefono.trim() || null,
+      tipo_organizacion: formData.tipo_organizacion || null,
+      direccion: formData.direccion.trim() || null,
+      departamento: formData.departamento || null,
+      municipio: formData.municipio || null,
     };
 
     setIsSaving(true);
@@ -361,6 +383,96 @@ export default function SupplierFormPage() {
                       className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 transition-colors"
                       placeholder="Ej. 3001234567"
                     />
+                  </div>
+                </div>
+
+                <div className="bg-neutralCustom-50 p-4 rounded-brand-md border border-neutralCustom-100 space-y-4">
+                  <div>
+                    <h4 className="text-sm font-semibold text-neutralCustom-800">Datos para Documento Soporte</h4>
+                    <p className="text-xs text-neutralCustom-500 mt-0.5">
+                      Opcionales para registrar Compras, pero obligatorios si vas a emitirle un Documento Soporte a
+                      este proveedor.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="tipo_organizacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                        Tipo de Organización
+                      </label>
+                      <select
+                        id="tipo_organizacion"
+                        name="tipo_organizacion"
+                        value={formData.tipo_organizacion}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      >
+                        <option value="">Sin especificar</option>
+                        {catalogs.orgTypes.map((type) => (
+                          <option key={type.code} value={type.code}>
+                            {type.value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="direccion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                        Dirección
+                      </label>
+                      <input
+                        type="text"
+                        id="direccion"
+                        name="direccion"
+                        value={formData.direccion}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        placeholder="Ej. Cra 1 # 2-3"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="departamento" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                        Departamento
+                      </label>
+                      <select
+                        id="departamento"
+                        name="departamento"
+                        value={formData.departamento}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      >
+                        <option value="">Seleccione un departamento...</option>
+                        {catalogs.departments.map((d) => (
+                          <option key={d.code} value={d.code}>
+                            {d.value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label htmlFor="municipio" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                        Municipio
+                      </label>
+                      <select
+                        id="municipio"
+                        name="municipio"
+                        value={formData.municipio}
+                        onChange={handleChange}
+                        disabled={!formData.departamento}
+                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <option value="">Seleccione un municipio...</option>
+                        {catalogs.municipalities
+                          .filter((m) => m.department_code === formData.departamento)
+                          .map((m) => (
+                            <option key={m.code} value={m.code}>
+                              {m.value}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 

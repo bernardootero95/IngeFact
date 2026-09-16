@@ -30,10 +30,14 @@ import PurchaseDetailPage from "./modules/purchases/pages/PurchaseDetailPage";
 import ReceivedInvoicesListPage from "./modules/receivedInvoices/pages/ReceivedInvoicesListPage";
 import ReceivedInvoiceFormPage from "./modules/receivedInvoices/pages/ReceivedInvoiceFormPage";
 import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/ReceivedInvoiceDetailPage";
+import SupportDocumentsListPage from "./modules/supportDocuments/pages/SupportDocumentsListPage";
+import SupportDocumentFormPage from "./modules/supportDocuments/pages/SupportDocumentFormPage";
+import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportDocumentDetailPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
 import ResolutionSettingsPage from "./modules/settings/pages/ResolutionSettingsPage";
+import SupportDocumentResolutionSettingsPage from "./modules/settings/pages/SupportDocumentResolutionSettingsPage";
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
 import TaxPresetFormPage from "./modules/settings/pages/TaxPresetFormPage";
 
@@ -347,6 +351,42 @@ export default function App() {
         />
 
         <Route
+          path="/support-documents"
+          element={
+            <ProtectedRoute>
+              <SupportDocumentsListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/support-documents/new"
+          element={
+            <ProtectedRoute>
+              <SupportDocumentFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/support-documents/:id/edit"
+          element={
+            <ProtectedRoute>
+              <SupportDocumentFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/support-documents/:id"
+          element={
+            <ProtectedRoute>
+              <SupportDocumentDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/products"
           element={
             <ProtectedRoute>
@@ -387,6 +427,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ResolutionSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/resolution-documento-soporte"
+          element={
+            <ProtectedRoute>
+              <SupportDocumentResolutionSettingsPage />
             </ProtectedRoute>
           }
         />

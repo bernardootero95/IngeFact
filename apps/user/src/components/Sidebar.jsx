@@ -64,6 +64,7 @@ const navItems = [
     children: [
       { name: "Compras", path: "/purchases" },
       { name: "Facturas Recibidas", path: "/received-invoices" },
+      { name: "Documento Soporte", path: "/support-documents" },
     ],
   },
   {
@@ -92,6 +93,7 @@ const navItems = [
     children: [
       { name: "Datos de la Empresa", path: "/settings/company" },
       { name: "Resolución DIAN", path: "/settings/resolution" },
+      { name: "Resolución Documento Soporte", path: "/settings/resolution-documento-soporte" },
       { name: "Impuestos", path: "/settings/taxes" },
     ],
   },

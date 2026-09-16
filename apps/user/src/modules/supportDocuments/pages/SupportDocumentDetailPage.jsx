@@ -1,0 +1,362 @@
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  getDocumentoSoporte,
+  eliminarBorradorDocumentoSoporte,
+  enviarDocumentoSoporte,
+  listPublicReferenceTable,
+} from "@ingefact/core-api";
+import Sidebar from "../../../components/Sidebar";
+import { validateFormaPago, validateMetodoPago } from "./SupportDocumentDetailPage.validation";
+
+const formatCOP = (value) =>
+  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
+
+const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
+
+const ESTADO_INFO = {
+  borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
+  enviado: { icon: "⏳", label: "Enviado a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
+  aceptado: { icon: "✅", label: "Aceptado por la DIAN", classes: "bg-brand-50 text-brand-600" },
+  rechazado: { icon: "❌", label: "Rechazado por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+};
+
+export default function SupportDocumentDetailPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  const [documento, setDocumento] = useState(null);
+  const [formasPago, setFormasPago] = useState([]);
+  const [metodosPago, setMetodosPago] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+
+  const [formaPago, setFormaPago] = useState("");
+  const [metodoPago, setMetodoPago] = useState("");
+  const [errors, setErrors] = useState({});
+
+  const cargarDatos = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [documentoData, formasPagoData, metodosPagoData] = await Promise.all([
+        getDocumentoSoporte(id),
+        listPublicReferenceTable("formas_pago"),
+        listPublicReferenceTable("metodos_pago"),
+      ]);
+      // Codigo "1" = "Instrumento no definido" -- un placeholder del catalogo
+      // DIAN, no un metodo de pago real (mismo criterio que InvoiceFormPage).
+      const metodosPagoValidos = metodosPagoData.filter((m) => m.code !== "1");
+      setDocumento(documentoData);
+      setFormasPago(formasPagoData);
+      setMetodosPago(metodosPagoValidos);
+      setFormaPago(documentoData.forma_pago || formasPagoData[0]?.code || "");
+      setMetodoPago(documentoData.metodo_pago || metodosPagoValidos[0]?.code || "");
+    } catch (error) {
+      setLoadError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    cargarDatos();
+  }, [cargarDatos]);
+
+  const handleEliminar = async () => {
+    if (!window.confirm("¿Eliminar este documento soporte?")) return;
+    setIsDeleting(true);
+    try {
+      await eliminarBorradorDocumentoSoporte(id);
+      navigate("/support-documents");
+    } catch (error) {
+      setSendError(error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEnviar = async (e) => {
+    e.preventDefault();
+    const nuevosErrores = {
+      formaPago: validateFormaPago(formaPago),
+      metodoPago: validateMetodoPago(metodoPago),
+    };
+    setErrors(nuevosErrores);
+    if (Object.values(nuevosErrores).some(Boolean)) return;
+
+    setIsSending(true);
+    setSendError(null);
+    try {
+      const actualizado = await enviarDocumentoSoporte(id, { forma_pago: formaPago, metodo_pago: metodoPago });
+      setDocumento(actualizado);
+    } catch (error) {
+      setSendError(error.message);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+        <Sidebar />
+        <main className="flex-1 p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</main>
+      </div>
+    );
+  }
+
+  if (loadError || !documento) {
+    return (
+      <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+        <Sidebar />
+        <main className="flex-1 p-8">
+          <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+            {loadError || "Documento Soporte no encontrado."}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const editable = documento.estado === "borrador" || documento.estado === "rechazado";
+  const estadoInfo = ESTADO_INFO[documento.estado] || ESTADO_INFO.borrador;
+
+  return (
+    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+      <Sidebar />
+
+      <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+          <div>
+            <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
+              <button
+                onClick={() => navigate("/support-documents")}
+                className="text-brand-600 hover:underline font-medium"
+              >
+                Documento Soporte
+              </button>
+              <span>/</span>
+              <span>{documento.numero_completo || "Borrador"}</span>
+            </div>
+            <h2 className="text-lg font-medium text-neutralCustom-800">{documento.proveedor_nombre}</h2>
+          </div>
+        </header>
+
+        <div className="p-8 flex-1 overflow-y-auto">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${estadoInfo.classes}`}
+                >
+                  {estadoInfo.icon} {estadoInfo.label}
+                </span>
+                {editable && (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => navigate(`/support-documents/${id}/edit`)}
+                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                    >
+                      {documento.estado === "rechazado" ? "Corregir" : "Continuar Editando"}
+                    </button>
+                    <button
+                      onClick={handleEliminar}
+                      disabled={isDeleting}
+                      className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    >
+                      {isDeleting ? "Eliminando..." : "Eliminar"}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {documento.cuds && (
+                <div className="bg-neutralCustom-50 rounded-brand-md p-3 flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-xs text-neutralCustom-500">CUDS</p>
+                    <p className="text-xs font-mono text-neutralCustom-700 break-all">{documento.cuds}</p>
+                  </div>
+                  <button
+                    onClick={() => navigator.clipboard?.writeText(documento.cuds)}
+                    className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              )}
+
+              {documento.estado === "rechazado" && documento.razon_rechazo && (
+                <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
+                  <p className="font-medium">{documento.razon_rechazo}</p>
+                </div>
+              )}
+
+              {documento.notificaciones_dian && documento.notificaciones_dian.length > 0 && (
+                <div
+                  className={`p-3 border text-sm rounded-brand-md mb-2 ${
+                    documento.estado === "rechazado"
+                      ? "bg-red-50 border-fiscal-danger text-fiscal-danger"
+                      : "bg-amber-50 border-amber-300 text-amber-700"
+                  }`}
+                >
+                  <p className="font-medium mb-1">Detalle de la DIAN</p>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {documento.notificaciones_dian.map((item, index) => (
+                      <li key={index}>{typeof item === "string" ? item : item.message || JSON.stringify(item)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <dl className="text-sm space-y-2 mt-2">
+                <div className="flex justify-between">
+                  <dt className="text-neutralCustom-500">Fecha</dt>
+                  <dd className="font-medium text-neutralCustom-800">{documento.fecha}</dd>
+                </div>
+                {documento.forma_pago && (
+                  <div className="flex justify-between">
+                    <dt className="text-neutralCustom-500">Forma de pago</dt>
+                    <dd className="font-medium text-neutralCustom-800">
+                      {nombreCatalogo(formasPago, documento.forma_pago)}
+                    </dd>
+                  </div>
+                )}
+                {documento.metodo_pago && (
+                  <div className="flex justify-between">
+                    <dt className="text-neutralCustom-500">Método de pago</dt>
+                    <dd className="font-medium text-neutralCustom-800">
+                      {nombreCatalogo(metodosPago, documento.metodo_pago)}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+              <h3 className="text-sm font-semibold text-neutralCustom-800 px-6 pt-6 mb-3">Líneas</h3>
+              <table className="w-full text-left text-sm text-neutralCustom-600">
+                <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
+                  <tr>
+                    <th className="px-6 py-2.5 font-semibold">Descripción</th>
+                    <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
+                    <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
+                    <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
+                    <th className="px-6 py-2.5 text-right font-semibold">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutralCustom-100">
+                  {documento.lineas.map((linea) => (
+                    <tr key={linea.id}>
+                      <td className="px-6 py-3">{linea.descripcion}</td>
+                      <td className="px-6 py-3 text-right">{linea.cantidad}</td>
+                      <td className="px-6 py-3 text-right">{formatCOP(linea.precio_unitario)}</td>
+                      <td className="px-6 py-3 text-right">{formatCOP(linea.impuesto_linea)}</td>
+                      <td className="px-6 py-3 text-right font-medium text-neutralCustom-800">
+                        {formatCOP(linea.total_linea)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex justify-end p-6">
+                <div className="w-56 space-y-1 text-sm">
+                  <div className="flex justify-between text-neutralCustom-600">
+                    <span>Subtotal</span>
+                    <span>{formatCOP(documento.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-neutralCustom-600">
+                    <span>Total impuestos</span>
+                    <span>{formatCOP(documento.total_impuestos)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-neutralCustom-800 text-base border-t border-neutralCustom-100 pt-1.5">
+                    <span>Total</span>
+                    <span>{formatCOP(documento.total)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {editable && (
+              <form
+                onSubmit={handleEnviar}
+                className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-4"
+              >
+                <h3 className="text-base font-semibold text-neutralCustom-800">Enviar a la DIAN</h3>
+
+                {sendError && (
+                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                    {sendError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="forma_pago" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      Forma de pago <span className="text-fiscal-danger">*</span>
+                    </label>
+                    <select
+                      id="forma_pago"
+                      value={formaPago}
+                      onChange={(e) => {
+                        setFormaPago(e.target.value);
+                        setErrors((prev) => ({ ...prev, formaPago: validateFormaPago(e.target.value) }));
+                      }}
+                      className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
+                        errors.formaPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      }`}
+                    >
+                      {formasPago.map((opt) => (
+                        <option key={opt.code} value={opt.code}>
+                          {opt.value}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.formaPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.formaPago}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="metodo_pago" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                      Método de pago <span className="text-fiscal-danger">*</span>
+                    </label>
+                    <select
+                      id="metodo_pago"
+                      value={metodoPago}
+                      onChange={(e) => {
+                        setMetodoPago(e.target.value);
+                        setErrors((prev) => ({ ...prev, metodoPago: validateMetodoPago(e.target.value) }));
+                      }}
+                      className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
+                        errors.metodoPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      }`}
+                    >
+                      {metodosPago.map((opt) => (
+                        <option key={opt.code} value={opt.code}>
+                          {opt.value}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.metodoPago}</p>}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSending}
+                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                  >
+                    {isSending ? "Enviando..." : "Enviar a la DIAN"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
