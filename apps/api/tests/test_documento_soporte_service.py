@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from src.application.documento_soporte_service import DocumentoSoporteService
 from src.core.alegra_client import AlegraApiError
 from src.domain.documento_soporte import CrearDocumentoSoporteRequest, LineaDocumentoSoporteRequest
-from src.infrastructure.db.models import Empresa, Producto, Proveedor, ResolucionDocumentoSoporte
+from src.infrastructure.db.models import Compra, CompraLinea, Empresa, Producto, Proveedor, ResolucionDocumentoSoporte
 
 
 def _crear_empresa(db_session, **overrides) -> Empresa:
@@ -68,6 +68,41 @@ def _crear_producto(db_session, empresa_id, **overrides) -> Producto:
     db_session.commit()
     db_session.refresh(producto)
     return producto
+
+
+def _crear_compra(db_session, empresa_id, proveedor_id, producto, **overrides) -> Compra:
+    data = {
+        "empresa_id": empresa_id,
+        "proveedor_id": proveedor_id,
+        "fecha": date.today(),
+        "estado": "registrada",
+        "subtotal": 200000,
+        "total_impuestos": 38000,
+        "total": 238000,
+    }
+    data.update(overrides)
+    compra = Compra(
+        **data,
+        lineas=[
+            CompraLinea(
+                producto_id=producto.id,
+                codigo=producto.codigo,
+                descripcion=producto.nombre,
+                unidad_medida=producto.unidad_medida,
+                cantidad=2,
+                precio_unitario=float(producto.precio),
+                tributo=producto.tributo,
+                tarifa_impuesto=float(producto.tarifa_impuesto),
+                subtotal_linea=200000,
+                impuesto_linea=38000,
+                total_linea=238000,
+            )
+        ],
+    )
+    db_session.add(compra)
+    db_session.commit()
+    db_session.refresh(compra)
+    return compra
 
 
 def _crear_resolucion(db_session, empresa_id, **overrides) -> ResolucionDocumentoSoporte:
@@ -339,6 +374,75 @@ def test_enviar_error_alegra_no_deja_estado_intermedio(db_session):
 
     db_session.refresh(documento)
     assert documento.estado == "borrador"
+
+
+def test_crear_desde_compra_copia_proveedor_fecha_y_lineas(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    compra = _crear_compra(db_session, empresa.id, proveedor.id, producto)
+    service = DocumentoSoporteService(db_session)
+
+    documento = service.crear_desde_compra(empresa.id, compra.id)
+
+    assert documento.estado == "borrador"
+    assert documento.proveedor_id == proveedor.id
+    assert documento.fecha == compra.fecha
+    assert float(documento.total) == float(compra.total)
+    assert len(documento.lineas) == 1
+    assert documento.lineas[0].descripcion == producto.nombre
+
+
+def test_crear_desde_compra_bloqueado_si_compra_tiene_cufe(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    compra = _crear_compra(db_session, empresa.id, proveedor.id, producto, cufe="cufe-real")
+    service = DocumentoSoporteService(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.crear_desde_compra(empresa.id, compra.id)
+    assert exc_info.value.status_code == 409
+    assert "cufe" in exc_info.value.detail.lower() or "factura electronica" in exc_info.value.detail.lower()
+
+
+def test_crear_desde_compra_bloqueado_si_ya_existe_uno(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    compra = _crear_compra(db_session, empresa.id, proveedor.id, producto)
+    service = DocumentoSoporteService(db_session)
+    service.crear_desde_compra(empresa.id, compra.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.crear_desde_compra(empresa.id, compra.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_crear_desde_compra_bloqueado_si_proveedor_inelegible(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id, tipo_identificacion="13", digito_verificacion=None)
+    producto = _crear_producto(db_session, empresa.id)
+    compra = _crear_compra(db_session, empresa.id, proveedor.id, producto)
+    service = DocumentoSoporteService(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.crear_desde_compra(empresa.id, compra.id)
+    assert exc_info.value.status_code == 409
+    assert "NIT" in exc_info.value.detail
+
+
+def test_crear_desde_compra_de_otro_tenant_falla_404(db_session):
+    empresa_a = _crear_empresa(db_session)
+    empresa_b = _crear_empresa(db_session, numero_identificacion="900618468", id_alegra="alegra-empresa-2")
+    proveedor_a = _crear_proveedor(db_session, empresa_a.id)
+    producto_a = _crear_producto(db_session, empresa_a.id)
+    compra_a = _crear_compra(db_session, empresa_a.id, proveedor_a.id, producto_a)
+    service = DocumentoSoporteService(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.crear_desde_compra(empresa_b.id, compra_a.id)
+    assert exc_info.value.status_code == 404
 
 
 def test_rechazado_se_puede_corregir_y_reenviar(db_session):

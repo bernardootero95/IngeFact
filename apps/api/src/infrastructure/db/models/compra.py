@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Index, Numeric, String, Text, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,7 +18,19 @@ class Compra(Base):
     se registra directo como 'registrada' y solo puede pasar a 'anulada'."""
 
     __tablename__ = "compras"
-    __table_args__ = (CheckConstraint("estado IN ('registrada', 'anulada')", name="ck_compras_estado"),)
+    __table_args__ = (
+        CheckConstraint("estado IN ('registrada', 'anulada')", name="ck_compras_estado"),
+        # NULLs no colisionan en un indice unico de Postgres -- solo impide
+        # registrar dos veces el mismo CUFE como Compra, mismo patron que
+        # "ix_facturas_recibidas_empresa_cufe_activo".
+        Index(
+            "ix_compras_empresa_cufe_activo",
+            "empresa_id",
+            "cufe",
+            unique=True,
+            postgresql_where=text("eliminado IS NULL"),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     empresa_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False)
@@ -27,6 +39,11 @@ class Compra(Base):
     # Numero de la factura/recibo que el proveedor le dio al tenant -- dato
     # libre (sin DIAN de por medio, no hay consecutivo propio que asignar).
     numero_documento_proveedor: Mapped[str | None] = mapped_column(String(50))
+    # CUFE de la factura electronica del proveedor, si esta compra se cargo
+    # con ese dato (Fase 5) -- nulo si se registro manualmente. Impide
+    # registrar la misma factura dos veces (ver indice arriba) y bloquea
+    # generar un Documento Soporte desde ella (ya es una factura real).
+    cufe: Mapped[str | None] = mapped_column(String(200))
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="registrada")
     subtotal: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False, default=0)
     total_impuestos: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False, default=0)

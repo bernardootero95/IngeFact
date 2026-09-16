@@ -153,6 +153,19 @@ class AlegraClient:
         que create_invoice -- el equivalente al CUFE se llama "cuds"."""
         return self._request("POST", "/support-documents", json=payload)
 
+    def get_by_track_id(self, track_id: str) -> dict:
+        """GET /get-by-trackid?trackId=<CUFE|CUNE|CUDE>. Verificado (Fase 5,
+        ver docs/alegra-investigacion.md): consulta directa el estado del
+        documento ante la DIAN -- el resumen (document.subtotal/taxTotal/
+        total/documentNumber/documentDate) funciona para CUALQUIER trackId,
+        sin importar si la empresa emisora esta asociada al token de
+        Alegra de IngeFact. El XML completo (xmlDocument, de donde salen
+        las lineas) solo viene si Alegra tiene custodia del documento (la
+        empresa emisora SI esta bajo nuestra cuenta) -- para un proveedor
+        externo real, xmlDocument normalmente no viene. 404 si la DIAN no
+        conoce ese trackId."""
+        return self._request("GET", "/get-by-trackid", params={"trackId": track_id})
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",
