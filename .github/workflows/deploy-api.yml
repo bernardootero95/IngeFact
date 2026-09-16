@@ -1,0 +1,74 @@
+name: Deploy API to Production
+
+# Solo se dispara con push a main que toque apps/api (codigo o migraciones) --
+# cambios de apps/admin/apps/user/landing no reinician el contenedor de la
+# API en produccion. El job `test` es el mismo gate que ya corre en
+# ci.yml/api-tests; se repite aqui (en vez de encadenar workflows con
+# workflow_run) para que este archivo sea autocontenido y facil de auditar.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+  # Boton "Run workflow" en la pestaña Actions -- solo para poder probar el
+  # despliegue una vez de punta a punta sin esperar un push real a apps/api.
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ingefact_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/ingefact_test
+      ALEGRA_BASE_URL: https://sandbox-api.alegra.com/e-provider/col/v1
+      ALEGRA_TOKEN: fake-token-for-ci
+      JWT_SECRET: fake-secret-for-ci
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install -r requirements.txt
+        working-directory: apps/api
+
+      - run: pytest
+        working-directory: apps/api
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    # Sin `secrets.PROD_SSH_HOST` configurado este job falla en el primer
+    # paso sin tocar nada -- seguro de mergear/pushear antes de terminar de
+    # configurar los secrets (ver README del propio workflow, seccion
+    # "Como aplicarlo" en el mensaje que acompaña este archivo).
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.PROD_SSH_HOST }}
+          username: ${{ secrets.PROD_SSH_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/ingefact
+            git fetch origin main
+            git reset --hard origin/main
+            docker compose -f docker-compose.prod.yml build api
+            docker compose -f docker-compose.prod.yml run --rm api alembic upgrade head
+            docker compose -f docker-compose.prod.yml up -d api
+            docker image prune -f
