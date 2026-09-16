@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getCompra, anularCompra, deleteCompra } from "@ingefact/core-api";
+import { getCompra, anularCompra, deleteCompra, generarDocumentoSoporteDesdeCompra } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -22,6 +22,7 @@ export default function PurchaseDetailPage() {
   const [loadError, setLoadError] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGenerandoDS, setIsGenerandoDS] = useState(false);
 
   const cargarCompra = useCallback(async () => {
     setLoading(true);
@@ -50,6 +51,18 @@ export default function PurchaseDetailPage() {
       setActionError(error.message);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleGenerarDocumentoSoporte = async () => {
+    setIsGenerandoDS(true);
+    setActionError(null);
+    try {
+      const documento = await generarDocumentoSoporteDesdeCompra(id);
+      navigate(`/support-documents/${documento.id}`);
+    } catch (error) {
+      setActionError(error.message);
+      setIsGenerandoDS(false);
     }
   };
 
@@ -111,18 +124,52 @@ export default function PurchaseDetailPage() {
                         </p>
                       )}
                     </div>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        ESTADO_BADGE[compra.estado] || ESTADO_BADGE.registrada
-                      }`}
-                    >
-                      {ESTADO_LABEL[compra.estado] || compra.estado}
-                    </span>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                          ESTADO_BADGE[compra.estado] || ESTADO_BADGE.registrada
+                        }`}
+                      >
+                        {ESTADO_LABEL[compra.estado] || compra.estado}
+                      </span>
+                      {compra.cufe && (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-fiscal-info/10 text-fiscal-info">
+                          Factura Electrónica
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {compra.observaciones && (
                     <p className="text-sm text-neutralCustom-600 border-t border-neutralCustom-100 pt-3">
                       {compra.observaciones}
                     </p>
+                  )}
+
+                  {compra.estado === "registrada" && (
+                    <div className="flex justify-end pt-3 border-t border-neutralCustom-100 mt-3">
+                      {compra.cufe ? (
+                        <p className="text-xs text-neutralCustom-500">
+                          Esta compra ya es una factura electrónica (CUFE) — no aplica Documento Soporte.
+                        </p>
+                      ) : compra.documento_soporte_id ? (
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/support-documents/${compra.documento_soporte_id}`)}
+                          className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors"
+                        >
+                          Ver Documento Soporte
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleGenerarDocumentoSoporte}
+                          disabled={isGenerandoDS}
+                          className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        >
+                          {isGenerandoDS ? "Generando..." : "Generar Documento Soporte"}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 

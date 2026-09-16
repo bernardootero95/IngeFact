@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const apiRequest = vi.fn();
 vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args) }));
 
-import { listCompras, getCompra, createCompra, anularCompra, deleteCompra } from "./compras.js";
+import { listCompras, getCompra, createCompra, anularCompra, deleteCompra, consultarCufe } from "./compras.js";
 
 describe("compras", () => {
   beforeEach(() => {
@@ -47,5 +47,11 @@ describe("compras", () => {
     apiRequest.mockResolvedValue(null);
     await deleteCompra("1");
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/compras/1", { method: "DELETE" });
+  });
+
+  it("consultarCufe hace GET con el cufe como query param", async () => {
+    apiRequest.mockResolvedValue({ fecha: "2026-09-01" });
+    await consultarCufe("abc/123");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/compras/consultar-cufe?cufe=abc%2F123");
   });
 });

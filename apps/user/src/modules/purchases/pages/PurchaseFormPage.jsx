@@ -4,6 +4,7 @@ import { listProductos, listProveedores, getProveedor, createCompra } from "@ing
 import { SearchableSelect } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasCompra from "../components/SeccionLineasCompra";
+import SeccionCufeCompra from "../components/SeccionCufeCompra";
 import { validateProveedor, validateFecha, validateLineas, calcularTotales } from "./PurchaseFormPage.validation";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -43,6 +44,7 @@ export default function PurchaseFormPage() {
   const [proveedor, setProveedor] = useState(null);
   const [fecha, setFecha] = useState(today());
   const [numeroDocumentoProveedor, setNumeroDocumentoProveedor] = useState("");
+  const [cufe, setCufe] = useState("");
   const [observaciones, setObservaciones] = useState("");
   const [lineas, setLineas] = useState([]);
 
@@ -81,6 +83,7 @@ export default function PurchaseFormPage() {
         limpiarBorradorTemporal();
         setFecha(borrador.fecha);
         setNumeroDocumentoProveedor(borrador.numeroDocumentoProveedor || "");
+        setCufe(borrador.cufe || "");
         setObservaciones(borrador.observaciones || "");
         setLineas(
           borrador.lineas.map((linea) => {
@@ -150,19 +153,53 @@ export default function PurchaseFormPage() {
     setLineas((prev) => prev.map((linea, i) => (i === index ? { ...linea, precio_unitario: precioUnitario } : linea)));
   };
 
-  const irACrear = (destino) => {
+  const irACrear = (destino, extraState, draftOverrides) => {
     guardarBorradorTemporal({
       proveedorId: proveedor?.id || null,
       fecha,
       numeroDocumentoProveedor,
+      cufe,
       observaciones,
       lineas: lineas.map((linea) => ({
         producto_id: linea.producto_id,
         cantidad: linea.cantidad,
         precio_unitario: linea.precio_unitario,
       })),
+      ...draftOverrides,
     });
-    navigate(destino, { state: { returnTo: location.pathname } });
+    navigate(destino, { state: { returnTo: location.pathname, ...extraState } });
+  };
+
+  const handleAplicarCufe = ({ fecha: fechaCufe, cufe: cufeAplicado, numeroDocumentoProveedor: numDoc, proveedorIdExistente, lineas: lineasResueltas }) => {
+    if (fechaCufe) setFecha(fechaCufe);
+    setCufe(cufeAplicado);
+    if (numDoc) setNumeroDocumentoProveedor(numDoc);
+    if (proveedorIdExistente) {
+      const seleccionado = proveedores.find((p) => p.id === proveedorIdExistente) || null;
+      if (seleccionado) setProveedor(seleccionado);
+    }
+    if (lineasResueltas.length > 0) {
+      setLineas((prev) => [...prev, ...lineasResueltas]);
+      setErrors((prev) => ({ ...prev, lineas: "" }));
+    }
+  };
+
+  const handleCrearProveedorSugerido = (sugerido, datosCufe) => {
+    irACrear(
+      "/suppliers/new",
+      {
+        prefill: {
+          nombre: sugerido.nombre,
+          tipo_identificacion: sugerido.tipo_identificacion,
+          numero_identificacion: sugerido.numero_identificacion,
+        },
+      },
+      {
+        fecha: datosCufe?.fecha || fecha,
+        cufe: datosCufe?.cufe || cufe,
+        numeroDocumentoProveedor: datosCufe?.numeroDocumentoProveedor || numeroDocumentoProveedor,
+      },
+    );
   };
 
   const validarTodo = () => {
@@ -186,6 +223,7 @@ export default function PurchaseFormPage() {
         proveedor_id: proveedor.id,
         fecha,
         numero_documento_proveedor: numeroDocumentoProveedor.trim() || null,
+        cufe: cufe.trim() || null,
         observaciones: observaciones.trim() || null,
         lineas: lineas.map((linea) => ({
           producto_id: linea.producto_id,
@@ -231,6 +269,13 @@ export default function PurchaseFormPage() {
               </div>
             ) : (
               <form onSubmit={handleGuardar} className="space-y-6">
+                <SeccionCufeCompra
+                  productos={productos}
+                  proveedores={proveedores}
+                  onAplicar={handleAplicarCufe}
+                  onCrearProveedor={handleCrearProveedorSugerido}
+                />
+
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Proveedor</h3>
 

@@ -53,7 +53,14 @@ export {
   deleteProveedor,
   consultarProveedorDian,
 } from "./services/proveedores.js";
-export { listCompras, getCompra, createCompra, anularCompra, deleteCompra } from "./services/compras.js";
+export {
+  listCompras,
+  getCompra,
+  createCompra,
+  anularCompra,
+  deleteCompra,
+  consultarCufe,
+} from "./services/compras.js";
 export {
   listDocumentosSoporte,
   getDocumentoSoporte,
@@ -61,6 +68,7 @@ export {
   actualizarBorradorDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
+  generarDocumentoSoporteDesdeCompra,
 } from "./services/documentosSoporte.js";
 export {
   getResolucionDocumentoSoporte,

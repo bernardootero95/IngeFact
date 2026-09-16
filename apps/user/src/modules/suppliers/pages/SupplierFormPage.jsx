@@ -76,6 +76,17 @@ export default function SupplierFormPage() {
           departamento: proveedor.departamento || "",
           municipio: proveedor.municipio || "",
         });
+      } else if (location.state?.prefill) {
+        const prefill = location.state.prefill;
+        const tipoIdentificacion = prefill.tipo_identificacion || identificationTypes[0]?.code || "";
+        setFormData({
+          ...emptyForm,
+          tipo_identificacion: tipoIdentificacion,
+          numero_identificacion: prefill.numero_identificacion || "",
+          digito_verificacion:
+            tipoIdentificacion === NIT_IDENTIFICATION_TYPE ? calculateNitDV(prefill.numero_identificacion || "") : "",
+          nombre: prefill.nombre || "",
+        });
       } else {
         setFormData({ ...emptyForm, tipo_identificacion: identificationTypes[0]?.code || "" });
       }
@@ -84,7 +95,7 @@ export default function SupplierFormPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, isEditing]);
+  }, [id, isEditing, location.state]);
 
   useEffect(() => {
     cargarDatos();

@@ -27,3 +27,7 @@ export async function eliminarBorradorDocumentoSoporte(id) {
 export async function enviarDocumentoSoporte(id, payload) {
   return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/enviar`, { method: "POST", body: payload });
 }
+
+export async function generarDocumentoSoporteDesdeCompra(compraId) {
+  return apiRequest(`/api/v1/tenant/documentos-soporte/desde-compra/${compraId}`, { method: "POST" });
+}
