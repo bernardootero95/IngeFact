@@ -1,6 +1,7 @@
 from src.infrastructure.db.models.api_key import ApiKey
 from src.infrastructure.db.models.cliente import Cliente
 from src.infrastructure.db.models.compra import Compra, CompraLinea
+from src.infrastructure.db.models.documento_soporte import DocumentoSoporte, DocumentoSoporteLinea
 from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
 from src.infrastructure.db.models.factura import Factura, FacturaLinea
 from src.infrastructure.db.models.factura_recibida import EventoReceptor, FacturaRecibida
@@ -13,6 +14,7 @@ from src.infrastructure.db.models.producto import Producto
 from src.infrastructure.db.models.proveedor import Proveedor
 from src.infrastructure.db.models.reference_table import REFERENCE_TABLE_MODELS, REFERENCE_TABLE_NAMES
 from src.infrastructure.db.models.resolucion_dian import ResolucionDian
+from src.infrastructure.db.models.resolucion_documento_soporte import ResolucionDocumentoSoporte
 from src.infrastructure.db.models.suscripcion import Suscripcion
 from src.infrastructure.db.models.tokens import PasswordResetToken, RefreshToken
 from src.infrastructure.db.models.usuario_admin import UsuarioAdmin
@@ -24,6 +26,8 @@ __all__ = [
     "Proveedor",
     "Compra",
     "CompraLinea",
+    "DocumentoSoporte",
+    "DocumentoSoporteLinea",
     "Empresa",
     "CompanyStatus",
     "UsuarioAdmin",
@@ -43,6 +47,7 @@ __all__ = [
     "MovimientoInventario",
     "Suscripcion",
     "ResolucionDian",
+    "ResolucionDocumentoSoporte",
     "RefreshToken",
     "PasswordResetToken",
     "REFERENCE_TABLE_MODELS",

@@ -16,6 +16,9 @@ class ProveedorRequestBase(BaseModel):
     regimen_fiscal: str | None = None
     regimen: str | None = None
     tributo: str | None = None
+    direccion: str | None = None
+    departamento: str | None = None
+    municipio: str | None = None
 
     @model_validator(mode="after")
     def dv_obligatorio_y_valido_si_es_nit(self) -> "ProveedorRequestBase":
@@ -54,7 +57,7 @@ class ProveedorRequestBase(BaseModel):
             raise ValueError("La razon social / nombre es obligatorio.")
         return v
 
-    @field_validator("telefono", "tipo_organizacion", "regimen", "tributo")
+    @field_validator("telefono", "tipo_organizacion", "regimen", "tributo", "direccion", "departamento", "municipio")
     @classmethod
     def normalizar_opcional(cls, v: str | None) -> str | None:
         if v is None:
@@ -95,6 +98,9 @@ class ProveedorResponse(BaseModel):
     regimen_fiscal: str | None
     regimen: str | None
     tributo: str | None
+    direccion: str | None
+    departamento: str | None
+    municipio: str | None
     estado: str
     creado: datetime
 
@@ -112,6 +118,9 @@ class ProveedorResponse(BaseModel):
             regimen_fiscal=proveedor.regimen_fiscal,
             regimen=proveedor.regimen,
             tributo=proveedor.tributo,
+            direccion=proveedor.direccion,
+            departamento=proveedor.departamento,
+            municipio=proveedor.municipio,
             estado=proveedor.estado,
             creado=proveedor.creado,
         )

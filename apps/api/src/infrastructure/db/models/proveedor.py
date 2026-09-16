@@ -41,6 +41,12 @@ class Proveedor(Base):
     regimen_fiscal: Mapped[str | None] = mapped_column(String(2))
     regimen: Mapped[str | None] = mapped_column(String(50))
     tributo: Mapped[str | None] = mapped_column(String(50))
+    # Nulos hasta que el proveedor se use en un Documento Soporte -- Compras
+    # no los necesita (ver CompraService), solo supplier.address de
+    # Documento Soporte los exige (Fase 3).
+    direccion: Mapped[str | None] = mapped_column(String(300))
+    departamento: Mapped[str | None] = mapped_column(String(2))
+    municipio: Mapped[str | None] = mapped_column(String(5))
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

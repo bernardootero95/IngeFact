@@ -18,6 +18,7 @@ from src.presentation.routes import (
     tenant_clientes,
     tenant_compras,
     tenant_dashboard,
+    tenant_documentos_soporte,
     tenant_empresa,
     tenant_facturas,
     tenant_facturas_recibidas,
@@ -27,6 +28,7 @@ from src.presentation.routes import (
     tenant_productos,
     tenant_proveedores,
     tenant_resolucion,
+    tenant_resolucion_documento_soporte,
     usuarios_admin,
     webhooks,
 )
@@ -60,9 +62,11 @@ app.include_router(reference_tables.admin_router)
 app.include_router(tenant_empresa.router)
 app.include_router(tenant_dashboard.router)
 app.include_router(tenant_resolucion.router)
+app.include_router(tenant_resolucion_documento_soporte.router)
 app.include_router(tenant_clientes.router)
 app.include_router(tenant_proveedores.router)
 app.include_router(tenant_compras.router)
+app.include_router(tenant_documentos_soporte.router)
 app.include_router(tenant_productos.router)
 app.include_router(tenant_impuestos.router)
 app.include_router(tenant_facturas.router)

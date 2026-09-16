@@ -142,6 +142,17 @@ class AlegraClient:
         proposito)."""
         return self._request("POST", "/events/from-cufe", json=payload)
 
+    def create_support_document(self, payload: dict) -> dict:
+        """POST /support-documents. Verificado en vivo (Fase 3, ver
+        docs/alegra-investigacion.md): endpoint propio, distinto de
+        /invoices -- exige su propio bloque "resolution" (sin
+        technicalKey), "company"/"supplier" completos (con
+        company.taxCode/supplier.taxCode como objeto {"id": ...}, no el
+        string plano de items[].taxes[].taxCode), y "items[].standardCode".
+        La respuesta 201 ya trae supportDocument.legalStatus inline, igual
+        que create_invoice -- el equivalente al CUFE se llama "cuds"."""
+        return self._request("POST", "/support-documents", json=payload)
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

@@ -18,6 +18,7 @@ from src.core.security import hash_password
 from src.infrastructure.db.models import (
     Cliente,
     Compra,
+    DocumentoSoporte,
     Empresa,
     Factura,
     FacturaRecibida,
@@ -134,6 +135,27 @@ def factura_recibida_de_empresa_a(db_session, empresa_a, proveedor_y_compra_de_e
     db_session.refresh(factura_recibida)
 
     return factura_recibida
+
+
+@pytest.fixture
+def documento_soporte_de_empresa_a(db_session, empresa_a, proveedor_y_compra_de_empresa_a):
+    empresa, _cliente, _producto, _factura = empresa_a
+    proveedor, _compra = proveedor_y_compra_de_empresa_a
+
+    documento = DocumentoSoporte(
+        empresa_id=empresa.id,
+        proveedor_id=proveedor.id,
+        fecha=date.today(),
+        estado="borrador",
+        subtotal=1000,
+        total_impuestos=0,
+        total=1000,
+    )
+    db_session.add(documento)
+    db_session.commit()
+    db_session.refresh(documento)
+
+    return documento
 
 
 @pytest.fixture
@@ -351,3 +373,26 @@ def test_tenant_can_read_its_own_factura_recibida(api_client, empresa_a, factura
 
     assert response.status_code == 200
     assert response.json()["id"] == str(factura_recibida_de_empresa_a.id)
+
+
+def test_tenant_cannot_read_another_tenants_documento_soporte(
+    api_client, empresa_a, empresa_b, documento_soporte_de_empresa_a
+):
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/documentos-soporte/{documento_soporte_de_empresa_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_documento_soporte(api_client, empresa_a, documento_soporte_de_empresa_a):
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/documentos-soporte/{documento_soporte_de_empresa_a.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(documento_soporte_de_empresa_a.id)
