@@ -7,7 +7,8 @@ import {
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import { validateFormaPago, validateMetodoPago } from "./SupportDocumentDetailPage.validation";
+import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
+import { validateFormaPago, validateMetodoPago } from "../components/SeccionPagoDocumentoSoporte.validation";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -293,55 +294,21 @@ export default function SupportDocumentDetailPage() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="forma_pago" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                      Forma de pago <span className="text-fiscal-danger">*</span>
-                    </label>
-                    <select
-                      id="forma_pago"
-                      value={formaPago}
-                      onChange={(e) => {
-                        setFormaPago(e.target.value);
-                        setErrors((prev) => ({ ...prev, formaPago: validateFormaPago(e.target.value) }));
-                      }}
-                      className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-                        errors.formaPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
-                      }`}
-                    >
-                      {formasPago.map((opt) => (
-                        <option key={opt.code} value={opt.code}>
-                          {opt.value}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.formaPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.formaPago}</p>}
-                  </div>
-
-                  <div>
-                    <label htmlFor="metodo_pago" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                      Método de pago <span className="text-fiscal-danger">*</span>
-                    </label>
-                    <select
-                      id="metodo_pago"
-                      value={metodoPago}
-                      onChange={(e) => {
-                        setMetodoPago(e.target.value);
-                        setErrors((prev) => ({ ...prev, metodoPago: validateMetodoPago(e.target.value) }));
-                      }}
-                      className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-                        errors.metodoPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
-                      }`}
-                    >
-                      {metodosPago.map((opt) => (
-                        <option key={opt.code} value={opt.code}>
-                          {opt.value}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.metodoPago}</p>}
-                  </div>
-                </div>
+                <SeccionPagoDocumentoSoporte
+                  formaPago={formaPago}
+                  metodoPago={metodoPago}
+                  formasPago={formasPago}
+                  metodosPago={metodosPago}
+                  errors={errors}
+                  onFormaPagoChange={(value) => {
+                    setFormaPago(value);
+                    setErrors((prev) => ({ ...prev, formaPago: validateFormaPago(value) }));
+                  }}
+                  onMetodoPagoChange={(value) => {
+                    setMetodoPago(value);
+                    setErrors((prev) => ({ ...prev, metodoPago: validateMetodoPago(value) }));
+                  }}
+                />
 
                 <div className="flex justify-end pt-2">
                   <button

@@ -7,10 +7,14 @@ import {
   getDocumentoSoporte,
   crearBorradorDocumentoSoporte,
   actualizarBorradorDocumentoSoporte,
+  enviarDocumentoSoporte,
+  listPublicReferenceTable,
 } from "@ingefact/core-api";
 import { SearchableSelect } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDocumentoSoporte from "../components/SeccionLineasDocumentoSoporte";
+import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
+import { validateFormaPago, validateMetodoPago } from "../components/SeccionPagoDocumentoSoporte.validation";
 import { validateProveedor, validateFecha, validateLineas, calcularTotales } from "./SupportDocumentFormPage.validation";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -52,14 +56,19 @@ export default function SupportDocumentFormPage() {
   const [lineas, setLineas] = useState([]);
   const [documentoId, setDocumentoId] = useState(id || null);
   const [razonRechazo, setRazonRechazo] = useState(null);
+  const [formaPago, setFormaPago] = useState("");
+  const [metodoPago, setMetodoPago] = useState("");
 
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
+  const [formasPago, setFormasPago] = useState([]);
+  const [metodosPago, setMetodosPago] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
   const borradorTemporalAplicado = useRef(false);
@@ -71,13 +80,22 @@ export default function SupportDocumentFormPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      const [productosData, proveedoresData, documento] = await Promise.all([
+      const [productosData, proveedoresData, formasPagoData, metodosPagoData, documento] = await Promise.all([
         listProductos(),
         listProveedores(),
+        listPublicReferenceTable("formas_pago"),
+        listPublicReferenceTable("metodos_pago"),
         isEditing ? getDocumentoSoporte(id) : Promise.resolve(null),
       ]);
+      // Codigo "1" = "Instrumento no definido" -- un placeholder del catalogo
+      // DIAN, no un metodo de pago real (mismo criterio que InvoiceFormPage).
+      const metodosPagoValidos = metodosPagoData.filter((m) => m.code !== "1");
       setProductos(productosData);
       setProveedores(proveedoresData);
+      setFormasPago(formasPagoData);
+      setMetodosPago(metodosPagoValidos);
+      setFormaPago(formasPagoData[0]?.code || "");
+      setMetodoPago(metodosPagoValidos[0]?.code || "");
 
       const borrador = leerBorradorTemporal();
       const nuevoProveedorId = location.state?.newProveedorId;
@@ -86,6 +104,8 @@ export default function SupportDocumentFormPage() {
       if (borrador) {
         limpiarBorradorTemporal();
         setFecha(borrador.fecha);
+        setFormaPago(borrador.formaPago || formasPagoData[0]?.code || "");
+        setMetodoPago(borrador.metodoPago || metodosPagoValidos[0]?.code || "");
         setLineas(
           borrador.lineas.map((linea) => {
             const producto = productosData.find((p) => p.id === linea.producto_id) || null;
@@ -111,6 +131,10 @@ export default function SupportDocumentFormPage() {
         }
         setProveedor(await getProveedor(documento.proveedor_id));
         setFecha(documento.fecha);
+        setFormaPago(documento.forma_pago || formasPagoData[0]?.code || "");
+        setMetodoPago(
+          (documento.metodo_pago !== "1" ? documento.metodo_pago : null) || metodosPagoValidos[0]?.code || "",
+        );
         setLineas(
           documento.lineas.map((linea) => ({
             producto_id: linea.producto_id,
@@ -188,6 +212,8 @@ export default function SupportDocumentFormPage() {
         cantidad: linea.cantidad,
         precio_unitario: linea.precio_unitario,
       })),
+      formaPago,
+      metodoPago,
     });
     navigate(destino, { state: { returnTo: location.pathname } });
   };
@@ -197,6 +223,8 @@ export default function SupportDocumentFormPage() {
       proveedor: validateProveedor(proveedor?.id),
       fecha: validateFecha(fecha),
       lineas: validateLineas(lineas),
+      formaPago: validateFormaPago(formaPago),
+      metodoPago: validateMetodoPago(metodoPago),
     };
     setErrors(nuevosErrores);
     return !Object.values(nuevosErrores).some(Boolean);
@@ -212,25 +240,48 @@ export default function SupportDocumentFormPage() {
     })),
   });
 
-  const handleGuardar = async (e) => {
-    e.preventDefault();
-    if (!validarTodo()) return;
+  const guardarBorrador = async () => {
+    const payload = buildPayload();
+    if (documentoId) {
+      return actualizarBorradorDocumentoSoporte(documentoId, payload);
+    }
+    const creado = await crearBorradorDocumentoSoporte(payload);
+    // Si el envio falla despues de guardar, un reintento debe actualizar este
+    // mismo borrador en vez de crear otro.
+    setDocumentoId(creado.id);
+    return creado;
+  };
 
-    setIsSaving(true);
+  const handleGuardarBorrador = async () => {
+    if (!validarTodo()) return;
+    setIsSavingDraft(true);
     setSaveError(null);
     try {
-      const payload = buildPayload();
-      const guardado = documentoId
-        ? await actualizarBorradorDocumentoSoporte(documentoId, payload)
-        : await crearBorradorDocumentoSoporte(payload);
-      setDocumentoId(guardado.id);
+      const guardado = await guardarBorrador();
       navigate(`/support-documents/${guardado.id}`);
     } catch (error) {
       setSaveError(error.message);
     } finally {
-      setIsSaving(false);
+      setIsSavingDraft(false);
     }
   };
+
+  const handleEnviar = async () => {
+    if (!validarTodo()) return;
+    setIsSending(true);
+    setSaveError(null);
+    try {
+      const guardado = await guardarBorrador();
+      await enviarDocumentoSoporte(guardado.id, { forma_pago: formaPago, metodo_pago: metodoPago });
+      navigate(`/support-documents/${guardado.id}`);
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const isBusy = isSavingDraft || isSending;
 
   const totales = calcularTotales(lineas);
 
@@ -266,7 +317,7 @@ export default function SupportDocumentFormPage() {
                 {loadError}
               </div>
             ) : (
-              <form onSubmit={handleGuardar} className="space-y-6">
+              <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                 {razonRechazo && (
                   <div className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     <p className="font-semibold mb-1">Este documento fue rechazado por la DIAN</p>
@@ -333,6 +384,25 @@ export default function SupportDocumentFormPage() {
                 />
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+                  <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Pago</h3>
+                  <SeccionPagoDocumentoSoporte
+                    formaPago={formaPago}
+                    metodoPago={metodoPago}
+                    formasPago={formasPago}
+                    metodosPago={metodosPago}
+                    errors={errors}
+                    onFormaPagoChange={(value) => {
+                      setFormaPago(value);
+                      setErrors((prev) => ({ ...prev, formaPago: validateFormaPago(value) }));
+                    }}
+                    onMetodoPagoChange={(value) => {
+                      setMetodoPago(value);
+                      setErrors((prev) => ({ ...prev, metodoPago: validateMetodoPago(value) }));
+                    }}
+                  />
+                </div>
+
+                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   {saveError && (
                     <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                       {saveError}
@@ -360,17 +430,26 @@ export default function SupportDocumentFormPage() {
                     <button
                       type="button"
                       onClick={() => navigate("/support-documents")}
-                      disabled={isSaving}
+                      disabled={isBusy}
                       className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                     >
                       Cancelar
                     </button>
                     <button
-                      type="submit"
-                      disabled={isSaving}
+                      type="button"
+                      onClick={handleGuardarBorrador}
+                      disabled={isBusy}
+                      className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    >
+                      {isSavingDraft ? "Guardando..." : "Guardar Borrador"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEnviar}
+                      disabled={isBusy}
                       className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50"
                     >
-                      {isSaving ? "Guardando..." : "Guardar Borrador"}
+                      {isSending ? "Enviando..." : "Enviar a la DIAN"}
                     </button>
                   </div>
                 </div>
