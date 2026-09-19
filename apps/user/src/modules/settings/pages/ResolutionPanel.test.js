@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateField } from "./ResolutionSettingsPage.validation.js";
+import { validateField } from "./ResolutionPanel.validation.js";
 
 const baseForm = {
   numero_resolucion: "",

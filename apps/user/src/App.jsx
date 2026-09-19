@@ -33,8 +33,7 @@ import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportD
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
-import ResolutionSettingsPage from "./modules/settings/pages/ResolutionSettingsPage";
-import SupportDocumentResolutionSettingsPage from "./modules/settings/pages/SupportDocumentResolutionSettingsPage";
+import ResolutionsSettingsPage from "./modules/settings/pages/ResolutionsSettingsPage";
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
 import TaxPresetFormPage from "./modules/settings/pages/TaxPresetFormPage";
 
@@ -396,16 +395,7 @@ export default function App() {
           path="/settings/resolution"
           element={
             <ProtectedRoute>
-              <ResolutionSettingsPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/settings/resolution-documento-soporte"
-          element={
-            <ProtectedRoute>
-              <SupportDocumentResolutionSettingsPage />
+              <ResolutionsSettingsPage />
             </ProtectedRoute>
           }
         />
