@@ -166,9 +166,7 @@ class DocumentoSoporteService:
             precio_unitario = (
                 float(linea_data.precio_unitario) if linea_data.precio_unitario is not None else float(producto.precio)
             )
-            tarifa = float(producto.tarifa_impuesto)
             subtotal_linea = round(cantidad * precio_unitario, 2)
-            impuesto_linea = round(subtotal_linea * tarifa / 100, 2)
 
             lineas.append(
                 DocumentoSoporteLinea(
@@ -178,11 +176,14 @@ class DocumentoSoporteService:
                     unidad_medida=producto.unidad_medida,
                     cantidad=cantidad,
                     precio_unitario=precio_unitario,
-                    tributo=producto.tributo,
-                    tarifa_impuesto=tarifa,
+                    # El Documento Soporte se le hace a quien NO factura, asi
+                    # que no lleva impuestos aunque el producto tenga IVA en
+                    # el catalogo: se ignoran tributo y tarifa del producto.
+                    tributo=None,
+                    tarifa_impuesto=0,
                     subtotal_linea=subtotal_linea,
-                    impuesto_linea=impuesto_linea,
-                    total_linea=subtotal_linea + impuesto_linea,
+                    impuesto_linea=0,
+                    total_linea=subtotal_linea,
                 )
             )
         return lineas
@@ -332,10 +333,8 @@ class DocumentoSoporteService:
         forma_pago: str,
         metodo_pago: str,
     ) -> dict:
-        items = []
-        taxable_total = 0.0
-        for linea in documento.lineas:
-            item = {
+        items = [
+            {
                 # "999" = estandar de adopcion del contribuyente (enum real
                 # confirmado: 001|010|020|999) -- IngeFact no tiene catalogo
                 # de codigos UNSPSC/GTIN por producto, se usa el generico.
@@ -345,19 +344,11 @@ class DocumentoSoporteService:
                 "quantity": float(linea.cantidad),
                 "unitCode": linea.unidad_medida,
                 "subtotal": float(linea.subtotal_linea),
-                "taxAmount": float(linea.impuesto_linea),
+                # Sin impuestos: ver _construir_lineas.
+                "taxAmount": 0,
             }
-            if linea.tributo and float(linea.tarifa_impuesto) > 0:
-                item["taxes"] = [
-                    {
-                        "taxCode": linea.tributo,
-                        "taxAmount": float(linea.impuesto_linea),
-                        "taxPercentage": str(linea.tarifa_impuesto),
-                        "taxableAmount": float(linea.subtotal_linea),
-                    }
-                ]
-                taxable_total += float(linea.subtotal_linea)
-            items.append(item)
+            for linea in documento.lineas
+        ]
 
         return {
             "number": consecutivo,
@@ -375,8 +366,8 @@ class DocumentoSoporteService:
             "payments": [{"paymentForm": forma_pago, "paymentMethod": metodo_pago}],
             "totalAmounts": {
                 "grossTotal": float(documento.subtotal),
-                "taxableTotal": round(taxable_total, 2),
-                "taxTotal": float(documento.total_impuestos),
+                "taxableTotal": 0,
+                "taxTotal": 0,
                 "discountTotal": 0,
                 "chargeTotal": 0,
                 "advanceTotal": 0,

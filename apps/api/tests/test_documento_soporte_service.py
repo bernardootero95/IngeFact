@@ -112,7 +112,7 @@ class _FakeAlegraClient:
         return self._response or {}
 
 
-def test_crear_borrador_calcula_totales_y_no_asigna_consecutivo(db_session):
+def test_crear_borrador_calcula_totales_sin_impuestos_y_no_asigna_consecutivo(db_session):
     empresa = _crear_empresa(db_session)
     proveedor = _crear_proveedor(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
@@ -123,10 +123,25 @@ def test_crear_borrador_calcula_totales_y_no_asigna_consecutivo(db_session):
     assert documento.estado == "borrador"
     assert documento.consecutivo is None
     assert float(documento.subtotal) == 200000
-    assert float(documento.total_impuestos) == 38000
-    assert float(documento.total) == 238000
+    assert float(documento.total_impuestos) == 0
+    assert float(documento.total) == 200000
     assert len(documento.lineas) == 1
     assert documento.lineas[0].descripcion == producto.nombre
+
+
+def test_crear_borrador_ignora_el_iva_del_producto(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, tributo="01", tarifa_impuesto=19)
+    service = DocumentoSoporteService(db_session)
+
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    linea = documento.lineas[0]
+    assert linea.tributo is None
+    assert float(linea.tarifa_impuesto) == 0
+    assert float(linea.impuesto_linea) == 0
+    assert float(linea.total_linea) == float(linea.subtotal_linea) == 200000
 
 
 def test_crear_borrador_proveedor_de_otro_tenant_falla_404(db_session):
@@ -260,6 +275,11 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptado(db_session):
     assert fake.last_payload["supplier"]["organizationType"] == 2
     assert fake.last_payload["company"]["taxCode"] == {"id": "01"}
     assert fake.last_payload["items"][0]["standardCode"]["id"] == "999"
+    # El IVA 19% del producto no debe viajar: el Documento Soporte no lleva impuestos.
+    assert "taxes" not in fake.last_payload["items"][0]
+    assert fake.last_payload["items"][0]["taxAmount"] == 0
+    assert fake.last_payload["totalAmounts"]["taxTotal"] == 0
+    assert fake.last_payload["totalAmounts"]["payableTotal"] == 200000
 
 
 def test_enviar_accepted_with_observations_marca_aceptado(db_session):
