@@ -24,4 +24,18 @@ describe("ProductFormPage validateField", () => {
     expect(validateField("unidad_medida", "")).toMatch(/obligatoria/i);
     expect(validateField("unidad_medida", "94")).toBe("");
   });
+
+  it("impuesto excluido es opcional y no puede ser negativo", () => {
+    expect(validateField("valor_impuesto_excluido", "")).toBe("");
+    expect(validateField("valor_impuesto_excluido", "no-es-numero")).toMatch(/número/i);
+    expect(validateField("valor_impuesto_excluido", "-1")).toMatch(/número/i);
+    expect(validateField("valor_impuesto_excluido", "0")).toBe("");
+    expect(validateField("valor_impuesto_excluido", "9000")).toBe("");
+  });
+
+  it("impuesto excluido no puede superar el precio", () => {
+    expect(validateField("valor_impuesto_excluido", "9001", { precio: "9000" })).toMatch(/mayor al precio/i);
+    expect(validateField("valor_impuesto_excluido", "9000", { precio: "9000" })).toBe("");
+    expect(validateField("valor_impuesto_excluido", "9000", { precio: "" })).toBe("");
+  });
 });

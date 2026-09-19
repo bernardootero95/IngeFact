@@ -198,6 +198,8 @@ export default function InvoiceFormPage() {
               precio: linea.precio_unitario,
               tributo: linea.tributo,
               tarifa_impuesto: linea.tarifa_impuesto,
+              valor_impuesto_excluido:
+                Number(linea.cantidad) > 0 ? Number(linea.valor_impuesto_excluido) / Number(linea.cantidad) : 0,
             },
           })),
         );
