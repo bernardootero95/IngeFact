@@ -1,4 +1,3 @@
-import base64
 import logging
 import uuid
 import xml.etree.ElementTree as ET
@@ -14,11 +13,15 @@ from src.application.resolucion_dian_service import ResolucionDianService
 from src.application.suscripcion_service import contar_documentos_usados, revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
-from src.core.email_client import EmailClient, EmailSendError
-from src.core.email_templates import QR_CONTENT_ID, plantilla_factura_cliente
+from src.application.correo_documento import (
+    construir_adjuntos,
+    ejecutar_envio_reportando_errores,
+    resolver_destinatario,
+)
+from src.core.email_client import EmailClient
+from src.core.email_templates import plantilla_factura_cliente
 from src.core.factura_pdf import generar_representacion_pdf
 from src.core.nit import dv_para_customer_alegra
-from src.core.qr_utils import generar_qr_png_base64
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto, Suscripcion
@@ -151,25 +154,25 @@ class FacturaService:
         firma_digital = self.obtener_firma_digital(empresa_id, factura_id)
         return generar_representacion_pdf(self.db, factura, firma_digital)
 
-    def enviar_por_correo(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> None:
-        """Reenvio manual (boton "Reenviar por correo" en el detalle) -- a
-        diferencia del envio automatico de notificar_factura_aceptada, aqui
-        un problema real (factura sin aceptar, cliente sin correo, o un
-        fallo real de Resend/Alegra) debe reportarse al usuario en vez de
-        fallar en silencio."""
+    def enviar_por_correo(
+        self, empresa_id: uuid.UUID, factura_id: uuid.UUID, destinatario: str | None = None
+    ) -> None:
+        """Reenvio manual (boton "Reenviar por correo") -- a diferencia del
+        envio automatico de notificar_factura_aceptada, aqui un problema real
+        (factura sin aceptar, sin correo, o un fallo real de Resend/Alegra)
+        debe reportarse al usuario en vez de fallar en silencio.
+        `destinatario` es el correo que pidio el usuario; sin el, va al
+        correo del cliente de la factura."""
         factura = self.obtener(empresa_id, factura_id)
         if factura.estado != "aceptada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una factura aceptada.")
-        if not factura.cliente or not factura.cliente.correo_electronico:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "El cliente de esta factura no tiene correo registrado.")
-        try:
-            _enviar_correo_factura(self.db, factura, self._alegra_client, EmailClient())
-        except EmailSendError as exc:
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo enviar el correo. Intenta de nuevo.") from exc
-        except HTTPException:
-            raise
-        except Exception as exc:  # noqa: BLE001 -- errores inesperados al armar el XML/QR
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo preparar el correo de la factura.") from exc
+        correo = resolver_destinatario(
+            destinatario, factura.cliente.correo_electronico if factura.cliente else None, "El cliente de esta factura"
+        )
+        ejecutar_envio_reportando_errores(
+            lambda: _enviar_correo_factura(self.db, factura, self._alegra_client, EmailClient(), correo),
+            "No se pudo preparar el correo de la factura.",
+        )
 
     def _obtener_editable(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
         """Editable/reenviable en 'borrador' y tambien en 'rechazada' -- una
@@ -487,11 +490,12 @@ def _enviar_correo_factura(
     factura: Factura,
     alegra_client: AlegraClient | None,
     email_client: EmailClient,
+    destinatario: str,
 ) -> None:
     """Arma y envia el correo -- deja propagar cualquier error (XML no
     disponible, EmailSendError, etc.) para que cada llamador decida si es
     best-effort o debe reportarse. Asume que factura.estado == 'aceptada' y
-    que el cliente tiene correo -- eso ya lo valida el llamador."""
+    que `destinatario` ya esta resuelto -- eso lo valida el llamador."""
     servicio = FacturaService(db, alegra_client)
     url_xml = servicio.obtener_url_xml(factura.empresa_id, factura.id)
     xml_bytes = servicio._alegra_client.fetch_raw(url_xml)
@@ -509,16 +513,8 @@ def _enviar_correo_factura(
         cufe=factura.cufe or "",
     )
     numero = factura.numero_completo or str(factura.id)
-    attachments = [
-        {
-            "filename": f"{numero}.png",
-            "content": generar_qr_png_base64(factura.qr_code_content or ""),
-            "content_id": QR_CONTENT_ID,
-        },
-        {"filename": f"{numero}.pdf", "content": base64.b64encode(pdf_bytes).decode("ascii")},
-        {"filename": f"{numero}.xml", "content": base64.b64encode(xml_bytes).decode("ascii")},
-    ]
-    email_client.send(to=factura.cliente.correo_electronico, subject=subject, html=html, attachments=attachments)
+    attachments = construir_adjuntos(numero, factura.qr_code_content, pdf_bytes, xml_bytes)
+    email_client.send(to=destinatario, subject=subject, html=html, attachments=attachments)
 
 
 def notificar_factura_aceptada(
@@ -541,7 +537,9 @@ def notificar_factura_aceptada(
         return
 
     try:
-        _enviar_correo_factura(db, factura, alegra_client, email_client or EmailClient())
+        _enviar_correo_factura(
+            db, factura, alegra_client, email_client or EmailClient(), factura.cliente.correo_electronico
+        )
     except Exception as exc:  # noqa: BLE001 -- best-effort, ver docstring.
         logger.error("No se pudo notificar la factura %s por correo: %s", factura.id, exc)
 

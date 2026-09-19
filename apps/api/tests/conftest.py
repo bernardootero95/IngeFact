@@ -24,6 +24,8 @@ _MODULOS_CON_EMAIL_CLIENT = (
     "src.application.documento_soporte_service",
     "src.application.empresa_service",
     "src.application.factura_service",
+    "src.application.nota_credito_service",
+    "src.application.nota_debito_service",
     "src.application.suscripcion_service",
 )
 

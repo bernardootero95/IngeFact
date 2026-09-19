@@ -12,6 +12,7 @@ from src.domain.nota_credito import (
     NotaCreditoListItemResponse,
     NotaCreditoResponse,
 )
+from src.domain.envio_correo import EnviarPorCorreoRequest
 from src.infrastructure.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/tenant", tags=["tenant"])
@@ -102,6 +103,16 @@ def enviar_nota_credito(
 ):
     nota = NotaCreditoService(db).enviar(tenant.empresa_id, nota_id)
     return NotaCreditoResponse.from_model(nota)
+
+
+@router.post("/notas-credito/{nota_id}/enviar-correo", status_code=204)
+def enviar_nota_por_correo(
+    nota_id: uuid.UUID,
+    body: EnviarPorCorreoRequest | None = None,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    NotaCreditoService(db).enviar_por_correo(tenant.empresa_id, nota_id, body.correo if body else None)
 
 
 @router.get("/notas-credito/{nota_id}/xml")

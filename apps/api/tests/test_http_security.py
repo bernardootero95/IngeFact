@@ -364,3 +364,16 @@ def test_tenant_can_read_its_own_documento_soporte(api_client, empresa_a, docume
 
     assert response.status_code == 200
     assert response.json()["id"] == str(documento_soporte_de_empresa_a.id)
+
+
+def test_enviar_correo_acepta_cuerpo_opcional_y_valida_el_correo(api_client, empresa_a):
+    _empresa, _cliente, _producto, factura = empresa_a
+    token = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+    url = f"/api/v1/tenant/facturas/{factura.id}/enviar-correo"
+
+    # Sin cuerpo: sigue funcionando (llega a la regla de negocio: la factura es un borrador).
+    assert api_client.post(url, headers=_auth_headers(token)).status_code == 409
+    # Con un correo valido: mismo resultado, el cuerpo es aceptado.
+    assert api_client.post(url, json={"correo": "otro@example.com"}, headers=_auth_headers(token)).status_code == 409
+    # Con un correo invalido: se rechaza antes de tocar nada.
+    assert api_client.post(url, json={"correo": "no-es-un-correo"}, headers=_auth_headers(token)).status_code == 422

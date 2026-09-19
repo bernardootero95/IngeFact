@@ -625,3 +625,95 @@ def test_generar_pdf_representacion_nota_aceptada_devuelve_bytes(db_session):
 
     assert isinstance(pdf_bytes, bytes)
     assert len(pdf_bytes) > 0
+
+def _nota_aceptada_para_correo(db_session, **cliente_overrides):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id, **cliente_overrides)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_response = {
+        "creditNote": {"id": "n-1", "cude": "cude-1", "fullNumber": "NOTA1", "legalStatus": "ACCEPTED"},
+        "files": {"xml": "https://s3.example.com/nota.xml"},
+    }
+    fake.raw_response = _XML_CON_FIRMA
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+    service.enviar(empresa.id, nota.id)
+    return empresa, service, nota
+
+
+def test_enviar_por_correo_nota_no_aceptada_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, nota.id, "otro@example.com")
+    assert exc_info.value.status_code == 409
+
+
+def test_enviar_por_correo_manda_qr_pdf_y_xml_al_correo_pedido(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append({"to": to, "subject": subject, "html": html, "attachments": attachments})
+
+    monkeypatch.setattr("src.application.nota_credito_service.EmailClient", _RecordingEmailClient)
+    empresa, service, nota = _nota_aceptada_para_correo(db_session)
+
+    service.enviar_por_correo(empresa.id, nota.id, "otro@example.com")
+
+    assert len(enviados) == 1
+    correo = enviados[0]
+    assert correo["to"] == "otro@example.com"
+    assert nota.numero_completo in correo["subject"] and "credito" in correo["subject"]
+    assert "cude-1" in correo["html"]
+    assert [a["filename"] for a in correo["attachments"]] == [
+        f"{nota.numero_completo}.png",
+        f"{nota.numero_completo}.pdf",
+        f"{nota.numero_completo}.xml",
+    ]
+
+
+def test_enviar_por_correo_sin_correo_pedido_usa_el_del_cliente(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append(to)
+
+    monkeypatch.setattr("src.application.nota_credito_service.EmailClient", _RecordingEmailClient)
+    empresa, service, nota = _nota_aceptada_para_correo(db_session, correo_electronico="cliente@example.com")
+
+    service.enviar_por_correo(empresa.id, nota.id)
+
+    assert enviados == ["cliente@example.com"]
+
+
+def test_enviar_por_correo_cliente_sin_correo_y_sin_correo_pedido_falla_400(db_session):
+    empresa, service, nota = _nota_aceptada_para_correo(db_session, correo_electronico="")
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, nota.id)
+    assert exc_info.value.status_code == 400
+
+
+def test_enviar_por_correo_nota_reporta_502_si_falla_el_envio(db_session, monkeypatch):
+    from src.core.email_client import EmailSendError
+
+    class _FailingEmailClient:
+        def send(self, **kwargs):
+            raise EmailSendError("fallo simulado de Resend")
+
+    monkeypatch.setattr("src.application.nota_credito_service.EmailClient", _FailingEmailClient)
+    empresa, service, nota = _nota_aceptada_para_correo(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, nota.id, "otro@example.com")
+    assert exc_info.value.status_code == 502

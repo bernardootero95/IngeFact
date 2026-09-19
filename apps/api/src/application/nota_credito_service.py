@@ -12,7 +12,13 @@ import logging
 
 from src.application.factura_service import _construir_customer_alegra, _construir_pago
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
+from src.application.correo_documento import (
+    ejecutar_envio_reportando_errores,
+    enviar_nota_por_correo,
+    resolver_destinatario,
+)
 from src.core.alegra_client import AlegraApiError, AlegraClient
+from src.core.email_client import EmailClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.nota_credito_pdf import generar_representacion_pdf_nota_credito
 from src.core.xml_utils import extraer_firma_digital
@@ -110,6 +116,27 @@ class NotaCreditoService:
             )
         firma_digital = self.obtener_firma_digital(empresa_id, nota_id)
         return generar_representacion_pdf_nota_credito(self.db, nota, firma_digital)
+
+    def enviar_por_correo(
+        self, empresa_id: uuid.UUID, nota_id: uuid.UUID, destinatario: str | None = None
+    ) -> None:
+        """Envio manual de la nota credito aceptada por correo (QR + PDF + XML).
+        `destinatario` es el correo que pidio el usuario; sin el, va al
+        correo del cliente. Un problema real se reporta al usuario."""
+        nota = self.obtener(empresa_id, nota_id)
+        if nota.estado != "aceptada":
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una nota credito aceptada."
+            )
+        correo = resolver_destinatario(
+            destinatario, nota.cliente.correo_electronico if nota.cliente else None, "El cliente de esta nota"
+        )
+        ejecutar_envio_reportando_errores(
+            lambda: enviar_nota_por_correo(
+                self, nota, tipo="credito", destinatario=correo, email_client=EmailClient()
+            ),
+            "No se pudo preparar el correo de la nota credito.",
+        )
 
     def _obtener_factura_aceptada(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
         factura = self.db.execute(

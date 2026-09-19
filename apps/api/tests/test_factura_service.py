@@ -832,3 +832,34 @@ def test_enviar_por_correo_reporta_502_si_falla_el_envio(db_session, monkeypatch
     with pytest.raises(HTTPException) as exc_info:
         service.enviar_por_correo(empresa.id, factura.id)
     assert exc_info.value.status_code == 502
+
+
+def test_enviar_por_correo_manda_al_correo_pedido_y_no_al_del_cliente(db_session, monkeypatch):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"},
+            "files": {"xml": "https://s3.example.com/factura.xml"},
+        },
+        raw_response=_XML_CON_FIRMA,
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append(to)
+
+    monkeypatch.setattr("src.application.factura_service.EmailClient", _RecordingEmailClient)
+
+    service.enviar_por_correo(empresa.id, factura.id, "otro@example.com")
+
+    assert enviados == ["otro@example.com"]
+

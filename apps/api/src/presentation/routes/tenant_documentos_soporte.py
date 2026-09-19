@@ -12,6 +12,7 @@ from src.domain.documento_soporte import (
     DocumentoSoporteResponse,
     EnviarDocumentoSoporteRequest,
 )
+from src.domain.envio_correo import EnviarPorCorreoRequest
 from src.infrastructure.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/tenant/documentos-soporte", tags=["tenant"])
@@ -82,10 +83,11 @@ def enviar_documento_soporte(
 @router.post("/{documento_id}/enviar-correo", status_code=204)
 def enviar_documento_soporte_por_correo(
     documento_id: uuid.UUID,
+    body: EnviarPorCorreoRequest | None = None,
     db: Session = Depends(get_db),
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
-    DocumentoSoporteService(db).enviar_por_correo(tenant.empresa_id, documento_id)
+    DocumentoSoporteService(db).enviar_por_correo(tenant.empresa_id, documento_id, body.correo if body else None)
 
 
 @router.get("/{documento_id}/xml")

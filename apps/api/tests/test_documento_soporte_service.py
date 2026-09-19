@@ -572,3 +572,35 @@ def test_enviar_rechazado_no_notifica_por_correo(db_session, monkeypatch):
 
     assert rechazado.estado == "rechazado"
     assert enviados == []
+
+
+def test_enviar_por_correo_manda_al_correo_pedido_y_no_al_del_proveedor(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append(to)
+
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session)
+    enviados.clear()  # ignora el envio automatico al aceptarse
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _RecordingEmailClient)
+
+    service.enviar_por_correo(empresa.id, documento.id, "otro@example.com")
+
+    assert enviados == ["otro@example.com"]
+
+
+def test_enviar_por_correo_proveedor_sin_correo_pero_con_correo_pedido_envia(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append(to)
+
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session, correo_electronico="")
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _RecordingEmailClient)
+
+    service.enviar_por_correo(empresa.id, documento.id, "otro@example.com")
+
+    assert enviados == ["otro@example.com"]
+

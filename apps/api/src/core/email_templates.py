@@ -84,6 +84,38 @@ def plantilla_factura_cliente(
     return subject, html
 
 
+def plantilla_nota_cliente(
+    *,
+    tipo: str,
+    razon_social_emisor: str,
+    nombre_cliente: str,
+    numero_completo: str,
+    factura_afectada: str,
+    fecha: str,
+    total_formateado: str,
+    cude: str,
+) -> tuple[str, str]:
+    """`tipo` = "credito" | "debito"."""
+    nombre_tipo = "credito" if tipo == "credito" else "debito"
+    subject = f"Nota {nombre_tipo} electronica {numero_completo} de {razon_social_emisor}"
+    html = f"""
+    <div style="font-family:sans-serif;color:#1e293b;max-width:480px;margin:0 auto;">
+      <h2>Hola, {nombre_cliente}</h2>
+      <p>{razon_social_emisor} te envio la nota {nombre_tipo} electronica <strong>{numero_completo}</strong>, con fecha {fecha}, sobre la factura <strong>{factura_afectada}</strong>.</p>
+      <div style="text-align:center;margin:20px 0;">
+        <img src="cid:{QR_CONTENT_ID}" alt="Codigo QR de la nota" style="width:160px;height:160px;" />
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:4px 0;color:#64748b;">Total</td><td style="padding:4px 0;font-weight:bold;">{total_formateado}</td></tr>
+        <tr><td style="padding:4px 0;color:#64748b;">CUDE</td><td style="padding:4px 0;font-family:monospace;font-size:11px;word-break:break-all;">{cude}</td></tr>
+      </table>
+      <p>Adjunto va la representacion grafica en PDF y el archivo XML del documento, el soporte legal ante la DIAN.</p>
+      {_FOOTER}
+    </div>
+    """
+    return subject, html
+
+
 def plantilla_documento_soporte_proveedor(
     *,
     razon_social_adquiriente: str,

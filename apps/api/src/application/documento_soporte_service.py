@@ -1,4 +1,3 @@
-import base64
 import logging
 import uuid
 import xml.etree.ElementTree as ET
@@ -13,9 +12,13 @@ from src.application.resolucion_documento_soporte_service import ResolucionDocum
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
-from src.core.email_client import EmailClient, EmailSendError
-from src.core.email_templates import QR_CONTENT_ID, plantilla_documento_soporte_proveedor
-from src.core.qr_utils import generar_qr_png_base64
+from src.application.correo_documento import (
+    construir_adjuntos,
+    ejecutar_envio_reportando_errores,
+    resolver_destinatario,
+)
+from src.core.email_client import EmailClient
+from src.core.email_templates import plantilla_documento_soporte_proveedor
 from src.core.representacion_pdf_common import formatear_cop
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.documento_soporte import CrearDocumentoSoporteRequest, LineaDocumentoSoporteRequest
@@ -350,27 +353,29 @@ class DocumentoSoporteService:
         firma_digital = self.obtener_firma_digital(empresa_id, documento_id)
         return generar_representacion_pdf_documento_soporte(self.db, documento, firma_digital)
 
-    def enviar_por_correo(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> None:
+    def enviar_por_correo(
+        self, empresa_id: uuid.UUID, documento_id: uuid.UUID, destinatario: str | None = None
+    ) -> None:
         """Reenvio manual al proveedor (boton "Reenviar por correo" en el
         detalle) -- a diferencia del envio automatico de
         notificar_documento_soporte_aceptado, aqui un problema real
-        (documento sin aceptar, proveedor sin correo, fallo de Resend/Alegra)
-        debe reportarse al usuario en vez de fallar en silencio."""
+        (documento sin aceptar, sin correo, fallo de Resend/Alegra) debe
+        reportarse al usuario en vez de fallar en silencio. `destinatario` es
+        el correo que pidio el usuario; sin el, va al del proveedor."""
         documento = self.obtener(empresa_id, documento_id)
         if documento.estado != "aceptado":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo un documento soporte aceptado.")
-        if not documento.proveedor or not documento.proveedor.correo_electronico:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "El proveedor de este documento no tiene correo registrado.")
-        try:
-            _enviar_correo_documento_soporte(self.db, documento, self._alegra_client, EmailClient())
-        except EmailSendError as exc:
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo enviar el correo. Intenta de nuevo.") from exc
-        except HTTPException:
-            raise
-        except Exception as exc:  # noqa: BLE001 -- errores inesperados al armar el XML/QR
-            raise HTTPException(
-                status.HTTP_502_BAD_GATEWAY, "No se pudo preparar el correo del documento soporte."
-            ) from exc
+        correo = resolver_destinatario(
+            destinatario,
+            documento.proveedor.correo_electronico if documento.proveedor else None,
+            "El proveedor de este documento",
+        )
+        ejecutar_envio_reportando_errores(
+            lambda: _enviar_correo_documento_soporte(
+                self.db, documento, self._alegra_client, EmailClient(), correo
+            ),
+            "No se pudo preparar el correo del documento soporte.",
+        )
 
     @staticmethod
     def _aplicar_respuesta_envio(
@@ -468,11 +473,12 @@ def _enviar_correo_documento_soporte(
     documento: DocumentoSoporte,
     alegra_client: AlegraClient | None,
     email_client: EmailClient,
+    destinatario: str,
 ) -> None:
-    """Arma y envia el correo al proveedor con QR + PDF + XML -- deja
-    propagar cualquier error para que cada llamador decida si es best-effort
-    o debe reportarse. Asume que el documento esta aceptado y que el
-    proveedor tiene correo -- eso ya lo valida el llamador."""
+    """Arma y envia el correo con QR + PDF + XML -- deja propagar cualquier
+    error para que cada llamador decida si es best-effort o debe reportarse.
+    Asume que el documento esta aceptado y que `destinatario` ya esta
+    resuelto -- eso lo valida el llamador."""
     servicio = DocumentoSoporteService(db, alegra_client)
     url_xml = servicio.obtener_url_xml(documento.empresa_id, documento.id)
     xml_bytes = servicio._alegra_client.fetch_raw(url_xml)
@@ -490,16 +496,8 @@ def _enviar_correo_documento_soporte(
         cuds=documento.cuds or "",
     )
     numero = documento.numero_completo or str(documento.id)
-    attachments = [
-        {
-            "filename": f"{numero}.png",
-            "content": generar_qr_png_base64(documento.qr_code_content or ""),
-            "content_id": QR_CONTENT_ID,
-        },
-        {"filename": f"{numero}.pdf", "content": base64.b64encode(pdf_bytes).decode("ascii")},
-        {"filename": f"{numero}.xml", "content": base64.b64encode(xml_bytes).decode("ascii")},
-    ]
-    email_client.send(to=documento.proveedor.correo_electronico, subject=subject, html=html, attachments=attachments)
+    attachments = construir_adjuntos(numero, documento.qr_code_content, pdf_bytes, xml_bytes)
+    email_client.send(to=destinatario, subject=subject, html=html, attachments=attachments)
 
 
 def notificar_documento_soporte_aceptado(
@@ -518,6 +516,8 @@ def notificar_documento_soporte_aceptado(
         return
 
     try:
-        _enviar_correo_documento_soporte(db, documento, alegra_client, email_client or EmailClient())
+        _enviar_correo_documento_soporte(
+            db, documento, alegra_client, email_client or EmailClient(), documento.proveedor.correo_electronico
+        )
     except Exception as exc:  # noqa: BLE001 -- best-effort, ver docstring.
         logger.error("No se pudo notificar el documento soporte %s por correo: %s", documento.id, exc)

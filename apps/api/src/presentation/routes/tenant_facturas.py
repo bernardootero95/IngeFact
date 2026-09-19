@@ -12,6 +12,7 @@ from src.domain.factura import (
     FacturaListItemResponse,
     FacturaResponse,
 )
+from src.domain.envio_correo import EnviarPorCorreoRequest
 from src.infrastructure.db.session import get_db
 
 router = APIRouter(prefix="/api/v1/tenant/facturas", tags=["tenant"])
@@ -94,10 +95,11 @@ def obtener_representacion_pdf(
 @router.post("/{factura_id}/enviar-correo", status_code=204)
 def enviar_factura_por_correo(
     factura_id: uuid.UUID,
+    body: EnviarPorCorreoRequest | None = None,
     db: Session = Depends(get_db),
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
-    FacturaService(db).enviar_por_correo(tenant.empresa_id, factura_id)
+    FacturaService(db).enviar_por_correo(tenant.empresa_id, factura_id, body.correo if body else None)
 
 
 @router.get("/{factura_id}/xml")
