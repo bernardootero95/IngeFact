@@ -47,3 +47,11 @@ export async function obtenerFirmaDigitalNotaCredito(id) {
 export async function obtenerRepresentacionPdfNotaCredito(id) {
   return apiRequestBlob(`/api/v1/tenant/notas-credito/${id}/representacion.pdf`);
 }
+
+/** Sin `correo`, va al correo registrado del cliente de la nota. */
+export async function enviarNotaCreditoPorCorreo(id, correo) {
+  return apiRequest(`/api/v1/tenant/notas-credito/${id}/enviar-correo`, {
+    method: "POST",
+    body: correo ? { correo } : undefined,
+  });
+}

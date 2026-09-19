@@ -14,6 +14,7 @@ import {
 } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -64,7 +65,6 @@ export default function InvoiceDetailPage() {
   const [loadError, setLoadError] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloadingXml, setIsDownloadingXml] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [isAnulando, setIsAnulando] = useState(false);
   const [toast, setToast] = useState({ message: null, type: "success" });
@@ -168,18 +168,6 @@ export default function InvoiceDetailPage() {
       onError: (message) => setToast({ message, type: "error" }),
     });
     setIsLoadingPdf(false);
-  };
-
-  const handleEnviarCorreo = async () => {
-    setIsSendingEmail(true);
-    try {
-      await enviarFacturaPorCorreo(id);
-      setToast({ message: "Factura enviada por correo al cliente.", type: "success" });
-    } catch (error) {
-      setToast({ message: error.message, type: "error" });
-    } finally {
-      setIsSendingEmail(false);
-    }
   };
 
   const historial = factura
@@ -311,13 +299,15 @@ export default function InvoiceDetailPage() {
                         {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
                       </button>
                       {factura.estado === "aceptada" && (
-                        <button
-                          onClick={handleEnviarCorreo}
-                          disabled={isSendingEmail}
-                          className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
-                        >
-                          {isSendingEmail ? "Enviando..." : "Reenviar por Correo"}
-                        </button>
+                        <EnviarCorreoPopover
+                          variant="button"
+                          label="Enviar por Correo"
+                          defaultEmail={cliente?.correo_electronico || ""}
+                          onEnviar={(correo) => enviarFacturaPorCorreo(id, correo)}
+                          onEnviado={(correo) =>
+                            setToast({ message: `Factura enviada a ${correo}.`, type: "success" })
+                          }
+                        />
                       )}
                     </>
                   )}

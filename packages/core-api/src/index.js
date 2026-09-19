@@ -113,6 +113,7 @@ export {
   obtenerUrlXmlNotaCredito,
   obtenerFirmaDigitalNotaCredito,
   obtenerRepresentacionPdfNotaCredito,
+  enviarNotaCreditoPorCorreo,
 } from "./services/notasCredito.js";
 export {
   listNotasDebito,
@@ -124,4 +125,5 @@ export {
   obtenerUrlXmlNotaDebito,
   obtenerFirmaDigitalNotaDebito,
   obtenerRepresentacionPdfNotaDebito,
+  enviarNotaDebitoPorCorreo,
 } from "./services/notasDebito.js";

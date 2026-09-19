@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { listFacturas, obtenerRepresentacionPdfFactura } from "@ingefact/core-api";
+import { listFacturas, obtenerRepresentacionPdfFactura, enviarFacturaPorCorreo } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import IconButton from "../../../components/IconButton";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
@@ -36,19 +38,6 @@ const ESTADO_LABEL = {
   rechazada: "Rechazada",
   anulada: "Anulada",
 };
-
-function IconButton({ title, onClick, children }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      className="p-1.5 text-neutralCustom-500 hover:text-brand-600 hover:bg-brand-50 rounded-brand-md transition-colors"
-    >
-      {children}
-    </button>
-  );
-}
 
 export default function InvoicesListPage() {
   const navigate = useNavigate();
@@ -221,6 +210,14 @@ export default function InvoicesListPage() {
                               />
                             </svg>
                           </IconButton>
+                          {f.estado === "aceptada" && (
+                            <EnviarCorreoPopover
+                              onEnviar={(correo) => enviarFacturaPorCorreo(f.id, correo)}
+                              onEnviado={(correo) =>
+                                setToast({ message: `Factura enviada a ${correo}.`, type: "success" })
+                              }
+                            />
+                          )}
                           {(f.estado === "borrador" || f.estado === "rechazada") && (
                             <IconButton
                               title={f.estado === "rechazada" ? "Corregir y reenviar" : "Continuar editando"}

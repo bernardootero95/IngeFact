@@ -39,3 +39,11 @@ export async function obtenerFirmaDigitalNotaDebito(id) {
 export async function obtenerRepresentacionPdfNotaDebito(id) {
   return apiRequestBlob(`/api/v1/tenant/notas-debito/${id}/representacion.pdf`);
 }
+
+/** Sin `correo`, va al correo registrado del cliente de la nota. */
+export async function enviarNotaDebitoPorCorreo(id, correo) {
+  return apiRequest(`/api/v1/tenant/notas-debito/${id}/enviar-correo`, {
+    method: "POST",
+    body: correo ? { correo } : undefined,
+  });
+}

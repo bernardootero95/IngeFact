@@ -1,7 +1,15 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { listDocumentosSoporte } from "@ingefact/core-api";
+import {
+  listDocumentosSoporte,
+  obtenerRepresentacionPdfDocumentoSoporte,
+  enviarDocumentoSoportePorCorreo,
+} from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import IconButton from "../../../components/IconButton";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
+import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -20,6 +28,16 @@ export default function SupportDocumentsListPage() {
   const [documentos, setDocumentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
+  const [toast, setToast] = useState({ message: null, type: "success" });
+
+  const handleVerRepresentacion = (documento) =>
+    abrirRepresentacion({
+      tieneDocumentoValido: documento.estado === "aceptado",
+      obtenerPdf: () => obtenerRepresentacionPdfDocumentoSoporte(documento.id),
+      navigate,
+      rutaPreview: `/support-documents/${documento.id}/representacion`,
+      onError: (message) => setToast({ message, type: "error" }),
+    });
 
   const fetchDocumentos = useCallback(async () => {
     setLoading(true);
@@ -83,6 +101,7 @@ export default function SupportDocumentsListPage() {
                     <th className="px-6 py-3 font-semibold">Fecha</th>
                     <th className="px-6 py-3 font-semibold">Estado</th>
                     <th className="px-6 py-3 text-right font-semibold">Total</th>
+                    <th className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
@@ -108,6 +127,62 @@ export default function SupportDocumentsListPage() {
                       </td>
                       <td className="px-6 py-4 text-right font-medium text-neutralCustom-800">
                         {formatCOP(d.total)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <IconButton
+                            title={d.estado === "aceptado" ? "Ver representación gráfica" : "Vista previa"}
+                            onClick={() => handleVerRepresentacion(d)}
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.75}
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                              />
+                            </svg>
+                          </IconButton>
+                          {d.estado === "aceptado" && (
+                            <EnviarCorreoPopover
+                              onEnviar={(correo) => enviarDocumentoSoportePorCorreo(d.id, correo)}
+                              onEnviado={(correo) =>
+                                setToast({ message: `Documento soporte enviado a ${correo}.`, type: "success" })
+                              }
+                            />
+                          )}
+                          {(d.estado === "borrador" || d.estado === "rechazado") && (
+                            <IconButton
+                              title={d.estado === "rechazado" ? "Corregir y reenviar" : "Continuar editando"}
+                              onClick={() => navigate(`/support-documents/${d.id}/edit`)}
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.75}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                            </IconButton>
+                          )}
+                          <IconButton title="Ver detalle" onClick={() => navigate(`/support-documents/${d.id}`)}>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.75}
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                              />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.75}
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                              />
+                            </svg>
+                          </IconButton>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -142,6 +217,8 @@ export default function SupportDocumentsListPage() {
           </div>
         </div>
       </main>
+
+      <ToastAlert message={toast.message} type={toast.type} onClose={() => setToast({ message: null, type: "success" })} />
     </div>
   );
 }

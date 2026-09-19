@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getDocumentoSoporte,
+  getProveedor,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
@@ -10,6 +11,7 @@ import {
 } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
 import { validateFormaPago, validateMetodoPago } from "../components/SeccionPagoDocumentoSoporte.validation";
@@ -31,6 +33,7 @@ export default function SupportDocumentDetailPage() {
   const { id } = useParams();
 
   const [documento, setDocumento] = useState(null);
+  const [proveedorCorreo, setProveedorCorreo] = useState("");
   const [formasPago, setFormasPago] = useState([]);
   const [metodosPago, setMetodosPago] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +42,6 @@ export default function SupportDocumentDetailPage() {
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [toast, setToast] = useState({ message: null, type: "success" });
 
   const [formaPago, setFormaPago] = useState("");
@@ -59,6 +61,10 @@ export default function SupportDocumentDetailPage() {
       // DIAN, no un metodo de pago real (mismo criterio que InvoiceFormPage).
       const metodosPagoValidos = metodosPagoData.filter((m) => m.code !== "1");
       setDocumento(documentoData);
+      // Solo para prellenar el correo del envio; si falla, el usuario lo escribe.
+      getProveedor(documentoData.proveedor_id)
+        .then((proveedor) => setProveedorCorreo(proveedor.correo_electronico || ""))
+        .catch(() => setProveedorCorreo(""));
       setFormasPago(formasPagoData);
       setMetodosPago(metodosPagoValidos);
       setFormaPago(documentoData.forma_pago || formasPagoData[0]?.code || "");
@@ -118,18 +124,6 @@ export default function SupportDocumentDetailPage() {
       onError: (message) => setToast({ message, type: "error" }),
     });
     setIsLoadingPdf(false);
-  };
-
-  const handleEnviarCorreo = async () => {
-    setIsSendingEmail(true);
-    try {
-      await enviarDocumentoSoportePorCorreo(id);
-      setToast({ message: "Documento soporte enviado por correo al proveedor.", type: "success" });
-    } catch (error) {
-      setToast({ message: error.message, type: "error" });
-    } finally {
-      setIsSendingEmail(false);
-    }
   };
 
   if (loading) {
@@ -219,13 +213,15 @@ export default function SupportDocumentDetailPage() {
                         : "Vista Previa"}
                   </button>
                   {documento.estado === "aceptado" && (
-                    <button
-                      onClick={handleEnviarCorreo}
-                      disabled={isSendingEmail}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
-                    >
-                      {isSendingEmail ? "Enviando..." : "Reenviar por Correo"}
-                    </button>
+                    <EnviarCorreoPopover
+                      variant="button"
+                      label="Enviar por Correo"
+                      defaultEmail={proveedorCorreo}
+                      onEnviar={(correo) => enviarDocumentoSoportePorCorreo(id, correo)}
+                      onEnviado={(correo) =>
+                        setToast({ message: `Documento soporte enviado a ${correo}.`, type: "success" })
+                      }
+                    />
                   )}
                 </div>
               </div>

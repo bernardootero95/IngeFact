@@ -95,6 +95,16 @@ describe("documentosSoporte", () => {
     await enviarDocumentoSoportePorCorreo("1");
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/enviar-correo", {
       method: "POST",
+      body: undefined,
+    });
+  });
+
+  it("enviarDocumentoSoportePorCorreo manda el correo elegido en el cuerpo", async () => {
+    apiRequest.mockResolvedValue(undefined);
+    await enviarDocumentoSoportePorCorreo("1", "otro@example.com");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/enviar-correo", {
+      method: "POST",
+      body: { correo: "otro@example.com" },
     });
   });
 });

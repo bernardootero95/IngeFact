@@ -36,8 +36,12 @@ export async function obtenerFirmaDigitalFactura(id) {
   return apiRequest(`/api/v1/tenant/facturas/${id}/firma-digital`);
 }
 
-export async function enviarFacturaPorCorreo(id) {
-  return apiRequest(`/api/v1/tenant/facturas/${id}/enviar-correo`, { method: "POST" });
+/** Sin `correo`, va al correo registrado del cliente de la factura. */
+export async function enviarFacturaPorCorreo(id, correo) {
+  return apiRequest(`/api/v1/tenant/facturas/${id}/enviar-correo`, {
+    method: "POST",
+    body: correo ? { correo } : undefined,
+  });
 }
 
 export async function obtenerRepresentacionPdfFactura(id) {

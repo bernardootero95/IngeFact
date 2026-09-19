@@ -6,10 +6,12 @@ import {
   eliminarBorradorNotaCredito,
   obtenerUrlXmlNotaCredito,
   obtenerRepresentacionPdfNotaCredito,
+  enviarNotaCreditoPorCorreo,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -237,6 +239,17 @@ export default function CreditNoteDetailPage() {
                     >
                       {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
                     </button>
+                  )}
+                  {nota.estado === "aceptada" && (
+                    <EnviarCorreoPopover
+                      variant="button"
+                      label="Enviar por Correo"
+                      defaultEmail={cliente?.correo_electronico || ""}
+                      onEnviar={(correo) => enviarNotaCreditoPorCorreo(id, correo)}
+                      onEnviado={(correo) =>
+                        setToast({ message: `Nota crédito enviada a ${correo}.`, type: "success" })
+                      }
+                    />
                   )}
                 </div>
               </div>

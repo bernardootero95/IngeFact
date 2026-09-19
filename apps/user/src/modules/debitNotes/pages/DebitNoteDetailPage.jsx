@@ -6,10 +6,12 @@ import {
   eliminarBorradorNotaDebito,
   obtenerUrlXmlNotaDebito,
   obtenerRepresentacionPdfNotaDebito,
+  enviarNotaDebitoPorCorreo,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -237,6 +239,17 @@ export default function DebitNoteDetailPage() {
                     >
                       {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
                     </button>
+                  )}
+                  {nota.estado === "aceptada" && (
+                    <EnviarCorreoPopover
+                      variant="button"
+                      label="Enviar por Correo"
+                      defaultEmail={cliente?.correo_electronico || ""}
+                      onEnviar={(correo) => enviarNotaDebitoPorCorreo(id, correo)}
+                      onEnviado={(correo) =>
+                        setToast({ message: `Nota débito enviada a ${correo}.`, type: "success" })
+                      }
+                    />
                   )}
                 </div>
               </div>

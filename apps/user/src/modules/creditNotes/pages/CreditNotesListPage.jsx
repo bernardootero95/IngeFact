@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { listNotasCredito, obtenerRepresentacionPdfNotaCredito } from "@ingefact/core-api";
+import { listNotasCredito, obtenerRepresentacionPdfNotaCredito, enviarNotaCreditoPorCorreo } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import IconButton from "../../../components/IconButton";
+import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
@@ -29,19 +31,6 @@ const ESTADO_LABEL = {
   aceptada: "Aceptada",
   rechazada: "Rechazada",
 };
-
-function IconButton({ title, onClick, children }) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      className="p-1.5 text-neutralCustom-500 hover:text-brand-600 hover:bg-brand-50 rounded-brand-md transition-colors"
-    >
-      {children}
-    </button>
-  );
-}
 
 export default function CreditNotesListPage() {
   const navigate = useNavigate();
@@ -182,6 +171,14 @@ export default function CreditNotesListPage() {
                               />
                             </svg>
                           </IconButton>
+                          {n.estado === "aceptada" && (
+                            <EnviarCorreoPopover
+                              onEnviar={(correo) => enviarNotaCreditoPorCorreo(n.id, correo)}
+                              onEnviado={(correo) =>
+                                setToast({ message: `Nota crédito enviada a ${correo}.`, type: "success" })
+                              }
+                            />
+                          )}
                           {(n.estado === "borrador" || n.estado === "rechazada") && (
                             <IconButton
                               title={n.estado === "rechazada" ? "Corregir y reenviar" : "Continuar editando"}

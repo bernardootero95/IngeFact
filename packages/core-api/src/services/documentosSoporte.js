@@ -36,6 +36,10 @@ export async function obtenerRepresentacionPdfDocumentoSoporte(id) {
   return apiRequestBlob(`/api/v1/tenant/documentos-soporte/${id}/representacion.pdf`);
 }
 
-export async function enviarDocumentoSoportePorCorreo(id) {
-  return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/enviar-correo`, { method: "POST" });
+/** Sin `correo`, va al correo registrado del proveedor. */
+export async function enviarDocumentoSoportePorCorreo(id, correo) {
+  return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/enviar-correo`, {
+    method: "POST",
+    body: correo ? { correo } : undefined,
+  });
 }
