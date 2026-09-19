@@ -95,18 +95,6 @@ def test_actualizar_datos_contacto_no_toca_razon_social_ni_nit(db_session):
     assert actualizada.numero_identificacion == original_nit
 
 
-def test_actualizar_datos_contacto_persiste_toggles_de_inventario(db_session):
-    empresa = _crear_empresa(db_session)
-    assert empresa.inventario_habilitado is False
-    assert empresa.permitir_facturar_sin_stock is False
-
-    data = ActualizarDatosContactoRequest(inventario_habilitado=True, permitir_facturar_sin_stock=True)
-    actualizada = EmpresaAdminService(db_session).actualizar_datos_contacto(empresa.id, data)
-
-    assert actualizada.inventario_habilitado is True
-    assert actualizada.permitir_facturar_sin_stock is True
-
-
 def test_cambiar_plan_crea_suscripcion_si_no_existe(db_session):
     empresa = _crear_empresa(db_session)
 

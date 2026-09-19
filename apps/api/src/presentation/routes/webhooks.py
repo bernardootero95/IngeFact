@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from src.application.factura_service import mover_inventario_factura_aceptada, notificar_factura_aceptada
+from src.application.factura_service import notificar_factura_aceptada
 from src.application.nota_credito_service import NotaCreditoService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_errors import map_government_response
@@ -70,11 +70,7 @@ async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
         logger.warning("Webhook invoices sin invoice.id identificable, se descarta.")
         return
 
-    factura = db.execute(
-        select(Factura)
-        .where(Factura.alegra_invoice_id == invoice_id)
-        .options(selectinload(Factura.lineas))
-    ).scalar_one_or_none()
+    factura = db.execute(select(Factura).where(Factura.alegra_invoice_id == invoice_id)).scalar_one_or_none()
     if factura is None:
         logger.warning("Webhook invoices para invoice.id=%s no corresponde a ninguna factura conocida.", invoice_id)
         return
@@ -104,7 +100,6 @@ async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
 
     db.add(factura)
     db.commit()
-    mover_inventario_factura_aceptada(db, factura)
     notificar_factura_aceptada(db, factura)
 
 

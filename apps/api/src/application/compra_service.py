@@ -6,7 +6,6 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from src.application.inventario_service import InventarioService
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.xml_utils import extraer_emisor_factura_ubl, extraer_lineas_factura_ubl
 from src.domain.compra import (
@@ -17,7 +16,7 @@ from src.domain.compra import (
     CrearCompraRequest,
     LineaCompraRequest,
 )
-from src.infrastructure.db.models import Compra, CompraLinea, DocumentoSoporte, Empresa, Producto, Proveedor
+from src.infrastructure.db.models import Compra, CompraLinea, DocumentoSoporte, Producto, Proveedor
 
 
 class CompraService:
@@ -163,12 +162,6 @@ class CompraService:
             ).scalar_one_or_none()
             if producto is None:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, f"Producto {linea_data.producto_id} no encontrado.")
-            if producto.tipo != "bien":
-                raise HTTPException(
-                    status.HTTP_400_BAD_REQUEST,
-                    f"'{producto.nombre}' es un servicio -- las compras solo admiten productos (bienes), "
-                    "los servicios no manejan inventario.",
-                )
 
             cantidad = linea_data.cantidad
             precio_unitario = (
@@ -201,25 +194,6 @@ class CompraService:
         total_impuestos = round(sum(float(linea.impuesto_linea) for linea in lineas), 2)
         return subtotal, total_impuestos, round(subtotal + total_impuestos, 2)
 
-    def _mover_inventario(self, empresa_id: uuid.UUID, compra: Compra, tipo: str) -> None:
-        """`tipo='entrada'` al registrar la compra, `tipo='salida'` para
-        revertir ese mismo movimiento si se anula/elimina -- todas las
-        lineas de una Compra son 'bien' por construccion (_construir_lineas
-        rechaza servicios), asi que no hace falta filtrar aqui de nuevo."""
-        empresa = self.db.get(Empresa, empresa_id)
-        if not empresa or not empresa.inventario_habilitado:
-            return
-        inventario = InventarioService(self.db)
-        for linea in compra.lineas:
-            inventario.registrar_movimiento(
-                empresa_id=empresa_id,
-                producto_id=linea.producto_id,
-                tipo=tipo,
-                cantidad=float(linea.cantidad),
-                origen_tipo="compra",
-                origen_id=compra.id,
-            )
-
     def crear(self, empresa_id: uuid.UUID, data: CrearCompraRequest) -> Compra:
         self._validar_proveedor(empresa_id, data.proveedor_id)
         if data.cufe:
@@ -243,17 +217,12 @@ class CompraService:
         self.db.add(compra)
         self.db.commit()
         self.db.refresh(compra)
-        compra = self.obtener(empresa_id, compra.id)
-        self._mover_inventario(empresa_id, compra, "entrada")
-        return compra
+        return self.obtener(empresa_id, compra.id)
 
     def anular(self, empresa_id: uuid.UUID, compra_id: uuid.UUID) -> Compra:
         compra = self.obtener(empresa_id, compra_id)
         if compra.estado == "anulada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Esta compra ya esta anulada.")
-        # Revierte el stock que esta compra habia sumado -- antes de marcarla
-        # anulada, para no perder las lineas ya cargadas por selectinload.
-        self._mover_inventario(empresa_id, compra, "salida")
         compra.estado = "anulada"
         self.db.add(compra)
         self.db.commit()
@@ -262,10 +231,6 @@ class CompraService:
 
     def eliminar(self, empresa_id: uuid.UUID, compra_id: uuid.UUID) -> None:
         compra = self.obtener(empresa_id, compra_id)
-        # Si ya estaba anulada el stock ya se revirtio en anular() -- no
-        # reversar dos veces.
-        if compra.estado == "registrada":
-            self._mover_inventario(empresa_id, compra, "salida")
         compra.eliminado = datetime.now(timezone.utc)
         self.db.add(compra)
         self.db.commit()

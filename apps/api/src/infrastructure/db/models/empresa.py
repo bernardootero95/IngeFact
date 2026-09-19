@@ -27,12 +27,6 @@ class Empresa(Base):
     correo_electronico: Mapped[str | None] = mapped_column(String(200))
     id_alegra: Mapped[str | None] = mapped_column(String(50))
     notificacion_correo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
-    # Ambos editables por el propio tenant (ActualizarDatosContactoRequest),
-    # a diferencia de notificacion_correo (solo staff) -- es una decision
-    # operativa del dia a dia, no una feature de plan. Apagados por defecto
-    # para no afectar tenants existentes.
-    inventario_habilitado: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    permitir_facturar_sin_stock: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
