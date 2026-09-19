@@ -145,8 +145,6 @@ export default function SupportDocumentFormPage() {
               codigo: linea.codigo,
               nombre: linea.descripcion,
               precio: linea.precio_unitario,
-              tributo: linea.tributo,
-              tarifa_impuesto: linea.tarifa_impuesto,
             },
           })),
         );
@@ -411,14 +409,6 @@ export default function SupportDocumentFormPage() {
 
                   <div className="flex justify-end mb-6">
                     <div className="w-56 space-y-1 text-sm">
-                      <div className="flex justify-between text-neutralCustom-600">
-                        <span>Subtotal</span>
-                        <span>{formatCOP(totales.subtotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-neutralCustom-600">
-                        <span>Total impuestos</span>
-                        <span>{formatCOP(totales.totalImpuestos)}</span>
-                      </div>
                       <div className="flex justify-between font-bold text-neutralCustom-800 text-base border-t border-neutralCustom-100 pt-1">
                         <span>Total</span>
                         <span>{formatCOP(totales.total)}</span>

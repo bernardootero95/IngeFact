@@ -93,8 +93,7 @@ export default function SeccionLineasDocumentoSoporte({
                 <th className="pb-2 font-semibold">Descripción</th>
                 <th className="pb-2 font-semibold text-right w-20">Cant.</th>
                 <th className="pb-2 font-semibold text-right w-28">Precio Unit.</th>
-                <th className="pb-2 font-semibold text-right w-28">Subtotal</th>
-                <th className="pb-2 font-semibold text-right w-24">IVA</th>
+                <th className="pb-2 font-semibold text-right w-28">Total</th>
                 <th className="pb-2 font-semibold text-right w-28">Total</th>
                 <th className="pb-2 w-8"></th>
               </tr>
@@ -104,7 +103,6 @@ export default function SeccionLineasDocumentoSoporte({
                 const cantidadInvalida = linea.cantidad !== "" && Number(linea.cantidad) <= 0;
                 const precioInvalido = linea.precio_unitario !== "" && Number(linea.precio_unitario) <= 0;
                 const subtotalLinea = (Number(linea.cantidad) || 0) * (Number(linea.precio_unitario) || 0);
-                const impuestoLinea = subtotalLinea * ((Number(linea.producto?.tarifa_impuesto) || 0) / 100);
 
                 return (
                   <tr key={index}>
@@ -113,11 +111,6 @@ export default function SeccionLineasDocumentoSoporte({
                     </td>
                     <td className="py-2 pr-2 align-top">
                       {linea.producto?.nombre}
-                      {linea.producto?.tributo && (
-                        <p className="text-xs text-neutralCustom-500 mt-0.5">
-                          {linea.producto.tributo} {linea.producto.tarifa_impuesto}%
-                        </p>
-                      )}
                     </td>
                     <td className="py-2 pr-2 align-top">
                       <input
@@ -143,11 +136,7 @@ export default function SeccionLineasDocumentoSoporte({
                         }`}
                       />
                     </td>
-                    <td className="py-2 pr-2 text-right align-top">{formatCOP(subtotalLinea)}</td>
-                    <td className="py-2 pr-2 text-right align-top">{formatCOP(impuestoLinea)}</td>
-                    <td className="py-2 pr-2 text-right font-medium align-top">
-                      {formatCOP(subtotalLinea + impuestoLinea)}
-                    </td>
+                    <td className="py-2 pr-2 text-right font-medium align-top">{formatCOP(subtotalLinea)}</td>
                     <td className="py-2 text-right align-top">
                       <button
                         type="button"

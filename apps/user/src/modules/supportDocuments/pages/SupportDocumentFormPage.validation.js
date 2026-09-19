@@ -32,16 +32,14 @@ export function validateLineas(lineas) {
   return "";
 }
 
+// El Documento Soporte no lleva impuestos (se le hace a quien no factura),
+// asi que el total es la suma de los subtotales, sin IVA del producto.
 export function calcularTotales(lineas) {
-  let subtotal = 0;
-  let totalImpuestos = 0;
+  let total = 0;
   for (const linea of lineas) {
     const cantidad = Number(linea.cantidad) || 0;
     const precio = Number(linea.precio_unitario ?? linea.producto?.precio) || 0;
-    const tarifa = Number(linea.producto?.tarifa_impuesto) || 0;
-    const subtotalLinea = cantidad * precio;
-    subtotal += subtotalLinea;
-    totalImpuestos += subtotalLinea * (tarifa / 100);
+    total += cantidad * precio;
   }
-  return { subtotal, totalImpuestos, total: subtotal + totalImpuestos };
+  return { total };
 }

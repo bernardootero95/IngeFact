@@ -18,11 +18,8 @@ describe("SupportDocumentFormPage validaciones", () => {
     expect(validateLineas([{ producto_id: "p1", cantidad: "0", precio_unitario: "100" }])).toMatch(/cantidad/i);
   });
 
-  it("calcula subtotal, impuestos y total", () => {
+  it("calcula el total sin impuestos, aunque el producto tenga IVA", () => {
     const lineas = [{ cantidad: "2", precio_unitario: "100000", producto: { tarifa_impuesto: 19 } }];
-    const totales = calcularTotales(lineas);
-    expect(totales.subtotal).toBe(200000);
-    expect(totales.totalImpuestos).toBe(38000);
-    expect(totales.total).toBe(238000);
+    expect(calcularTotales(lineas).total).toBe(200000);
   });
 });

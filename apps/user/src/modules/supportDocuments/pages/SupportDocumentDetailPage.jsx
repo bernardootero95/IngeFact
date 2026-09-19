@@ -124,6 +124,8 @@ export default function SupportDocumentDetailPage() {
   }
 
   const editable = documento.estado === "borrador" || documento.estado === "rechazado";
+  // Los documentos nuevos no llevan impuestos; solo los anteriores a ese cambio pueden traerlos.
+  const tieneImpuestos = Number(documento.total_impuestos) > 0;
   const estadoInfo = ESTADO_INFO[documento.estado] || ESTADO_INFO.borrador;
 
   return (
@@ -245,7 +247,7 @@ export default function SupportDocumentDetailPage() {
                     <th className="px-6 py-2.5 font-semibold">Descripción</th>
                     <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
                     <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
-                    <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
+                    {tieneImpuestos && <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>}
                     <th className="px-6 py-2.5 text-right font-semibold">Total</th>
                   </tr>
                 </thead>
@@ -255,7 +257,7 @@ export default function SupportDocumentDetailPage() {
                       <td className="px-6 py-3">{linea.descripcion}</td>
                       <td className="px-6 py-3 text-right">{linea.cantidad}</td>
                       <td className="px-6 py-3 text-right">{formatCOP(linea.precio_unitario)}</td>
-                      <td className="px-6 py-3 text-right">{formatCOP(linea.impuesto_linea)}</td>
+                      {tieneImpuestos && <td className="px-6 py-3 text-right">{formatCOP(linea.impuesto_linea)}</td>}
                       <td className="px-6 py-3 text-right font-medium text-neutralCustom-800">
                         {formatCOP(linea.total_linea)}
                       </td>
@@ -265,14 +267,18 @@ export default function SupportDocumentDetailPage() {
               </table>
               <div className="flex justify-end p-6">
                 <div className="w-56 space-y-1 text-sm">
-                  <div className="flex justify-between text-neutralCustom-600">
-                    <span>Subtotal</span>
-                    <span>{formatCOP(documento.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-neutralCustom-600">
-                    <span>Total impuestos</span>
-                    <span>{formatCOP(documento.total_impuestos)}</span>
-                  </div>
+                  {tieneImpuestos && (
+                    <>
+                      <div className="flex justify-between text-neutralCustom-600">
+                        <span>Subtotal</span>
+                        <span>{formatCOP(documento.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-neutralCustom-600">
+                        <span>Total impuestos</span>
+                        <span>{formatCOP(documento.total_impuestos)}</span>
+                      </div>
+                    </>
+                  )}
                   <div className="flex justify-between font-bold text-neutralCustom-800 text-base border-t border-neutralCustom-100 pt-1.5">
                     <span>Total</span>
                     <span>{formatCOP(documento.total)}</span>
