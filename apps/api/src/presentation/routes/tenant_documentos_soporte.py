@@ -48,16 +48,6 @@ def crear_borrador(
     return DocumentoSoporteResponse.from_model(documento)
 
 
-@router.post("/desde-compra/{compra_id}", response_model=DocumentoSoporteResponse, status_code=201)
-def crear_desde_compra(
-    compra_id: uuid.UUID,
-    db: Session = Depends(get_db),
-    tenant: CurrentTenant = Depends(get_current_tenant),
-):
-    documento = DocumentoSoporteService(db).crear_desde_compra(tenant.empresa_id, compra_id)
-    return DocumentoSoporteResponse.from_model(documento)
-
-
 @router.put("/{documento_id}", response_model=DocumentoSoporteResponse)
 def actualizar_borrador(
     documento_id: uuid.UUID,

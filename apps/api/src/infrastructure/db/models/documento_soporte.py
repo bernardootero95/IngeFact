@@ -11,11 +11,8 @@ ESTADOS_DOCUMENTO_SOPORTE = ("borrador", "enviado", "aceptado", "rechazado")
 
 
 class DocumentoSoporte(Base):
-    """Documento Soporte de Adquisiciones -- flujo MANUAL y separado de
-    Compras (no se autogenera desde CompraService.crear, ver plan Fase 3);
-    opcionalmente puede referenciar una Compra existente. El consecutivo
-    solo se asigna al enviar (nunca al guardar un borrador), igual que
-    Factura -- ver ResolucionDocumentoSoporteService.incrementar_consecutivo."""
+    """Documento Soporte de Adquisiciones. El consecutivo solo se asigna al
+    enviar (nunca al guardar un borrador), igual que Factura -- ver ResolucionDocumentoSoporteService.incrementar_consecutivo."""
 
     __tablename__ = "documentos_soporte"
     __table_args__ = (
@@ -27,9 +24,6 @@ class DocumentoSoporte(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     empresa_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False)
     proveedor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("proveedores.id"), nullable=False)
-    # Referencia opcional a una Compra ya registrada -- solo para trazabilidad
-    # del lado de IngeFact, Alegra no sabe nada de esto.
-    compra_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("compras.id"))
     fecha: Mapped[date] = mapped_column(Date, nullable=False)
     consecutivo: Mapped[int | None] = mapped_column(Integer)
     numero_completo: Mapped[str | None] = mapped_column(String(30))
@@ -61,7 +55,7 @@ class DocumentoSoporte(Base):
 
 class DocumentoSoporteLinea(Base):
     """Linea de un Documento Soporte. Mismo patron snapshot que
-    FacturaLinea/CompraLinea -- copia los datos del producto al crear la
+    FacturaLinea -- copia los datos del producto al crear la
     linea."""
 
     __tablename__ = "documento_soporte_lineas"

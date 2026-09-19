@@ -10,7 +10,6 @@ from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransient
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.domain.documento_soporte import CrearDocumentoSoporteRequest, LineaDocumentoSoporteRequest
 from src.infrastructure.db.models import (
-    Compra,
     DocumentoSoporte,
     DocumentoSoporteLinea,
     Empresa,
@@ -28,11 +27,8 @@ SUPPLIER_IDENTIFICATION_TYPES_VALIDOS = ("21", "22", "31", "41", "42", "47", "50
 
 def validar_proveedor_para_documento_soporte(proveedor: Proveedor) -> None:
     """Verifica que el proveedor cumpla los 3 requisitos DIAN para un
-    Documento Soporte (NIT valido, tipo de organizacion, direccion) --
-    reusada tanto por enviar() como por crear_desde_compra() (Fase 5), asi
-    el clic de "Generar Documento Soporte" desde una Compra valida ANTES de
-    crear nada, no solo al enviar. Lanza HTTPException 409 con el mensaje
-    puntual si algo falta."""
+    Documento Soporte (NIT valido, tipo de organizacion, direccion). Lanza
+    HTTPException 409 con el mensaje puntual si algo falta."""
     if proveedor.tipo_identificacion not in SUPPLIER_IDENTIFICATION_TYPES_VALIDOS:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
@@ -93,8 +89,7 @@ def _construir_supplier_alegra(proveedor: Proveedor) -> dict:
 
 
 class DocumentoSoporteService:
-    """Documento Soporte de Adquisiciones -- flujo MANUAL y separado de
-    Compras (ver CompraService), envia a Alegra/DIAN mismo patron que
+    """Documento Soporte de Adquisiciones -- envia a Alegra/DIAN mismo patron que
     FacturaService pero con su propia resolucion de numeracion
     (ResolucionDocumentoSoporteService) y sin cupo de Suscripcion (esa
     cuenta solo Facturas, ver contar_documentos_usados -- Documento Soporte
@@ -152,17 +147,6 @@ class DocumentoSoporteService:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Proveedor no encontrado.")
         return proveedor
 
-    def _validar_compra(self, empresa_id: uuid.UUID, compra_id: uuid.UUID | None) -> None:
-        if compra_id is None:
-            return
-        compra = self.db.execute(
-            select(Compra).where(
-                Compra.id == compra_id, Compra.empresa_id == empresa_id, Compra.eliminado.is_(None)
-            )
-        ).scalar_one_or_none()
-        if compra is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Compra no encontrada.")
-
     def _construir_lineas(
         self, empresa_id: uuid.UUID, lineas_data: list[LineaDocumentoSoporteRequest]
     ) -> list[DocumentoSoporteLinea]:
@@ -211,14 +195,12 @@ class DocumentoSoporteService:
 
     def crear_borrador(self, empresa_id: uuid.UUID, data: CrearDocumentoSoporteRequest) -> DocumentoSoporte:
         self._validar_proveedor(empresa_id, data.proveedor_id)
-        self._validar_compra(empresa_id, data.compra_id)
         lineas = self._construir_lineas(empresa_id, data.lineas)
         subtotal, total_impuestos, total = self._totales(lineas)
 
         documento = DocumentoSoporte(
             empresa_id=empresa_id,
             proveedor_id=data.proveedor_id,
-            compra_id=data.compra_id,
             fecha=data.fecha,
             estado="borrador",
             subtotal=subtotal,
@@ -231,78 +213,11 @@ class DocumentoSoporteService:
         self.db.refresh(documento)
         return self.obtener(empresa_id, documento.id)
 
-    def crear_desde_compra(self, empresa_id: uuid.UUID, compra_id: uuid.UUID) -> DocumentoSoporte:
-        """Genera un Documento Soporte borrador prellenado 1:1 desde una
-        Compra ya registrada (Fase 5, "un clic") -- copia proveedor/fecha/
-        lineas (snapshot directo de CompraLinea, sin volver a tocar
-        Producto) y valida los requisitos DIAN del proveedor ANTES de crear
-        nada, no solo al enviar (pedido explicito del usuario)."""
-        compra = self.db.execute(
-            select(Compra)
-            .where(Compra.id == compra_id, Compra.empresa_id == empresa_id, Compra.eliminado.is_(None))
-            .options(selectinload(Compra.proveedor), selectinload(Compra.lineas))
-        ).scalar_one_or_none()
-        if compra is None:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Compra no encontrada.")
-
-        if compra.cufe:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT,
-                "Esta compra ya tiene una factura electronica (CUFE) asociada -- "
-                "un Documento Soporte no aplica, la DIAN ya la reconoce como factura real.",
-            )
-
-        ya_existe = self.db.execute(
-            select(DocumentoSoporte.id).where(
-                DocumentoSoporte.compra_id == compra_id, DocumentoSoporte.eliminado.is_(None)
-            )
-        ).scalar_one_or_none()
-        if ya_existe is not None:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, f"Ya existe un Documento Soporte para esta compra (id: {ya_existe})."
-            )
-
-        validar_proveedor_para_documento_soporte(compra.proveedor)
-
-        lineas = [
-            DocumentoSoporteLinea(
-                producto_id=linea.producto_id,
-                codigo=linea.codigo,
-                descripcion=linea.descripcion,
-                unidad_medida=linea.unidad_medida,
-                cantidad=linea.cantidad,
-                precio_unitario=linea.precio_unitario,
-                tributo=linea.tributo,
-                tarifa_impuesto=linea.tarifa_impuesto,
-                subtotal_linea=linea.subtotal_linea,
-                impuesto_linea=linea.impuesto_linea,
-                total_linea=linea.total_linea,
-            )
-            for linea in compra.lineas
-        ]
-
-        documento = DocumentoSoporte(
-            empresa_id=empresa_id,
-            proveedor_id=compra.proveedor_id,
-            compra_id=compra.id,
-            fecha=compra.fecha,
-            estado="borrador",
-            subtotal=compra.subtotal,
-            total_impuestos=compra.total_impuestos,
-            total=compra.total,
-            lineas=lineas,
-        )
-        self.db.add(documento)
-        self.db.commit()
-        self.db.refresh(documento)
-        return self.obtener(empresa_id, documento.id)
-
     def actualizar_borrador(
         self, empresa_id: uuid.UUID, documento_id: uuid.UUID, data: CrearDocumentoSoporteRequest
     ) -> DocumentoSoporte:
         documento = self._obtener_editable(empresa_id, documento_id)
         self._validar_proveedor(empresa_id, data.proveedor_id)
-        self._validar_compra(empresa_id, data.compra_id)
         lineas = self._construir_lineas(empresa_id, data.lineas)
         subtotal, total_impuestos, total = self._totales(lineas)
 
@@ -322,7 +237,6 @@ class DocumentoSoporteService:
             documento.fecha_respuesta = None
 
         documento.proveedor_id = data.proveedor_id
-        documento.compra_id = data.compra_id
         documento.fecha = data.fecha
         documento.subtotal = subtotal
         documento.total_impuestos = total_impuestos

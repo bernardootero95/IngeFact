@@ -17,7 +17,6 @@ import pytest
 from src.core.security import hash_password
 from src.infrastructure.db.models import (
     Cliente,
-    Compra,
     DocumentoSoporte,
     Empresa,
     Factura,
@@ -88,7 +87,7 @@ def empresa_a(db_session):
 
 
 @pytest.fixture
-def proveedor_y_compra_de_empresa_a(db_session, empresa_a):
+def proveedor_de_empresa_a(db_session, empresa_a):
     empresa, _cliente, producto, _factura = empresa_a
 
     proveedor = Proveedor(
@@ -103,26 +102,13 @@ def proveedor_y_compra_de_empresa_a(db_session, empresa_a):
     db_session.commit()
     db_session.refresh(proveedor)
 
-    compra = Compra(
-        empresa_id=empresa.id,
-        proveedor_id=proveedor.id,
-        fecha=date.today(),
-        estado="registrada",
-        subtotal=1000,
-        total_impuestos=0,
-        total=1000,
-    )
-    db_session.add(compra)
-    db_session.commit()
-    db_session.refresh(compra)
-
-    return proveedor, compra
+    return proveedor
 
 
 @pytest.fixture
-def factura_recibida_de_empresa_a(db_session, empresa_a, proveedor_y_compra_de_empresa_a):
+def factura_recibida_de_empresa_a(db_session, empresa_a, proveedor_de_empresa_a):
     empresa, _cliente, _producto, _factura = empresa_a
-    proveedor, _compra = proveedor_y_compra_de_empresa_a
+    proveedor = proveedor_de_empresa_a
 
     factura_recibida = FacturaRecibida(
         empresa_id=empresa.id,
@@ -138,9 +124,9 @@ def factura_recibida_de_empresa_a(db_session, empresa_a, proveedor_y_compra_de_e
 
 
 @pytest.fixture
-def documento_soporte_de_empresa_a(db_session, empresa_a, proveedor_y_compra_de_empresa_a):
+def documento_soporte_de_empresa_a(db_session, empresa_a, proveedor_de_empresa_a):
     empresa, _cliente, _producto, _factura = empresa_a
-    proveedor, _compra = proveedor_y_compra_de_empresa_a
+    proveedor = proveedor_de_empresa_a
 
     documento = DocumentoSoporte(
         empresa_id=empresa.id,
@@ -306,8 +292,8 @@ def test_admin_token_can_call_admin_routes(api_client, admin_user):
     assert response.status_code == 200
 
 
-def test_tenant_cannot_read_another_tenants_proveedor(api_client, empresa_a, empresa_b, proveedor_y_compra_de_empresa_a):
-    proveedor_a, _compra_a = proveedor_y_compra_de_empresa_a
+def test_tenant_cannot_read_another_tenants_proveedor(api_client, empresa_a, empresa_b, proveedor_de_empresa_a):
+    proveedor_a = proveedor_de_empresa_a
     token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
 
     response = api_client.get(
@@ -317,8 +303,8 @@ def test_tenant_cannot_read_another_tenants_proveedor(api_client, empresa_a, emp
     assert response.status_code == 404
 
 
-def test_tenant_can_read_its_own_proveedor(api_client, empresa_a, proveedor_y_compra_de_empresa_a):
-    proveedor, _compra = proveedor_y_compra_de_empresa_a
+def test_tenant_can_read_its_own_proveedor(api_client, empresa_a, proveedor_de_empresa_a):
+    proveedor = proveedor_de_empresa_a
     token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
 
     response = api_client.get(
@@ -327,29 +313,6 @@ def test_tenant_can_read_its_own_proveedor(api_client, empresa_a, proveedor_y_co
 
     assert response.status_code == 200
     assert response.json()["id"] == str(proveedor.id)
-
-
-def test_tenant_cannot_read_another_tenants_compra(api_client, empresa_a, empresa_b, proveedor_y_compra_de_empresa_a):
-    _proveedor_a, compra_a = proveedor_y_compra_de_empresa_a
-    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
-
-    response = api_client.get(
-        f"/api/v1/tenant/compras/{compra_a.id}", headers=_auth_headers(token_b)
-    )
-
-    assert response.status_code == 404
-
-
-def test_tenant_can_read_its_own_compra(api_client, empresa_a, proveedor_y_compra_de_empresa_a):
-    _proveedor, compra = proveedor_y_compra_de_empresa_a
-    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
-
-    response = api_client.get(
-        f"/api/v1/tenant/compras/{compra.id}", headers=_auth_headers(token_a)
-    )
-
-    assert response.status_code == 200
-    assert response.json()["id"] == str(compra.id)
 
 
 def test_tenant_cannot_read_another_tenants_factura_recibida(

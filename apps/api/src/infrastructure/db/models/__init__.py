@@ -1,6 +1,5 @@
 from src.infrastructure.db.models.api_key import ApiKey
 from src.infrastructure.db.models.cliente import Cliente
-from src.infrastructure.db.models.compra import Compra, CompraLinea
 from src.infrastructure.db.models.documento_soporte import DocumentoSoporte, DocumentoSoporteLinea
 from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
 from src.infrastructure.db.models.factura import Factura, FacturaLinea
@@ -23,8 +22,6 @@ __all__ = [
     "ApiKey",
     "Cliente",
     "Proveedor",
-    "Compra",
-    "CompraLinea",
     "DocumentoSoporte",
     "DocumentoSoporteLinea",
     "Empresa",

@@ -11,9 +11,7 @@ from src.infrastructure.db.session import Base
 class Proveedor(Base):
     """Directorio de proveedores de un tenant -- a quien le compra. Mismo
     shape que Cliente (misma naturaleza de entidad DIAN, identificada con
-    NIT/cedula) aunque este modulo no envia nada a Alegra todavia -- se
-    mantienen regimen/tributo por si el Documento Soporte los necesita
-    luego, para no tener que migrar de nuevo."""
+    NIT/cedula). Se usa como el vendedor de un Documento Soporte."""
 
     __tablename__ = "proveedores"
     __table_args__ = (
@@ -41,9 +39,8 @@ class Proveedor(Base):
     regimen_fiscal: Mapped[str | None] = mapped_column(String(2))
     regimen: Mapped[str | None] = mapped_column(String(50))
     tributo: Mapped[str | None] = mapped_column(String(50))
-    # Nulos hasta que el proveedor se use en un Documento Soporte -- Compras
-    # no los necesita (ver CompraService), solo supplier.address de
-    # Documento Soporte los exige (Fase 3).
+    # Nulos hasta que el proveedor se use en un Documento Soporte --
+    # supplier.address de Documento Soporte los exige (Fase 3).
     direccion: Mapped[str | None] = mapped_column(String(300))
     departamento: Mapped[str | None] = mapped_column(String(2))
     municipio: Mapped[str | None] = mapped_column(String(5))

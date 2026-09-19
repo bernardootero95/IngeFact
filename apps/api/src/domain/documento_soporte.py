@@ -26,7 +26,6 @@ class LineaDocumentoSoporteRequest(BaseModel):
 
 class CrearDocumentoSoporteRequest(BaseModel):
     proveedor_id: uuid.UUID
-    compra_id: uuid.UUID | None = None
     fecha: date
     lineas: list[LineaDocumentoSoporteRequest]
 
@@ -91,7 +90,6 @@ class DocumentoSoporteResponse(BaseModel):
     id: str
     proveedor_id: str
     proveedor_nombre: str
-    compra_id: str | None
     fecha: date
     consecutivo: int | None
     numero_completo: str | None
@@ -116,7 +114,6 @@ class DocumentoSoporteResponse(BaseModel):
             id=str(documento.id),
             proveedor_id=str(documento.proveedor_id),
             proveedor_nombre=documento.proveedor.nombre,
-            compra_id=str(documento.compra_id) if documento.compra_id else None,
             fecha=documento.fecha,
             consecutivo=documento.consecutivo,
             numero_completo=documento.numero_completo,

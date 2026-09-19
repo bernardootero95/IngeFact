@@ -16,7 +16,6 @@ from src.presentation.routes import (
     external_productos,
     reference_tables,
     tenant_clientes,
-    tenant_compras,
     tenant_dashboard,
     tenant_documentos_soporte,
     tenant_empresa,
@@ -65,7 +64,6 @@ app.include_router(tenant_resolucion.router)
 app.include_router(tenant_resolucion_documento_soporte.router)
 app.include_router(tenant_clientes.router)
 app.include_router(tenant_proveedores.router)
-app.include_router(tenant_compras.router)
 app.include_router(tenant_documentos_soporte.router)
 app.include_router(tenant_productos.router)
 app.include_router(tenant_impuestos.router)
