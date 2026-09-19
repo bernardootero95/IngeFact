@@ -1,6 +1,10 @@
+import base64
+import logging
 import uuid
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
+import httpx
 from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
@@ -8,6 +12,12 @@ from sqlalchemy.orm import Session, selectinload
 from src.application.resolucion_documento_soporte_service import ResolucionDocumentoSoporteService
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
+from src.core.email_client import EmailClient, EmailSendError
+from src.core.email_templates import QR_CONTENT_ID, plantilla_documento_soporte_proveedor
+from src.core.qr_utils import generar_qr_png_base64
+from src.core.representacion_pdf_common import formatear_cop
+from src.core.xml_utils import extraer_firma_digital
 from src.domain.documento_soporte import CrearDocumentoSoporteRequest, LineaDocumentoSoporteRequest
 from src.infrastructure.db.models import (
     DocumentoSoporte,
@@ -16,6 +26,8 @@ from src.infrastructure.db.models import (
     Producto,
     Proveedor,
 )
+
+logger = logging.getLogger(__name__)
 
 # Confirmado contra el schema OpenAPI crudo de Alegra (Fase 3, ver
 # docs/alegra-investigacion.md): supplier.identificationType excluye cedula
@@ -232,6 +244,7 @@ class DocumentoSoporteService:
             documento.alegra_support_document_id = None
             documento.cuds = None
             documento.qr_code_content = None
+            documento.firma_digital = None
             documento.razon_rechazo = None
             documento.notificaciones_dian = None
             documento.fecha_envio = None
@@ -284,7 +297,80 @@ class DocumentoSoporteService:
         self.db.add(documento)
         self.db.commit()
         self.db.refresh(documento)
-        return self.obtener(empresa_id, documento.id)
+
+        documento_actualizado = self.obtener(empresa_id, documento.id)
+        notificar_documento_soporte_aceptado(self.db, documento_actualizado, self._alegra_client)
+        return documento_actualizado
+
+    def obtener_url_xml(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> str:
+        """URL S3 firmada (temporal) del XML -- se pide fresca a Alegra en
+        cada llamada, nunca se persiste."""
+        documento = self.obtener(empresa_id, documento_id)
+        if not documento.alegra_support_document_id:
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Este documento soporte todavia no fue enviado a Alegra."
+            )
+        try:
+            respuesta = self._alegra_client.get_support_document(documento.alegra_support_document_id)
+        except AlegraApiError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body)) from exc
+        url = (respuesta.get("files") or {}).get("xml")
+        if not url:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Alegra no tiene un XML disponible para este documento.")
+        return url
+
+    def obtener_firma_digital(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> str:
+        documento = self.obtener(empresa_id, documento_id)
+        if documento.firma_digital:
+            return documento.firma_digital
+
+        url = self.obtener_url_xml(empresa_id, documento_id)
+        try:
+            xml_bytes = self._alegra_client.fetch_raw(url)
+            firma = extraer_firma_digital(xml_bytes)
+        except (httpx.HTTPError, ET.ParseError) as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo obtener la firma digital del XML.") from exc
+
+        if not firma:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "El XML no contiene una firma digital.")
+
+        documento.firma_digital = firma
+        self.db.add(documento)
+        self.db.commit()
+        return firma
+
+    def generar_pdf_representacion(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> bytes:
+        """PDF real de la representacion grafica -- solo tiene sentido para un
+        documento ya aceptado (CUDS/QR/firma reales)."""
+        documento = self.obtener(empresa_id, documento_id)
+        if documento.estado != "aceptado":
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, "Solo se puede generar el PDF de un documento soporte ya aceptado por la DIAN."
+            )
+        firma_digital = self.obtener_firma_digital(empresa_id, documento_id)
+        return generar_representacion_pdf_documento_soporte(self.db, documento, firma_digital)
+
+    def enviar_por_correo(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> None:
+        """Reenvio manual al proveedor (boton "Reenviar por correo" en el
+        detalle) -- a diferencia del envio automatico de
+        notificar_documento_soporte_aceptado, aqui un problema real
+        (documento sin aceptar, proveedor sin correo, fallo de Resend/Alegra)
+        debe reportarse al usuario en vez de fallar en silencio."""
+        documento = self.obtener(empresa_id, documento_id)
+        if documento.estado != "aceptado":
+            raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo un documento soporte aceptado.")
+        if not documento.proveedor or not documento.proveedor.correo_electronico:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "El proveedor de este documento no tiene correo registrado.")
+        try:
+            _enviar_correo_documento_soporte(self.db, documento, self._alegra_client, EmailClient())
+        except EmailSendError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, "No se pudo enviar el correo. Intenta de nuevo.") from exc
+        except HTTPException:
+            raise
+        except Exception as exc:  # noqa: BLE001 -- errores inesperados al armar el XML/QR
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY, "No se pudo preparar el correo del documento soporte."
+            ) from exc
 
     @staticmethod
     def _aplicar_respuesta_envio(
@@ -375,3 +461,63 @@ class DocumentoSoporteService:
                 "currencyCode": "COP",
             },
         }
+
+
+def _enviar_correo_documento_soporte(
+    db: Session,
+    documento: DocumentoSoporte,
+    alegra_client: AlegraClient | None,
+    email_client: EmailClient,
+) -> None:
+    """Arma y envia el correo al proveedor con QR + PDF + XML -- deja
+    propagar cualquier error para que cada llamador decida si es best-effort
+    o debe reportarse. Asume que el documento esta aceptado y que el
+    proveedor tiene correo -- eso ya lo valida el llamador."""
+    servicio = DocumentoSoporteService(db, alegra_client)
+    url_xml = servicio.obtener_url_xml(documento.empresa_id, documento.id)
+    xml_bytes = servicio._alegra_client.fetch_raw(url_xml)
+    firma_digital = servicio.obtener_firma_digital(documento.empresa_id, documento.id)
+    pdf_bytes = generar_representacion_pdf_documento_soporte(db, documento, firma_digital)
+
+    empresa = db.get(Empresa, documento.empresa_id)
+    fecha_mostrar = documento.fecha_envio or datetime.combine(documento.fecha, datetime.min.time())
+    subject, html = plantilla_documento_soporte_proveedor(
+        razon_social_adquiriente=empresa.razon_social,
+        nombre_proveedor=documento.proveedor.nombre,
+        numero_completo=documento.numero_completo or "",
+        fecha=fecha_mostrar.strftime("%d/%m/%Y"),
+        total_formateado=formatear_cop(float(documento.total)),
+        cuds=documento.cuds or "",
+    )
+    numero = documento.numero_completo or str(documento.id)
+    attachments = [
+        {
+            "filename": f"{numero}.png",
+            "content": generar_qr_png_base64(documento.qr_code_content or ""),
+            "content_id": QR_CONTENT_ID,
+        },
+        {"filename": f"{numero}.pdf", "content": base64.b64encode(pdf_bytes).decode("ascii")},
+        {"filename": f"{numero}.xml", "content": base64.b64encode(xml_bytes).decode("ascii")},
+    ]
+    email_client.send(to=documento.proveedor.correo_electronico, subject=subject, html=html, attachments=attachments)
+
+
+def notificar_documento_soporte_aceptado(
+    db: Session,
+    documento: DocumentoSoporte,
+    alegra_client: AlegraClient | None = None,
+    email_client: EmailClient | None = None,
+) -> None:
+    """Envia al proveedor el QR + PDF + XML del documento soporte ya aceptado,
+    best-effort: nunca debe romper el flujo que la llama (el documento ya
+    quedo aceptado ante la DIAN). Para el reenvio manual, que si debe
+    reportar un fallo real, ver DocumentoSoporteService.enviar_por_correo."""
+    if documento.estado != "aceptado":
+        return
+    if not documento.proveedor or not documento.proveedor.correo_electronico:
+        return
+
+    try:
+        _enviar_correo_documento_soporte(db, documento, alegra_client, email_client or EmailClient())
+    except Exception as exc:  # noqa: BLE001 -- best-effort, ver docstring.
+        logger.error("No se pudo notificar el documento soporte %s por correo: %s", documento.id, exc)

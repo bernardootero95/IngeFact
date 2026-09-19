@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from src.application.documento_soporte_service import DocumentoSoporteService
@@ -77,3 +77,44 @@ def enviar_documento_soporte(
 ):
     documento = DocumentoSoporteService(db).enviar(tenant.empresa_id, documento_id, body.forma_pago, body.metodo_pago)
     return DocumentoSoporteResponse.from_model(documento)
+
+
+@router.post("/{documento_id}/enviar-correo", status_code=204)
+def enviar_documento_soporte_por_correo(
+    documento_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    DocumentoSoporteService(db).enviar_por_correo(tenant.empresa_id, documento_id)
+
+
+@router.get("/{documento_id}/xml")
+def obtener_url_xml(
+    documento_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Devuelve la URL S3 firmada (temporal) del XML -- se pide fresca a
+    Alegra en cada llamada, nunca se persiste."""
+    url = DocumentoSoporteService(db).obtener_url_xml(tenant.empresa_id, documento_id)
+    return {"url": url}
+
+
+@router.get("/{documento_id}/representacion.pdf")
+def obtener_representacion_pdf(
+    documento_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    pdf_bytes = DocumentoSoporteService(db).generar_pdf_representacion(tenant.empresa_id, documento_id)
+    return Response(content=pdf_bytes, media_type="application/pdf")
+
+
+@router.get("/{documento_id}/firma-digital")
+def obtener_firma_digital(
+    documento_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    firma = DocumentoSoporteService(db).obtener_firma_digital(tenant.empresa_id, documento_id)
+    return {"firma_digital": firma}

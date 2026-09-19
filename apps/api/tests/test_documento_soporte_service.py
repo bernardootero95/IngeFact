@@ -100,10 +100,22 @@ def _payload(proveedor_id, producto_id, **overrides) -> CrearDocumentoSoporteReq
 
 
 class _FakeAlegraClient:
-    def __init__(self, response: dict | None = None, error: AlegraApiError | None = None):
+    def __init__(
+        self,
+        response: dict | None = None,
+        error: AlegraApiError | None = None,
+        raw_response: bytes = b"",
+    ):
         self._response = response
         self._error = error
+        self.raw_response = raw_response
         self.last_payload = None
+
+    def get_support_document(self, support_document_id: str) -> dict:
+        return {"supportDocument": {"id": support_document_id}, "files": {"xml": "https://s3.example.com/ds.xml"}}
+
+    def fetch_raw(self, url: str) -> bytes:
+        return self.raw_response
 
     def create_support_document(self, payload: dict) -> dict:
         self.last_payload = payload
@@ -364,3 +376,199 @@ def test_rechazado_se_puede_corregir_y_reenviar(db_session):
     corregido = service.actualizar_borrador(empresa.id, documento.id, _payload(proveedor.id, producto.id))
     assert corregido.estado == "borrador"
     assert corregido.consecutivo is None
+
+
+_XML_CON_FIRMA = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<SupportDocument xmlns:ds="http://www.w3.org/2000/09/xmldsig#">'
+    b'<ds:SignatureValue Id="xmldsig-1-sigvalue">firma-base64-de-prueba</ds:SignatureValue>'
+    b"</SupportDocument>"
+)
+
+_RESPUESTA_ACEPTADA = {
+    "supportDocument": {
+        "id": "ds-1",
+        "cuds": "cuds-1",
+        "fullNumber": "SEDS1",
+        "legalStatus": "ACCEPTED",
+        "governmentResponse": {"code": "00", "message": "Procesado Correctamente."},
+    }
+}
+
+
+def _crear_documento_aceptado(db_session, **proveedor_overrides):
+    """Devuelve (empresa, proveedor, documento, service) con un documento ya
+    aceptado -- el envio automatico de correo corre con el EmailClient falso
+    del conftest, asi que no toca la red."""
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id, **proveedor_overrides)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(response=_RESPUESTA_ACEPTADA, raw_response=_XML_CON_FIRMA)
+    service = DocumentoSoporteService(db_session, alegra_client=fake)
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+    documento = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+    return empresa, proveedor, documento, service
+
+
+def test_obtener_url_xml_pide_una_url_fresca_a_alegra(db_session):
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session)
+
+    assert service.obtener_url_xml(empresa.id, documento.id) == "https://s3.example.com/ds.xml"
+
+
+def test_obtener_url_xml_borrador_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = DocumentoSoporteService(db_session, alegra_client=_FakeAlegraClient())
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.obtener_url_xml(empresa.id, documento.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_obtener_firma_digital_la_extrae_del_xml_y_la_cachea(db_session):
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session)
+
+    firma = service.obtener_firma_digital(empresa.id, documento.id)
+
+    assert firma == "firma-base64-de-prueba"
+    assert service.obtener(empresa.id, documento.id).firma_digital == "firma-base64-de-prueba"
+
+
+def test_generar_pdf_representacion_borrador_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = DocumentoSoporteService(db_session, alegra_client=_FakeAlegraClient())
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.generar_pdf_representacion(empresa.id, documento.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_generar_pdf_representacion_documento_aceptado_devuelve_bytes(db_session):
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session)
+
+    pdf_bytes = service.generar_pdf_representacion(empresa.id, documento.id)
+
+    assert isinstance(pdf_bytes, bytes)
+    assert len(pdf_bytes) > 0
+
+
+def test_enviar_por_correo_documento_no_aceptado_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = DocumentoSoporteService(db_session, alegra_client=_FakeAlegraClient())
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, documento.id)
+    assert exc_info.value.status_code == 409
+
+
+def test_enviar_por_correo_proveedor_sin_correo_falla_400(db_session):
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session, correo_electronico="")
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, documento.id)
+    assert exc_info.value.status_code == 400
+
+
+def test_enviar_por_correo_manda_qr_pdf_y_xml_al_proveedor(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append({"to": to, "subject": subject, "html": html, "attachments": attachments})
+
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session)
+    enviados.clear()  # ignora el envio automatico al aceptarse
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _RecordingEmailClient)
+
+    service.enviar_por_correo(empresa.id, documento.id)
+
+    assert len(enviados) == 1
+    correo = enviados[0]
+    assert correo["to"] == "proveedor@example.com"
+    assert "SEDS1" in correo["subject"]
+    assert "cuds-1" in correo["html"]
+    assert [a["filename"] for a in correo["attachments"]] == ["SEDS1.png", "SEDS1.pdf", "SEDS1.xml"]
+
+
+def test_enviar_por_correo_reporta_502_si_falla_el_envio(db_session, monkeypatch):
+    """El reenvio manual (a diferencia del automatico, best-effort) debe
+    reportar un fallo real de Resend en vez de fallar en silencio."""
+    from src.core.email_client import EmailSendError
+
+    class _FailingEmailClient:
+        def send(self, **kwargs):
+            raise EmailSendError("fallo simulado de Resend")
+
+    empresa, _proveedor, documento, service = _crear_documento_aceptado(db_session)
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _FailingEmailClient)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar_por_correo(empresa.id, documento.id)
+    assert exc_info.value.status_code == 502
+
+
+def test_enviar_notifica_al_proveedor_cuando_queda_aceptado(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append(to)
+
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _RecordingEmailClient)
+
+    _crear_documento_aceptado(db_session)
+
+    assert enviados == ["proveedor@example.com"]
+
+
+def test_enviar_no_se_rompe_si_falla_la_notificacion_por_correo(db_session, monkeypatch):
+    class _FailingEmailClient:
+        def send(self, **kwargs):
+            raise RuntimeError("Resend caido")
+
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _FailingEmailClient)
+
+    _empresa, _proveedor, documento, _service = _crear_documento_aceptado(db_session)
+
+    assert documento.estado == "aceptado"
+
+
+def test_enviar_rechazado_no_notifica_por_correo(db_session, monkeypatch):
+    enviados = []
+
+    class _RecordingEmailClient:
+        def send(self, to, subject, html, attachments=None):
+            enviados.append(to)
+
+    monkeypatch.setattr("src.application.documento_soporte_service.EmailClient", _RecordingEmailClient)
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={
+            "supportDocument": {
+                "id": "ds-1",
+                "fullNumber": "SEDS1",
+                "legalStatus": "REJECTED",
+                "governmentResponse": {"code": "99", "message": "Rechazado"},
+            }
+        }
+    )
+    service = DocumentoSoporteService(db_session, alegra_client=fake)
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    rechazado = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+
+    assert rechazado.estado == "rechazado"
+    assert enviados == []

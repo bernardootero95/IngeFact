@@ -153,6 +153,13 @@ class AlegraClient:
         que create_invoice -- el equivalente al CUFE se llama "cuds"."""
         return self._request("POST", "/support-documents", json=payload)
 
+    def get_support_document(self, support_document_id: str) -> dict:
+        """GET /support-documents/{id} -- usado para re-pedir la URL S3
+        firmada del XML (expira en 1h, no se persiste), mismo patron que
+        get_invoice. Verificado en vivo: trae files.xml y
+        files.applicationResponse, sin PDF."""
+        return self._request("GET", f"/support-documents/{support_document_id}")
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

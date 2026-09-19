@@ -21,6 +21,7 @@ TEST_DATABASE_URL = get_settings().database_url.rsplit("/", 1)[0] + "/ingefact_t
 # real de Resend por construir un EmailClient() default sin querer.
 _MODULOS_CON_EMAIL_CLIENT = (
     "src.application.auth_service",
+    "src.application.documento_soporte_service",
     "src.application.empresa_service",
     "src.application.factura_service",
     "src.application.suscripcion_service",
@@ -75,6 +76,10 @@ def _no_real_pdf(monkeypatch):
     monkeypatch.setattr(
         "src.application.nota_debito_service.generar_representacion_pdf_nota_debito",
         lambda db, nota, firma_digital: b"%PDF-fake%",
+    )
+    monkeypatch.setattr(
+        "src.application.documento_soporte_service.generar_representacion_pdf_documento_soporte",
+        lambda db, documento, firma_digital: b"%PDF-fake%",
     )
 
 

@@ -143,7 +143,7 @@ def render_filas_lineas(lineas) -> str:
     )
 
 
-def render_emisor_html(empresa, catalogos: dict) -> str:
+def render_emisor_html(empresa, catalogos: dict, label: str = "Emisor") -> str:
     departamento_nombre = nombre_catalogo(catalogos["departamentos"], empresa.departamento)
     municipio_nombre = nombre_catalogo(catalogos["municipios"], empresa.municipio)
     tipo_organizacion_nombre = nombre_catalogo(catalogos["tipos_organizacion"], empresa.tipo_organizacion)
@@ -152,7 +152,7 @@ def render_emisor_html(empresa, catalogos: dict) -> str:
 
     return f"""
     <div class="parte">
-      <p class="label">Emisor</p>
+      <p class="label">{label}</p>
       <p><strong>{empresa.razon_social}</strong></p>
       <p>NIT {empresa.numero_identificacion}-{empresa.digito_verificacion}</p>
       {f"<p>{empresa.direccion}</p>" if empresa.direccion else ""}

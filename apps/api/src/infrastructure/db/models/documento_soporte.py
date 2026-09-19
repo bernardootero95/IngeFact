@@ -36,6 +36,9 @@ class DocumentoSoporte(Base):
     alegra_support_document_id: Mapped[str | None] = mapped_column(String(50))
     cuds: Mapped[str | None] = mapped_column(String(200))
     qr_code_content: Mapped[str | None] = mapped_column(Text)
+    # Se cachea la primera vez que se pide (viene del XML de Alegra), para la
+    # representacion grafica -- ver DocumentoSoporteService.obtener_firma_digital.
+    firma_digital: Mapped[str | None] = mapped_column(Text)
     razon_rechazo: Mapped[str | None] = mapped_column(Text)
     notificaciones_dian: Mapped[list | None] = mapped_column(JSONB)
     fecha_envio: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
