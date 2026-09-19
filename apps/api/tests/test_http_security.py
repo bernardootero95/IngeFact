@@ -217,7 +217,12 @@ def test_tenant_route_without_token_is_rejected(api_client, empresa_a):
 
 def test_tampered_jwt_is_rejected(api_client, empresa_a):
     token = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
-    tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+    # Se altera el PRIMER caracter de la firma: el ultimo de una firma HS256 en
+    # base64url solo aporta 4 bits utiles, asi que cambiarlo a veces deja los
+    # mismos bytes decodificados y el token "alterado" seguia siendo valido.
+    header, payload, signature = token.split(".")
+    signature = ("A" if signature[0] != "A" else "B") + signature[1:]
+    tampered = ".".join([header, payload, signature])
 
     response = api_client.get("/api/v1/tenant/clientes", headers=_auth_headers(tampered))
 
