@@ -4,21 +4,13 @@ import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./CompanyDataSettingsPage.validation";
 
-const emptyForm = {
-  nombre_comercial: "",
-  telefono: "",
-  direccion: "",
-  inventario_habilitado: false,
-  permitir_facturar_sin_stock: false,
-};
+const emptyForm = { nombre_comercial: "", telefono: "", direccion: "" };
 
 function formFromEmpresa(empresa) {
   return {
     nombre_comercial: empresa?.nombre_comercial || "",
     telefono: empresa?.telefono || "",
     direccion: empresa?.direccion || "",
-    inventario_habilitado: empresa?.inventario_habilitado || false,
-    permitir_facturar_sin_stock: empresa?.permitir_facturar_sin_stock || false,
   };
 }
 
@@ -38,18 +30,6 @@ export default function CompanyDataSettingsPage() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
-    setSaveSuccess(false);
-  };
-
-  const handleToggleChange = (e) => {
-    const { name, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: checked,
-      // Si se apaga el inventario, no tiene sentido dejar prendido el
-      // permiso de facturar sin stock -- se apaga junto con el.
-      ...(name === "inventario_habilitado" && !checked ? { permitir_facturar_sin_stock: false } : {}),
-    }));
     setSaveSuccess(false);
   };
 
@@ -83,8 +63,6 @@ export default function CompanyDataSettingsPage() {
         nombre_comercial: formData.nombre_comercial.trim() || null,
         telefono: formData.telefono.trim() || null,
         direccion: formData.direccion.trim() || null,
-        inventario_habilitado: formData.inventario_habilitado,
-        permitir_facturar_sin_stock: formData.permitir_facturar_sin_stock,
       });
       await refetch();
       setSaveSuccess(true);
@@ -215,42 +193,6 @@ export default function CompanyDataSettingsPage() {
                         </p>
                       )}
                     </div>
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t border-neutralCustom-100 space-y-3">
-                    <h4 className="text-sm font-semibold text-neutralCustom-800">Inventario</h4>
-                    <label className="flex items-start gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="inventario_habilitado"
-                        checked={formData.inventario_habilitado}
-                        onChange={handleToggleChange}
-                        className="mt-0.5 h-4 w-4 rounded border-neutralCustom-300 text-brand-600 focus:ring-brand-400"
-                      />
-                      <span className="text-sm text-neutralCustom-800">
-                        Habilitar manejo de inventario
-                        <span className="block text-xs text-neutralCustom-500">
-                          Las Compras suman stock y las Facturas lo descuentan (solo para productos, no servicios).
-                        </span>
-                      </span>
-                    </label>
-                    {formData.inventario_habilitado && (
-                      <label className="flex items-start gap-2 cursor-pointer pl-6">
-                        <input
-                          type="checkbox"
-                          name="permitir_facturar_sin_stock"
-                          checked={formData.permitir_facturar_sin_stock}
-                          onChange={handleToggleChange}
-                          className="mt-0.5 h-4 w-4 rounded border-neutralCustom-300 text-brand-600 focus:ring-brand-400"
-                        />
-                        <span className="text-sm text-neutralCustom-800">
-                          Permitir facturar sin inventario suficiente
-                          <span className="block text-xs text-neutralCustom-500">
-                            Si está apagado, no podrás enviar una factura cuando el stock de un producto no alcance.
-                          </span>
-                        </span>
-                      </label>
-                    )}
                   </div>
 
                   <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { listProductos, deleteProducto } from "@ingefact/core-api";
 import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", {
@@ -14,8 +13,6 @@ const formatCOP = (value) =>
 
 export default function ProductsPage() {
   const navigate = useNavigate();
-  const { empresa } = useCurrentEmpresa();
-  const mostrarDisponible = Boolean(empresa?.inventario_habilitado);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -150,9 +147,6 @@ export default function ProductsPage() {
                       Precio
                     </th>
                     <th className="px-6 py-3 font-semibold">Impuesto</th>
-                    {mostrarDisponible && (
-                      <th className="px-6 py-3 text-right font-semibold">Disponible</th>
-                    )}
                     <th className="px-6 py-3 text-right font-semibold">
                       Acciones
                     </th>
@@ -175,17 +169,6 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         {p.tributo ? `${p.tributo} · ${p.tarifa_impuesto}%` : "Excluido"}
                       </td>
-                      {mostrarDisponible && (
-                        <td
-                          className={`px-6 py-4 text-right font-medium ${
-                            p.tipo === "bien" && (p.stock_actual ?? 0) <= 0
-                              ? "text-fiscal-danger"
-                              : "text-neutralCustom-800"
-                          }`}
-                        >
-                          {p.tipo === "bien" ? p.stock_actual ?? 0 : "No aplica"}
-                        </td>
-                      )}
                       <td className="px-6 py-4 text-right space-x-3">
                         <button
                           onClick={() => navigate(`/products/${p.id}/edit`)}
