@@ -54,21 +54,12 @@ export {
   consultarProveedorDian,
 } from "./services/proveedores.js";
 export {
-  listCompras,
-  getCompra,
-  createCompra,
-  anularCompra,
-  deleteCompra,
-  consultarCufe,
-} from "./services/compras.js";
-export {
   listDocumentosSoporte,
   getDocumentoSoporte,
   crearBorradorDocumentoSoporte,
   actualizarBorradorDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
-  generarDocumentoSoporteDesdeCompra,
 } from "./services/documentosSoporte.js";
 export {
   getResolucionDocumentoSoporte,

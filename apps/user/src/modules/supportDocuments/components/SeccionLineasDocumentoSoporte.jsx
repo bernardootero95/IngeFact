@@ -4,7 +4,7 @@ import { SearchableSelect } from "@ingefact/ui";
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
-export default function SeccionLineasCompra({
+export default function SeccionLineasDocumentoSoporte({
   lineas,
   productos,
   error,

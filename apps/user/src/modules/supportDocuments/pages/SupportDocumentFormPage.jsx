@@ -3,7 +3,6 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   listProductos,
   listProveedores,
-  listCompras,
   getProveedor,
   getDocumentoSoporte,
   crearBorradorDocumentoSoporte,
@@ -11,14 +10,14 @@ import {
 } from "@ingefact/core-api";
 import { SearchableSelect } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import SeccionLineasCompra from "../../purchases/components/SeccionLineasCompra";
+import SeccionLineasDocumentoSoporte from "../components/SeccionLineasDocumentoSoporte";
 import { validateProveedor, validateFecha, validateLineas, calcularTotales } from "./SupportDocumentFormPage.validation";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 const DRAFT_KEY = "ingefact:support-document-form-draft";
 
-// Mismo patron ya usado en PurchaseFormPage/InvoiceFormPage: el progreso en
+// Mismo patron ya usado en InvoiceFormPage: el progreso en
 // curso se guarda en sessionStorage antes de navegar a "+ Nuevo Proveedor"/
 // "+ Nuevo Producto" y se restaura al volver.
 function guardarBorradorTemporal(datos) {
@@ -50,14 +49,12 @@ export default function SupportDocumentFormPage() {
 
   const [proveedor, setProveedor] = useState(null);
   const [fecha, setFecha] = useState(today());
-  const [compraId, setCompraId] = useState("");
   const [lineas, setLineas] = useState([]);
   const [documentoId, setDocumentoId] = useState(id || null);
   const [razonRechazo, setRazonRechazo] = useState(null);
 
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
-  const [comprasDelProveedor, setComprasDelProveedor] = useState([]);
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(true);
@@ -89,7 +86,6 @@ export default function SupportDocumentFormPage() {
       if (borrador) {
         limpiarBorradorTemporal();
         setFecha(borrador.fecha);
-        setCompraId(borrador.compraId || "");
         setLineas(
           borrador.lineas.map((linea) => {
             const producto = productosData.find((p) => p.id === linea.producto_id) || null;
@@ -115,7 +111,6 @@ export default function SupportDocumentFormPage() {
         }
         setProveedor(await getProveedor(documento.proveedor_id));
         setFecha(documento.fecha);
-        setCompraId(documento.compra_id || "");
         setLineas(
           documento.lineas.map((linea) => ({
             producto_id: linea.producto_id,
@@ -155,24 +150,11 @@ export default function SupportDocumentFormPage() {
     cargarDatos();
   }, [cargarDatos]);
 
-  // Compra asociada (opcional) -- solo tiene sentido elegir entre las
-  // compras registradas para el proveedor ya seleccionado.
-  useEffect(() => {
-    if (!proveedor) {
-      setComprasDelProveedor([]);
-      return;
-    }
-    listCompras({ proveedorId: proveedor.id })
-      .then(setComprasDelProveedor)
-      .catch(() => setComprasDelProveedor([]));
-  }, [proveedor]);
-
   const proveedorOptions = proveedores.map((p) => ({ code: p.id, value: `${p.nombre} (${p.numero_identificacion})` }));
 
   const handleSelectProveedor = (proveedorId) => {
     const seleccionado = proveedores.find((p) => p.id === proveedorId) || null;
     setProveedor(seleccionado);
-    setCompraId("");
     setErrors((prev) => ({ ...prev, proveedor: seleccionado ? "" : prev.proveedor }));
   };
 
@@ -201,7 +183,6 @@ export default function SupportDocumentFormPage() {
     guardarBorradorTemporal({
       proveedorId: proveedor?.id || null,
       fecha,
-      compraId,
       lineas: lineas.map((linea) => ({
         producto_id: linea.producto_id,
         cantidad: linea.cantidad,
@@ -223,7 +204,6 @@ export default function SupportDocumentFormPage() {
 
   const buildPayload = () => ({
     proveedor_id: proveedor.id,
-    compra_id: compraId || null,
     fecha,
     lineas: lineas.map((linea) => ({
       producto_id: linea.producto_id,
@@ -338,31 +318,10 @@ export default function SupportDocumentFormPage() {
                         className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
                       />
                     </div>
-
-                    <div>
-                      <label htmlFor="compra_id" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                        Compra asociada
-                      </label>
-                      <select
-                        id="compra_id"
-                        value={compraId}
-                        onChange={(e) => setCompraId(e.target.value)}
-                        disabled={!proveedor}
-                        className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <option value="">Sin asociar (opcional)</option>
-                        {comprasDelProveedor.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.fecha} — {formatCOP(c.total)}
-                            {c.numero_documento_proveedor ? ` (${c.numero_documento_proveedor})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                 </div>
 
-                <SeccionLineasCompra
+                <SeccionLineasDocumentoSoporte
                   lineas={lineas}
                   productos={productos}
                   error={errors.lineas}

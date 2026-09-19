@@ -401,7 +401,7 @@ export default function SupplierFormPage() {
                   <div>
                     <h4 className="text-sm font-semibold text-neutralCustom-800">Datos para Documento Soporte</h4>
                     <p className="text-xs text-neutralCustom-500 mt-0.5">
-                      Opcionales para registrar Compras, pero obligatorios si vas a emitirle un Documento Soporte a
+                      Obligatorios si vas a emitirle un Documento Soporte a
                       este proveedor.
                     </p>
                   </div>

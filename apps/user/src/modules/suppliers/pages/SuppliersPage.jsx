@@ -59,7 +59,7 @@ export default function SuppliersPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">Directorio de Proveedores</h2>
-            <p className="text-xs text-neutralCustom-500">Gestiona a quiénes les compras.</p>
+            <p className="text-xs text-neutralCustom-500">Gestiona a quiénes les compras (vendedores para tus Documentos Soporte).</p>
           </div>
           <button
             onClick={() => navigate("/suppliers/new")}
@@ -168,7 +168,7 @@ export default function SuppliersPage() {
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
                   {search
                     ? "Prueba con otro nombre o número de identificación."
-                    : "Agrega tu primer proveedor para poder registrar compras."}
+                    : "Agrega tu primer proveedor para poder emitirle un Documento Soporte."}
                 </p>
                 {!search && (
                   <div className="flex justify-center space-x-3">

@@ -10,7 +10,6 @@ import {
   actualizarBorradorDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
-  generarDocumentoSoporteDesdeCompra,
 } from "./documentosSoporte.js";
 
 describe("documentosSoporte", () => {
@@ -68,14 +67,6 @@ describe("documentosSoporte", () => {
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/enviar", {
       method: "POST",
       body: { forma_pago: "1", metodo_pago: "10" },
-    });
-  });
-
-  it("generarDocumentoSoporteDesdeCompra hace POST al recurso", async () => {
-    apiRequest.mockResolvedValue({ id: "1", estado: "borrador" });
-    await generarDocumentoSoporteDesdeCompra("compra-1");
-    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/desde-compra/compra-1", {
-      method: "POST",
     });
   });
 });
