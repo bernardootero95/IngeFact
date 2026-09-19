@@ -863,3 +863,96 @@ def test_enviar_por_correo_manda_al_correo_pedido_y_no_al_del_cliente(db_session
 
     assert enviados == ["otro@example.com"]
 
+
+def test_crear_borrador_excluye_impuesto_monofasico_de_la_base_del_iva(db_session):
+    """ICL/IBUA ya pagado y embebido en el precio: el subtotal no cambia, solo
+    el IVA se calcula sobre la base reducida (60.000 al cliente)."""
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, precio=51857.14, valor_impuesto_excluido=9000)
+    service = FacturaService(db_session)
+
+    factura = service.crear_borrador(
+        empresa.id,
+        CrearFacturaRequest(
+            cliente_id=cliente.id, fecha=date.today(), lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=1)]
+        ),
+    )
+
+    linea = factura.lineas[0]
+    assert float(linea.subtotal_linea) == 51857.14
+    assert float(linea.valor_impuesto_excluido) == 9000
+    assert float(linea.impuesto_linea) == 8142.86
+    assert float(linea.total_linea) == 60000.00
+    assert float(factura.total) == 60000.00
+
+
+def test_crear_borrador_excluido_se_multiplica_por_la_cantidad(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, precio=50000, valor_impuesto_excluido=9000)
+    service = FacturaService(db_session)
+
+    factura = service.crear_borrador(
+        empresa.id,
+        CrearFacturaRequest(
+            cliente_id=cliente.id, fecha=date.today(), lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=3)]
+        ),
+    )
+
+    linea = factura.lineas[0]
+    assert float(linea.valor_impuesto_excluido) == 27000
+    assert float(linea.impuesto_linea) == 23370  # 19% de (150000 - 27000)
+
+
+def test_crear_borrador_excluido_mayor_al_subtotal_por_precio_bajo_falla_400(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, precio=51857.14, valor_impuesto_excluido=9000)
+    service = FacturaService(db_session)
+
+    with pytest.raises(HTTPException) as exc:
+        service.crear_borrador(
+            empresa.id,
+            CrearFacturaRequest(
+                cliente_id=cliente.id,
+                fecha=date.today(),
+                lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=1, precio_unitario=5000)],
+            ),
+        )
+
+    assert exc.value.status_code == 400
+
+
+def test_enviar_con_impuesto_excluido_manda_base_reducida_a_alegra(db_session):
+    """Validado contra el sandbox real: DIAN acepta taxableAmount < subtotal
+    de la misma linea. taxableTotal debe ser la suma de esas bases (FAU04)."""
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, precio=51857.14, valor_impuesto_excluido=9000)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(
+        empresa.id,
+        CrearFacturaRequest(
+            cliente_id=cliente.id, fecha=date.today(), lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=1)]
+        ),
+    )
+
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    item = fake.last_payload["items"][0]
+    assert item["subtotal"] == 51857.14
+    assert item["taxAmount"] == 8142.86
+    assert len(item["taxes"]) == 1  # el excluido NO se envia como tributo
+    assert item["taxes"][0]["taxableAmount"] == 42857.14
+    totales = fake.last_payload["totalAmounts"]
+    assert totales["grossTotal"] == 51857.14
+    assert totales["taxableTotal"] == 42857.14
+    assert totales["taxTotal"] == 8142.86
+    assert totales["payableTotal"] == 60000.00
+

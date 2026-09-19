@@ -65,6 +65,10 @@ class FacturaLinea(Base):
     __table_args__ = (
         CheckConstraint("cantidad > 0", name="ck_factura_lineas_cantidad_positiva"),
         CheckConstraint("precio_unitario >= 0", name="ck_factura_lineas_precio_no_negativo"),
+        CheckConstraint(
+            "valor_impuesto_excluido >= 0 AND valor_impuesto_excluido <= subtotal_linea",
+            name="ck_factura_lineas_valor_impuesto_excluido_rango",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -78,6 +82,9 @@ class FacturaLinea(Base):
     tributo: Mapped[str | None] = mapped_column(String(50))
     tarifa_impuesto: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
     subtotal_linea: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    # Valor TOTAL de la linea (cantidad * excluido unitario del producto) de un
+    # impuesto monofasico embebido en el subtotal; se resta de la base del IVA.
+    valor_impuesto_excluido: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False, default=0)
     impuesto_linea: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     total_linea: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
 

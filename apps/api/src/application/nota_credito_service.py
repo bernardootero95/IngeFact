@@ -20,6 +20,7 @@ from src.application.correo_documento import (
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.email_client import EmailClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.calculo_linea import base_gravable_iva, calcular_linea, excluido_proporcional
 from src.core.nota_credito_pdf import generar_representacion_pdf_nota_credito
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.nota_credito import ActualizarNotaCreditoRequest, CrearNotaCreditoRequest, LineaNotaCreditoRequest
@@ -211,8 +212,17 @@ class NotaCreditoService:
             cantidad = linea_data.cantidad
             precio_unitario = float(factura_linea.precio_unitario)
             tarifa = float(factura_linea.tarifa_impuesto)
-            subtotal_linea = round(cantidad * precio_unitario, 2)
-            impuesto_linea = round(subtotal_linea * tarifa / 100, 2)
+            calculo = calcular_linea(
+                cantidad,
+                precio_unitario,
+                tarifa,
+                excluido_proporcional(
+                    factura_linea.valor_impuesto_excluido,
+                    factura_linea.cantidad,
+                    cantidad,
+                    round(cantidad * precio_unitario, 2),
+                ),
+            )
 
             lineas.append(
                 NotaCreditoLinea(
@@ -224,9 +234,10 @@ class NotaCreditoService:
                     precio_unitario=precio_unitario,
                     tributo=factura_linea.tributo,
                     tarifa_impuesto=tarifa,
-                    subtotal_linea=subtotal_linea,
-                    impuesto_linea=impuesto_linea,
-                    total_linea=subtotal_linea + impuesto_linea,
+                    subtotal_linea=calculo.subtotal_linea,
+                    valor_impuesto_excluido=calculo.valor_impuesto_excluido,
+                    impuesto_linea=calculo.impuesto_linea,
+                    total_linea=calculo.total_linea,
                 )
             )
         return lineas
@@ -430,15 +441,16 @@ class NotaCreditoService:
                 "taxAmount": float(linea.impuesto_linea),
             }
             if linea.tributo and float(linea.tarifa_impuesto) > 0:
+                base_iva = base_gravable_iva(linea.subtotal_linea, linea.valor_impuesto_excluido)
                 item["taxes"] = [
                     {
                         "taxCode": linea.tributo,
                         "taxAmount": float(linea.impuesto_linea),
                         "taxPercentage": str(int(round(float(linea.tarifa_impuesto)))),
-                        "taxableAmount": float(linea.subtotal_linea),
+                        "taxableAmount": base_iva,
                     }
                 ]
-                taxable_total += float(linea.subtotal_linea)
+                taxable_total += base_iva
             items.append(item)
 
         return {

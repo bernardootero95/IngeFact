@@ -13,6 +13,7 @@ from src.application.resolucion_dian_service import ResolucionDianService
 from src.application.suscripcion_service import contar_documentos_usados, revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.calculo_linea import base_gravable_iva, calcular_linea
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -218,8 +219,14 @@ class FacturaService:
                 float(linea_data.precio_unitario) if linea_data.precio_unitario is not None else float(producto.precio)
             )
             tarifa = float(producto.tarifa_impuesto)
-            subtotal_linea = round(cantidad * precio_unitario, 2)
-            impuesto_linea = round(subtotal_linea * tarifa / 100, 2)
+            try:
+                calculo = calcular_linea(
+                    cantidad, precio_unitario, tarifa, round(cantidad * float(producto.valor_impuesto_excluido), 2)
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, f"Producto '{producto.nombre}': {exc}"
+                ) from exc
 
             lineas.append(
                 FacturaLinea(
@@ -231,9 +238,10 @@ class FacturaService:
                     precio_unitario=precio_unitario,
                     tributo=producto.tributo,
                     tarifa_impuesto=tarifa,
-                    subtotal_linea=subtotal_linea,
-                    impuesto_linea=impuesto_linea,
-                    total_linea=subtotal_linea + impuesto_linea,
+                    subtotal_linea=calculo.subtotal_linea,
+                    valor_impuesto_excluido=calculo.valor_impuesto_excluido,
+                    impuesto_linea=calculo.impuesto_linea,
+                    total_linea=calculo.total_linea,
                 )
             )
         return lineas
@@ -444,15 +452,18 @@ class FacturaService:
                 "taxAmount": float(linea.impuesto_linea),
             }
             if linea.tributo and float(linea.tarifa_impuesto) > 0:
+                # La base del IVA excluye el impuesto monofasico embebido en el
+                # subtotal (validado en sandbox: DIAN acepta taxableAmount < subtotal).
+                base_iva = base_gravable_iva(linea.subtotal_linea, linea.valor_impuesto_excluido)
                 item["taxes"] = [
                     {
                         "taxCode": linea.tributo,
                         "taxAmount": float(linea.impuesto_linea),
                         "taxPercentage": _tarifa_a_string(float(linea.tarifa_impuesto)),
-                        "taxableAmount": float(linea.subtotal_linea),
+                        "taxableAmount": base_iva,
                     }
                 ]
-                taxable_total += float(linea.subtotal_linea)
+                taxable_total += base_iva
             items.append(item)
 
         return {

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 TIPOS_VALIDOS = ("bien", "servicio")
 
@@ -14,6 +14,7 @@ class ProductoRequestBase(BaseModel):
     unidad_medida: str
     tributo: str | None = None
     tarifa_impuesto: float = 0
+    valor_impuesto_excluido: float = 0
 
     @field_validator("tipo")
     @classmethod
@@ -68,6 +69,19 @@ class ProductoRequestBase(BaseModel):
             raise ValueError("La tarifa de impuesto debe estar entre 0 y 100.")
         return v
 
+    @field_validator("valor_impuesto_excluido")
+    @classmethod
+    def valor_impuesto_excluido_no_negativo(cls, v: float) -> float:
+        if v < 0:
+            raise ValueError("El impuesto excluido de IVA debe ser mayor o igual a 0.")
+        return v
+
+    @model_validator(mode="after")
+    def valor_impuesto_excluido_dentro_del_precio(self) -> "ProductoRequestBase":
+        if self.valor_impuesto_excluido > self.precio:
+            raise ValueError("El impuesto excluido de IVA no puede ser mayor al precio.")
+        return self
+
 
 class CrearProductoRequest(ProductoRequestBase):
     pass
@@ -87,6 +101,7 @@ class ProductoResponse(BaseModel):
     unidad_medida: str
     tributo: str | None
     tarifa_impuesto: float
+    valor_impuesto_excluido: float
     estado: str
     creado: datetime
 
@@ -102,6 +117,7 @@ class ProductoResponse(BaseModel):
             unidad_medida=producto.unidad_medida,
             tributo=producto.tributo,
             tarifa_impuesto=float(producto.tarifa_impuesto),
+            valor_impuesto_excluido=float(producto.valor_impuesto_excluido),
             estado=producto.estado,
             creado=producto.creado,
         )

@@ -3,6 +3,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, field_validator
 
+from src.core.calculo_linea import base_gravable_iva
+
 
 class LineaNotaDebitoRequest(BaseModel):
     factura_linea_id: uuid.UUID
@@ -51,6 +53,8 @@ class NotaDebitoLineaResponse(BaseModel):
     tributo: str | None
     tarifa_impuesto: float
     subtotal_linea: float
+    valor_impuesto_excluido: float
+    base_gravable_iva: float
     impuesto_linea: float
     total_linea: float
 
@@ -67,6 +71,8 @@ class NotaDebitoLineaResponse(BaseModel):
             tributo=linea.tributo,
             tarifa_impuesto=float(linea.tarifa_impuesto),
             subtotal_linea=float(linea.subtotal_linea),
+            valor_impuesto_excluido=float(linea.valor_impuesto_excluido),
+            base_gravable_iva=base_gravable_iva(linea.subtotal_linea, linea.valor_impuesto_excluido),
             impuesto_linea=float(linea.impuesto_linea),
             total_linea=float(linea.total_linea),
         )
