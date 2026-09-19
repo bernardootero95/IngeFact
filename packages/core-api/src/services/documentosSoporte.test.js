@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const apiRequest = vi.fn();
-vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args) }));
+const apiRequestBlob = vi.fn();
+vi.mock("../apiClient.js", () => ({
+  apiRequest: (...args) => apiRequest(...args),
+  apiRequestBlob: (...args) => apiRequestBlob(...args),
+}));
 
 import {
   listDocumentosSoporte,
@@ -10,11 +14,15 @@ import {
   actualizarBorradorDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
+  obtenerFirmaDigitalDocumentoSoporte,
+  obtenerRepresentacionPdfDocumentoSoporte,
+  enviarDocumentoSoportePorCorreo,
 } from "./documentosSoporte.js";
 
 describe("documentosSoporte", () => {
   beforeEach(() => {
     apiRequest.mockReset();
+    apiRequestBlob.mockReset();
   });
 
   it("listDocumentosSoporte sin filtros no agrega query string", async () => {
@@ -67,6 +75,26 @@ describe("documentosSoporte", () => {
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/enviar", {
       method: "POST",
       body: { forma_pago: "1", metodo_pago: "10" },
+    });
+  });
+
+  it("obtenerFirmaDigitalDocumentoSoporte hace GET a la firma", async () => {
+    apiRequest.mockResolvedValue({ firma_digital: "abc" });
+    await obtenerFirmaDigitalDocumentoSoporte("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/firma-digital");
+  });
+
+  it("obtenerRepresentacionPdfDocumentoSoporte pide el PDF como blob", async () => {
+    apiRequestBlob.mockResolvedValue(new Blob());
+    await obtenerRepresentacionPdfDocumentoSoporte("1");
+    expect(apiRequestBlob).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/representacion.pdf");
+  });
+
+  it("enviarDocumentoSoportePorCorreo hace POST al recurso", async () => {
+    apiRequest.mockResolvedValue(undefined);
+    await enviarDocumentoSoportePorCorreo("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/enviar-correo", {
+      method: "POST",
     });
   });
 });

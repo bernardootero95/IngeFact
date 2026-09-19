@@ -4,9 +4,13 @@ import {
   getDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
+  enviarDocumentoSoportePorCorreo,
+  obtenerRepresentacionPdfDocumentoSoporte,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
+import { ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import { abrirRepresentacion } from "../../../utils/representacionPdf";
 import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
 import { validateFormaPago, validateMetodoPago } from "../components/SeccionPagoDocumentoSoporte.validation";
 
@@ -34,6 +38,9 @@ export default function SupportDocumentDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [toast, setToast] = useState({ message: null, type: "success" });
 
   const [formaPago, setFormaPago] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
@@ -101,6 +108,30 @@ export default function SupportDocumentDetailPage() {
     }
   };
 
+  const handleVerRepresentacion = async () => {
+    setIsLoadingPdf(true);
+    await abrirRepresentacion({
+      tieneDocumentoValido: documento.estado === "aceptado",
+      obtenerPdf: () => obtenerRepresentacionPdfDocumentoSoporte(id),
+      navigate,
+      rutaPreview: `/support-documents/${id}/representacion`,
+      onError: (message) => setToast({ message, type: "error" }),
+    });
+    setIsLoadingPdf(false);
+  };
+
+  const handleEnviarCorreo = async () => {
+    setIsSendingEmail(true);
+    try {
+      await enviarDocumentoSoportePorCorreo(id);
+      setToast({ message: "Documento soporte enviado por correo al proveedor.", type: "success" });
+    } catch (error) {
+      setToast({ message: error.message, type: "error" });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
@@ -158,23 +189,45 @@ export default function SupportDocumentDetailPage() {
                 >
                   {estadoInfo.icon} {estadoInfo.label}
                 </span>
-                {editable && (
-                  <div className="flex gap-3">
+                <div className="flex flex-wrap justify-end gap-3">
+                  {editable && (
+                    <>
+                      <button
+                        onClick={() => navigate(`/support-documents/${id}/edit`)}
+                        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                      >
+                        {documento.estado === "rechazado" ? "Corregir" : "Continuar Editando"}
+                      </button>
+                      <button
+                        onClick={handleEliminar}
+                        disabled={isDeleting}
+                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      >
+                        {isDeleting ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={handleVerRepresentacion}
+                    disabled={isLoadingPdf}
+                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                  >
+                    {isLoadingPdf
+                      ? "Generando PDF..."
+                      : documento.estado === "aceptado"
+                        ? "Ver Representación Gráfica"
+                        : "Vista Previa"}
+                  </button>
+                  {documento.estado === "aceptado" && (
                     <button
-                      onClick={() => navigate(`/support-documents/${id}/edit`)}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                      onClick={handleEnviarCorreo}
+                      disabled={isSendingEmail}
+                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                     >
-                      {documento.estado === "rechazado" ? "Corregir" : "Continuar Editando"}
+                      {isSendingEmail ? "Enviando..." : "Reenviar por Correo"}
                     </button>
-                    <button
-                      onClick={handleEliminar}
-                      disabled={isDeleting}
-                      className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
-                    >
-                      {isDeleting ? "Eliminando..." : "Eliminar"}
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {documento.cuds && (
@@ -330,6 +383,8 @@ export default function SupportDocumentDetailPage() {
           </div>
         </div>
       </main>
+
+      <ToastAlert message={toast.message} type={toast.type} onClose={() => setToast({ message: null, type: "success" })} />
     </div>
   );
 }

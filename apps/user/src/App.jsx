@@ -30,6 +30,7 @@ import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/Received
 import SupportDocumentsListPage from "./modules/supportDocuments/pages/SupportDocumentsListPage";
 import SupportDocumentFormPage from "./modules/supportDocuments/pages/SupportDocumentFormPage";
 import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportDocumentDetailPage";
+import SupportDocumentRepresentationPage from "./modules/supportDocuments/pages/SupportDocumentRepresentationPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
@@ -342,6 +343,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SupportDocumentFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/support-documents/:id/representacion"
+          element={
+            <ProtectedRoute>
+              <SupportDocumentRepresentationPage />
             </ProtectedRoute>
           }
         />

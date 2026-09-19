@@ -1,4 +1,4 @@
-import { apiRequest } from "../apiClient.js";
+import { apiRequest, apiRequestBlob } from "../apiClient.js";
 
 export async function listDocumentosSoporte({ estado, proveedorId } = {}) {
   const params = new URLSearchParams();
@@ -26,4 +26,16 @@ export async function eliminarBorradorDocumentoSoporte(id) {
 
 export async function enviarDocumentoSoporte(id, payload) {
   return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/enviar`, { method: "POST", body: payload });
+}
+
+export async function obtenerFirmaDigitalDocumentoSoporte(id) {
+  return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/firma-digital`);
+}
+
+export async function obtenerRepresentacionPdfDocumentoSoporte(id) {
+  return apiRequestBlob(`/api/v1/tenant/documentos-soporte/${id}/representacion.pdf`);
+}
+
+export async function enviarDocumentoSoportePorCorreo(id) {
+  return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/enviar-correo`, { method: "POST" });
 }

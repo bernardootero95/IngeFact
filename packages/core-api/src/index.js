@@ -60,6 +60,9 @@ export {
   actualizarBorradorDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
   enviarDocumentoSoporte,
+  obtenerFirmaDigitalDocumentoSoporte,
+  obtenerRepresentacionPdfDocumentoSoporte,
+  enviarDocumentoSoportePorCorreo,
 } from "./services/documentosSoporte.js";
 export {
   getResolucionDocumentoSoporte,
