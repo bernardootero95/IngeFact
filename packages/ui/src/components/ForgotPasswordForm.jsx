@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isValidEmail } from "@ingefact/utils";
+import Button from "./Button.jsx";
 
 const validateEmail = (value) => {
   if (!value.trim()) return "El correo es obligatorio.";
@@ -108,13 +109,18 @@ export default function ForgotPasswordForm({
                 {fieldError && <p className="mt-1 text-xs text-fiscal-danger">{fieldError}</p>}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading || Boolean(fieldError)}
-                className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+                variant="primary"
+                size="lg"
+                fullWidth
+                title="Enviar enlace de recuperación"
+                loading={loading}
+                className="mt-2"
               >
-                {loading ? "Enviando..." : "Enviar enlace de recuperación"}
-              </button>
+                Enviar enlace
+              </Button>
             </form>
 
             <Link

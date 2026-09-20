@@ -1,3 +1,5 @@
+import { Button } from "@ingefact/ui";
+
 
 export default function UserTable({ users, loading, onEdit }) {
   if (loading) {
@@ -61,12 +63,12 @@ export default function UserTable({ users, loading, onEdit }) {
                   </span>
                 </td>
                 <td className="p-4 text-sm">
-                  <button
+                  <Button
                     onClick={() => onEdit(user)}
-                    className="text-brand-600 hover:text-brand-400 font-medium transition-colors"
+                    variant="link"
                   >
                     Editar
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))

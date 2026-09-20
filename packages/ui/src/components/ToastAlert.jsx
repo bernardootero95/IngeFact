@@ -23,7 +23,7 @@ export default function ToastAlert({
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-bounce-in">
+    <div className="fixed bottom-6 right-6 z-50 animate-bounce-in motion-reduce:animate-none">
       <div
         className={`flex items-center justify-between px-4 py-3 rounded-brand-lg border shadow-lg max-w-md ${styles[type] || styles.success}`}
       >
@@ -31,10 +31,14 @@ export default function ToastAlert({
           <span className="text-sm font-medium">{message}</span>
         </div>
         <button
+          type="button"
           onClick={onClose}
-          className="ml-4 text-xs font-bold opacity-70 hover:opacity-100 transition-opacity"
+          aria-label="Cerrar notificación"
+          className="ml-4 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full opacity-70 hover:opacity-100 hover:bg-black/5 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
         >
-          ✕
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
     </div>

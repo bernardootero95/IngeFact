@@ -42,6 +42,15 @@ export default {
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
+      keyframes: {
+        "bounce-in": {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "none" },
+        },
+      },
+      animation: {
+        "bounce-in": "bounce-in 0.25s ease-out",
+      },
     },
   },
   plugins: [],

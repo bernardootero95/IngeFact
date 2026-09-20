@@ -11,7 +11,7 @@ import {
   revocarApiKey,
 } from "@ingefact/core-api";
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const emptyForm = {
@@ -359,13 +359,12 @@ export default function CompanyFormPage() {
               {isEditing ? "Actualiza los datos y el plan de este tenant." : "Crea un nuevo tenant y su plan de facturación."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate("/admin/companies")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -766,21 +765,13 @@ export default function CompanyFormPage() {
                             <code className="flex-1 px-3 py-2 bg-white border border-amber-200 rounded-brand-md text-xs break-all">
                               {generatedKey}
                             </code>
-                            <button
-                              type="button"
-                              onClick={handleCopyKey}
-                              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded-brand-md transition-colors shrink-0"
-                            >
+                            <Button variant="primary" className="shrink-0" onClick={handleCopyKey}>
                               Copiar
-                            </button>
+                            </Button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setGeneratedKey(null)}
-                            className="mt-2 text-xs text-amber-700 hover:underline"
-                          >
+                          <Button variant="link" className="mt-2 text-xs" onClick={() => setGeneratedKey(null)}>
                             Ya la copié, ocultar
-                          </button>
+                          </Button>
                         </div>
                       )}
 
@@ -802,13 +793,14 @@ export default function CompanyFormPage() {
                           />
                           {newKeyNameError && <p className="mt-1 text-xs text-fiscal-danger">{newKeyNameError}</p>}
                         </div>
-                        <button
+                        <Button
                           type="submit"
-                          disabled={isGeneratingKey}
-                          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          variant="primary"
+                          loading={isGeneratingKey}
+                          className="shrink-0"
                         >
-                          {isGeneratingKey ? "Generando..." : "Generar key"}
-                        </button>
+                          Generar key
+                        </Button>
                       </form>
 
                       {apiKeysLoading ? (
@@ -851,13 +843,13 @@ export default function CompanyFormPage() {
                                 </td>
                                 <td className="py-2 text-right">
                                   {!k.revocada && (
-                                    <button
-                                      type="button"
+                                    <Button
                                       onClick={() => handleRevokeKey(k.id, k.nombre)}
-                                      className="text-xs text-fiscal-danger hover:underline"
+                                      variant="link-danger"
+                                      className="text-xs"
                                     >
                                       Revocar
-                                    </button>
+                                    </Button>
                                   )}
                                 </td>
                               </tr>
@@ -869,32 +861,24 @@ export default function CompanyFormPage() {
                   )}
                 </div>
 
-                <div className="p-6 border-t border-neutralCustom-100 flex justify-end space-x-3 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/admin/companies")}
-                    className="px-4 py-2 border border-neutralCustom-200 text-neutralCustom-600 text-sm font-medium rounded-brand-md hover:bg-neutralCustom-50 transition-colors"
-                  >
+                <div className="p-6 border-t border-neutralCustom-100 flex justify-end gap-3 shrink-0">
+                  <Button variant="ghost" onClick={() => navigate("/admin/companies")}>
                     Cancelar
-                  </button>
+                  </Button>
 
                   {activeTab === "empresa" ? (
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("suscripcion")}
-                      className="px-4 py-2 bg-neutralCustom-800 hover:bg-black text-white text-sm font-medium rounded-brand-md transition-colors"
-                    >
-                      Siguiente →
-                    </button>
+                    <Button variant="primary" onClick={() => setActiveTab("suscripcion")}>
+                      Siguiente
+                    </Button>
                   ) : activeTab === "suscripcion" ? (
-                    <button
+                    <Button
                       form="company-form"
                       type="submit"
-                      disabled={isSaving}
-                      className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="primary"
+                      loading={isSaving}
                     >
-                      {isSaving ? "Procesando..." : isEditing ? "Actualizar Tenant" : "Crear Tenant y Accesos"}
-                    </button>
+                      {isEditing ? "Guardar" : "Crear empresa"}
+                    </Button>
                   ) : null}
                 </div>
               </div>

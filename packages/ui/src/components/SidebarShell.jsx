@@ -52,7 +52,7 @@ export default function SidebarShell({
             onClick={() => setCollapsed((prev) => !prev)}
             aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
             title={collapsed ? "Expandir menú" : "Contraer menú"}
-            className="w-6 h-6 flex items-center justify-center rounded-full bg-neutralCustom-600 hover:bg-brand-600 text-white transition-colors shrink-0"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-neutralCustom-600 hover:bg-brand-600 text-white transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
           >
             <svg
               className={`w-3.5 h-3.5 transition-transform ${collapsed ? "rotate-180" : ""}`}

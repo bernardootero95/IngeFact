@@ -1,3 +1,5 @@
+import { Button } from "@ingefact/ui";
+
 
 export default function CompanyTable({ companies, loading, onEdit }) {
   if (loading) {
@@ -133,12 +135,12 @@ export default function CompanyTable({ companies, loading, onEdit }) {
                   </td>
 
                   <td className="p-4 text-sm">
-                    <button
+                    <Button
                       onClick={() => onEdit(company)}
-                      className="text-brand-600 hover:text-brand-400 font-medium transition-colors"
+                      variant="link"
                     >
                       Gestionar
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               );

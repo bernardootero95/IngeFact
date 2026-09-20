@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearUsuarioAdmin, actualizarUsuarioAdmin } from "@ingefact/core-api";
 import { isValidEmail } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
+import { Button } from "@ingefact/ui";
 
 function validateName(value) {
   if (!value.trim()) return "El nombre es obligatorio.";
@@ -89,13 +90,12 @@ export default function UserFormPage() {
               {isEditing ? "Actualiza los datos de este usuario interno." : "Agrega un nuevo miembro del staff de IngeFact."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate("/admin/users")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -168,20 +168,20 @@ export default function UserFormPage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                <button
-                  type="button"
+                <Button
                   onClick={() => navigate("/admin/users")}
-                  className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                  variant="ghost"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSaving || hasErrors}
-                  className="px-6 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="primary"
+                  loading={isSaving}
                 >
-                  {isSaving ? "Guardando..." : "Guardar"}
-                </button>
+                  Guardar
+                </Button>
               </div>
             </form>
           </div>

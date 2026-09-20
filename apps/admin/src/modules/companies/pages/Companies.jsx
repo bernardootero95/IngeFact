@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { listEmpresas, sincronizarEmpresasAlegra } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
-import { SpinnerLoading, ToastAlert } from "@ingefact/ui";
+import { SpinnerLoading, ToastAlert, Button, RefreshIcon } from "@ingefact/ui";
 
 export default function Companies() {
   const navigate = useNavigate();
@@ -75,39 +75,23 @@ export default function Companies() {
             Empresas y Suscripciones (Tenants)
           </h2>
           <div className="flex items-center space-x-3">
-            <button
+            <Button
               onClick={handleSyncAlegra}
-              disabled={syncLoading || loading}
-              className="flex items-center px-4 py-2 border border-brand-600 text-brand-600 hover:bg-brand-50 disabled:opacity-50 text-sm font-medium rounded-brand-md transition-all"
+              variant="outline"
+              icon={RefreshIcon}
+              loading={syncLoading}
+              disabled={loading}
+              title="Sincronizar con Alegra"
             >
-              {syncLoading ? (
-                <SpinnerLoading text="Sincronizando..." />
-              ) : (
-                <>
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"
-                    />
-                  </svg>
-                  Sincronizar Alegra
-                </>
-              )}
-            </button>
+              Sincronizar
+            </Button>
 
-            <button
+            <Button
               onClick={() => navigate("/admin/companies/new")}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors"
+              variant="primary"
             >
-              Aprovisionar Empresa
-            </button>
+              Nueva empresa
+            </Button>
           </div>
         </header>
 

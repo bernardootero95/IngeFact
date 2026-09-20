@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getDashboardKpis } from "@ingefact/core-api";
 import { useAuthStore } from "../../auth/store/authStore";
 import Sidebar from "../../../components/Sidebar";
-import { SpinnerLoading } from "@ingefact/ui";
+import { SpinnerLoading, Button } from "@ingefact/ui";
 
 export default function Dashboard() {
   const { profile } = useAuthStore();
@@ -39,12 +39,14 @@ export default function Dashboard() {
           {error && (
             <div className="p-4 bg-red-50 border border-fiscal-danger rounded-brand-lg flex items-center justify-between">
               <p className="text-sm text-fiscal-danger">No se pudieron cargar las métricas: {error}</p>
-              <button
+              <Button
                 onClick={fetchKpis}
-                className="px-3 py-1.5 bg-white border border-fiscal-danger text-fiscal-danger text-xs font-medium rounded-brand-md hover:bg-red-100 transition-colors shrink-0 ml-4"
+                variant="danger"
+                size="sm"
+                className="shrink-0 ml-4"
               >
                 Reintentar
-              </button>
+              </Button>
             </div>
           )}
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { listUsuariosAdmin } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import UserTable from "../components/UserTable";
 
@@ -35,12 +35,12 @@ export default function Users() {
           <h2 className="text-lg font-medium text-neutralCustom-800">
             Gestión de Usuarios
           </h2>
-          <button
+          <Button
             onClick={() => navigate("/admin/users/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors"
+            variant="primary"
           >
-            Crear Usuario
-          </button>
+            Nuevo usuario
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">

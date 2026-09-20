@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isStrongPassword } from "@ingefact/utils";
+import Button from "./Button.jsx";
 
 function validatePassword(value) {
   if (!value) return "La contraseña es obligatoria.";
@@ -90,12 +91,9 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
             <div className="p-4 bg-brand-50 border border-brand-400 text-brand-700 text-sm rounded-brand-md">
               Tu contraseña se actualizó correctamente.
             </div>
-            <Link
-              to={loginPath}
-              className="block text-center py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors text-sm"
-            >
-              Ir a iniciar sesión
-            </Link>
+            <Button as={Link} to={loginPath} variant="primary" size="lg" fullWidth>
+              Iniciar sesión
+            </Button>
           </div>
         ) : (
           <>
@@ -154,13 +152,17 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading || hasErrors}
-                className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                className="mt-2"
               >
-                {loading ? "Guardando..." : "Restablecer contraseña"}
-              </button>
+                Restablecer contraseña
+              </Button>
             </form>
           </>
         )}

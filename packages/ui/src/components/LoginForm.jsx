@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isValidEmail } from "@ingefact/utils";
+import Button from "./Button.jsx";
 
 const validateEmail = (value) => {
   if (!value.trim()) return "El correo es obligatorio.";
@@ -154,6 +155,8 @@ export default function LoginForm({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutralCustom-500 hover:text-brand-600 transition-colors"
               >
                 {showPassword ? (
@@ -200,13 +203,17 @@ export default function LoginForm({
             )}
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading || hasErrors}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+            className="mt-2"
           >
-            {loading ? "Validando credenciales..." : "Iniciar sesión"}
-          </button>
+            Iniciar sesión
+          </Button>
         </form>
       </div>
     </div>

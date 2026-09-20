@@ -7,4 +7,4 @@ export { default as SidebarShell } from "./components/SidebarShell.jsx";
 export { default as SearchableSelect } from "./components/SearchableSelect.jsx";
 export { default as Button } from "./components/Button.jsx";
 export { default as IconButton } from "./components/IconButton.jsx";
-export { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon } from "./components/icons.jsx";
+export { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, RefreshIcon } from "./components/icons.jsx";
