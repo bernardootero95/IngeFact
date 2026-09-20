@@ -492,6 +492,31 @@ corrección real (nueva factura, Nota Crédito, etc.) sigue siendo
 responsabilidad manual del proveedor/tenant, mismo criterio "MVP simple
 primero" ya aplicado en el resto del proyecto.
 
+## `taxes[].taxableAmount` menor que `subtotal` — impuesto monofásico (ICL/IBUA) ✅ verificado
+
+Caso: un distribuidor revende producto que ya trae ICL/IBUA pagado al productor
+(impuesto monofásico). No es responsable de ese impuesto, así que **no** lo factura
+como tributo, pero la ley lo excluye de la base del IVA. Ej.: precio pre-IVA 51.857,14
+= base 42.857,14 + ICL embebido 9.000; IVA 19% sobre 42.857,14 = 8.142,86; total 60.000.
+
+Verificado en el sandbox (factura, nota crédito y nota débito, con los constructores de
+payload reales de los servicios): una línea con `subtotal`/`price` = 51.857,14 y
+`taxes[0].taxableAmount` = 42.857,14 (mismo IVA 19%) se acepta —
+`legalStatus: ACCEPTED_WITH_OBSERVATIONS`, código 00. Reglas:
+
+- `item.subtotal`/`price` siguen siendo el valor comercial de la línea (incluye el ICL embebido);
+  solo `taxes[].taxableAmount` baja.
+- `totalAmounts.taxableTotal` = suma de esas bases reducidas (regla FAU04 sigue cumpliéndose);
+  `grossTotal` sigue siendo la suma de `subtotal`.
+- El ICL/IBUA **no** viaja como `taxes[]`; el QR de la DIAN muestra `ValOtroIm: 0.00`.
+- Las observaciones que aparecen (FAZ09 sin `standardCode`, FAJ43b nombre vs RUT del cliente
+  de prueba, CAJ39/DAJ39 TaxScheme del emisor, DAK07 ubicación del adquiriente) no
+  tienen relación con la diferencia de bases.
+
+Reproducible con `apps/api/scripts/explore_alegra_taxable_amount_split.py` (empresa asociada
+NIT 900559088 + resolución SETP de pruebas; usa el número dentro del rango 990000000-995000000,
+fuera de él la DIAN rechaza con FAD05b).
+
 ## Errores comunes observados/documentados
 
 | Código | Mensaje | Causa |

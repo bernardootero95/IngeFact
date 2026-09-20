@@ -17,6 +17,7 @@ class Producto(Base):
     __table_args__ = (
         CheckConstraint("tipo IN ('bien', 'servicio')", name="ck_productos_tipo"),
         CheckConstraint("precio >= 0", name="ck_productos_precio_positivo"),
+        CheckConstraint("valor_impuesto_excluido >= 0", name="ck_productos_valor_impuesto_excluido_no_negativo"),
         CheckConstraint(
             "tarifa_impuesto >= 0 AND tarifa_impuesto <= 100", name="ck_productos_tarifa_impuesto_rango"
         ),
@@ -42,6 +43,10 @@ class Producto(Base):
     unidad_medida: Mapped[str] = mapped_column(String(50), nullable=False)
     tributo: Mapped[str | None] = mapped_column(String(50))
     tarifa_impuesto: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
+    # Valor fijo POR UNIDAD de un impuesto monofasico (ICL/IBUA) ya pagado al
+    # productor y embebido en `precio`: se excluye de la base del IVA al
+    # revender, pero no se factura como tributo propio.
+    valor_impuesto_excluido: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False, default=0)
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

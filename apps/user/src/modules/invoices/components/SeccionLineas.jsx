@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { SearchableSelect } from "@ingefact/ui";
+import { calcularLinea } from "@ingefact/utils";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -124,8 +125,17 @@ export default function SeccionLineas({
               {lineas.map((linea, index) => {
                 const cantidadInvalida = linea.cantidad !== "" && Number(linea.cantidad) <= 0;
                 const precioInvalido = linea.precio_unitario !== "" && Number(linea.precio_unitario) <= 0;
-                const subtotalLinea = (Number(linea.cantidad) || 0) * (Number(linea.precio_unitario) || 0);
-                const impuestoLinea = subtotalLinea * ((Number(linea.producto?.tarifa_impuesto) || 0) / 100);
+                const {
+                  subtotal: subtotalLinea,
+                  excluido: excluidoLinea,
+                  base: baseLinea,
+                  impuesto: impuestoLinea,
+                } = calcularLinea({
+                  cantidad: linea.cantidad,
+                  precio: linea.precio_unitario,
+                  tarifa: linea.producto?.tarifa_impuesto,
+                  valorExcluido: (Number(linea.cantidad) || 0) * (Number(linea.producto?.valor_impuesto_excluido) || 0),
+                });
 
                 return (
                   <tr key={index}>
@@ -137,6 +147,11 @@ export default function SeccionLineas({
                       {linea.producto?.tributo && (
                         <p className="text-xs text-neutralCustom-500 mt-0.5">
                           {linea.producto.tributo} {linea.producto.tarifa_impuesto}%
+                        </p>
+                      )}
+                      {excluidoLinea > 0 && (
+                        <p className="text-xs text-neutralCustom-500 mt-0.5">
+                          Base IVA {formatCOP(baseLinea)} (excluye {formatCOP(excluidoLinea)} de impuesto ya pagado)
                         </p>
                       )}
                     </td>

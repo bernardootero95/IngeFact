@@ -26,9 +26,11 @@ const emptyForm = {
   precio: "",
   unidad_medida: "",
   impuestoKey: "",
+  valor_impuesto_excluido: "",
 };
 
 const REQUIRED_FIELDS = ["codigo", "nombre", "precio", "unidad_medida"];
+const VALIDATED_ON_SUBMIT = [...REQUIRED_FIELDS, "valor_impuesto_excluido"];
 
 export default function ProductFormPage() {
   const navigate = useNavigate();
@@ -79,6 +81,7 @@ export default function ProductFormPage() {
           precio: String(producto.precio),
           unidad_medida: producto.unidad_medida,
           impuestoKey: preset ? `${preset.tributo}-${preset.tarifa}` : "",
+          valor_impuesto_excluido: Number(producto.valor_impuesto_excluido) > 0 ? String(producto.valor_impuesto_excluido) : "",
         });
       } else {
         const defaultUnidad =
@@ -98,8 +101,19 @@ export default function ProductFormPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    const next = { ...formData, [name]: value };
+    setFormData(next);
+    setErrors((prev) => {
+      const updated = { ...prev, [name]: validateField(name, value, next) };
+      if (name === "precio") {
+        updated.valor_impuesto_excluido = validateField(
+          "valor_impuesto_excluido",
+          next.valor_impuesto_excluido,
+          next,
+        );
+      }
+      return updated;
+    });
   };
 
   const handleUnidadMedidaChange = (code) => {
@@ -110,8 +124,8 @@ export default function ProductFormPage() {
     e.preventDefault();
 
     const newErrors = {};
-    REQUIRED_FIELDS.forEach((field) => {
-      newErrors[field] = validateField(field, formData[field]);
+    VALIDATED_ON_SUBMIT.forEach((field) => {
+      newErrors[field] = validateField(field, formData[field], formData);
     });
     if (Object.values(newErrors).some(Boolean)) {
       setErrors(newErrors);
@@ -128,6 +142,7 @@ export default function ProductFormPage() {
       unidad_medida: formData.unidad_medida,
       tributo: preset?.tributo || null,
       tarifa_impuesto: preset?.tarifa || 0,
+      valor_impuesto_excluido: formData.tipo === "bien" ? Number(formData.valor_impuesto_excluido) || 0 : 0,
     };
 
     setIsSaving(true);
@@ -322,6 +337,40 @@ export default function ProductFormPage() {
                     <p className="mt-1 text-xs text-neutralCustom-400">
                       Aún no tienes impuestos configurados. Ve a Configuración → Impuestos para crearlos.
                     </p>
+                  )}
+
+                  {formData.tipo === "bien" && formData.impuestoKey && (
+                    <div className="mt-4">
+                      <label
+                        htmlFor="valor_impuesto_excluido"
+                        className="block text-sm font-medium text-neutralCustom-600 mb-1"
+                      >
+                        Impuesto ya pagado excluido de IVA (por unidad)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        id="valor_impuesto_excluido"
+                        name="valor_impuesto_excluido"
+                        value={formData.valor_impuesto_excluido}
+                        onChange={handleChange}
+                        className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                          errors.valor_impuesto_excluido
+                            ? "border-fiscal-danger"
+                            : "border-neutralCustom-200 focus:border-brand-400"
+                        }`}
+                        placeholder="0.00"
+                      />
+                      {errors.valor_impuesto_excluido ? (
+                        <p className="mt-1 text-xs text-fiscal-danger">{errors.valor_impuesto_excluido}</p>
+                      ) : (
+                        <p className="mt-1 text-xs text-neutralCustom-400">
+                          Solo si el precio ya incluye un impuesto monofásico pagado al productor (ICL, IBUA). Ese
+                          valor no se factura como impuesto: se resta de la base del IVA.
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 

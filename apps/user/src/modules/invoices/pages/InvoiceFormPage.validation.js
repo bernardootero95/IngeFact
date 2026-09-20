@@ -1,3 +1,5 @@
+import { calcularLinea } from "@ingefact/utils";
+
 export function validateCliente(clienteId) {
   if (!clienteId) return "Debes seleccionar un cliente.";
   return "";
@@ -56,11 +58,14 @@ export function calcularTotales(lineas) {
   let totalImpuestos = 0;
   for (const linea of lineas) {
     const cantidad = Number(linea.cantidad) || 0;
-    const precio = Number(linea.precio_unitario ?? linea.producto?.precio) || 0;
-    const tarifa = Number(linea.producto?.tarifa_impuesto) || 0;
-    const subtotalLinea = cantidad * precio;
-    subtotal += subtotalLinea;
-    totalImpuestos += subtotalLinea * (tarifa / 100);
+    const calculo = calcularLinea({
+      cantidad,
+      precio: Number(linea.precio_unitario ?? linea.producto?.precio) || 0,
+      tarifa: Number(linea.producto?.tarifa_impuesto) || 0,
+      valorExcluido: cantidad * (Number(linea.producto?.valor_impuesto_excluido) || 0),
+    });
+    subtotal += calculo.subtotal;
+    totalImpuestos += calculo.impuesto;
   }
   return { subtotal, totalImpuestos, total: subtotal + totalImpuestos };
 }

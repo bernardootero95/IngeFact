@@ -205,3 +205,55 @@ def test_obtener_o_crear_no_mezcla_codigos_entre_tenants(db_session):
     assert len(service.listar(empresa_b.id)) == 1
     assert service.listar(empresa_a.id)[0].nombre == "De la empresa A"
     assert service.listar(empresa_b.id)[0].nombre == "De la empresa B"
+
+
+def test_crear_con_valor_impuesto_excluido(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ProductoService(db_session)
+
+    producto = service.crear(empresa.id, _payload(precio=51857.14, valor_impuesto_excluido=9000))
+
+    assert float(producto.valor_impuesto_excluido) == 9000
+
+
+def test_valor_impuesto_excluido_por_defecto_es_cero(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ProductoService(db_session)
+
+    producto = service.crear(empresa.id, _payload())
+
+    assert float(producto.valor_impuesto_excluido) == 0
+
+
+def test_valor_impuesto_excluido_negativo_o_mayor_al_precio_falla_validacion():
+    with pytest.raises(ValueError):
+        _payload(valor_impuesto_excluido=-1)
+    with pytest.raises(ValueError):
+        _payload(precio=15000, valor_impuesto_excluido=15001)
+
+
+def test_actualizar_valor_impuesto_excluido(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ProductoService(db_session)
+    creado = service.crear(empresa.id, _payload())
+
+    actualizado = service.actualizar(
+        empresa.id,
+        creado.id,
+        ActualizarProductoRequest(
+            tipo="bien", codigo="PROD-001", nombre="Producto Uno", precio=15000, unidad_medida="94",
+            valor_impuesto_excluido=4000,
+        ),
+    )
+
+    assert float(actualizado.valor_impuesto_excluido) == 4000
+
+
+def test_obtener_o_crear_no_pisa_el_valor_impuesto_excluido_configurado(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ProductoService(db_session)
+    service.crear(empresa.id, _payload(codigo="EXT-001", precio=20000, valor_impuesto_excluido=5000))
+
+    producto = service.obtener_o_crear(empresa.id, _item_externo(codigo="EXT-001", precio_unitario=20000))
+
+    assert float(producto.valor_impuesto_excluido) == 5000

@@ -1,3 +1,5 @@
+import { calcularLinea, excluidoProporcional } from "@ingefact/utils";
+
 export function validateMotivo(motivoCodigo) {
   if (!motivoCodigo) return "Selecciona un motivo.";
   return "";
@@ -23,12 +25,15 @@ export function calcularTotalesNota(seleccion) {
   let subtotal = 0;
   let totalImpuestos = 0;
   for (const linea of seleccion.filter((l) => l.incluida)) {
-    const cantidad = Number(linea.cantidad) || 0;
-    const precio = Number(linea.facturaLinea.precio_unitario) || 0;
-    const tarifa = Number(linea.facturaLinea.tarifa_impuesto) || 0;
-    const subtotalLinea = cantidad * precio;
-    subtotal += subtotalLinea;
-    totalImpuestos += subtotalLinea * (tarifa / 100);
+    const { facturaLinea } = linea;
+    const calculo = calcularLinea({
+      cantidad: linea.cantidad,
+      precio: facturaLinea.precio_unitario,
+      tarifa: facturaLinea.tarifa_impuesto,
+      valorExcluido: excluidoProporcional(facturaLinea.valor_impuesto_excluido, facturaLinea.cantidad, linea.cantidad),
+    });
+    subtotal += calculo.subtotal;
+    totalImpuestos += calculo.impuesto;
   }
   return { subtotal, totalImpuestos, total: subtotal + totalImpuestos };
 }

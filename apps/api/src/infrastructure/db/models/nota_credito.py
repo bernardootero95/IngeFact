@@ -64,7 +64,13 @@ class NotaCreditoLinea(Base):
     acredita, no la cantidad original de la factura."""
 
     __tablename__ = "nota_credito_lineas"
-    __table_args__ = (CheckConstraint("cantidad > 0", name="ck_nota_credito_lineas_cantidad_positiva"),)
+    __table_args__ = (
+        CheckConstraint("cantidad > 0", name="ck_nota_credito_lineas_cantidad_positiva"),
+        CheckConstraint(
+            "valor_impuesto_excluido >= 0 AND valor_impuesto_excluido <= subtotal_linea",
+            name="ck_nota_credito_lineas_valor_impuesto_excluido_rango",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     nota_credito_id: Mapped[uuid.UUID] = mapped_column(
@@ -79,6 +85,7 @@ class NotaCreditoLinea(Base):
     tributo: Mapped[str | None] = mapped_column(String(50))
     tarifa_impuesto: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False, default=0)
     subtotal_linea: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    valor_impuesto_excluido: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False, default=0)
     impuesto_linea: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     total_linea: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
 

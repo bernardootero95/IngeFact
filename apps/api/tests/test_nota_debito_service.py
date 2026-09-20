@@ -532,3 +532,26 @@ def test_enviar_por_correo_nota_reporta_502_si_falla_el_envio(db_session, monkey
     with pytest.raises(HTTPException) as exc_info:
         service.enviar_por_correo(empresa.id, nota.id, "otro@example.com")
     assert exc_info.value.status_code == 502
+
+
+def test_nota_debito_conserva_proporcion_del_impuesto_excluido(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id, precio=51857.14, valor_impuesto_excluido=9000)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    fake.debit_note_response = {"debitNote": {"id": "dn-1", "cude": "cude-dn", "legalStatus": "ACCEPTED"}}
+    service = NotaDebitoService(db_session, alegra_client=fake)
+
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id, cantidad=1))
+
+    linea = nota.lineas[0]
+    assert float(linea.valor_impuesto_excluido) == 9000
+    assert float(linea.impuesto_linea) == 8142.86
+    assert float(nota.total) == 60000.00
+
+    service.enviar(empresa.id, nota.id)
+
+    item = fake.last_debit_note_payload["items"][0]
+    assert item["taxes"][0]["taxableAmount"] == 42857.14
+    assert fake.last_debit_note_payload["totalAmounts"]["taxableTotal"] == 42857.14
