@@ -8,6 +8,7 @@ import {
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./TaxPresetFormPage.validation";
+import { Button } from "@ingefact/ui";
 
 const REQUIRED_FIELDS = ["tributo", "tarifa"];
 
@@ -102,13 +103,12 @@ export default function TaxPresetFormPage() {
               Combinación de tributo y tarifa que podrás elegir al crear productos.
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate("/settings/taxes")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -173,20 +173,20 @@ export default function TaxPresetFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate("/settings/taxes")}
-                    className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                    variant="ghost"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isSaving || hasErrors}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Guardar Impuesto"}
-                  </button>
+                    Guardar
+                  </Button>
                 </div>
               </form>
             )}

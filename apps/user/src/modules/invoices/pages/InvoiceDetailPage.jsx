@@ -12,7 +12,7 @@ import {
   anularFactura,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -189,9 +189,9 @@ export default function InvoiceDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/invoices")} className="text-brand-600 hover:underline font-medium">
+              <Button onClick={() => navigate("/invoices")} variant="link">
                 Facturas
-              </button>
+              </Button>
               <span>/</span>
               <span>{factura?.numero_completo || "Borrador"}</span>
             </div>
@@ -228,12 +228,13 @@ export default function InvoiceDetailPage() {
                       <p className="text-xs text-neutralCustom-500">CUFE</p>
                       <p className="text-xs font-mono text-neutralCustom-700 break-all">{factura.cufe}</p>
                     </div>
-                    <button
+                    <Button
                       onClick={() => navigator.clipboard?.writeText(factura.cufe)}
-                      className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                      variant="link"
+                      className="shrink-0 ml-4 text-xs"
                     >
                       Copiar
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -263,45 +264,41 @@ export default function InvoiceDetailPage() {
                 <div className="flex flex-wrap gap-3">
                   {(factura.estado === "borrador" || factura.estado === "rechazada") && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/invoices/${id}/edit`)}
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                        variant="primary"
+                        title="Continuar editando"
                       >
-                        {factura.estado === "rechazada" ? "Corregir y Reenviar" : "Continuar Editando"}
-                      </button>
-                      <button
+                        {factura.estado === "rechazada" ? "Corregir" : "Editar"}
+                      </Button>
+                      <Button
                         onClick={handleEliminar}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        variant="danger"
+                        loading={isDeleting}
                       >
-                        {isDeleting
-                          ? "Eliminando..."
-                          : factura.estado === "rechazada"
-                            ? "Eliminar Factura"
-                            : "Eliminar Borrador"}
-                      </button>
+                        Eliminar
+                      </Button>
                     </>
                   )}
-                  <button
+                  <Button
                     onClick={handleVerRepresentacion}
-                    disabled={isLoadingPdf}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    loading={isLoadingPdf}
+                    title={factura.cufe ? "Ver representación gráfica" : "Vista previa del borrador"}
                   >
-                    {isLoadingPdf ? "Generando PDF..." : factura.cufe ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
-                  </button>
+                    {factura.cufe ? "Ver PDF" : "Vista previa"}
+                  </Button>
                   {factura.cufe && (
                     <>
-                      <button
+                      <Button
                         onClick={handleDescargarXml}
-                        disabled={isDownloadingXml}
-                        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        loading={isDownloadingXml}
                       >
-                        {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
-                      </button>
+                        Descargar XML
+                      </Button>
                       {factura.estado === "aceptada" && (
                         <EnviarCorreoPopover
                           variant="button"
-                          label="Enviar por Correo"
+                          label="Enviar correo"
                           defaultEmail={cliente?.correo_electronico || ""}
                           onEnviar={(correo) => enviarFacturaPorCorreo(id, correo)}
                           onEnviado={(correo) =>
@@ -313,25 +310,28 @@ export default function InvoiceDetailPage() {
                   )}
                   {factura.estado === "aceptada" && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/invoices/${id}/credit-notes/new`)}
-                        className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors"
+                        variant="outline"
+                        title="Crear nota crédito"
                       >
-                        Crear Nota Crédito
-                      </button>
-                      <button
+                        Nota crédito
+                      </Button>
+                      <Button
                         onClick={() => navigate(`/invoices/${id}/debit-notes/new`)}
-                        className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors"
+                        variant="outline"
+                        title="Crear nota débito"
                       >
-                        Crear Nota Débito
-                      </button>
-                      <button
+                        Nota débito
+                      </Button>
+                      <Button
                         onClick={handleAnular}
-                        disabled={isAnulando}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        variant="danger"
+                        title="Anular factura"
+                        loading={isAnulando}
                       >
-                        {isAnulando ? "Anulando..." : "Anular Factura"}
-                      </button>
+                        Anular
+                      </Button>
                     </>
                   )}
                 </div>

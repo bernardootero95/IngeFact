@@ -5,9 +5,8 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import IconButton from "../../../components/IconButton";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
@@ -67,15 +66,15 @@ export default function SupportDocumentsListPage() {
               Documento Soporte de Adquisiciones para compras a proveedores no obligados a facturar.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/support-documents/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nuevo Documento Soporte
-          </button>
+            Nuevo documento
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -85,12 +84,12 @@ export default function SupportDocumentsListPage() {
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
-                <button
+                <Button
                   onClick={fetchDocumentos}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : documentos.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -206,12 +205,12 @@ export default function SupportDocumentsListPage() {
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
                   Crea uno para soportar una compra a un proveedor no obligado a facturar electrónicamente.
                 </p>
-                <button
+                <Button
                   onClick={() => navigate("/support-documents/new")}
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                  variant="primary"
                 >
-                  Nuevo Documento Soporte
-                </button>
+                  Nuevo documento
+                </Button>
               </div>
             )}
           </div>

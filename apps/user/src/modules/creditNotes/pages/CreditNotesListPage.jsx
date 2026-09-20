@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNotasCredito, obtenerRepresentacionPdfNotaCredito, enviarNotaCreditoPorCorreo } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import IconButton from "../../../components/IconButton";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
@@ -101,12 +100,12 @@ export default function CreditNotesListPage() {
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
-                <button
+                <Button
                   onClick={() => fetchNotas(estado)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : notas.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -132,15 +131,15 @@ export default function CreditNotesListPage() {
                         {n.numero_completo || "Sin enviar"}
                       </td>
                       <td className="px-6 py-4">
-                        <button
+                        <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/invoices/${n.factura_id}`);
                           }}
-                          className="text-brand-600 hover:underline"
+                          variant="link"
                         >
                           {n.factura_numero_completo}
-                        </button>
+                        </Button>
                       </td>
                       <td className="px-6 py-4">{n.cliente_nombre}</td>
                       <td className="px-6 py-4">{n.fecha}</td>

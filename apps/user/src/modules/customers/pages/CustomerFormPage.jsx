@@ -10,6 +10,7 @@ import {
 import { calculateNitDV } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 import { validateField, NIT_IDENTIFICATION_TYPE } from "./CustomerFormPage.validation";
+import { Button } from "@ingefact/ui";
 
 const emptyForm = {
   tipo_identificacion: "",
@@ -223,13 +224,12 @@ export default function CustomerFormPage() {
                 : "Agrega una nueva empresa o persona a tu directorio."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate(returnTo || "/customers")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -316,14 +316,14 @@ export default function CustomerFormPage() {
                             />
                           </div>
                         )}
-                        <button
-                          type="button"
+                        <Button
                           onClick={handleConsultDIAN}
                           disabled={isConsulting || !formData.numero_identificacion}
-                          className="px-3 py-2 bg-neutralCustom-800 hover:bg-neutralCustom-600 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          loading={isConsulting}
+                          className="shrink-0"
                         >
-                          {isConsulting ? "Consultando..." : "Consultar"}
-                        </button>
+                          Consultar
+                        </Button>
                       </div>
                       {errors.numero_identificacion && (
                         <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_identificacion}</p>
@@ -483,20 +483,20 @@ export default function CustomerFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate(returnTo || "/customers")}
-                    className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                    variant="ghost"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isSaving || hasErrors}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Guardar Cliente"}
-                  </button>
+                    Guardar
+                  </Button>
                 </div>
               </form>
             )}

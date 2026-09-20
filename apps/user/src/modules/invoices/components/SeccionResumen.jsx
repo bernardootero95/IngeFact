@@ -1,4 +1,5 @@
 import { calcularTotales } from "../pages/InvoiceFormPage.validation";
+import { Button } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -41,30 +42,27 @@ export default function SeccionResumen({
       </div>
 
       <div className="flex gap-3 justify-end">
-        <button
-          type="button"
+        <Button
           onClick={onCancelar}
           disabled={disabled}
-          className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
         >
           Cancelar
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
           onClick={onGuardarBorrador}
           disabled={disabled}
-          className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+          loading={isSavingDraft}
         >
-          {isSavingDraft ? "Guardando..." : "Guardar Borrador"}
-        </button>
-        <button
-          type="button"
+          Guardar borrador
+        </Button>
+        <Button
           onClick={onEnviar}
           disabled={disabled}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50"
+          variant="primary"
+          loading={isSending}
         >
-          {isSending ? "Enviando..." : "Enviar a DIAN"}
-        </button>
+          Enviar a DIAN
+        </Button>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listClientes, deleteCliente } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function CustomersPage() {
@@ -65,12 +65,12 @@ export default function CustomersPage() {
               Gestiona las empresas y personas a las que vas a facturar.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/customers/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
             <svg
-              className="w-4 h-4 mr-2"
+              className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -82,8 +82,8 @@ export default function CustomersPage() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Nuevo Cliente
-          </button>
+            Nuevo cliente
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -122,12 +122,12 @@ export default function CustomersPage() {
                 <p className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los clientes: {loadError}
                 </p>
-                <button
+                <Button
                   onClick={() => fetchCustomers(search)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : customers.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -156,20 +156,20 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-4">{c.correo_electronico}</td>
                       <td className="px-6 py-4">{c.telefono || "-"}</td>
-                      <td className="px-6 py-4 text-right space-x-3">
-                        <button
-                          onClick={() => navigate(`/customers/${c.id}/edit`)}
-                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c)}
-                          disabled={deletingId === c.id}
-                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
-                        >
-                          {deletingId === c.id ? "Eliminando..." : "Eliminar"}
-                        </button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <IconButton title="Editar" onClick={() => navigate(`/customers/${c.id}/edit`)}>
+                            <PencilIcon />
+                          </IconButton>
+                          <IconButton
+                            title="Eliminar"
+                            variant="danger"
+                            onClick={() => handleDelete(c)}
+                            disabled={deletingId === c.id}
+                          >
+                            <TrashIcon />
+                          </IconButton>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -202,12 +202,12 @@ export default function CustomersPage() {
                 </p>
                 {!search && (
                   <div className="flex justify-center space-x-3">
-                    <button
+                    <Button
                       onClick={() => navigate("/customers/new")}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                      variant="primary"
                     >
-                      Agregar Cliente
-                    </button>
+                      Nuevo cliente
+                    </Button>
                   </div>
                 )}
               </div>

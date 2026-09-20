@@ -6,6 +6,7 @@ import {
   cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
+import { Button } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -466,29 +467,30 @@ export default function ResolutionPanel() {
             </div>
 
             <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
-              <button
-                type="button"
+              <Button
                 onClick={handleCargarAlegra}
                 disabled={isLoadingAlegra || isValidating || isSaving}
-                className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Cargar la resolución desde Alegra"
+                loading={isLoadingAlegra}
               >
-                {isLoadingAlegra ? "Cargando..." : "Cargar desde Alegra"}
-              </button>
-              <button
-                type="button"
+                Importar
+              </Button>
+              <Button
                 onClick={handleValidar}
                 disabled={!resolucion || isValidating || isSaving}
-                className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Validar ante Alegra"
+                loading={isValidating}
               >
-                {isValidating ? "Validando..." : "Validar ante Alegra"}
-              </button>
-              <button
+                Validar
+              </Button>
+              <Button
                 type="submit"
                 disabled={isSaving || hasErrors}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                loading={isSaving}
               >
-                {isSaving ? "Guardando..." : "Guardar Cambios"}
-              </button>
+                Guardar
+              </Button>
             </div>
           </form>
 

@@ -5,3 +5,6 @@ export { default as ForgotPasswordForm } from "./components/ForgotPasswordForm.j
 export { default as ResetPasswordForm } from "./components/ResetPasswordForm.jsx";
 export { default as SidebarShell } from "./components/SidebarShell.jsx";
 export { default as SearchableSelect } from "./components/SearchableSelect.jsx";
+export { default as Button } from "./components/Button.jsx";
+export { default as IconButton } from "./components/IconButton.jsx";
+export { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon } from "./components/icons.jsx";

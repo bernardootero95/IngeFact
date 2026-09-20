@@ -9,6 +9,7 @@ import {
   obtenerFirmaDigitalNotaCredito,
 } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { Button, ArrowLeftIcon } from "@ingefact/ui";
 
 const MONEDA = "COP";
 
@@ -129,18 +130,21 @@ export default function CreditNoteRepresentationPage() {
   return (
     <div className="min-h-screen bg-neutralCustom-100 font-sans">
       <div className="print:hidden sticky top-0 z-10 bg-white border-b border-neutralCustom-200 px-6 py-3 flex items-center justify-between">
-        <button
+        <Button
           onClick={() => navigate(`/credit-notes/${id}`)}
-          className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+          variant="ghost"
+          icon={ArrowLeftIcon}
+          title="Volver al detalle"
         >
-          ← Volver a la nota crédito
-        </button>
-        <button
+          Volver
+        </Button>
+        <Button
           onClick={() => window.print()}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+          variant="primary"
+          title="Imprimir o guardar como PDF"
         >
-          Imprimir / Guardar como PDF
-        </button>
+          Imprimir
+        </Button>
       </div>
 
       <div className="relative max-w-4xl mx-auto bg-white shadow-sm print:shadow-none my-6 print:my-0 p-8 text-sm text-neutralCustom-800 overflow-hidden">

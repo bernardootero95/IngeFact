@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { listProveedores, getProveedor, crearFacturaRecibida } from "@ingefact/core-api";
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateProveedor, validateCufe, validateFecha } from "./ReceivedInvoiceFormPage.validation";
 
@@ -99,12 +99,12 @@ export default function ReceivedInvoiceFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button
+              <Button
                 onClick={() => navigate("/received-invoices")}
-                className="text-brand-600 hover:underline font-medium"
+                variant="link"
               >
-                Facturas Recibidas
-              </button>
+                Facturas recibidas
+              </Button>
               <span>/</span>
               <span>Nueva</span>
             </div>
@@ -139,13 +139,14 @@ export default function ReceivedInvoiceFormPage() {
                     <label htmlFor="proveedor-select" className="block text-sm font-medium text-neutralCustom-800">
                       Proveedor <span className="text-fiscal-danger">*</span>
                     </label>
-                    <button
-                      type="button"
+                    <Button
                       onClick={irACrearProveedor}
-                      className="text-xs font-medium text-brand-600 hover:text-brand-400"
+                      variant="link"
+                      icon={PlusIcon}
+                      className="text-xs"
                     >
-                      + Nuevo Proveedor
-                    </button>
+                      Nuevo proveedor
+                    </Button>
                   </div>
                   <SearchableSelect
                     id="proveedor-select"
@@ -245,21 +246,20 @@ export default function ReceivedInvoiceFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate("/received-invoices")}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    disabled={isSaving}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    variant="primary"
+                    title="Registrar factura recibida"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Registrar Factura Recibida"}
-                  </button>
+                    Registrar
+                  </Button>
                 </div>
               </form>
             )}

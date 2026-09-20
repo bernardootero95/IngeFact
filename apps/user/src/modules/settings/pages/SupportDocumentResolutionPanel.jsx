@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getResolucionDocumentoSoporte, guardarResolucionDocumentoSoporte } from "@ingefact/core-api";
 import { validateField } from "./SupportDocumentResolutionPanel.validation";
+import { Button } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -325,13 +326,14 @@ export default function SupportDocumentResolutionPanel() {
             </div>
 
             <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
-              <button
+              <Button
                 type="submit"
                 disabled={isSaving || hasErrors}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                loading={isSaving}
               >
-                {isSaving ? "Guardando..." : "Guardar Cambios"}
-              </button>
+                Guardar
+              </Button>
             </div>
           </form>
         </>

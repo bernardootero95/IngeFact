@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, IconButton, TrashIcon } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -40,13 +40,14 @@ export default function SeccionLineasDocumentoSoporte({
     <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-neutralCustom-800">Productos y Servicios</h3>
-        <button
-          type="button"
+        <Button
           onClick={onCrearProducto}
-          className="text-xs font-medium text-brand-600 hover:text-brand-400"
+          variant="link"
+          icon={PlusIcon}
+          className="text-xs"
         >
-          + Nuevo Producto
-        </button>
+          Nuevo producto
+        </Button>
       </div>
 
       <div className="flex items-end gap-3 p-3 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md">
@@ -74,13 +75,14 @@ export default function SeccionLineasDocumentoSoporte({
             className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm text-right focus:outline-none focus:border-brand-400"
           />
         </div>
-        <button
-          type="button"
+        <Button
           onClick={handleAgregar}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shrink-0"
+          variant="primary"
+          icon={PlusIcon}
+          className="shrink-0"
         >
-          + Agregar
-        </button>
+          Agregar
+        </Button>
       </div>
       {addError && <p className="text-xs text-fiscal-danger mt-2">{addError}</p>}
 
@@ -138,13 +140,9 @@ export default function SeccionLineasDocumentoSoporte({
                     </td>
                     <td className="py-2 pr-2 text-right font-medium align-top">{formatCOP(subtotalLinea)}</td>
                     <td className="py-2 text-right align-top">
-                      <button
-                        type="button"
-                        onClick={() => onRemoveLinea(index)}
-                        className="text-neutralCustom-400 hover:text-fiscal-danger"
-                      >
-                        ✕
-                      </button>
+                      <IconButton title="Quitar línea" variant="danger" onClick={() => onRemoveLinea(index)}>
+                        <TrashIcon />
+                      </IconButton>
                     </td>
                   </tr>
                 );

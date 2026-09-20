@@ -9,7 +9,7 @@ import {
   enviarNotaCreditoPorCorreo,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -118,9 +118,9 @@ export default function CreditNoteDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/credit-notes")} className="text-brand-600 hover:underline font-medium">
-                Notas Crédito
-              </button>
+              <Button onClick={() => navigate("/credit-notes")} variant="link">
+                Notas crédito
+              </Button>
               <span>/</span>
               <span>{nota?.numero_completo || "Borrador"}</span>
             </div>
@@ -156,12 +156,13 @@ export default function CreditNoteDetailPage() {
                     <p className="text-xs text-brand-600 font-semibold uppercase">Factura afectada</p>
                     <p className="text-sm font-semibold text-neutralCustom-800">{nota.factura_numero_completo}</p>
                   </div>
-                  <button
+                  <Button
                     onClick={() => navigate(`/invoices/${nota.factura_id}`)}
-                    className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                    variant="link"
+                    className="shrink-0 ml-4 text-xs"
                   >
                     Ver factura →
-                  </button>
+                  </Button>
                 </div>
 
                 {nota.cude && (
@@ -170,12 +171,13 @@ export default function CreditNoteDetailPage() {
                       <p className="text-xs text-neutralCustom-500">CUDE</p>
                       <p className="text-xs font-mono text-neutralCustom-700 break-all">{nota.cude}</p>
                     </div>
-                    <button
+                    <Button
                       onClick={() => navigator.clipboard?.writeText(nota.cude)}
-                      className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                      variant="link"
+                      className="shrink-0 ml-4 text-xs"
                     >
                       Copiar
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -205,45 +207,41 @@ export default function CreditNoteDetailPage() {
                 <div className="flex flex-wrap gap-3">
                   {(nota.estado === "borrador" || nota.estado === "rechazada") && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/credit-notes/${id}/edit`)}
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                        variant="primary"
+                        title="Continuar editando"
                       >
-                        {nota.estado === "rechazada" ? "Corregir y Reenviar" : "Continuar Editando"}
-                      </button>
-                      <button
+                        {nota.estado === "rechazada" ? "Corregir" : "Editar"}
+                      </Button>
+                      <Button
                         onClick={handleEliminar}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        variant="danger"
+                        loading={isDeleting}
                       >
-                        {isDeleting
-                          ? "Eliminando..."
-                          : nota.estado === "rechazada"
-                            ? "Eliminar Nota"
-                            : "Eliminar Borrador"}
-                      </button>
+                        Eliminar
+                      </Button>
                     </>
                   )}
-                  <button
+                  <Button
                     onClick={handleVerRepresentacion}
-                    disabled={isLoadingPdf}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    loading={isLoadingPdf}
+                    title={nota.cude ? "Ver representación gráfica" : "Vista previa del borrador"}
                   >
-                    {isLoadingPdf ? "Generando PDF..." : nota.cude ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
-                  </button>
+                    {nota.cude ? "Ver PDF" : "Vista previa"}
+                  </Button>
                   {nota.cude && (
-                    <button
+                    <Button
                       onClick={handleDescargarXml}
-                      disabled={isDownloadingXml}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      loading={isDownloadingXml}
                     >
-                      {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
-                    </button>
+                      Descargar XML
+                    </Button>
                   )}
                   {nota.estado === "aceptada" && (
                     <EnviarCorreoPopover
                       variant="button"
-                      label="Enviar por Correo"
+                      label="Enviar correo"
                       defaultEmail={cliente?.correo_electronico || ""}
                       onEnviar={(correo) => enviarNotaCreditoPorCorreo(id, correo)}
                       onEnviado={(correo) =>

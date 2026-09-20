@@ -10,7 +10,7 @@ import {
   enviarDocumentoSoporte,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDocumentoSoporte from "../components/SeccionLineasDocumentoSoporte";
 import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
@@ -291,12 +291,12 @@ export default function SupportDocumentFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button
+              <Button
                 onClick={() => navigate("/support-documents")}
-                className="text-brand-600 hover:underline font-medium"
+                variant="link"
               >
-                Documento Soporte
-              </button>
+                Documento soporte
+              </Button>
               <span>/</span>
               <span>{isEditing ? "Editar" : "Nuevo"}</span>
             </div>
@@ -335,13 +335,14 @@ export default function SupportDocumentFormPage() {
                         <label htmlFor="proveedor-select" className="block text-sm font-medium text-neutralCustom-800">
                           Proveedor <span className="text-fiscal-danger">*</span>
                         </label>
-                        <button
-                          type="button"
+                        <Button
                           onClick={() => irACrear("/suppliers/new")}
-                          className="text-xs font-medium text-brand-600 hover:text-brand-400"
+                          variant="link"
+                          icon={PlusIcon}
+                          className="text-xs"
                         >
-                          + Nuevo Proveedor
-                        </button>
+                          Nuevo proveedor
+                        </Button>
                       </div>
                       <SearchableSelect
                         id="proveedor-select"
@@ -417,30 +418,28 @@ export default function SupportDocumentFormPage() {
                   </div>
 
                   <div className="flex gap-3 justify-end">
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => navigate("/support-documents")}
                       disabled={isBusy}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                     >
                       Cancelar
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
                       onClick={handleGuardarBorrador}
                       disabled={isBusy}
-                      className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      variant="outline"
+                      loading={isSavingDraft}
                     >
-                      {isSavingDraft ? "Guardando..." : "Guardar Borrador"}
-                    </button>
-                    <button
-                      type="button"
+                      Guardar borrador
+                    </Button>
+                    <Button
                       onClick={handleEnviar}
                       disabled={isBusy}
-                      className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50"
+                      variant="primary"
+                      loading={isSending}
                     >
-                      {isSending ? "Enviando..." : "Enviar a la DIAN"}
-                    </button>
+                      Enviar a DIAN
+                    </Button>
                   </div>
                 </div>
               </form>

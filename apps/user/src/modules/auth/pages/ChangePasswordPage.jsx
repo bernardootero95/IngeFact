@@ -4,6 +4,7 @@ import { changePassword } from "@ingefact/core-api";
 import { isStrongPassword } from "@ingefact/utils";
 import { useAuthStore } from "../store/authStore";
 import logo from "../../../assets/logo.png";
+import { Button } from "@ingefact/ui";
 
 function validateNewPassword(value) {
   if (!value) return "La contraseña es obligatoria.";
@@ -167,13 +168,17 @@ export default function ChangePasswordPage() {
             )}
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading || hasErrors}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+            className="mt-2"
           >
-            {loading ? "Guardando..." : "Cambiar contraseña"}
-          </button>
+            Cambiar contraseña
+          </Button>
         </form>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon } from "@ingefact/ui";
 
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
@@ -103,13 +103,14 @@ export default function SeccionCliente({
             <label htmlFor="cliente-select" className="block text-sm font-medium text-neutralCustom-800">
               Cliente <span className="text-fiscal-danger">*</span>
             </label>
-            <button
-              type="button"
+            <Button
               onClick={onCrearCliente}
-              className="text-xs font-medium text-brand-600 hover:text-brand-400"
+              variant="link"
+              icon={PlusIcon}
+              className="text-xs"
             >
-              + Nuevo Cliente
-            </button>
+              Nuevo cliente
+            </Button>
           </div>
           <SearchableSelect
             id="cliente-select"

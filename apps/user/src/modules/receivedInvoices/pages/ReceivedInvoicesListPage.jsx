@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturasRecibidas } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import { Button } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -61,15 +62,15 @@ export default function ReceivedInvoicesListPage() {
               Registra las facturas de tus proveedores y sus eventos ante la DIAN.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/received-invoices/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nueva Factura Recibida
-          </button>
+            Registrar
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -81,12 +82,12 @@ export default function ReceivedInvoicesListPage() {
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
-                <button
+                <Button
                   onClick={fetchFacturas}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : facturas.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -143,12 +144,12 @@ export default function ReceivedInvoicesListPage() {
                   Registra el CUFE de una factura que te haya enviado un proveedor para poder confirmar su recibo
                   ante la DIAN.
                 </p>
-                <button
+                <Button
                   onClick={() => navigate("/received-invoices/new")}
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                  variant="primary"
                 >
-                  Nueva Factura Recibida
-                </button>
+                  Registrar
+                </Button>
               </div>
             )}
           </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFacturaRecibida, registrarEventoReceptor, listPublicReferenceTable } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import { Button } from "@ingefact/ui";
 import {
   TIPOS_EVENTO,
   TIPOS_QUE_REQUIEREN_GENERADOR,
@@ -151,12 +152,12 @@ export default function ReceivedInvoiceDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button
+              <Button
                 onClick={() => navigate("/received-invoices")}
-                className="text-brand-600 hover:underline font-medium"
+                variant="link"
               >
-                Facturas Recibidas
-              </button>
+                Facturas recibidas
+              </Button>
               <span>/</span>
               <span>Detalle</span>
             </div>
@@ -403,13 +404,13 @@ export default function ReceivedInvoiceDetailPage() {
               )}
 
               <div className="flex justify-end pt-2">
-                <button
+                <Button
                   type="submit"
-                  disabled={isRegistering}
-                  className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                  variant="primary"
+                  loading={isRegistering}
                 >
-                  {isRegistering ? "Registrando..." : "Registrar Evento"}
-                </button>
+                  Registrar
+                </Button>
               </div>
             </form>
           </div>

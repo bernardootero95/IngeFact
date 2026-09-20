@@ -14,6 +14,7 @@ import Sidebar from "../../../components/Sidebar";
 import SeccionCliente from "../components/SeccionCliente";
 import SeccionLineas from "../components/SeccionLineas";
 import SeccionResumen from "../components/SeccionResumen";
+import { Button } from "@ingefact/ui";
 import {
   validateCliente,
   validateFecha,
@@ -357,9 +358,9 @@ export default function InvoiceFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/invoices")} className="text-brand-600 hover:underline font-medium">
+              <Button onClick={() => navigate("/invoices")} variant="link">
                 Facturas
-              </button>
+              </Button>
               <span>/</span>
               <span>{isEditing ? "Editar" : "Nueva"}</span>
             </div>

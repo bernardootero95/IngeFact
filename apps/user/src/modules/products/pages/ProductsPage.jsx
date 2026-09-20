@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProductos, deleteProducto } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -72,12 +72,12 @@ export default function ProductsPage() {
               Ítems reutilizables para agilizar la creación de facturas.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/products/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
             <svg
-              className="w-4 h-4 mr-2"
+              className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -89,8 +89,8 @@ export default function ProductsPage() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Nuevo Producto
-          </button>
+            Nuevo producto
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -129,12 +129,12 @@ export default function ProductsPage() {
                 <p className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los productos: {loadError}
                 </p>
-                <button
+                <Button
                   onClick={() => fetchProducts(search)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : products.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -169,20 +169,20 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         {p.tributo ? `${p.tributo} · ${p.tarifa_impuesto}%` : "Excluido"}
                       </td>
-                      <td className="px-6 py-4 text-right space-x-3">
-                        <button
-                          onClick={() => navigate(`/products/${p.id}/edit`)}
-                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p)}
-                          disabled={deletingId === p.id}
-                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
-                        >
-                          {deletingId === p.id ? "Eliminando..." : "Eliminar"}
-                        </button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <IconButton title="Editar" onClick={() => navigate(`/products/${p.id}/edit`)}>
+                            <PencilIcon />
+                          </IconButton>
+                          <IconButton
+                            title="Eliminar"
+                            variant="danger"
+                            onClick={() => handleDelete(p)}
+                            disabled={deletingId === p.id}
+                          >
+                            <TrashIcon />
+                          </IconButton>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -215,12 +215,12 @@ export default function ProductsPage() {
                 </p>
                 {!search && (
                   <div className="flex justify-center space-x-3">
-                    <button
+                    <Button
                       onClick={() => navigate("/products/new")}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                      variant="primary"
                     >
-                      Agregar Producto
-                    </button>
+                      Nuevo producto
+                    </Button>
                   </div>
                 )}
               </div>

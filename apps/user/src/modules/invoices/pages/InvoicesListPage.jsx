@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturas, obtenerRepresentacionPdfFactura, enviarFacturaPorCorreo } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import IconButton from "../../../components/IconButton";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
@@ -96,15 +95,15 @@ export default function InvoicesListPage() {
             <h2 className="text-lg font-medium text-neutralCustom-800">Facturas</h2>
             <p className="text-xs text-neutralCustom-500">Emite y consulta tus facturas electrónicas.</p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/invoices/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nueva Factura
-          </button>
+            Nueva factura
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -152,12 +151,12 @@ export default function InvoicesListPage() {
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las facturas: {loadError}</p>
-                <button
+                <Button
                   onClick={() => fetchFacturas(estado)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : facturasFiltradas.length > 0 ? (
               <table className="w-full text-left text-sm text-neutralCustom-600">
@@ -276,12 +275,12 @@ export default function InvoicesListPage() {
                     : "Crea tu primera factura para empezar a facturar electrónicamente."}
                 </p>
                 {!search && !estado && (
-                  <button
+                  <Button
                     onClick={() => navigate("/invoices/new")}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                    variant="primary"
                   >
-                    Nueva Factura
-                  </button>
+                    Nueva factura
+                  </Button>
                 )}
               </div>
             )}

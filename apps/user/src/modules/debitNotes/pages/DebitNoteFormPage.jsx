@@ -11,6 +11,7 @@ import {
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDebito from "../components/SeccionLineasDebito";
 import { validateMotivo, validateLineasDebito, calcularTotalesNota } from "./DebitNoteFormPage.validation";
+import { Button } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -169,18 +170,18 @@ export default function DebitNoteFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/invoices")} className="text-brand-600 hover:underline font-medium">
+              <Button onClick={() => navigate("/invoices")} variant="link">
                 Facturas
-              </button>
+              </Button>
               {factura && (
                 <>
                   <span>/</span>
-                  <button
+                  <Button
                     onClick={() => navigate(`/invoices/${factura.id}`)}
-                    className="text-brand-600 hover:underline font-medium"
+                    variant="link"
                   >
                     {factura.numero_completo}
-                  </button>
+                  </Button>
                 </>
               )}
               <span>/</span>
@@ -281,30 +282,27 @@ export default function DebitNoteFormPage() {
                     </div>
                   </div>
                   <div className="flex gap-3 justify-end">
-                    <button
-                      type="button"
+                    <Button
                       onClick={() => navigate(-1)}
                       disabled={guardando}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                     >
                       Cancelar
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
                       onClick={handleGuardarBorrador}
                       disabled={guardando}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      loading={isSavingDraft}
                     >
-                      {isSavingDraft ? "Guardando..." : "Guardar Borrador"}
-                    </button>
-                    <button
-                      type="button"
+                      Guardar borrador
+                    </Button>
+                    <Button
                       onClick={handleEnviar}
                       disabled={guardando}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50"
+                      variant="primary"
+                      loading={isSending}
                     >
-                      {isSending ? "Enviando..." : "Enviar a DIAN"}
-                    </button>
+                      Enviar a DIAN
+                    </Button>
                   </div>
                 </div>
               </>
