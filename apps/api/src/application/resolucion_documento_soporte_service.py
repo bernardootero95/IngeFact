@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from src.application.consecutivo import revertir_consecutivo
 from src.domain.resolucion_documento_soporte import GuardarResolucionDocumentoSoporteRequest
 from src.infrastructure.db.models import ResolucionDocumentoSoporte
 
@@ -97,3 +98,13 @@ class ResolucionDocumentoSoporteService:
                 "Se agoto el rango de numeracion de la Resolucion de Documento Soporte configurada.",
             )
         return fila[0]
+
+    def revertir_consecutivo(self, empresa_id: uuid.UUID, consecutivo: int) -> bool:
+        """Mismo criterio que ResolucionDianService.revertir_consecutivo."""
+        return revertir_consecutivo(
+            self.db,
+            ResolucionDocumentoSoporte,
+            consecutivo,
+            ResolucionDocumentoSoporte.empresa_id == empresa_id,
+            empresa_id=empresa_id,
+        )

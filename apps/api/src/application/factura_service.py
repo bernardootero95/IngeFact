@@ -353,7 +353,9 @@ class FacturaService:
             # Alegra respondio (rechazo por dato invalido, resolucion, etc.) --
             # es un error del request, no una falla de infraestructura, por
             # eso 400 y no 502 (que aqui confundia al frontend con una caida
-            # del gateway).
+            # del gateway). Un 4xx significa que no creo ningun documento: se
+            # devuelve el numero para no dejar un hueco en la resolucion DIAN.
+            resolucion_service.revertir_consecutivo(empresa_id, consecutivo)
             raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
         except AlegraTransientError as exc:
             raise HTTPException(
