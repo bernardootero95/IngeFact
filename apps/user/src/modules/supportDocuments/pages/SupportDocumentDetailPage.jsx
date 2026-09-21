@@ -22,10 +22,10 @@ const formatCOP = (value) =>
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
 const ESTADO_INFO = {
-  borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
-  enviado: { icon: "⏳", label: "Enviado a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
-  aceptado: { icon: "✅", label: "Aceptado por la DIAN", classes: "bg-brand-50 text-brand-600" },
-  rechazado: { icon: "❌", label: "Rechazado por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  borrador: { label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
+  enviado: { label: "Enviado a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
+  aceptado: { label: "Aceptado por la DIAN", classes: "bg-brand-50 text-brand-600" },
+  rechazado: { label: "Rechazado por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
 };
 
 export default function SupportDocumentDetailPage() {
@@ -181,7 +181,8 @@ export default function SupportDocumentDetailPage() {
                 <span
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${estadoInfo.classes}`}
                 >
-                  {estadoInfo.icon} {estadoInfo.label}
+                  <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+                  {estadoInfo.label}
                 </span>
                 <div className="flex flex-wrap justify-end gap-3">
                   {editable && (

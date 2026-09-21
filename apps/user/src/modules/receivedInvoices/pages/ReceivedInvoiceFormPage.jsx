@@ -247,6 +247,7 @@ export default function ReceivedInvoiceFormPage() {
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
                   <Button
+                    variant="ghost"
                     onClick={() => navigate("/received-invoices")}
                     disabled={isSaving}
                   >

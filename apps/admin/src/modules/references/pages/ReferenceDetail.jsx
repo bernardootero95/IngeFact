@@ -157,7 +157,7 @@ export default function ReferenceDetail() {
               Cargando datos de la DIAN...
             </p>
           ) : (
-            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col flex-1 overflow-hidden">
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col flex-1 overflow-x-auto">
               <div className="overflow-y-auto flex-1">
                 <table className="w-full text-left border-collapse relative">
                   <thead className="sticky top-0 bg-neutralCustom-50 z-10 shadow-sm border-b border-neutralCustom-100">

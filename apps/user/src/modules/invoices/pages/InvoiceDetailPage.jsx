@@ -25,11 +25,11 @@ const formatCOP = (value) =>
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
 const ESTADO_INFO = {
-  borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
-  enviada: { icon: "⏳", label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
-  aceptada: { icon: "✅", label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
-  rechazada: { icon: "❌", label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
-  anulada: { icon: "🚫", label: "Anulada", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  borrador: { label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
+  enviada: { label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
+  aceptada: { label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
+  rechazada: { label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  anulada: { label: "Anulada", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
 };
 
 const NOTA_ESTADO_BADGE = {
@@ -217,7 +217,7 @@ export default function InvoiceDetailPage() {
                       (ESTADO_INFO[factura.estado] || ESTADO_INFO.borrador).classes
                     }`}
                   >
-                    {(ESTADO_INFO[factura.estado] || ESTADO_INFO.borrador).icon}{" "}
+                    <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
                     {(ESTADO_INFO[factura.estado] || ESTADO_INFO.borrador).label}
                   </span>
                 </div>

@@ -196,8 +196,9 @@ export default function CompanyDataSettingsPage() {
                     </div>
                   </div>
 
-                  <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+                  <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
                     <Button
+                      variant="ghost"
                       onClick={handleCancel}
                       disabled={isSaving}
                     >

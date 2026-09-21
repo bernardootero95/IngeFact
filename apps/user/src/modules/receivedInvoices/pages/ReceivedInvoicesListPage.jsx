@@ -74,7 +74,7 @@ export default function ReceivedInvoicesListPage() {
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             {loading ? (
               <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
                 Cargando facturas recibidas...

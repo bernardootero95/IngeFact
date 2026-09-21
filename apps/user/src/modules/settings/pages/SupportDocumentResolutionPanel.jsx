@@ -325,7 +325,7 @@ export default function SupportDocumentResolutionPanel() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
               <Button
                 type="submit"
                 disabled={isSaving || hasErrors}

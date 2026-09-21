@@ -419,6 +419,7 @@ export default function SupportDocumentFormPage() {
 
                   <div className="flex gap-3 justify-end">
                     <Button
+                      variant="ghost"
                       onClick={() => navigate("/support-documents")}
                       disabled={isBusy}
                     >
@@ -427,7 +428,6 @@ export default function SupportDocumentFormPage() {
                     <Button
                       onClick={handleGuardarBorrador}
                       disabled={isBusy}
-                      variant="outline"
                       loading={isSavingDraft}
                     >
                       Guardar borrador

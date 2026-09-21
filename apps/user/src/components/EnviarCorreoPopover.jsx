@@ -172,6 +172,7 @@ export default function EnviarCorreoPopover({
 
             <div className="flex justify-end gap-2">
               <Button
+                variant="ghost"
                 onClick={close}
                 disabled={sending}
                 size="sm"

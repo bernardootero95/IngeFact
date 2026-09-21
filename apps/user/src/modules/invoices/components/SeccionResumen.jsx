@@ -43,6 +43,7 @@ export default function SeccionResumen({
 
       <div className="flex gap-3 justify-end">
         <Button
+          variant="ghost"
           onClick={onCancelar}
           disabled={disabled}
         >

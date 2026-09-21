@@ -283,6 +283,7 @@ export default function DebitNoteFormPage() {
                   </div>
                   <div className="flex gap-3 justify-end">
                     <Button
+                      variant="ghost"
                       onClick={() => navigate(-1)}
                       disabled={guardando}
                     >

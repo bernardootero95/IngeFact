@@ -290,6 +290,7 @@ export default function CreditNoteFormPage() {
                   </div>
                   <div className="flex gap-3 justify-end">
                     <Button
+                      variant="ghost"
                       onClick={() => navigate(-1)}
                       disabled={guardando}
                     >
