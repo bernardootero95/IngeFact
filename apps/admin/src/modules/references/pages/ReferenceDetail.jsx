@@ -93,11 +93,11 @@ export default function ReferenceDetail() {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 shrink-0 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
+      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 shrink-0 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8">
           <div className="flex items-center space-x-4">
             <Button
               onClick={() => navigate("/admin/references")}
@@ -141,7 +141,7 @@ export default function ReferenceDetail() {
           </div>
         </header>
 
-        <div className="p-8 flex-1 flex flex-col space-y-4 overflow-hidden">
+        <div className="p-4 md:p-8 flex-1 flex flex-col space-y-4 overflow-hidden">
           <div className="max-w-md shrink-0">
             <input
               type="text"

@@ -168,7 +168,7 @@ export default function SupportDocumentResolutionPanel() {
             )}
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="numero_resolucion" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Número de Resolución
@@ -209,7 +209,7 @@ export default function SupportDocumentResolutionPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="rango_minimo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Rango Mínimo
@@ -254,7 +254,7 @@ export default function SupportDocumentResolutionPanel() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="fecha_inicio" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Fecha Inicio

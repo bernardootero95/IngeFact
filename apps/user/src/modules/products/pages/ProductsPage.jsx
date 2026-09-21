@@ -60,16 +60,16 @@ export default function ProductsPage() {
 
   const view = useTableView(products);
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
               Catálogo de Productos y Servicios
             </h2>
-            <p className="text-xs text-neutralCustom-500">
+            <p className="hidden sm:block text-xs text-neutralCustom-500">
               Ítems reutilizables para agilizar la creación de facturas.
             </p>
           </div>
@@ -94,7 +94,7 @@ export default function ProductsPage() {
           </Button>
         </header>
 
-        <div className="p-8 flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-between items-center">
               <div className="relative w-64">

@@ -60,17 +60,17 @@ export default function References() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
       <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center px-8">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center gap-3 px-4 md:px-8">
           <h2 className="text-lg font-medium text-neutralCustom-800">
             Tablas de Referencia (Anexos DIAN)
           </h2>
         </header>
 
-        <div className="p-8 flex-1 overflow-y-auto space-y-8">
+        <div className="p-4 md:p-8 flex-1 overflow-y-auto space-y-8">
           {categories.map((category, index) => (
             <div key={index} className="space-y-4">
               <div>

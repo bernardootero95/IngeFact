@@ -30,18 +30,18 @@ export default function Dashboard() {
   const conectadoAlegra = Boolean(empresa?.id_alegra);
 
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <h2 className="text-lg font-medium text-neutralCustom-800">
             Resumen Operativo
           </h2>
           <div className="text-sm text-neutralCustom-500">{profile?.email}</div>
         </header>
 
-        <div className="p-8 space-y-8 flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8 space-y-8 flex-1 overflow-y-auto">
           {loading ? (
             <SpinnerLoading fullScreen={false} text="Cargando métricas..." />
           ) : (

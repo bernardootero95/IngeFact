@@ -15,3 +15,4 @@ export { default as preventNumberWheelChange } from "./utils/preventNumberWheelC
 export { default as useTableView } from "./hooks/useTableView.js";
 export { default as SortableTh } from "./components/SortableTh.jsx";
 export { default as Pagination } from "./components/Pagination.jsx";
+export { default as useMediaQuery } from "./hooks/useMediaQuery.js";
