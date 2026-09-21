@@ -50,7 +50,7 @@ export function Header({ active }: { active: NavKey }) {
             aria-label={open ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={open}
             onClick={() => setOpen((value) => !value)}
-            className="flex h-9 w-9 items-center justify-center rounded-brand-md text-neutralCustom-800 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-brand-md text-neutralCustom-800 md:hidden"
           >
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
               {open ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}

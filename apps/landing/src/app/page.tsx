@@ -82,7 +82,7 @@ export default function HomePage() {
             <PriceCard key={pkg.documentos} {...pkg} />
           ))}
         </div>
-        <Link href="/precios" className="mt-6 inline-block text-[14px] font-semibold text-brand-600 hover:text-brand-400">
+        <Link href="/precios" className="mt-6 inline-block text-[14px] font-semibold text-brand-600 hover:text-brand-700">
           Ver todos los paquetes →
         </Link>
         <CustomAmountBanner className="mx-auto mt-8 max-w-[920px]" />

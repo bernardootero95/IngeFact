@@ -13,7 +13,7 @@ const baseClasses =
   "inline-flex items-center justify-center gap-2 rounded-brand-md px-6 py-3 text-[15px] font-semibold transition-colors";
 
 export function PrimaryButton({ href, children, icon, external, className = "" }: ButtonProps) {
-  const classes = `${baseClasses} bg-brand-600 text-white hover:bg-brand-400 ${className}`;
+  const classes = `${baseClasses} bg-brand-600 text-white hover:bg-brand-700 ${className}`;
   const content = (
     <>
       {icon}
