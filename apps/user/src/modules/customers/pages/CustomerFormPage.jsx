@@ -324,10 +324,10 @@ export default function CustomerFormPage() {
                         </Button>
                       </div>
                       {errors.numero_identificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_identificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_identificacion}</p>
                       )}
                       {errors.digito_verificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.digito_verificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.digito_verificacion}</p>
                       )}
                     </div>
                   </div>
@@ -361,7 +361,7 @@ export default function CustomerFormPage() {
                       }`}
                       placeholder="Ej. IngeFact S.A.S."
                     />
-                    {errors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{errors.nombre}</p>}
+                    {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
                   </div>
 
                   <div>
@@ -382,7 +382,7 @@ export default function CustomerFormPage() {
                       placeholder="facturacion@cliente.com"
                     />
                     {errors.correo_electronico && (
-                      <p className="mt-1 text-xs text-fiscal-danger">{errors.correo_electronico}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger">{errors.correo_electronico}</p>
                     )}
                   </div>
 
@@ -418,7 +418,7 @@ export default function CustomerFormPage() {
                       <option value="48">48 - Responsable de IVA</option>
                       <option value="49">49 - No responsable de IVA</option>
                     </select>
-                    {errors.regimen_fiscal && <p className="mt-1 text-xs text-fiscal-danger">{errors.regimen_fiscal}</p>}
+                    {errors.regimen_fiscal && <p className="mt-1 text-sm text-fiscal-danger">{errors.regimen_fiscal}</p>}
                   </div>
 
                   <div>

@@ -167,7 +167,7 @@ export default function TaxPresetFormPage() {
                     }`}
                     placeholder="Ej. 19"
                   />
-                  {errors.tarifa && <p className="mt-1 text-xs text-fiscal-danger">{errors.tarifa}</p>}
+                  {errors.tarifa && <p className="mt-1 text-sm text-fiscal-danger">{errors.tarifa}</p>}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">

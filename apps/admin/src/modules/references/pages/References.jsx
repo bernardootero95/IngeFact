@@ -98,7 +98,7 @@ export default function References() {
                       <h4 className="text-sm font-medium text-neutralCustom-800 group-hover:text-brand-600 transition-colors">
                         {table.name}
                       </h4>
-                      <span className="text-[10px] text-neutralCustom-500 font-mono uppercase tracking-wider">
+                      <span className="text-xs text-neutralCustom-500 font-mono uppercase tracking-wider">
                         Ver registros
                       </span>
                     </div>

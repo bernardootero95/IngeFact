@@ -353,7 +353,7 @@ export default function SupportDocumentFormPage() {
                         error={!!errors.proveedor}
                         formatOption={(opt) => opt.value}
                       />
-                      {errors.proveedor && <p className="mt-1 text-xs text-fiscal-danger">{errors.proveedor}</p>}
+                      {errors.proveedor && <p className="mt-1 text-sm text-fiscal-danger">{errors.proveedor}</p>}
                     </div>
 
                     <div>

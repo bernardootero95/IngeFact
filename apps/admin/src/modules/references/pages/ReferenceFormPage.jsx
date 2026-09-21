@@ -165,7 +165,7 @@ export default function ReferenceFormPage() {
                     placeholder="Ej: 01"
                   />
                   {fieldErrors.code && (
-                    <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.code}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.code}</p>
                   )}
                 </div>
                 <div className="col-span-2">
@@ -185,7 +185,7 @@ export default function ReferenceFormPage() {
                     placeholder="Descripción oficial"
                   />
                   {fieldErrors.value && (
-                    <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.value}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.value}</p>
                   )}
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function ReferenceFormPage() {
                       placeholder="Ej: 08"
                     />
                     {fieldErrors.deptCode && (
-                      <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.deptCode}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.deptCode}</p>
                     )}
                   </div>
                   <div className="col-span-2">
@@ -229,7 +229,7 @@ export default function ReferenceFormPage() {
                       placeholder="Atlántico"
                     />
                     {fieldErrors.deptValue && (
-                      <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.deptValue}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.deptValue}</p>
                     )}
                   </div>
                 </div>
@@ -253,7 +253,7 @@ export default function ReferenceFormPage() {
                     placeholder="Valor estandarizado NADE"
                   />
                   {fieldErrors.valueNade && (
-                    <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.valueNade}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.valueNade}</p>
                   )}
                 </div>
               )}

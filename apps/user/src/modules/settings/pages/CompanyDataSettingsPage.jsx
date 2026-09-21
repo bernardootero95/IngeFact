@@ -140,7 +140,7 @@ export default function CompanyDataSettingsPage() {
                         diferir de la razón social).
                       </p>
                       {errors.nombre_comercial && (
-                        <p className="mt-1 text-xs text-fiscal-danger">
+                        <p className="mt-1 text-sm text-fiscal-danger">
                           {errors.nombre_comercial}
                         </p>
                       )}
@@ -164,7 +164,7 @@ export default function CompanyDataSettingsPage() {
                         placeholder="+57 1 234 5678"
                       />
                       {errors.telefono && (
-                        <p className="mt-1 text-xs text-fiscal-danger">
+                        <p className="mt-1 text-sm text-fiscal-danger">
                           {errors.telefono}
                         </p>
                       )}
@@ -187,7 +187,7 @@ export default function CompanyDataSettingsPage() {
                         }`}
                       />
                       {errors.direccion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">
+                        <p className="mt-1 text-sm text-fiscal-danger">
                           {errors.direccion}
                         </p>
                       )}

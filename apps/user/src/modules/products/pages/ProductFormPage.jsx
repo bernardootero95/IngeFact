@@ -240,7 +240,7 @@ export default function ProductFormPage() {
                       }`}
                       placeholder="Ej. PROD-001"
                     />
-                    {errors.codigo && <p className="mt-1 text-xs text-fiscal-danger">{errors.codigo}</p>}
+                    {errors.codigo && <p className="mt-1 text-sm text-fiscal-danger">{errors.codigo}</p>}
                   </div>
                 </div>
 
@@ -259,7 +259,7 @@ export default function ProductFormPage() {
                     }`}
                     placeholder="Ej. Asesoría contable mensual"
                   />
-                  {errors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{errors.nombre}</p>}
+                  {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
                 </div>
 
                 <div>
@@ -293,7 +293,7 @@ export default function ProductFormPage() {
                       }`}
                       placeholder="0.00"
                     />
-                    {errors.precio && <p className="mt-1 text-xs text-fiscal-danger">{errors.precio}</p>}
+                    {errors.precio && <p className="mt-1 text-sm text-fiscal-danger">{errors.precio}</p>}
                   </div>
 
                   <div>
@@ -309,7 +309,7 @@ export default function ProductFormPage() {
                       error={!!errors.unidad_medida}
                     />
                     {errors.unidad_medida && (
-                      <p className="mt-1 text-xs text-fiscal-danger">{errors.unidad_medida}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger">{errors.unidad_medida}</p>
                     )}
                   </div>
                 </div>
@@ -360,7 +360,7 @@ export default function ProductFormPage() {
                         placeholder="0.00"
                       />
                       {errors.valor_impuesto_excluido ? (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.valor_impuesto_excluido}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.valor_impuesto_excluido}</p>
                       ) : (
                         <p className="mt-1 text-xs text-neutralCustom-400">
                           Solo si el precio ya incluye un impuesto monofásico pagado al productor (ICL, IBUA). Ese

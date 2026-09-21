@@ -157,7 +157,7 @@ export default function ReceivedInvoiceFormPage() {
                     error={!!errors.proveedor}
                     formatOption={(opt) => opt.value}
                   />
-                  {errors.proveedor && <p className="mt-1 text-xs text-fiscal-danger">{errors.proveedor}</p>}
+                  {errors.proveedor && <p className="mt-1 text-sm text-fiscal-danger">{errors.proveedor}</p>}
                 </div>
 
                 <div>
@@ -177,7 +177,7 @@ export default function ReceivedInvoiceFormPage() {
                       errors.cufe ? "border-fiscal-danger field-invalid" : ""
                     }`}
                   />
-                  {errors.cufe && <p className="mt-1 text-xs text-fiscal-danger">{errors.cufe}</p>}
+                  {errors.cufe && <p className="mt-1 text-sm text-fiscal-danger">{errors.cufe}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -197,7 +197,7 @@ export default function ReceivedInvoiceFormPage() {
                         errors.fecha ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     />
-                    {errors.fecha && <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha}</p>}
+                    {errors.fecha && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha}</p>}
                   </div>
 
                   <div>

@@ -32,7 +32,7 @@ export default function SeccionPagoDocumentoSoporte({
             </option>
           ))}
         </select>
-        {errors.formaPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.formaPago}</p>}
+        {errors.formaPago && <p className="mt-1 text-sm text-fiscal-danger">{errors.formaPago}</p>}
       </div>
 
       <div>
@@ -53,7 +53,7 @@ export default function SeccionPagoDocumentoSoporte({
             </option>
           ))}
         </select>
-        {errors.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.metodoPago}</p>}
+        {errors.metodoPago && <p className="mt-1 text-sm text-fiscal-danger">{errors.metodoPago}</p>}
       </div>
     </div>
   );

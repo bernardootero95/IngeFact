@@ -437,7 +437,7 @@ export default function CompanyFormPage() {
                             onChange={handleChange("razonSocial")}
                             className={`field w-full ${errors.razonSocial ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {errors.razonSocial && <p className="mt-1 text-xs text-fiscal-danger">{errors.razonSocial}</p>}
+                          {errors.razonSocial && <p className="mt-1 text-sm text-fiscal-danger">{errors.razonSocial}</p>}
                         </div>
 
                         <div>
@@ -467,7 +467,7 @@ export default function CompanyFormPage() {
                               className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger field-invalid" : ""}`}
                             />
                             {errors.numeroIdentificacion && (
-                              <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{errors.numeroIdentificacion}</p>
+                              <p className="mt-1 text-sm text-fiscal-danger leading-tight">{errors.numeroIdentificacion}</p>
                             )}
                           </div>
                           <div className="col-span-1">
@@ -518,7 +518,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.departamento && <p className="mt-1 text-[10px] text-fiscal-danger">{errors.departamento}</p>}
+                          {errors.departamento && <p className="mt-1 text-sm text-fiscal-danger">{errors.departamento}</p>}
                         </div>
 
                         <div>
@@ -539,7 +539,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.municipio && <p className="mt-1 text-[10px] text-fiscal-danger">{errors.municipio}</p>}
+                          {errors.municipio && <p className="mt-1 text-sm text-fiscal-danger">{errors.municipio}</p>}
                         </div>
 
                         <div>
@@ -559,7 +559,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.regimen && <p className="mt-1 text-[10px] text-fiscal-danger">{errors.regimen}</p>}
+                          {errors.regimen && <p className="mt-1 text-sm text-fiscal-danger">{errors.regimen}</p>}
                         </div>
 
                         <div>
@@ -580,7 +580,7 @@ export default function CompanyFormPage() {
                             ))}
                           </select>
                           {errors.tipoOrganizacion && (
-                            <p className="mt-1 text-[10px] text-fiscal-danger">{errors.tipoOrganizacion}</p>
+                            <p className="mt-1 text-sm text-fiscal-danger">{errors.tipoOrganizacion}</p>
                           )}
                         </div>
 
@@ -635,7 +635,7 @@ export default function CompanyFormPage() {
                             className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                           />
                           {errors.correoElectronico && (
-                            <p className="mt-1 text-xs text-fiscal-danger">{errors.correoElectronico}</p>
+                            <p className="mt-1 text-sm text-fiscal-danger">{errors.correoElectronico}</p>
                           )}
                         </div>
 
@@ -652,7 +652,7 @@ export default function CompanyFormPage() {
                             className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                           />
                           {errors.nombreUsuario && (
-                            <p className="mt-1 text-xs text-fiscal-danger">{errors.nombreUsuario}</p>
+                            <p className="mt-1 text-sm text-fiscal-danger">{errors.nombreUsuario}</p>
                           )}
                           {!isEditing && (
                             <p className="mt-1 text-xs text-brand-600">
@@ -693,7 +693,7 @@ export default function CompanyFormPage() {
                             className={`field w-full ${errors.maxDocumentos ? "border-fiscal-danger field-invalid" : ""}`}
                             placeholder="Ej: 1200"
                           />
-                          {errors.maxDocumentos && <p className="mt-1 text-xs text-fiscal-danger">{errors.maxDocumentos}</p>}
+                          {errors.maxDocumentos && <p className="mt-1 text-sm text-fiscal-danger">{errors.maxDocumentos}</p>}
                         </div>
 
                         <div className="hidden md:block" />
@@ -709,7 +709,7 @@ export default function CompanyFormPage() {
                             onChange={handleChange("fechaInicio")}
                             className={`field w-full ${errors.fechaInicio ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {errors.fechaInicio && <p className="mt-1 text-xs text-fiscal-danger">{errors.fechaInicio}</p>}
+                          {errors.fechaInicio && <p className="mt-1 text-sm text-fiscal-danger">{errors.fechaInicio}</p>}
                         </div>
 
                         <div>
@@ -723,7 +723,7 @@ export default function CompanyFormPage() {
                             onChange={handleChange("fechaFin")}
                             className={`field w-full ${errors.fechaFin ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {errors.fechaFin && <p className="mt-1 text-xs text-fiscal-danger">{errors.fechaFin}</p>}
+                          {errors.fechaFin && <p className="mt-1 text-sm text-fiscal-danger">{errors.fechaFin}</p>}
                         </div>
 
                         <div>
@@ -790,7 +790,7 @@ export default function CompanyFormPage() {
                             placeholder="Ej: Integracion Sistema de Pedidos"
                             className={`field w-full ${newKeyNameError ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {newKeyNameError && <p className="mt-1 text-xs text-fiscal-danger">{newKeyNameError}</p>}
+                          {newKeyNameError && <p className="mt-1 text-sm text-fiscal-danger">{newKeyNameError}</p>}
                         </div>
                         <Button
                           type="submit"

@@ -122,7 +122,7 @@ export default function ChangePasswordPage() {
               placeholder="••••••••"
             />
             {fieldErrors.currentPassword && (
-              <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.currentPassword}</p>
+              <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.currentPassword}</p>
             )}
           </div>
 
@@ -143,7 +143,7 @@ export default function ChangePasswordPage() {
               }`}
               placeholder="••••••••"
             />
-            {fieldErrors.newPassword && <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.newPassword}</p>}
+            {fieldErrors.newPassword && <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.newPassword}</p>}
           </div>
 
           <div>
@@ -164,7 +164,7 @@ export default function ChangePasswordPage() {
               placeholder="••••••••"
             />
             {fieldErrors.confirmPassword && (
-              <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.confirmPassword}</p>
+              <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.confirmPassword}</p>
             )}
           </div>
 

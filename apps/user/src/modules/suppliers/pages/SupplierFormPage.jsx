@@ -321,10 +321,10 @@ export default function SupplierFormPage() {
                         </Button>
                       </div>
                       {errors.numero_identificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_identificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_identificacion}</p>
                       )}
                       {errors.digito_verificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.digito_verificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.digito_verificacion}</p>
                       )}
                     </div>
                   </div>
@@ -358,7 +358,7 @@ export default function SupplierFormPage() {
                       }`}
                       placeholder="Ej. Papelería Nacional S.A.S."
                     />
-                    {errors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{errors.nombre}</p>}
+                    {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
                   </div>
 
                   <div>
@@ -379,7 +379,7 @@ export default function SupplierFormPage() {
                       placeholder="contacto@proveedor.com"
                     />
                     {errors.correo_electronico && (
-                      <p className="mt-1 text-xs text-fiscal-danger">{errors.correo_electronico}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger">{errors.correo_electronico}</p>
                     )}
                   </div>
 

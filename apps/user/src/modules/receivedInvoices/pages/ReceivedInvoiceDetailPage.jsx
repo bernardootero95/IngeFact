@@ -220,7 +220,7 @@ export default function ReceivedInvoiceDetailPage() {
                         </span>
                       </div>
                       {evento.razon_rechazo && (
-                        <p className="text-xs text-fiscal-danger mt-2">{evento.razon_rechazo}</p>
+                        <p className="text-sm text-fiscal-danger mt-2">{evento.razon_rechazo}</p>
                       )}
                       {evento.notas && <p className="text-xs text-neutralCustom-600 mt-2">{evento.notas}</p>}
                       {evento.cude && (
@@ -266,7 +266,7 @@ export default function ReceivedInvoiceDetailPage() {
                     </option>
                   ))}
                 </select>
-                {errors.tipo && <p className="mt-1 text-xs text-fiscal-danger">{errors.tipo}</p>}
+                {errors.tipo && <p className="mt-1 text-sm text-fiscal-danger">{errors.tipo}</p>}
               </div>
 
               {TIPOS_QUE_REQUIEREN_GENERADOR.includes(tipo) && (
@@ -385,7 +385,7 @@ export default function ReceivedInvoiceDetailPage() {
                         </option>
                       ))}
                     </select>
-                    {errors.claim_code && <p className="mt-1 text-xs text-fiscal-danger">{errors.claim_code}</p>}
+                    {errors.claim_code && <p className="mt-1 text-sm text-fiscal-danger">{errors.claim_code}</p>}
                   </div>
                   <div>
                     <label htmlFor="notas" className="block text-xs font-medium text-neutralCustom-600 mb-1">

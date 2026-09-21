@@ -106,7 +106,7 @@ export default function ForgotPasswordForm({
                   }`}
                   placeholder={emailPlaceholder}
                 />
-                {fieldError && <p className="mt-1 text-xs text-fiscal-danger">{fieldError}</p>}
+                {fieldError && <p className="mt-1 text-sm text-fiscal-danger">{fieldError}</p>}
               </div>
 
               <Button

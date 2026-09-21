@@ -88,7 +88,7 @@ export default function SeccionLineasDocumentoSoporte({
           Agregar
         </Button>
       </div>
-      {addError && <p className="text-xs text-fiscal-danger mt-2">{addError}</p>}
+      {addError && <p className="text-sm text-fiscal-danger mt-2">{addError}</p>}
 
       {lineas.length > 0 ? (
         <div className="overflow-x-auto mt-4">
@@ -159,7 +159,7 @@ export default function SeccionLineasDocumentoSoporte({
           Aún no has agregado productos. Búscalo arriba y dale a "+ Agregar".
         </p>
       )}
-      {error && <p className="text-xs text-fiscal-danger mt-2">{error}</p>}
+      {error && <p className="text-sm text-fiscal-danger mt-2">{error}</p>}
     </div>
   );
 }

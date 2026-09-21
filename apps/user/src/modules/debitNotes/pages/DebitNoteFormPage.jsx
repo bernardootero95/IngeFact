@@ -249,7 +249,7 @@ export default function DebitNoteFormPage() {
                       </option>
                     ))}
                   </select>
-                  {errors.motivo && <p className="mt-1 text-xs text-fiscal-danger">{errors.motivo}</p>}
+                  {errors.motivo && <p className="mt-1 text-sm text-fiscal-danger">{errors.motivo}</p>}
                 </div>
 
                 <SeccionLineasDebito

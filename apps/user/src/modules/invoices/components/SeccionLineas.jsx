@@ -110,7 +110,7 @@ export default function SeccionLineas({
           Agregar
         </Button>
       </div>
-      {addError && <p className="text-xs text-fiscal-danger mt-2">{addError}</p>}
+      {addError && <p className="text-sm text-fiscal-danger mt-2">{addError}</p>}
 
       {lineas.length > 0 ? (
         <div className="overflow-x-auto mt-4">
@@ -206,7 +206,7 @@ export default function SeccionLineas({
           Aún no has agregado productos. Búscalo arriba y dale a "+ Agregar".
         </p>
       )}
-      {errores.lineas && <p className="text-xs text-fiscal-danger mt-2">{errores.lineas}</p>}
+      {errores.lineas && <p className="text-sm text-fiscal-danger mt-2">{errores.lineas}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-neutralCustom-100">
         <div>
@@ -246,7 +246,7 @@ export default function SeccionLineas({
               </option>
             ))}
           </select>
-          {errores.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errores.metodoPago}</p>}
+          {errores.metodoPago && <p className="mt-1 text-sm text-fiscal-danger">{errores.metodoPago}</p>}
         </div>
 
         {formaPago === FORMA_PAGO_CREDITO && (
@@ -263,7 +263,7 @@ export default function SeccionLineas({
                 errores.fechaVencimiento ? "border-fiscal-danger field-invalid" : ""
               }`}
             />
-            {errores.fechaVencimiento && <p className="mt-1 text-xs text-fiscal-danger">{errores.fechaVencimiento}</p>}
+            {errores.fechaVencimiento && <p className="mt-1 text-sm text-fiscal-danger">{errores.fechaVencimiento}</p>}
           </div>
         )}
       </div>

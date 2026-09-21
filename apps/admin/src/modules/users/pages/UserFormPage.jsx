@@ -126,7 +126,7 @@ export default function UserFormPage() {
                   }`}
                   placeholder="Nombre completo"
                 />
-                {fieldErrors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.nombre}</p>}
+                {fieldErrors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.nombre}</p>}
               </div>
 
               <div>
@@ -148,7 +148,7 @@ export default function UserFormPage() {
                   placeholder="correo@ingefact.com"
                 />
                 {fieldErrors.email && !isEditing && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.email}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.email}</p>
                 )}
               </div>
 

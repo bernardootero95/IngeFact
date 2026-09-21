@@ -126,7 +126,7 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                   placeholder="••••••••"
                 />
                 {fieldErrors.password && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.password}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.password}</p>
                 )}
               </div>
 
@@ -148,7 +148,7 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                   placeholder="••••••••"
                 />
                 {fieldErrors.confirmPassword && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.confirmPassword}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.confirmPassword}</p>
                 )}
               </div>
 

@@ -118,7 +118,7 @@ export default function LoginForm({
               placeholder={emailPlaceholder}
             />
             {fieldErrors.email && (
-              <p className="mt-1 text-xs text-fiscal-danger">
+              <p className="mt-1 text-sm text-fiscal-danger">
                 {fieldErrors.email}
               </p>
             )}
@@ -197,7 +197,7 @@ export default function LoginForm({
               </button>
             </div>
             {fieldErrors.password && (
-              <p className="mt-1 text-xs text-fiscal-danger">
+              <p className="mt-1 text-sm text-fiscal-danger">
                 {fieldErrors.password}
               </p>
             )}

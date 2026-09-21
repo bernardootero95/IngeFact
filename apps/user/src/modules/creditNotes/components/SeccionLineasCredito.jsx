@@ -71,7 +71,7 @@ export default function SeccionLineasCredito({ seleccion, error, onToggleLinea, 
           </tbody>
         </table>
       </div>
-      {error && <p className="text-xs text-fiscal-danger mt-2">{error}</p>}
+      {error && <p className="text-sm text-fiscal-danger mt-2">{error}</p>}
     </div>
   );
 }

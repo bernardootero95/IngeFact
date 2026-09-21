@@ -294,7 +294,7 @@ export default function ResolutionPanel() {
                     }`}
                   />
                   {errors.numero_resolucion && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_resolucion}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_resolucion}</p>
                   )}
                 </div>
                 <div>
@@ -314,7 +314,7 @@ export default function ResolutionPanel() {
                     }`}
                   />
                   {errors.prefijo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.prefijo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.prefijo}</p>
                   )}
                 </div>
               </div>
@@ -338,7 +338,7 @@ export default function ResolutionPanel() {
                     }`}
                   />
                   {errors.rango_minimo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.rango_minimo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_minimo}</p>
                   )}
                 </div>
                 <div>
@@ -359,7 +359,7 @@ export default function ResolutionPanel() {
                     }`}
                   />
                   {errors.rango_maximo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.rango_maximo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_maximo}</p>
                   )}
                 </div>
               </div>
@@ -382,7 +382,7 @@ export default function ResolutionPanel() {
                     }`}
                   />
                   {errors.fecha_inicio && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_inicio}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_inicio}</p>
                   )}
                 </div>
                 <div>
@@ -402,7 +402,7 @@ export default function ResolutionPanel() {
                     }`}
                   />
                   {errors.fecha_fin ? (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_fin}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_fin}</p>
                   ) : (
                     resolucion &&
                     formData.fecha_fin === resolucion.fecha_fin && (
@@ -429,7 +429,7 @@ export default function ResolutionPanel() {
                   }`}
                 />
                 {errors.technical_key && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{errors.technical_key}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{errors.technical_key}</p>
                 )}
               </div>
 
@@ -452,9 +452,9 @@ export default function ResolutionPanel() {
                   }`}
                 />
                 {errors.consecutivo_actual ? (
-                  <p className="mt-1 text-xs text-fiscal-danger">{errors.consecutivo_actual}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{errors.consecutivo_actual}</p>
                 ) : (
-                  <p className="mt-1 text-xs text-neutralCustom-500">
+                  <p className="mt-1 text-sm text-neutralCustom-500">
                     Déjalo vacío para iniciar en el rango mínimo. Solo
                     cámbialo si esta numeración ya tiene documentos
                     emitidos fuera de IngeFact (por ejemplo, al

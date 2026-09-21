@@ -200,7 +200,7 @@ export default function SidebarShell({
             >
               {footerLabel}
             </p>
-            <span className="inline-block mt-1 text-[10px] font-bold text-brand-400 bg-brand-50/10 px-2 py-0.5 rounded-brand-md uppercase">
+            <span className="inline-block mt-1 text-xs font-bold text-brand-400 bg-brand-50/10 px-2 py-0.5 rounded-brand-md uppercase">
               {roleBadge}
             </span>
           </div>

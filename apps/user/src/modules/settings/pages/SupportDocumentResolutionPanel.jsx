@@ -186,7 +186,7 @@ export default function SupportDocumentResolutionPanel() {
                     }`}
                   />
                   {errors.numero_resolucion && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_resolucion}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_resolucion}</p>
                   )}
                 </div>
                 <div>
@@ -205,7 +205,7 @@ export default function SupportDocumentResolutionPanel() {
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
-                  {errors.prefijo && <p className="mt-1 text-xs text-fiscal-danger">{errors.prefijo}</p>}
+                  {errors.prefijo && <p className="mt-1 text-sm text-fiscal-danger">{errors.prefijo}</p>}
                 </div>
               </div>
 
@@ -228,7 +228,7 @@ export default function SupportDocumentResolutionPanel() {
                     }`}
                   />
                   {errors.rango_minimo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.rango_minimo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_minimo}</p>
                   )}
                 </div>
                 <div>
@@ -249,7 +249,7 @@ export default function SupportDocumentResolutionPanel() {
                     }`}
                   />
                   {errors.rango_maximo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.rango_maximo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_maximo}</p>
                   )}
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function SupportDocumentResolutionPanel() {
                     }`}
                   />
                   {errors.fecha_inicio && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_inicio}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_inicio}</p>
                   )}
                 </div>
                 <div>
@@ -291,7 +291,7 @@ export default function SupportDocumentResolutionPanel() {
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
-                  {errors.fecha_fin && <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_fin}</p>}
+                  {errors.fecha_fin && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_fin}</p>}
                 </div>
               </div>
 
@@ -314,9 +314,9 @@ export default function SupportDocumentResolutionPanel() {
                   }`}
                 />
                 {errors.consecutivo_actual ? (
-                  <p className="mt-1 text-xs text-fiscal-danger">{errors.consecutivo_actual}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{errors.consecutivo_actual}</p>
                 ) : (
-                  <p className="mt-1 text-xs text-neutralCustom-500">
+                  <p className="mt-1 text-sm text-neutralCustom-500">
                     Déjalo vacío para iniciar en el rango mínimo.
                   </p>
                 )}

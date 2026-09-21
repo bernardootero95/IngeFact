@@ -124,7 +124,7 @@ export default function EnviarCorreoPopover({
                 placeholder="correo@ejemplo.com"
                 className={`field w-full ${error ? "border-fiscal-danger field-invalid" : ""}`}
               />
-              {error && <p className="mt-1 text-xs text-fiscal-danger">{error}</p>}
+              {error && <p className="mt-1 text-sm text-fiscal-danger">{error}</p>}
             </div>
 
             {sendError && (

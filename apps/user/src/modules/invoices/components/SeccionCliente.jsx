@@ -121,7 +121,7 @@ export default function SeccionCliente({
             error={!!error}
             formatOption={(opt) => opt.value}
           />
-          {error && <p className="mt-1 text-xs text-fiscal-danger">{error}</p>}
+          {error && <p className="mt-1 text-sm text-fiscal-danger">{error}</p>}
         </div>
 
         <div>
