@@ -6,7 +6,7 @@ import {
   cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
-import { Button } from "@ingefact/ui";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -187,9 +187,7 @@ export default function ResolutionPanel() {
   return (
     <div className="max-w-2xl space-y-6">
       {loading ? (
-        <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-          Cargando resolución DIAN...
-        </div>
+        <FormSkeleton label="Cargando resolución DIAN..." />
       ) : (
         <>
           {loadError && (

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProveedores, deleteProveedor } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function SuppliersPage() {
@@ -100,9 +100,7 @@ export default function SuppliersPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando proveedores...
-              </div>
+              <TableSkeleton columns={5} label="Cargando proveedores..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar los proveedores: {loadError}</p>

@@ -10,7 +10,7 @@ import {
   enviarDocumentoSoporte,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { SearchableSelect, Button, PlusIcon } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, FormSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDocumentoSoporte from "../components/SeccionLineasDocumentoSoporte";
 import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
@@ -309,7 +309,7 @@ export default function SupportDocumentFormPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}

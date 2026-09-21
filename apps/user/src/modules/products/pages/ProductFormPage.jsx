@@ -7,7 +7,7 @@ import {
   listImpuestosEmpresa,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { SearchableSelect, Button } from "@ingefact/ui";
+import { SearchableSelect, Button, FormSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./ProductFormPage.validation";
 
@@ -189,9 +189,7 @@ export default function ProductFormPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-3xl">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando...
-              </div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}

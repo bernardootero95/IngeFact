@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { listReferenceTable, sincronizarReferenceTable } from "@ingefact/core-api";
-import { ToastAlert, Button, RefreshIcon, ArrowLeftIcon } from "@ingefact/ui";
+import { ToastAlert, Button, RefreshIcon, ArrowLeftIcon, TableSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { tableTitles } from "../tableTitles";
 
@@ -153,9 +153,9 @@ export default function ReferenceDetail() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-neutralCustom-500 font-medium animate-pulse">
-              Cargando datos de la DIAN...
-            </p>
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+              <TableSkeleton columns={4} rows={6} label="Cargando datos de la DIAN..." />
+            </div>
           ) : (
             <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col flex-1 overflow-x-auto">
               <div className="overflow-y-auto flex-1">

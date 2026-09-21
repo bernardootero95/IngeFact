@@ -3,7 +3,7 @@ import { actualizarDatosEmpresa } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./CompanyDataSettingsPage.validation";
-import { Button } from "@ingefact/ui";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = { nombre_comercial: "", telefono: "", direccion: "" };
 
@@ -93,9 +93,7 @@ export default function CompanyDataSettingsPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-2xl space-y-6">
             {loadingEmpresa ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando datos de la empresa...
-              </div>
+              <FormSkeleton label="Cargando datos de la empresa..." />
             ) : (
               <>
                 <form

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getResolucionDocumentoSoporte, guardarResolucionDocumentoSoporte } from "@ingefact/core-api";
 import { validateField } from "./SupportDocumentResolutionPanel.validation";
-import { Button } from "@ingefact/ui";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -109,9 +109,7 @@ export default function SupportDocumentResolutionPanel() {
   return (
     <div className="max-w-2xl space-y-6">
       {loading ? (
-        <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-          Cargando resolución...
-        </div>
+        <FormSkeleton label="Cargando resolución..." />
       ) : (
         <>
           {loadError && (

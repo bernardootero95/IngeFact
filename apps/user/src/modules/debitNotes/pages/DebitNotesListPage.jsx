@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNotasDebito, obtenerRepresentacionPdfNotaDebito, enviarNotaDebitoPorCorreo } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -94,9 +94,7 @@ export default function DebitNotesListPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando notas débito...
-              </div>
+              <TableSkeleton columns={7} label="Cargando notas débito..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>

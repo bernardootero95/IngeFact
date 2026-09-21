@@ -8,3 +8,4 @@ export { default as SearchableSelect } from "./components/SearchableSelect.jsx";
 export { default as Button } from "./components/Button.jsx";
 export { default as IconButton } from "./components/IconButton.jsx";
 export { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, RefreshIcon } from "./components/icons.jsx";
+export { Skeleton, TableSkeleton, FormSkeleton } from "./components/Skeleton.jsx";

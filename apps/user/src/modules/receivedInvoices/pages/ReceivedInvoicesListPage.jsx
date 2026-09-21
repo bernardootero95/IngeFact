@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturasRecibidas } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import { Button } from "@ingefact/ui";
+import { Button, TableSkeleton } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -76,9 +76,7 @@ export default function ReceivedInvoicesListPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando facturas recibidas...
-              </div>
+              <TableSkeleton columns={5} label="Cargando facturas recibidas..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>

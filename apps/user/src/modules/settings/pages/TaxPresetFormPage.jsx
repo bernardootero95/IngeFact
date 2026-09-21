@@ -8,7 +8,7 @@ import {
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./TaxPresetFormPage.validation";
-import { Button } from "@ingefact/ui";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const REQUIRED_FIELDS = ["tributo", "tarifa"];
 
@@ -114,9 +114,7 @@ export default function TaxPresetFormPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-lg">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando...
-              </div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}

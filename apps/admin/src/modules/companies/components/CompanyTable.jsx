@@ -1,13 +1,11 @@
-import { Button } from "@ingefact/ui";
+import { Button, TableSkeleton } from "@ingefact/ui";
 
 
 export default function CompanyTable({ companies, loading, onEdit }) {
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 bg-white border border-neutralCustom-100 rounded-brand-lg">
-        <p className="text-sm font-medium text-neutralCustom-500 animate-pulse">
-          Cargando empresas...
-        </p>
+      <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+        <TableSkeleton columns={6} label="Cargando empresas..." />
       </div>
     );
   }

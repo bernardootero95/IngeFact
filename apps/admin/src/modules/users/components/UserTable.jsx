@@ -1,12 +1,12 @@
-import { Button } from "@ingefact/ui";
+import { Button, TableSkeleton } from "@ingefact/ui";
 
 
 export default function UserTable({ users, loading, onEdit }) {
   if (loading) {
     return (
-      <p className="text-sm text-neutralCustom-500 font-medium animate-pulse">
-        Cargando usuarios...
-      </p>
+      <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+        <TableSkeleton columns={5} label="Cargando usuarios..." />
+      </div>
     );
   }
 

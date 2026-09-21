@@ -5,7 +5,7 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
 } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -80,7 +80,7 @@ export default function SupportDocumentsListPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <TableSkeleton columns={6} label="Cargando..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
