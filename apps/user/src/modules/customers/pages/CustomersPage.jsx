@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listClientes, deleteCliente } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function CustomersPage() {
@@ -39,7 +39,6 @@ export default function CustomersPage() {
   };
 
   const handleDelete = async (cliente) => {
-    if (!window.confirm(`¿Eliminar a "${cliente.nombre}" de tu directorio de clientes?`)) return;
     setDeletingId(cliente.id);
     try {
       await deleteCliente(cliente.id);
@@ -159,14 +158,22 @@ export default function CustomersPage() {
                           <IconButton title="Editar" onClick={() => navigate(`/customers/${c.id}/edit`)}>
                             <PencilIcon />
                           </IconButton>
-                          <IconButton
-                            title="Eliminar"
-                            variant="danger"
-                            onClick={() => handleDelete(c)}
-                            disabled={deletingId === c.id}
+                          <ConfirmPopover
+                            message={`¿Eliminar a "${c.nombre}" de tu directorio de clientes?`}
+                            confirmLabel="Eliminar"
+                            onConfirm={() => handleDelete(c)}
                           >
-                            <TrashIcon />
-                          </IconButton>
+                            {({ ask }) => (
+                              <IconButton
+                                title="Eliminar"
+                                variant="danger"
+                                onClick={ask}
+                                disabled={deletingId === c.id}
+                              >
+                                <TrashIcon />
+                              </IconButton>
+                            )}
+                          </ConfirmPopover>
                         </div>
                       </td>
                     </tr>

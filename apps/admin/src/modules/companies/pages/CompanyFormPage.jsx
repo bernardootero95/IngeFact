@@ -11,7 +11,7 @@ import {
   revocarApiKey,
 } from "@ingefact/core-api";
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
-import { ToastAlert, Button, FormSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const emptyForm = {
@@ -153,8 +153,7 @@ export default function CompanyFormPage() {
     }
   };
 
-  const handleRevokeKey = async (apiKeyId, nombre) => {
-    if (!window.confirm(`¿Revocar la key "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleRevokeKey = async (apiKeyId) => {
     try {
       await revocarApiKey(id, apiKeyId);
       setApiKeyToast({ message: "API key revocada.", type: "success" });
@@ -843,13 +842,21 @@ export default function CompanyFormPage() {
                                 </td>
                                 <td className="py-2 text-right">
                                   {!k.revocada && (
-                                    <Button
-                                      onClick={() => handleRevokeKey(k.id, k.nombre)}
-                                      variant="link-danger"
-                                      className="text-xs"
+                                    <ConfirmPopover
+                                      message={`¿Revocar la key "${k.nombre}"? Esta acción no se puede deshacer.`}
+                                      confirmLabel="Revocar"
+                                      onConfirm={() => handleRevokeKey(k.id)}
                                     >
-                                      Revocar
-                                    </Button>
+                                      {({ ask }) => (
+                                        <Button
+                                          onClick={ask}
+                                          variant="link-danger"
+                                          className="text-xs"
+                                        >
+                                          Revocar
+                                        </Button>
+                                      )}
+                                    </ConfirmPopover>
                                   )}
                                 </td>
                               </tr>

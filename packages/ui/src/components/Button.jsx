@@ -24,6 +24,7 @@ const VARIANTS = {
   secondary: "border-neutralCustom-200 bg-white text-neutralCustom-800 hover:bg-neutralCustom-50",
   outline: "border-brand-600 bg-white text-brand-600 hover:bg-brand-50",
   danger: "border-red-600 bg-white text-red-600 hover:bg-red-50",
+  "danger-solid": "border-red-600 bg-red-600 text-white hover:bg-red-700 hover:border-red-700",
   ghost: "border-transparent bg-transparent text-neutralCustom-600 hover:bg-neutralCustom-100",
 };
 

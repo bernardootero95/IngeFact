@@ -12,7 +12,7 @@ import {
   anularFactura,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert, Button, FormSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -117,7 +117,6 @@ export default function InvoiceDetailPage() {
   }, [cargarFactura]);
 
   const handleAnular = async () => {
-    if (!window.confirm("¿Anular esta factura? Se creará y enviará una Nota Crédito por el 100% del valor.")) return;
     setIsAnulando(true);
     try {
       const nota = await anularFactura(id);
@@ -134,7 +133,6 @@ export default function InvoiceDetailPage() {
     .reduce((total, n) => total + n.total, 0);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este borrador de factura?")) return;
     setIsDeleting(true);
     try {
       await eliminarBorradorFactura(id);
@@ -271,13 +269,21 @@ export default function InvoiceDetailPage() {
                       >
                         {factura.estado === "rechazada" ? "Corregir" : "Editar"}
                       </Button>
-                      <Button
-                        onClick={handleEliminar}
-                        variant="danger"
-                        loading={isDeleting}
+                      <ConfirmPopover
+                        message="¿Eliminar este borrador de factura?"
+                        confirmLabel="Eliminar"
+                        onConfirm={handleEliminar}
                       >
-                        Eliminar
-                      </Button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            loading={isDeleting}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
                   <Button
@@ -324,14 +330,22 @@ export default function InvoiceDetailPage() {
                       >
                         Nota débito
                       </Button>
-                      <Button
-                        onClick={handleAnular}
-                        variant="danger"
-                        title="Anular factura"
-                        loading={isAnulando}
+                      <ConfirmPopover
+                        message="¿Anular esta factura? Se creará y enviará una Nota Crédito por el 100% del valor."
+                        confirmLabel="Anular"
+                        onConfirm={handleAnular}
                       >
-                        Anular
-                      </Button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            title="Anular factura"
+                            loading={isAnulando}
+                          >
+                            Anular
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
                 </div>

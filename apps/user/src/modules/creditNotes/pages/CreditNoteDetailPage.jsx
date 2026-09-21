@@ -9,7 +9,7 @@ import {
   enviarNotaCreditoPorCorreo,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert, Button, FormSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -86,7 +86,6 @@ export default function CreditNoteDetailPage() {
   }, [cargarNota]);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este borrador de nota crédito?")) return;
     setIsDeleting(true);
     try {
       await eliminarBorradorNotaCredito(id);
@@ -214,13 +213,21 @@ export default function CreditNoteDetailPage() {
                       >
                         {nota.estado === "rechazada" ? "Corregir" : "Editar"}
                       </Button>
-                      <Button
-                        onClick={handleEliminar}
-                        variant="danger"
-                        loading={isDeleting}
+                      <ConfirmPopover
+                        message="¿Eliminar este borrador de nota crédito?"
+                        confirmLabel="Eliminar"
+                        onConfirm={handleEliminar}
                       >
-                        Eliminar
-                      </Button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            loading={isDeleting}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
                   <Button

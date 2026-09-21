@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProductos, deleteProducto } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -46,7 +46,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (producto) => {
-    if (!window.confirm(`¿Eliminar "${producto.nombre}" de tu catálogo?`)) return;
     setDeletingId(producto.id);
     try {
       await deleteProducto(producto.id);
@@ -172,14 +171,22 @@ export default function ProductsPage() {
                           <IconButton title="Editar" onClick={() => navigate(`/products/${p.id}/edit`)}>
                             <PencilIcon />
                           </IconButton>
-                          <IconButton
-                            title="Eliminar"
-                            variant="danger"
-                            onClick={() => handleDelete(p)}
-                            disabled={deletingId === p.id}
+                          <ConfirmPopover
+                            message={`¿Eliminar "${p.nombre}" de tu catálogo?`}
+                            confirmLabel="Eliminar"
+                            onConfirm={() => handleDelete(p)}
                           >
-                            <TrashIcon />
-                          </IconButton>
+                            {({ ask }) => (
+                              <IconButton
+                                title="Eliminar"
+                                variant="danger"
+                                onClick={ask}
+                                disabled={deletingId === p.id}
+                              >
+                                <TrashIcon />
+                              </IconButton>
+                            )}
+                          </ConfirmPopover>
                         </div>
                       </td>
                     </tr>

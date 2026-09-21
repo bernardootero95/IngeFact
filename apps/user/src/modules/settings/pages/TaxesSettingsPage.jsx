@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listImpuestosEmpresa, deleteImpuestoEmpresa, listPublicReferenceTable } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function TaxesSettingsPage() {
@@ -35,7 +35,6 @@ export default function TaxesSettingsPage() {
   }, [fetchTaxes]);
 
   const handleDelete = async (impuesto) => {
-    if (!window.confirm(`¿Eliminar el preset "${impuesto.tributo} ${impuesto.tarifa}%"?`)) return;
     setDeletingId(impuesto.id);
     try {
       await deleteImpuestoEmpresa(impuesto.id);
@@ -127,14 +126,22 @@ export default function TaxesSettingsPage() {
                           <IconButton title="Editar" onClick={() => navigate(`/settings/taxes/${t.id}/edit`)}>
                             <PencilIcon />
                           </IconButton>
-                          <IconButton
-                            title="Eliminar"
-                            variant="danger"
-                            onClick={() => handleDelete(t)}
-                            disabled={deletingId === t.id}
+                          <ConfirmPopover
+                            message={`¿Eliminar el preset "${t.tributo} ${t.tarifa}%"?`}
+                            confirmLabel="Eliminar"
+                            onConfirm={() => handleDelete(t)}
                           >
-                            <TrashIcon />
-                          </IconButton>
+                            {({ ask }) => (
+                              <IconButton
+                                title="Eliminar"
+                                variant="danger"
+                                onClick={ask}
+                                disabled={deletingId === t.id}
+                              >
+                                <TrashIcon />
+                              </IconButton>
+                            )}
+                          </ConfirmPopover>
                         </div>
                       </td>
                     </tr>

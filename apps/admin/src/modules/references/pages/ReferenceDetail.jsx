@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { listReferenceTable, sincronizarReferenceTable } from "@ingefact/core-api";
-import { ToastAlert, Button, RefreshIcon, ArrowLeftIcon, TableSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, RefreshIcon, ArrowLeftIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { tableTitles } from "../tableTitles";
 
@@ -66,14 +66,6 @@ export default function ReferenceDetail() {
   }, [searchTerm, records]);
 
   const handleSync = async () => {
-    if (
-      !window.confirm(
-        `¿Estás seguro de que deseas sincronizar la tabla de ${title} con Allegra? Esto actualizará o insertará los códigos oficiales de la DIAN.`,
-      )
-    ) {
-      return;
-    }
-
     setSyncLoading(true);
     try {
       const data = await sincronizarReferenceTable(tableName);
@@ -121,16 +113,24 @@ export default function ReferenceDetail() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <Button
-              onClick={handleSync}
-              variant="outline"
-              icon={RefreshIcon}
-              loading={syncLoading}
-              disabled={loading}
-              title="Sincronizar con Alegra"
+            <ConfirmPopover
+              message={`¿Estás seguro de que deseas sincronizar la tabla de ${title} con Allegra? Esto actualizará o insertará los códigos oficiales de la DIAN.`}
+              confirmLabel="Sincronizar"
+              onConfirm={handleSync}
             >
-              Sincronizar
-            </Button>
+              {({ ask }) => (
+                <Button
+                  onClick={ask}
+                  variant="outline"
+                  icon={RefreshIcon}
+                  loading={syncLoading}
+                  disabled={loading}
+                  title="Sincronizar con Alegra"
+                >
+                  Sincronizar
+                </Button>
+              )}
+            </ConfirmPopover>
 
             <Button
               onClick={() => navigate(`/admin/references/${tableName}/new`)}

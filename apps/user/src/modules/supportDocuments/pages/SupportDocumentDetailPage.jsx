@@ -9,7 +9,7 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert, Button } from "@ingefact/ui";
+import { ToastAlert, Button, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -81,7 +81,6 @@ export default function SupportDocumentDetailPage() {
   }, [cargarDatos]);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este documento soporte?")) return;
     setIsDeleting(true);
     try {
       await eliminarBorradorDocumentoSoporte(id);
@@ -193,13 +192,21 @@ export default function SupportDocumentDetailPage() {
                       >
                         {documento.estado === "rechazado" ? "Corregir" : "Editar"}
                       </Button>
-                      <Button
-                        onClick={handleEliminar}
-                        variant="danger"
-                        loading={isDeleting}
+                      <ConfirmPopover
+                        message="¿Eliminar este documento soporte?"
+                        confirmLabel="Eliminar"
+                        onConfirm={handleEliminar}
                       >
-                        Eliminar
-                      </Button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            loading={isDeleting}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
                   <Button

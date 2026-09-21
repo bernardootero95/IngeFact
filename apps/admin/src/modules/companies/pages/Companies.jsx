@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { listEmpresas, sincronizarEmpresasAlegra } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import CompanyTable from "../components/CompanyTable";
-import { SpinnerLoading, ToastAlert, Button, RefreshIcon } from "@ingefact/ui";
+import { SpinnerLoading, ToastAlert, Button, RefreshIcon, ConfirmPopover } from "@ingefact/ui";
 
 export default function Companies() {
   const navigate = useNavigate();
@@ -43,13 +43,6 @@ export default function Companies() {
   }, []);
 
   const handleSyncAlegra = async () => {
-    if (
-      !window.confirm(
-        "¿Estás seguro de que deseas sincronizar las empresas desde Alegra?",
-      )
-    )
-      return;
-
     setSyncLoading(true);
     try {
       const data = await sincronizarEmpresasAlegra();
@@ -75,16 +68,24 @@ export default function Companies() {
             Empresas y Suscripciones (Tenants)
           </h2>
           <div className="flex items-center space-x-3">
-            <Button
-              onClick={handleSyncAlegra}
-              variant="outline"
-              icon={RefreshIcon}
-              loading={syncLoading}
-              disabled={loading}
-              title="Sincronizar con Alegra"
+            <ConfirmPopover
+              message="¿Estás seguro de que deseas sincronizar las empresas desde Alegra?"
+              confirmLabel="Sincronizar"
+              onConfirm={handleSyncAlegra}
             >
-              Sincronizar
-            </Button>
+              {({ ask }) => (
+                <Button
+                  onClick={ask}
+                  variant="outline"
+                  icon={RefreshIcon}
+                  loading={syncLoading}
+                  disabled={loading}
+                  title="Sincronizar con Alegra"
+                >
+                  Sincronizar
+                </Button>
+              )}
+            </ConfirmPopover>
 
             <Button
               onClick={() => navigate("/admin/companies/new")}
