@@ -24,18 +24,18 @@ export default function Dashboard() {
   }, [fetchKpis]);
 
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
       <main className="flex-1 flex flex-col">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8">
           <h2 className="text-lg font-medium text-neutralCustom-800">
             Resumen del Sistema
           </h2>
           <div className="text-sm text-neutralCustom-500">{profile?.email}</div>
         </header>
 
-        <div className="p-8 space-y-8 flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8 space-y-8 flex-1 overflow-y-auto">
           {error && (
             <div className="p-4 bg-red-50 border border-fiscal-danger rounded-brand-lg flex items-center justify-between">
               <p className="text-sm text-fiscal-danger">No se pudieron cargar las métricas: {error}</p>

@@ -172,11 +172,11 @@ export default function CreditNoteFormPage() {
   const guardando = isSavingDraft || isSending;
 
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
               <Button onClick={() => navigate("/invoices")} variant="link">
@@ -202,7 +202,7 @@ export default function CreditNoteFormPage() {
           </div>
         </header>
 
-        <div className="p-8 flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
             {loading ? (
               <FormSkeleton label="Cargando..." />
@@ -224,7 +224,7 @@ export default function CreditNoteFormPage() {
                 )}
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   <h3 className="text-base font-semibold text-neutralCustom-800 mb-3">Factura Original</h3>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-xs text-neutralCustom-500">Número</p>
                       <p className="font-medium text-neutralCustom-800">{factura.numero_completo}</p>

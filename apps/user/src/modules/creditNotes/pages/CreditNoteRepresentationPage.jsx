@@ -117,7 +117,7 @@ export default function CreditNoteRepresentationPage() {
 
   if (loadError) {
     return (
-      <div className="p-8 max-w-2xl mx-auto">
+      <div className="p-4 md:p-8 max-w-2xl mx-auto">
         <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
           {loadError}
         </div>

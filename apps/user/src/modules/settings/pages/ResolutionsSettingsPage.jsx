@@ -20,20 +20,20 @@ export default function ResolutionsSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
+    <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden">
-        <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
+      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">Resoluciones DIAN</h2>
-            <p className="text-xs text-neutralCustom-500">
+            <p className="hidden sm:block text-xs text-neutralCustom-500">
               Numeración autorizada por la DIAN para cada tipo de documento que emites.
             </p>
           </div>
         </header>
 
-        <div className="px-8 bg-white border-b border-neutralCustom-100 shrink-0">
+        <div className="px-4 md:px-8 bg-white border-b border-neutralCustom-100 shrink-0">
           <div role="tablist" aria-label="Tipo de resolución" className="flex gap-6">
             {TABS.map((tab) => {
               const selected = tab.id === activeTab;
@@ -59,7 +59,7 @@ export default function ResolutionsSettingsPage() {
           </div>
         </div>
 
-        <div className="p-8 flex-1 overflow-y-auto">
+        <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           {/* Ambos paneles quedan montados y solo se oculta el inactivo: asi
               cambiar de pestana no pierde lo que se este editando. */}
           {TABS.map(({ id, Panel }) => (
