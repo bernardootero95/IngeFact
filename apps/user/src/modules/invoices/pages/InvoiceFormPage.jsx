@@ -14,6 +14,7 @@ import Sidebar from "../../../components/Sidebar";
 import SeccionCliente from "../components/SeccionCliente";
 import SeccionLineas from "../components/SeccionLineas";
 import SeccionResumen from "../components/SeccionResumen";
+import { Button, FormSkeleton } from "@ingefact/ui";
 import {
   validateCliente,
   validateFecha,
@@ -357,9 +358,9 @@ export default function InvoiceFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/invoices")} className="text-brand-600 hover:underline font-medium">
+              <Button onClick={() => navigate("/invoices")} variant="link">
                 Facturas
-              </button>
+              </Button>
               <span>/</span>
               <span>{isEditing ? "Editar" : "Nueva"}</span>
             </div>
@@ -372,7 +373,7 @@ export default function InvoiceFormPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}

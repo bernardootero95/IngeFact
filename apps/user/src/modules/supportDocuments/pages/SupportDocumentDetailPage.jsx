@@ -9,7 +9,7 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -22,10 +22,10 @@ const formatCOP = (value) =>
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
 const ESTADO_INFO = {
-  borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
-  enviado: { icon: "⏳", label: "Enviado a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
-  aceptado: { icon: "✅", label: "Aceptado por la DIAN", classes: "bg-brand-50 text-brand-600" },
-  rechazado: { icon: "❌", label: "Rechazado por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  borrador: { label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
+  enviado: { label: "Enviado a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
+  aceptado: { label: "Aceptado por la DIAN", classes: "bg-brand-50 text-brand-600" },
+  rechazado: { label: "Rechazado por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
 };
 
 export default function SupportDocumentDetailPage() {
@@ -81,7 +81,6 @@ export default function SupportDocumentDetailPage() {
   }, [cargarDatos]);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este documento soporte?")) return;
     setIsDeleting(true);
     try {
       await eliminarBorradorDocumentoSoporte(id);
@@ -161,12 +160,12 @@ export default function SupportDocumentDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button
+              <Button
                 onClick={() => navigate("/support-documents")}
-                className="text-brand-600 hover:underline font-medium"
+                variant="link"
               >
-                Documento Soporte
-              </button>
+                Documento soporte
+              </Button>
               <span>/</span>
               <span>{documento.numero_completo || "Borrador"}</span>
             </div>
@@ -181,41 +180,46 @@ export default function SupportDocumentDetailPage() {
                 <span
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold ${estadoInfo.classes}`}
                 >
-                  {estadoInfo.icon} {estadoInfo.label}
+                  <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
+                  {estadoInfo.label}
                 </span>
                 <div className="flex flex-wrap justify-end gap-3">
                   {editable && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/support-documents/${id}/edit`)}
-                        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
+                        title="Continuar editando"
                       >
-                        {documento.estado === "rechazado" ? "Corregir" : "Continuar Editando"}
-                      </button>
-                      <button
-                        onClick={handleEliminar}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        {documento.estado === "rechazado" ? "Corregir" : "Editar"}
+                      </Button>
+                      <ConfirmPopover
+                        message="¿Eliminar este documento soporte?"
+                        confirmLabel="Eliminar"
+                        onConfirm={handleEliminar}
                       >
-                        {isDeleting ? "Eliminando..." : "Eliminar"}
-                      </button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            loading={isDeleting}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
-                  <button
+                  <Button
                     onClick={handleVerRepresentacion}
-                    disabled={isLoadingPdf}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    loading={isLoadingPdf}
+                    title={documento.estado === "aceptado" ? "Ver representación gráfica" : "Vista previa del borrador"}
                   >
-                    {isLoadingPdf
-                      ? "Generando PDF..."
-                      : documento.estado === "aceptado"
-                        ? "Ver Representación Gráfica"
-                        : "Vista Previa"}
-                  </button>
+                    {documento.estado === "aceptado" ? "Ver PDF" : "Vista previa"}
+                  </Button>
                   {documento.estado === "aceptado" && (
                     <EnviarCorreoPopover
                       variant="button"
-                      label="Enviar por Correo"
+                      label="Enviar correo"
                       defaultEmail={proveedorCorreo}
                       onEnviar={(correo) => enviarDocumentoSoportePorCorreo(id, correo)}
                       onEnviado={(correo) =>
@@ -232,12 +236,13 @@ export default function SupportDocumentDetailPage() {
                     <p className="text-xs text-neutralCustom-500">CUDS</p>
                     <p className="text-xs font-mono text-neutralCustom-700 break-all">{documento.cuds}</p>
                   </div>
-                  <button
+                  <Button
                     onClick={() => navigator.clipboard?.writeText(documento.cuds)}
-                    className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                    variant="link"
+                    className="shrink-0 ml-4 text-xs"
                   >
                     Copiar
-                  </button>
+                  </Button>
                 </div>
               )}
 
@@ -293,11 +298,11 @@ export default function SupportDocumentDetailPage() {
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-2.5 font-semibold">Descripción</th>
-                    <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
-                    <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
-                    {tieneImpuestos && <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>}
-                    <th className="px-6 py-2.5 text-right font-semibold">Total</th>
+                    <th scope="col" className="px-6 py-2.5 font-semibold">Descripción</th>
+                    <th scope="col" className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
+                    <th scope="col" className="px-6 py-2.5 text-right font-semibold">Precio</th>
+                    {tieneImpuestos && <th scope="col" className="px-6 py-2.5 text-right font-semibold">Impuesto</th>}
+                    <th scope="col" className="px-6 py-2.5 text-right font-semibold">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
@@ -366,13 +371,13 @@ export default function SupportDocumentDetailPage() {
                 />
 
                 <div className="flex justify-end pt-2">
-                  <button
+                  <Button
                     type="submit"
-                    disabled={isSending}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    variant="primary"
+                    loading={isSending}
                   >
-                    {isSending ? "Enviando..." : "Enviar a la DIAN"}
-                  </button>
+                    Enviar a DIAN
+                  </Button>
                 </div>
               </form>
             )}

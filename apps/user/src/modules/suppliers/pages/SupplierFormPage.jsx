@@ -10,6 +10,7 @@ import {
 import { calculateNitDV } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 import { validateField, NIT_IDENTIFICATION_TYPE } from "./SupplierFormPage.validation";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = {
   tipo_identificacion: "",
@@ -220,19 +221,18 @@ export default function SupplierFormPage() {
               {isEditing ? "Actualiza los datos de este proveedor." : "Agrega un nuevo proveedor a tu directorio."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate(returnTo || "/suppliers")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-3xl">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -266,7 +266,7 @@ export default function SupplierFormPage() {
                         name="tipo_identificacion"
                         value={formData.tipo_identificacion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         {catalogs.identificationTypes.map((type) => (
                           <option key={type.code} value={type.code}>
@@ -288,10 +288,10 @@ export default function SupplierFormPage() {
                             name="numero_identificacion"
                             value={formData.numero_identificacion}
                             onChange={handleChange}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                            className={`field w-full ${
                               errors.numero_identificacion
-                                ? "border-fiscal-danger"
-                                : "border-neutralCustom-200 focus:border-brand-400"
+                                ? "border-fiscal-danger field-invalid"
+                                : ""
                             }`}
                             placeholder="Ej. 900123456"
                           />
@@ -305,26 +305,26 @@ export default function SupplierFormPage() {
                               readOnly
                               value={formData.digito_verificacion}
                               title="Dígito de verificación (calculado automáticamente)"
-                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${
-                                errors.digito_verificacion ? "border-fiscal-danger" : "border-neutralCustom-200"
+                              className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${
+                                errors.digito_verificacion ? "border-fiscal-danger field-invalid" : ""
                               }`}
                             />
                           </div>
                         )}
-                        <button
-                          type="button"
+                        <Button
                           onClick={handleConsultDIAN}
                           disabled={isConsulting || !formData.numero_identificacion}
-                          className="px-3 py-2 bg-neutralCustom-800 hover:bg-neutralCustom-600 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          loading={isConsulting}
+                          className="shrink-0"
                         >
-                          {isConsulting ? "Consultando..." : "Consultar"}
-                        </button>
+                          Consultar
+                        </Button>
                       </div>
                       {errors.numero_identificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_identificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_identificacion}</p>
                       )}
                       {errors.digito_verificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.digito_verificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.digito_verificacion}</p>
                       )}
                     </div>
                   </div>
@@ -353,12 +353,12 @@ export default function SupplierFormPage() {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.nombre ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.nombre ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. Papelería Nacional S.A.S."
                     />
-                    {errors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{errors.nombre}</p>}
+                    {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
                   </div>
 
                   <div>
@@ -371,15 +371,15 @@ export default function SupplierFormPage() {
                       name="correo_electronico"
                       value={formData.correo_electronico}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                      className={`field w-full ${
                         errors.correo_electronico
-                          ? "border-fiscal-danger"
-                          : "border-neutralCustom-200 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid"
+                          : ""
                       }`}
                       placeholder="contacto@proveedor.com"
                     />
                     {errors.correo_electronico && (
-                      <p className="mt-1 text-xs text-fiscal-danger">{errors.correo_electronico}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger">{errors.correo_electronico}</p>
                     )}
                   </div>
 
@@ -391,7 +391,7 @@ export default function SupplierFormPage() {
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 transition-colors"
+                      className="field w-full"
                       placeholder="Ej. 3001234567"
                     />
                   </div>
@@ -416,7 +416,7 @@ export default function SupplierFormPage() {
                         name="tipo_organizacion"
                         value={formData.tipo_organizacion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         <option value="">Sin especificar</option>
                         {catalogs.orgTypes.map((type) => (
@@ -437,7 +437,7 @@ export default function SupplierFormPage() {
                         name="direccion"
                         value={formData.direccion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                         placeholder="Ej. Cra 1 # 2-3"
                       />
                     </div>
@@ -451,7 +451,7 @@ export default function SupplierFormPage() {
                         name="departamento"
                         value={formData.departamento}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         <option value="">Seleccione un departamento...</option>
                         {catalogs.departments.map((d) => (
@@ -472,7 +472,7 @@ export default function SupplierFormPage() {
                         value={formData.municipio}
                         onChange={handleChange}
                         disabled={!formData.departamento}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="field w-full disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="">Seleccione un municipio...</option>
                         {catalogs.municipalities
@@ -488,20 +488,20 @@ export default function SupplierFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate(returnTo || "/suppliers")}
-                    className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                    variant="ghost"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isSaving || hasErrors}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Guardar Proveedor"}
-                  </button>
+                    Guardar
+                  </Button>
                 </div>
               </form>
             )}

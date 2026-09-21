@@ -9,18 +9,18 @@ export default function References() {
       title: "Ubicación Geográfica",
       description: "Códigos de estandarización de localización",
       items: [
-        { name: "Países", slug: "paises", icon: "🌐" },
-        { name: "Departamentos", slug: "departamentos", icon: "🗺️" },
-        { name: "Municipios", slug: "municipios", icon: "📍" },
+        { name: "Países", slug: "paises" },
+        { name: "Departamentos", slug: "departamentos" },
+        { name: "Municipios", slug: "municipios" },
       ],
     },
     {
       title: "Finanzas y Moneda",
       description: "Configuraciones transaccionales y divisas",
       items: [
-        { name: "Monedas", slug: "monedas", icon: "💵" },
-        { name: "Formas de Pago", slug: "formas_pago", icon: "💳" },
-        { name: "Métodos de Pago", slug: "metodos_pago", icon: "🏦" },
+        { name: "Monedas", slug: "monedas" },
+        { name: "Formas de Pago", slug: "formas_pago" },
+        { name: "Métodos de Pago", slug: "metodos_pago" },
       ],
     },
     {
@@ -30,18 +30,15 @@ export default function References() {
         {
           name: "Tipos de Organización",
           slug: "tipos_organizacion",
-          icon: "🏢",
         },
         {
           name: "Responsabilidad Fiscal",
           slug: "responsabilidades_fiscales",
-          icon: "⚖️",
         },
-        { name: "Tributos / Impuestos", slug: "tributos", icon: "📊" },
+        { name: "Tributos / Impuestos", slug: "tributos" },
         {
           name: "Tipos de Identificación",
           slug: "tipos_identificacion",
-          icon: "🪪",
         },
       ],
     },
@@ -49,16 +46,14 @@ export default function References() {
       title: "Operación y Documentos",
       description: "Unidades de medida y conceptos de ajuste",
       items: [
-        { name: "Tipos de Unidad", slug: "tipos_unidad", icon: "📦" },
+        { name: "Tipos de Unidad", slug: "tipos_unidad" },
         {
           name: "Conceptos Nota Crédito",
           slug: "conceptos_nota_credito",
-          icon: "📉",
         },
         {
           name: "Conceptos Nota Débito",
           slug: "conceptos_nota_debito",
-          icon: "📈",
         },
       ],
     },
@@ -94,14 +89,16 @@ export default function References() {
                     onClick={() => navigate(`/admin/references/${table.slug}`)}
                     className="flex items-center p-4 bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm hover:border-brand-400 hover:shadow-md text-left transition-all group"
                   >
-                    <span className="text-2xl mr-4 bg-neutralCustom-50 p-2 rounded-brand-md group-hover:bg-brand-50 transition-colors">
-                      {table.icon}
+                    <span className="mr-4 shrink-0 bg-neutralCustom-50 p-2.5 text-neutralCustom-500 rounded-brand-md group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 10h18M3 14h18M10 3v18M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                      </svg>
                     </span>
                     <div>
                       <h4 className="text-sm font-medium text-neutralCustom-800 group-hover:text-brand-600 transition-colors">
                         {table.name}
                       </h4>
-                      <span className="text-[10px] text-neutralCustom-500 font-mono uppercase tracking-wider">
+                      <span className="text-xs text-neutralCustom-500 font-mono uppercase tracking-wider">
                         Ver registros
                       </span>
                     </div>

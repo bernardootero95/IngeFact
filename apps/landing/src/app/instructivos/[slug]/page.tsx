@@ -82,7 +82,7 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
             <WhatsAppButton message={`Hola, tengo una duda con la guía "${guide.title}".`} />
           </div>
 
-          <Link href="/instructivos" className="mt-8 inline-block text-[14px] font-semibold text-brand-600 hover:text-brand-400">
+          <Link href="/instructivos" className="mt-8 inline-block text-[14px] font-semibold text-brand-600 hover:text-brand-700">
             ← Volver a todas las guías
           </Link>
         </div>

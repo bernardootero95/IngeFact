@@ -1,4 +1,4 @@
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon } from "@ingefact/ui";
 
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
@@ -103,13 +103,14 @@ export default function SeccionCliente({
             <label htmlFor="cliente-select" className="block text-sm font-medium text-neutralCustom-800">
               Cliente <span className="text-fiscal-danger">*</span>
             </label>
-            <button
-              type="button"
+            <Button
               onClick={onCrearCliente}
-              className="text-xs font-medium text-brand-600 hover:text-brand-400"
+              variant="link"
+              icon={PlusIcon}
+              className="text-xs"
             >
-              + Nuevo Cliente
-            </button>
+              Nuevo cliente
+            </Button>
           </div>
           <SearchableSelect
             id="cliente-select"
@@ -120,7 +121,7 @@ export default function SeccionCliente({
             error={!!error}
             formatOption={(opt) => opt.value}
           />
-          {error && <p className="mt-1 text-xs text-fiscal-danger">{error}</p>}
+          {error && <p className="mt-1 text-sm text-fiscal-danger">{error}</p>}
         </div>
 
         <div>
@@ -132,7 +133,7 @@ export default function SeccionCliente({
             id="fecha"
             value={fecha}
             onChange={(e) => onFechaChange(e.target.value)}
-            className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+            className="field w-full"
           />
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { SearchableSelect } from "@ingefact/ui";
+import { useState, useEffect, useId } from "react";
+import { SearchableSelect, Button, PlusIcon, IconButton, TrashIcon } from "@ingefact/ui";
 import { calcularLinea } from "@ingefact/utils";
 
 const formatCOP = (value) =>
@@ -26,6 +26,8 @@ export default function SeccionLineas({
   onFechaVencimientoChange,
   onCrearProducto,
 }) {
+  const productoFieldId = useId();
+  const cantidadFieldId = useId();
   const [productoId, setProductoId] = useState("");
   const [cantidad, setCantidad] = useState("1");
   const [addError, setAddError] = useState("");
@@ -62,19 +64,21 @@ export default function SeccionLineas({
     <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-neutralCustom-800">Productos y Servicios</h3>
-        <button
-          type="button"
+        <Button
           onClick={onCrearProducto}
-          className="text-xs font-medium text-brand-600 hover:text-brand-400"
+          variant="link"
+          icon={PlusIcon}
+          className="text-xs"
         >
-          + Nuevo Producto
-        </button>
+          Nuevo producto
+        </Button>
       </div>
 
       <div className="flex items-end gap-3 p-3 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-neutralCustom-500 mb-1">Producto / Servicio</label>
+          <label htmlFor={productoFieldId} className="block text-xs font-medium text-neutralCustom-500 mb-1">Producto / Servicio</label>
           <SearchableSelect
+            id={productoFieldId}
             options={productoOptions}
             value={productoId}
             onChange={(id) => {
@@ -86,39 +90,41 @@ export default function SeccionLineas({
           />
         </div>
         <div className="w-24">
-          <label className="block text-xs font-medium text-neutralCustom-500 mb-1">Cantidad</label>
+          <label htmlFor={cantidadFieldId} className="block text-xs font-medium text-neutralCustom-500 mb-1">Cantidad</label>
           <input
+            id={cantidadFieldId}
             type="number"
             min="0"
             step="1"
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
-            className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm text-right focus:outline-none focus:border-brand-400"
+            className="field w-full text-right"
           />
         </div>
-        <button
-          type="button"
+        <Button
           onClick={handleAgregar}
-          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shrink-0"
+          variant="primary"
+          icon={PlusIcon}
+          className="shrink-0"
         >
-          + Agregar
-        </button>
+          Agregar
+        </Button>
       </div>
-      {addError && <p className="text-xs text-fiscal-danger mt-2">{addError}</p>}
+      {addError && <p className="text-sm text-fiscal-danger mt-2">{addError}</p>}
 
       {lineas.length > 0 ? (
         <div className="overflow-x-auto mt-4">
           <table className="w-full text-left text-sm min-w-[680px]">
             <thead>
               <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-200">
-                <th className="pb-2 font-semibold w-24">Cod</th>
-                <th className="pb-2 font-semibold">Descripción</th>
-                <th className="pb-2 font-semibold text-right w-20">Cant.</th>
-                <th className="pb-2 font-semibold text-right w-28">Precio Unit.</th>
-                <th className="pb-2 font-semibold text-right w-28">Subtotal</th>
-                <th className="pb-2 font-semibold text-right w-24">IVA</th>
-                <th className="pb-2 font-semibold text-right w-28">Total</th>
-                <th className="pb-2 w-8"></th>
+                <th scope="col" className="pb-2 font-semibold w-24">Cod</th>
+                <th scope="col" className="pb-2 font-semibold">Descripción</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-20">Cant.</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-28">Precio Unit.</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-28">Subtotal</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-24">IVA</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-28">Total</th>
+                <th scope="col" className="pb-2 w-8"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutralCustom-100">
@@ -162,8 +168,8 @@ export default function SeccionLineas({
                         step="1"
                         value={linea.cantidad}
                         onChange={(e) => onLineaCantidadChange(index, e.target.value)}
-                        className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none ${
-                          cantidadInvalida ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field field-sm w-full text-right ${
+                          cantidadInvalida ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </td>
@@ -174,8 +180,8 @@ export default function SeccionLineas({
                         step="0.01"
                         value={linea.precio_unitario}
                         onChange={(e) => onLineaPrecioChange(index, e.target.value)}
-                        className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none ${
-                          precioInvalido ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field field-sm w-full text-right ${
+                          precioInvalido ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </td>
@@ -185,13 +191,9 @@ export default function SeccionLineas({
                       {formatCOP(subtotalLinea + impuestoLinea)}
                     </td>
                     <td className="py-2 text-right align-top">
-                      <button
-                        type="button"
-                        onClick={() => onRemoveLinea(index)}
-                        className="text-neutralCustom-400 hover:text-fiscal-danger"
-                      >
-                        ✕
-                      </button>
+                      <IconButton title="Quitar línea" variant="danger" onClick={() => onRemoveLinea(index)}>
+                        <TrashIcon />
+                      </IconButton>
                     </td>
                   </tr>
                 );
@@ -200,11 +202,11 @@ export default function SeccionLineas({
           </table>
         </div>
       ) : (
-        <p className="text-sm text-neutralCustom-400 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md mt-4">
+        <p className="text-sm text-neutralCustom-500 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md mt-4">
           Aún no has agregado productos. Búscalo arriba y dale a "+ Agregar".
         </p>
       )}
-      {errores.lineas && <p className="text-xs text-fiscal-danger mt-2">{errores.lineas}</p>}
+      {errores.lineas && <p className="text-sm text-fiscal-danger mt-2">{errores.lineas}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-neutralCustom-100">
         <div>
@@ -215,8 +217,8 @@ export default function SeccionLineas({
             id="forma_pago"
             value={formaPago}
             onChange={(e) => onFormaPagoChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-              errores.formaPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+            className={`field w-full ${
+              errores.formaPago ? "border-fiscal-danger field-invalid" : ""
             }`}
           >
             {formasPago.map((opt) => (
@@ -234,8 +236,8 @@ export default function SeccionLineas({
             id="metodo_pago"
             value={metodoPago}
             onChange={(e) => onMetodoPagoChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-              errores.metodoPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+            className={`field w-full ${
+              errores.metodoPago ? "border-fiscal-danger field-invalid" : ""
             }`}
           >
             {metodosPago.map((opt) => (
@@ -244,7 +246,7 @@ export default function SeccionLineas({
               </option>
             ))}
           </select>
-          {errores.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errores.metodoPago}</p>}
+          {errores.metodoPago && <p className="mt-1 text-sm text-fiscal-danger">{errores.metodoPago}</p>}
         </div>
 
         {formaPago === FORMA_PAGO_CREDITO && (
@@ -257,11 +259,11 @@ export default function SeccionLineas({
               id="fecha_vencimiento"
               value={fechaVencimiento}
               onChange={(e) => onFechaVencimientoChange(e.target.value)}
-              className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                errores.fechaVencimiento ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+              className={`field w-full ${
+                errores.fechaVencimiento ? "border-fiscal-danger field-invalid" : ""
               }`}
             />
-            {errores.fechaVencimiento && <p className="mt-1 text-xs text-fiscal-danger">{errores.fechaVencimiento}</p>}
+            {errores.fechaVencimiento && <p className="mt-1 text-sm text-fiscal-danger">{errores.fechaVencimiento}</p>}
           </div>
         )}
       </div>

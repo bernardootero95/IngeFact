@@ -22,8 +22,8 @@ export default function SeccionPagoDocumentoSoporte({
           id="forma_pago"
           value={formaPago}
           onChange={(e) => onFormaPagoChange(e.target.value)}
-          className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-            errors.formaPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+          className={`field w-full ${
+            errors.formaPago ? "border-fiscal-danger field-invalid" : ""
           }`}
         >
           {formasPago.map((opt) => (
@@ -32,7 +32,7 @@ export default function SeccionPagoDocumentoSoporte({
             </option>
           ))}
         </select>
-        {errors.formaPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.formaPago}</p>}
+        {errors.formaPago && <p className="mt-1 text-sm text-fiscal-danger">{errors.formaPago}</p>}
       </div>
 
       <div>
@@ -43,8 +43,8 @@ export default function SeccionPagoDocumentoSoporte({
           id="metodo_pago"
           value={metodoPago}
           onChange={(e) => onMetodoPagoChange(e.target.value)}
-          className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-            errors.metodoPago ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+          className={`field w-full ${
+            errors.metodoPago ? "border-fiscal-danger field-invalid" : ""
           }`}
         >
           {metodosPago.map((opt) => (
@@ -53,7 +53,7 @@ export default function SeccionPagoDocumentoSoporte({
             </option>
           ))}
         </select>
-        {errors.metodoPago && <p className="mt-1 text-xs text-fiscal-danger">{errors.metodoPago}</p>}
+        {errors.metodoPago && <p className="mt-1 text-sm text-fiscal-danger">{errors.metodoPago}</p>}
       </div>
     </div>
   );

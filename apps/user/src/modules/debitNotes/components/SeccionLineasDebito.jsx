@@ -13,10 +13,10 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
         <table className="w-full text-left text-sm min-w-[560px]">
           <thead>
             <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-200">
-              <th className="pb-2 font-semibold w-8"></th>
-              <th className="pb-2 font-semibold">Descripción</th>
-              <th className="pb-2 font-semibold text-right w-32">Cantidad</th>
-              <th className="pb-2 font-semibold text-right w-28">Subtotal</th>
+              <th scope="col" className="pb-2 font-semibold w-8"></th>
+              <th scope="col" className="pb-2 font-semibold">Descripción</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-32">Cantidad</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-28">Subtotal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutralCustom-100">
@@ -49,8 +49,8 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
                       value={linea.cantidad}
                       disabled={!linea.incluida}
                       onChange={(e) => onCantidadChange(linea.facturaLinea.id, e.target.value)}
-                      className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
-                        cantidadInvalida ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field field-sm w-full text-right disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
+                        cantidadInvalida ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     />
                   </td>
@@ -63,7 +63,7 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
           </tbody>
         </table>
       </div>
-      {error && <p className="text-xs text-fiscal-danger mt-2">{error}</p>}
+      {error && <p className="text-sm text-fiscal-danger mt-2">{error}</p>}
     </div>
   );
 }

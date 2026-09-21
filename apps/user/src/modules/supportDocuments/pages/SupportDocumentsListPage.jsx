@@ -5,9 +5,8 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import IconButton from "../../../components/IconButton";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
@@ -55,6 +54,8 @@ export default function SupportDocumentsListPage() {
     fetchDocumentos();
   }, [fetchDocumentos]);
 
+
+  const view = useTableView(documentos);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -67,45 +68,46 @@ export default function SupportDocumentsListPage() {
               Documento Soporte de Adquisiciones para compras a proveedores no obligados a facturar.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/support-documents/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nuevo Documento Soporte
-          </button>
+            Nuevo documento
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <TableSkeleton columns={6} label="Cargando..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
-                <button
+                <Button
                   onClick={fetchDocumentos}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : documentos.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Número</th>
-                    <th className="px-6 py-3 font-semibold">Proveedor</th>
-                    <th className="px-6 py-3 font-semibold">Fecha</th>
-                    <th className="px-6 py-3 font-semibold">Estado</th>
-                    <th className="px-6 py-3 text-right font-semibold">Total</th>
-                    <th className="px-6 py-3 text-right font-semibold">Acciones</th>
+                    <SortableTh sortKey="numero_completo" sort={view.sort} onSort={view.toggleSort}>Número</SortableTh>
+                    <SortableTh sortKey="proveedor_nombre" sort={view.sort} onSort={view.toggleSort}>Proveedor</SortableTh>
+                    <SortableTh sortKey="fecha" sort={view.sort} onSort={view.toggleSort}>Fecha</SortableTh>
+                    <SortableTh sortKey="estado" sort={view.sort} onSort={view.toggleSort}>Estado</SortableTh>
+                    <SortableTh sortKey="total" sort={view.sort} onSort={view.toggleSort} align="right">Total</SortableTh>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {documentos.map((d) => (
+                  {view.rows.map((d) => (
                     <tr
                       key={d.id}
                       onClick={() => navigate(`/support-documents/${d.id}`)}
@@ -188,6 +190,8 @@ export default function SupportDocumentsListPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">
@@ -206,12 +210,12 @@ export default function SupportDocumentsListPage() {
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
                   Crea uno para soportar una compra a un proveedor no obligado a facturar electrónicamente.
                 </p>
-                <button
+                <Button
                   onClick={() => navigate("/support-documents/new")}
-                  className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                  variant="primary"
                 >
-                  Nuevo Documento Soporte
-                </button>
+                  Nuevo documento
+                </Button>
               </div>
             )}
           </div>

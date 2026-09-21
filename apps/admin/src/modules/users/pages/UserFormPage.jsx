@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearUsuarioAdmin, actualizarUsuarioAdmin } from "@ingefact/core-api";
 import { isValidEmail } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
+import { Button } from "@ingefact/ui";
 
 function validateName(value) {
   if (!value.trim()) return "El nombre es obligatorio.";
@@ -89,13 +90,12 @@ export default function UserFormPage() {
               {isEditing ? "Actualiza los datos de este usuario interno." : "Agrega un nuevo miembro del staff de IngeFact."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate("/admin/users")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -119,14 +119,14 @@ export default function UserFormPage() {
                   type="text"
                   value={nombre}
                   onChange={handleNameChange}
-                  className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                  className={`field w-full ${
                     fieldErrors.nombre
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="Nombre completo"
                 />
-                {fieldErrors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.nombre}</p>}
+                {fieldErrors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.nombre}</p>}
               </div>
 
               <div>
@@ -140,15 +140,15 @@ export default function UserFormPage() {
                   value={email}
                   disabled={isEditing}
                   onChange={handleEmailChange}
-                  className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none disabled:opacity-60 disabled:bg-neutralCustom-100 disabled:cursor-not-allowed ${
+                  className={`field w-full disabled:opacity-60 disabled:bg-neutralCustom-100 disabled:cursor-not-allowed ${
                     fieldErrors.email && !isEditing
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="correo@ingefact.com"
                 />
                 {fieldErrors.email && !isEditing && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.email}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.email}</p>
                 )}
               </div>
 
@@ -160,7 +160,7 @@ export default function UserFormPage() {
                   id="user-estado"
                   value={estado}
                   onChange={(e) => setEstado(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full"
                 >
                   <option value="activo">Activo</option>
                   <option value="inactivo">Inactivo</option>
@@ -168,20 +168,20 @@ export default function UserFormPage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                <button
-                  type="button"
+                <Button
                   onClick={() => navigate("/admin/users")}
-                  className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                  variant="ghost"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSaving || hasErrors}
-                  className="px-6 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="primary"
+                  loading={isSaving}
                 >
-                  {isSaving ? "Guardando..." : "Guardar"}
-                </button>
+                  Guardar
+                </Button>
               </div>
             </form>
           </div>

@@ -12,7 +12,7 @@ import {
   anularFactura,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -25,11 +25,11 @@ const formatCOP = (value) =>
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
 const ESTADO_INFO = {
-  borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
-  enviada: { icon: "⏳", label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
-  aceptada: { icon: "✅", label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
-  rechazada: { icon: "❌", label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
-  anulada: { icon: "🚫", label: "Anulada", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  borrador: { label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
+  enviada: { label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
+  aceptada: { label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
+  rechazada: { label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  anulada: { label: "Anulada", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
 };
 
 const NOTA_ESTADO_BADGE = {
@@ -117,7 +117,6 @@ export default function InvoiceDetailPage() {
   }, [cargarFactura]);
 
   const handleAnular = async () => {
-    if (!window.confirm("¿Anular esta factura? Se creará y enviará una Nota Crédito por el 100% del valor.")) return;
     setIsAnulando(true);
     try {
       const nota = await anularFactura(id);
@@ -134,7 +133,6 @@ export default function InvoiceDetailPage() {
     .reduce((total, n) => total + n.total, 0);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este borrador de factura?")) return;
     setIsDeleting(true);
     try {
       await eliminarBorradorFactura(id);
@@ -189,9 +187,9 @@ export default function InvoiceDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/invoices")} className="text-brand-600 hover:underline font-medium">
+              <Button onClick={() => navigate("/invoices")} variant="link">
                 Facturas
-              </button>
+              </Button>
               <span>/</span>
               <span>{factura?.numero_completo || "Borrador"}</span>
             </div>
@@ -203,7 +201,7 @@ export default function InvoiceDetailPage() {
 
         <div className="p-8 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+            <FormSkeleton label="Cargando..." />
           ) : loadError ? (
             <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md max-w-3xl mx-auto">
               {loadError}
@@ -217,7 +215,7 @@ export default function InvoiceDetailPage() {
                       (ESTADO_INFO[factura.estado] || ESTADO_INFO.borrador).classes
                     }`}
                   >
-                    {(ESTADO_INFO[factura.estado] || ESTADO_INFO.borrador).icon}{" "}
+                    <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
                     {(ESTADO_INFO[factura.estado] || ESTADO_INFO.borrador).label}
                   </span>
                 </div>
@@ -228,12 +226,13 @@ export default function InvoiceDetailPage() {
                       <p className="text-xs text-neutralCustom-500">CUFE</p>
                       <p className="text-xs font-mono text-neutralCustom-700 break-all">{factura.cufe}</p>
                     </div>
-                    <button
+                    <Button
                       onClick={() => navigator.clipboard?.writeText(factura.cufe)}
-                      className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                      variant="link"
+                      className="shrink-0 ml-4 text-xs"
                     >
                       Copiar
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -263,45 +262,49 @@ export default function InvoiceDetailPage() {
                 <div className="flex flex-wrap gap-3">
                   {(factura.estado === "borrador" || factura.estado === "rechazada") && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/invoices/${id}/edit`)}
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                        variant="primary"
+                        title="Continuar editando"
                       >
-                        {factura.estado === "rechazada" ? "Corregir y Reenviar" : "Continuar Editando"}
-                      </button>
-                      <button
-                        onClick={handleEliminar}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        {factura.estado === "rechazada" ? "Corregir" : "Editar"}
+                      </Button>
+                      <ConfirmPopover
+                        message="¿Eliminar este borrador de factura?"
+                        confirmLabel="Eliminar"
+                        onConfirm={handleEliminar}
                       >
-                        {isDeleting
-                          ? "Eliminando..."
-                          : factura.estado === "rechazada"
-                            ? "Eliminar Factura"
-                            : "Eliminar Borrador"}
-                      </button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            loading={isDeleting}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
-                  <button
+                  <Button
                     onClick={handleVerRepresentacion}
-                    disabled={isLoadingPdf}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    loading={isLoadingPdf}
+                    title={factura.cufe ? "Ver representación gráfica" : "Vista previa del borrador"}
                   >
-                    {isLoadingPdf ? "Generando PDF..." : factura.cufe ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
-                  </button>
+                    {factura.cufe ? "Ver PDF" : "Vista previa"}
+                  </Button>
                   {factura.cufe && (
                     <>
-                      <button
+                      <Button
                         onClick={handleDescargarXml}
-                        disabled={isDownloadingXml}
-                        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        loading={isDownloadingXml}
                       >
-                        {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
-                      </button>
+                        Descargar XML
+                      </Button>
                       {factura.estado === "aceptada" && (
                         <EnviarCorreoPopover
                           variant="button"
-                          label="Enviar por Correo"
+                          label="Enviar correo"
                           defaultEmail={cliente?.correo_electronico || ""}
                           onEnviar={(correo) => enviarFacturaPorCorreo(id, correo)}
                           onEnviado={(correo) =>
@@ -313,25 +316,36 @@ export default function InvoiceDetailPage() {
                   )}
                   {factura.estado === "aceptada" && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/invoices/${id}/credit-notes/new`)}
-                        className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors"
+                        variant="outline"
+                        title="Crear nota crédito"
                       >
-                        Crear Nota Crédito
-                      </button>
-                      <button
+                        Nota crédito
+                      </Button>
+                      <Button
                         onClick={() => navigate(`/invoices/${id}/debit-notes/new`)}
-                        className="px-4 py-2 bg-white border border-brand-600 text-brand-600 hover:bg-brand-50 text-sm font-medium rounded-brand-md transition-colors"
+                        variant="outline"
+                        title="Crear nota débito"
                       >
-                        Crear Nota Débito
-                      </button>
-                      <button
-                        onClick={handleAnular}
-                        disabled={isAnulando}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        Nota débito
+                      </Button>
+                      <ConfirmPopover
+                        message="¿Anular esta factura? Se creará y enviará una Nota Crédito por el 100% del valor."
+                        confirmLabel="Anular"
+                        onConfirm={handleAnular}
                       >
-                        {isAnulando ? "Anulando..." : "Anular Factura"}
-                      </button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            title="Anular factura"
+                            loading={isAnulando}
+                          >
+                            Anular
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
                 </div>
@@ -379,11 +393,11 @@ export default function InvoiceDetailPage() {
                 <table className="w-full text-left text-sm text-neutralCustom-600">
                   <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
                     <tr>
-                      <th className="px-6 py-2.5 font-semibold">Descripción</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Total</th>
+                      <th scope="col" className="px-6 py-2.5 font-semibold">Descripción</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Precio</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutralCustom-100">
@@ -424,10 +438,10 @@ export default function InvoiceDetailPage() {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-100">
-                        <th className="pb-2 font-semibold">Número</th>
-                        <th className="pb-2 font-semibold">Fecha</th>
-                        <th className="pb-2 font-semibold">Estado</th>
-                        <th className="pb-2 text-right font-semibold">Monto</th>
+                        <th scope="col" className="pb-2 font-semibold">Número</th>
+                        <th scope="col" className="pb-2 font-semibold">Fecha</th>
+                        <th scope="col" className="pb-2 font-semibold">Estado</th>
+                        <th scope="col" className="pb-2 text-right font-semibold">Monto</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutralCustom-100">
@@ -472,10 +486,10 @@ export default function InvoiceDetailPage() {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-100">
-                        <th className="pb-2 font-semibold">Número</th>
-                        <th className="pb-2 font-semibold">Fecha</th>
-                        <th className="pb-2 font-semibold">Estado</th>
-                        <th className="pb-2 text-right font-semibold">Monto</th>
+                        <th scope="col" className="pb-2 font-semibold">Número</th>
+                        <th scope="col" className="pb-2 font-semibold">Fecha</th>
+                        <th scope="col" className="pb-2 font-semibold">Estado</th>
+                        <th scope="col" className="pb-2 text-right font-semibold">Monto</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutralCustom-100">

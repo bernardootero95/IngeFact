@@ -9,7 +9,7 @@ import {
   enviarNotaCreditoPorCorreo,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -20,10 +20,10 @@ const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
 const ESTADO_INFO = {
-  borrador: { icon: "📝", label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
-  enviada: { icon: "⏳", label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
-  aceptada: { icon: "✅", label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
-  rechazada: { icon: "❌", label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
+  borrador: { label: "Borrador", classes: "bg-neutralCustom-100 text-neutralCustom-600" },
+  enviada: { label: "Enviada a la DIAN", classes: "bg-fiscal-info/10 text-fiscal-info" },
+  aceptada: { label: "Aceptada por la DIAN", classes: "bg-brand-50 text-brand-600" },
+  rechazada: { label: "Rechazada por la DIAN", classes: "bg-fiscal-danger/10 text-fiscal-danger" },
 };
 
 export default function CreditNoteDetailPage() {
@@ -86,7 +86,6 @@ export default function CreditNoteDetailPage() {
   }, [cargarNota]);
 
   const handleEliminar = async () => {
-    if (!window.confirm("¿Eliminar este borrador de nota crédito?")) return;
     setIsDeleting(true);
     try {
       await eliminarBorradorNotaCredito(id);
@@ -118,9 +117,9 @@ export default function CreditNoteDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/credit-notes")} className="text-brand-600 hover:underline font-medium">
-                Notas Crédito
-              </button>
+              <Button onClick={() => navigate("/credit-notes")} variant="link">
+                Notas crédito
+              </Button>
               <span>/</span>
               <span>{nota?.numero_completo || "Borrador"}</span>
             </div>
@@ -132,7 +131,7 @@ export default function CreditNoteDetailPage() {
 
         <div className="p-8 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+            <FormSkeleton label="Cargando..." />
           ) : loadError ? (
             <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md max-w-3xl mx-auto">
               {loadError}
@@ -146,7 +145,7 @@ export default function CreditNoteDetailPage() {
                       (ESTADO_INFO[nota.estado] || ESTADO_INFO.borrador).classes
                     }`}
                   >
-                    {(ESTADO_INFO[nota.estado] || ESTADO_INFO.borrador).icon}{" "}
+                    <span className="h-2 w-2 rounded-full bg-current" aria-hidden="true" />
                     {(ESTADO_INFO[nota.estado] || ESTADO_INFO.borrador).label}
                   </span>
                 </div>
@@ -156,12 +155,13 @@ export default function CreditNoteDetailPage() {
                     <p className="text-xs text-brand-600 font-semibold uppercase">Factura afectada</p>
                     <p className="text-sm font-semibold text-neutralCustom-800">{nota.factura_numero_completo}</p>
                   </div>
-                  <button
+                  <Button
                     onClick={() => navigate(`/invoices/${nota.factura_id}`)}
-                    className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                    variant="link"
+                    className="shrink-0 ml-4 text-xs"
                   >
                     Ver factura →
-                  </button>
+                  </Button>
                 </div>
 
                 {nota.cude && (
@@ -170,12 +170,13 @@ export default function CreditNoteDetailPage() {
                       <p className="text-xs text-neutralCustom-500">CUDE</p>
                       <p className="text-xs font-mono text-neutralCustom-700 break-all">{nota.cude}</p>
                     </div>
-                    <button
+                    <Button
                       onClick={() => navigator.clipboard?.writeText(nota.cude)}
-                      className="text-brand-600 hover:text-brand-400 text-xs font-medium shrink-0 ml-4"
+                      variant="link"
+                      className="shrink-0 ml-4 text-xs"
                     >
                       Copiar
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -205,45 +206,49 @@ export default function CreditNoteDetailPage() {
                 <div className="flex flex-wrap gap-3">
                   {(nota.estado === "borrador" || nota.estado === "rechazada") && (
                     <>
-                      <button
+                      <Button
                         onClick={() => navigate(`/credit-notes/${id}/edit`)}
-                        className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                        variant="primary"
+                        title="Continuar editando"
                       >
-                        {nota.estado === "rechazada" ? "Corregir y Reenviar" : "Continuar Editando"}
-                      </button>
-                      <button
-                        onClick={handleEliminar}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-white border border-fiscal-danger text-fiscal-danger hover:bg-red-50 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                        {nota.estado === "rechazada" ? "Corregir" : "Editar"}
+                      </Button>
+                      <ConfirmPopover
+                        message="¿Eliminar este borrador de nota crédito?"
+                        confirmLabel="Eliminar"
+                        onConfirm={handleEliminar}
                       >
-                        {isDeleting
-                          ? "Eliminando..."
-                          : nota.estado === "rechazada"
-                            ? "Eliminar Nota"
-                            : "Eliminar Borrador"}
-                      </button>
+                        {({ ask }) => (
+                          <Button
+                            onClick={ask}
+                            variant="danger"
+                            loading={isDeleting}
+                          >
+                            Eliminar
+                          </Button>
+                        )}
+                      </ConfirmPopover>
                     </>
                   )}
-                  <button
+                  <Button
                     onClick={handleVerRepresentacion}
-                    disabled={isLoadingPdf}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    loading={isLoadingPdf}
+                    title={nota.cude ? "Ver representación gráfica" : "Vista previa del borrador"}
                   >
-                    {isLoadingPdf ? "Generando PDF..." : nota.cude ? "Ver Representación Gráfica" : "Vista Previa (Borrador)"}
-                  </button>
+                    {nota.cude ? "Ver PDF" : "Vista previa"}
+                  </Button>
                   {nota.cude && (
-                    <button
+                    <Button
                       onClick={handleDescargarXml}
-                      disabled={isDownloadingXml}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      loading={isDownloadingXml}
                     >
-                      {isDownloadingXml ? "Obteniendo..." : "Descargar XML"}
-                    </button>
+                      Descargar XML
+                    </Button>
                   )}
                   {nota.estado === "aceptada" && (
                     <EnviarCorreoPopover
                       variant="button"
-                      label="Enviar por Correo"
+                      label="Enviar correo"
                       defaultEmail={cliente?.correo_electronico || ""}
                       onEnviar={(correo) => enviarNotaCreditoPorCorreo(id, correo)}
                       onEnviado={(correo) =>
@@ -288,11 +293,11 @@ export default function CreditNoteDetailPage() {
                 <table className="w-full text-left text-sm text-neutralCustom-600">
                   <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
                     <tr>
-                      <th className="px-6 py-2.5 font-semibold">Descripción</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Total</th>
+                      <th scope="col" className="px-6 py-2.5 font-semibold">Descripción</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Precio</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutralCustom-100">

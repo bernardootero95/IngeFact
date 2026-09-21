@@ -8,6 +8,7 @@ import {
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./TaxPresetFormPage.validation";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const REQUIRED_FIELDS = ["tributo", "tarifa"];
 
@@ -102,21 +103,18 @@ export default function TaxPresetFormPage() {
               Combinación de tributo y tarifa que podrás elegir al crear productos.
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate("/settings/taxes")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-lg">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando...
-              </div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -141,7 +139,7 @@ export default function TaxPresetFormPage() {
                     name="tributo"
                     value={formData.tributo}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   >
                     {tributos.map((t) => (
                       <option key={t.code} value={t.code}>
@@ -164,29 +162,29 @@ export default function TaxPresetFormPage() {
                     name="tarifa"
                     value={formData.tarifa}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                      errors.tarifa ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full ${
+                      errors.tarifa ? "border-fiscal-danger field-invalid" : ""
                     }`}
                     placeholder="Ej. 19"
                   />
-                  {errors.tarifa && <p className="mt-1 text-xs text-fiscal-danger">{errors.tarifa}</p>}
+                  {errors.tarifa && <p className="mt-1 text-sm text-fiscal-danger">{errors.tarifa}</p>}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate("/settings/taxes")}
-                    className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                    variant="ghost"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isSaving || hasErrors}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Guardar Impuesto"}
-                  </button>
+                    Guardar
+                  </Button>
                 </div>
               </form>
             )}

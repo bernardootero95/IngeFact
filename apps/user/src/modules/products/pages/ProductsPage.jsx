@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProductos, deleteProducto } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -46,7 +46,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (producto) => {
-    if (!window.confirm(`¿Eliminar "${producto.nombre}" de tu catálogo?`)) return;
     setDeletingId(producto.id);
     try {
       await deleteProducto(producto.id);
@@ -58,6 +57,8 @@ export default function ProductsPage() {
     }
   };
 
+
+  const view = useTableView(products);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -72,12 +73,12 @@ export default function ProductsPage() {
               Ítems reutilizables para agilizar la creación de facturas.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/products/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
             <svg
-              className="w-4 h-4 mr-2"
+              className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -89,12 +90,12 @@ export default function ProductsPage() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Nuevo Producto
-          </button>
+            Nuevo producto
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-between items-center">
               <div className="relative w-64">
                 <input
@@ -102,7 +103,7 @@ export default function ProductsPage() {
                   value={search}
                   onChange={handleSearchChange}
                   placeholder="Buscar por código o nombre..."
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full pl-9 pr-4"
                 />
                 <svg
                   className="w-4 h-4 absolute left-3 top-2.5 text-neutralCustom-400"
@@ -121,39 +122,36 @@ export default function ProductsPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando productos...
-              </div>
+              <TableSkeleton columns={6} label="Cargando productos..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los productos: {loadError}
                 </p>
-                <button
+                <Button
                   onClick={() => fetchProducts(search)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : products.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Código</th>
-                    <th className="px-6 py-3 font-semibold">Nombre</th>
-                    <th className="px-6 py-3 font-semibold">Tipo</th>
-                    <th className="px-6 py-3 text-right font-semibold">
-                      Precio
-                    </th>
-                    <th className="px-6 py-3 font-semibold">Impuesto</th>
-                    <th className="px-6 py-3 text-right font-semibold">
+                    <SortableTh sortKey="codigo" sort={view.sort} onSort={view.toggleSort}>Código</SortableTh>
+                    <SortableTh sortKey="nombre" sort={view.sort} onSort={view.toggleSort}>Nombre</SortableTh>
+                    <SortableTh sortKey="tipo" sort={view.sort} onSort={view.toggleSort}>Tipo</SortableTh>
+                    <SortableTh sortKey="precio" sort={view.sort} onSort={view.toggleSort} align="right">Precio</SortableTh>
+                    <th scope="col" className="px-6 py-3 font-semibold">Impuesto</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {products.map((p) => (
+                  {view.rows.map((p) => (
                     <tr
                       key={p.id}
                       className="hover:bg-neutralCustom-50 transition-colors"
@@ -169,25 +167,35 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         {p.tributo ? `${p.tributo} · ${p.tarifa_impuesto}%` : "Excluido"}
                       </td>
-                      <td className="px-6 py-4 text-right space-x-3">
-                        <button
-                          onClick={() => navigate(`/products/${p.id}/edit`)}
-                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p)}
-                          disabled={deletingId === p.id}
-                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
-                        >
-                          {deletingId === p.id ? "Eliminando..." : "Eliminar"}
-                        </button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <IconButton title="Editar" onClick={() => navigate(`/products/${p.id}/edit`)}>
+                            <PencilIcon />
+                          </IconButton>
+                          <ConfirmPopover
+                            message={`¿Eliminar "${p.nombre}" de tu catálogo?`}
+                            confirmLabel="Eliminar"
+                            onConfirm={() => handleDelete(p)}
+                          >
+                            {({ ask }) => (
+                              <IconButton
+                                title="Eliminar"
+                                variant="danger"
+                                onClick={ask}
+                                disabled={deletingId === p.id}
+                              >
+                                <TrashIcon />
+                              </IconButton>
+                            )}
+                          </ConfirmPopover>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">
@@ -215,12 +223,12 @@ export default function ProductsPage() {
                 </p>
                 {!search && (
                   <div className="flex justify-center space-x-3">
-                    <button
+                    <Button
                       onClick={() => navigate("/products/new")}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                      variant="primary"
                     >
-                      Agregar Producto
-                    </button>
+                      Nuevo producto
+                    </Button>
                   </div>
                 )}
               </div>

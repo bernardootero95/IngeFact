@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isStrongPassword } from "@ingefact/utils";
+import Button from "./Button.jsx";
 
 function validatePassword(value) {
   if (!value) return "La contraseña es obligatoria.";
@@ -80,7 +81,7 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
             </div>
             <Link
               to={forgotPasswordPath}
-              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-400 transition-colors"
+              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
             >
               Solicitar un nuevo enlace
             </Link>
@@ -90,12 +91,9 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
             <div className="p-4 bg-brand-50 border border-brand-400 text-brand-700 text-sm rounded-brand-md">
               Tu contraseña se actualizó correctamente.
             </div>
-            <Link
-              to={loginPath}
-              className="block text-center py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors text-sm"
-            >
-              Ir a iniciar sesión
-            </Link>
+            <Button as={Link} to={loginPath} variant="primary" size="lg" fullWidth>
+              Iniciar sesión
+            </Button>
           </div>
         ) : (
           <>
@@ -120,15 +118,15 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                   required
                   value={password}
                   onChange={handlePasswordChange}
-                  className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  className={`field field-lg w-full ${
                     fieldErrors.password
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="••••••••"
                 />
                 {fieldErrors.password && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.password}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.password}</p>
                 )}
               </div>
 
@@ -142,25 +140,29 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                   required
                   value={confirmPassword}
                   onChange={handleConfirmChange}
-                  className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  className={`field field-lg w-full ${
                     fieldErrors.confirmPassword
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="••••••••"
                 />
                 {fieldErrors.confirmPassword && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.confirmPassword}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.confirmPassword}</p>
                 )}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading || hasErrors}
-                className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+                variant="primary"
+                size="lg"
+                fullWidth
+                loading={loading}
+                className="mt-2"
               >
-                {loading ? "Guardando..." : "Restablecer contraseña"}
-              </button>
+                Restablecer contraseña
+              </Button>
             </form>
           </>
         )}

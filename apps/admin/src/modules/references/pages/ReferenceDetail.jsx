@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { listReferenceTable, sincronizarReferenceTable } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, RefreshIcon, ArrowLeftIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { tableTitles } from "../tableTitles";
 
@@ -66,14 +66,6 @@ export default function ReferenceDetail() {
   }, [searchTerm, records]);
 
   const handleSync = async () => {
-    if (
-      !window.confirm(
-        `¿Estás seguro de que deseas sincronizar la tabla de ${title} con Allegra? Esto actualizará o insertará los códigos oficiales de la DIAN.`,
-      )
-    ) {
-      return;
-    }
-
     setSyncLoading(true);
     try {
       const data = await sincronizarReferenceTable(tableName);
@@ -107,72 +99,45 @@ export default function ReferenceDetail() {
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         <header className="h-16 shrink-0 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8">
           <div className="flex items-center space-x-4">
-            <button
+            <Button
               onClick={() => navigate("/admin/references")}
-              className="text-neutralCustom-500 hover:text-brand-600 transition-colors text-sm font-medium"
+              variant="ghost"
+              icon={ArrowLeftIcon}
+              title="Volver al hub de referencias"
             >
-              ← Volver al Hub
-            </button>
+              Volver
+            </Button>
             <h2 className="text-lg font-bold text-neutralCustom-800">
               {title}
             </h2>
           </div>
 
           <div className="flex items-center space-x-3">
-            <button
-              onClick={handleSync}
-              disabled={syncLoading || loading}
-              className="flex items-center px-4 py-2 border border-brand-600 text-brand-600 hover:bg-brand-50 disabled:opacity-50 text-sm font-medium rounded-brand-md transition-all"
+            <ConfirmPopover
+              message={`¿Estás seguro de que deseas sincronizar la tabla de ${title} con Allegra? Esto actualizará o insertará los códigos oficiales de la DIAN.`}
+              confirmLabel="Sincronizar"
+              onConfirm={handleSync}
             >
-              {syncLoading ? (
-                <>
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-brand-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Sincronizando...
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.253 8H18"
-                    />
-                  </svg>
-                  Sincronizar Allegra
-                </>
+              {({ ask }) => (
+                <Button
+                  onClick={ask}
+                  variant="outline"
+                  icon={RefreshIcon}
+                  loading={syncLoading}
+                  disabled={loading}
+                  title="Sincronizar con Alegra"
+                >
+                  Sincronizar
+                </Button>
               )}
-            </button>
+            </ConfirmPopover>
 
-            <button
+            <Button
               onClick={() => navigate(`/admin/references/${tableName}/new`)}
-              className="px-4 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors"
+              variant="primary"
             >
-              Agregar Registro
-            </button>
+              Nuevo registro
+            </Button>
           </div>
         </header>
 
@@ -183,45 +148,45 @@ export default function ReferenceDetail() {
               placeholder="Buscar por código o descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-white border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400 shadow-sm"
+              className="field w-full shadow-sm"
             />
           </div>
 
           {loading ? (
-            <p className="text-sm text-neutralCustom-500 font-medium animate-pulse">
-              Cargando datos de la DIAN...
-            </p>
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+              <TableSkeleton columns={4} rows={6} label="Cargando datos de la DIAN..." />
+            </div>
           ) : (
-            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col flex-1 overflow-hidden">
+            <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col flex-1 overflow-x-auto">
               <div className="overflow-y-auto flex-1">
                 <table className="w-full text-left border-collapse relative">
                   <thead className="sticky top-0 bg-neutralCustom-50 z-10 shadow-sm border-b border-neutralCustom-100">
                     <tr>
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                         Código
                       </th>
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                         Descripción / Valor
                       </th>
                       {isMunicipio && (
                         <>
-                          <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                          <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                             Cód. Depto
                           </th>
-                          <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                          <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                             Departamento
                           </th>
                         </>
                       )}
                       {isNotaCredito && (
-                        <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                        <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                           Valor NADE
                         </th>
                       )}
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                         Estado
                       </th>
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
                         Acciones
                       </th>
                     </tr>
@@ -275,14 +240,14 @@ export default function ReferenceDetail() {
                             </span>
                           </td>
                           <td className="p-4 text-sm">
-                            <button
+                            <Button
                               onClick={() =>
                                 navigate(`/admin/references/${tableName}/${rec.id}/edit`, { state: { record: rec } })
                               }
-                              className="text-brand-600 hover:text-brand-400 font-medium transition-colors"
+                              variant="link"
                             >
                               Editar
-                            </button>
+                            </Button>
                           </td>
                         </tr>
                       ))
@@ -310,23 +275,23 @@ export default function ReferenceDetail() {
                     registros
                   </span>
                   <div className="flex space-x-2">
-                    <button
+                    <Button
                       onClick={() => paginate(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="px-3 py-1.5 border border-neutralCustom-200 bg-white text-neutralCustom-700 rounded-brand-md text-sm font-medium hover:bg-neutralCustom-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      size="sm"
                     >
                       Anterior
-                    </button>
+                    </Button>
                     <span className="px-4 py-1.5 text-sm font-medium text-neutralCustom-800">
                       Página {currentPage} de {totalPages}
                     </span>
-                    <button
+                    <Button
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="px-3 py-1.5 border border-neutralCustom-200 bg-white text-neutralCustom-700 rounded-brand-md text-sm font-medium hover:bg-neutralCustom-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      size="sm"
                     >
                       Siguiente
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}

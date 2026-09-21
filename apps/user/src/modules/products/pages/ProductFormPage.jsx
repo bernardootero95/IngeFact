@@ -7,7 +7,7 @@ import {
   listImpuestosEmpresa,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, FormSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./ProductFormPage.validation";
 
@@ -178,21 +178,18 @@ export default function ProductFormPage() {
               {isEditing ? "Actualiza los datos de este ítem." : "Agrega un nuevo ítem a tu catálogo."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate(returnTo || "/products")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-3xl">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando...
-              </div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -218,7 +215,7 @@ export default function ProductFormPage() {
                       name="tipo"
                       value={formData.tipo}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       {TIPOS_PRODUCTO.map((t) => (
                         <option key={t.value} value={t.value}>
@@ -238,12 +235,12 @@ export default function ProductFormPage() {
                       name="codigo"
                       value={formData.codigo}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.codigo ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.codigo ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. PROD-001"
                     />
-                    {errors.codigo && <p className="mt-1 text-xs text-fiscal-danger">{errors.codigo}</p>}
+                    {errors.codigo && <p className="mt-1 text-sm text-fiscal-danger">{errors.codigo}</p>}
                   </div>
                 </div>
 
@@ -257,12 +254,12 @@ export default function ProductFormPage() {
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                      errors.nombre ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full ${
+                      errors.nombre ? "border-fiscal-danger field-invalid" : ""
                     }`}
                     placeholder="Ej. Asesoría contable mensual"
                   />
-                  {errors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{errors.nombre}</p>}
+                  {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
                 </div>
 
                 <div>
@@ -273,7 +270,7 @@ export default function ProductFormPage() {
                     value={formData.descripcion}
                     onChange={handleChange}
                     rows={2}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                     placeholder="Detalle opcional del producto o servicio"
                   />
                 </div>
@@ -291,12 +288,12 @@ export default function ProductFormPage() {
                       name="precio"
                       value={formData.precio}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.precio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.precio ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="0.00"
                     />
-                    {errors.precio && <p className="mt-1 text-xs text-fiscal-danger">{errors.precio}</p>}
+                    {errors.precio && <p className="mt-1 text-sm text-fiscal-danger">{errors.precio}</p>}
                   </div>
 
                   <div>
@@ -312,7 +309,7 @@ export default function ProductFormPage() {
                       error={!!errors.unidad_medida}
                     />
                     {errors.unidad_medida && (
-                      <p className="mt-1 text-xs text-fiscal-danger">{errors.unidad_medida}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger">{errors.unidad_medida}</p>
                     )}
                   </div>
                 </div>
@@ -324,7 +321,7 @@ export default function ProductFormPage() {
                     name="impuestoKey"
                     value={formData.impuestoKey}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   >
                     <option value="">Excluido de impuestos</option>
                     {impuestoOptions.map((o) => (
@@ -355,15 +352,15 @@ export default function ProductFormPage() {
                         name="valor_impuesto_excluido"
                         value={formData.valor_impuesto_excluido}
                         onChange={handleChange}
-                        className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.valor_impuesto_excluido
-                            ? "border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400"
+                            ? "border-fiscal-danger field-invalid"
+                            : ""
                         }`}
                         placeholder="0.00"
                       />
                       {errors.valor_impuesto_excluido ? (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.valor_impuesto_excluido}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.valor_impuesto_excluido}</p>
                       ) : (
                         <p className="mt-1 text-xs text-neutralCustom-400">
                           Solo si el precio ya incluye un impuesto monofásico pagado al productor (ICL, IBUA). Ese
@@ -375,20 +372,20 @@ export default function ProductFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate(returnTo || "/products")}
-                    className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                    variant="ghost"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isSaving || hasErrors}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Guardar Producto"}
-                  </button>
+                    Guardar
+                  </Button>
                 </div>
               </form>
             )}

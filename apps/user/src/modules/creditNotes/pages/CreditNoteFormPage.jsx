@@ -12,6 +12,7 @@ import {
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasCredito from "../components/SeccionLineasCredito";
 import { validateMotivo, validateLineasCredito, calcularTotalesNota } from "./CreditNoteFormPage.validation";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -178,18 +179,18 @@ export default function CreditNoteFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button onClick={() => navigate("/invoices")} className="text-brand-600 hover:underline font-medium">
+              <Button onClick={() => navigate("/invoices")} variant="link">
                 Facturas
-              </button>
+              </Button>
               {factura && (
                 <>
                   <span>/</span>
-                  <button
+                  <Button
                     onClick={() => navigate(`/invoices/${factura.id}`)}
-                    className="text-brand-600 hover:underline font-medium"
+                    variant="link"
                   >
                     {factura.numero_completo}
-                  </button>
+                  </Button>
                 </>
               )}
               <span>/</span>
@@ -204,7 +205,7 @@ export default function CreditNoteFormPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto space-y-6">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -245,8 +246,8 @@ export default function CreditNoteFormPage() {
                   <select
                     value={motivoCodigo}
                     onChange={(e) => setMotivoCodigo(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                      errors.motivo ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full ${
+                      errors.motivo ? "border-fiscal-danger field-invalid" : ""
                     }`}
                   >
                     {motivos.map((opt) => (
@@ -255,7 +256,7 @@ export default function CreditNoteFormPage() {
                       </option>
                     ))}
                   </select>
-                  {errors.motivo && <p className="mt-1 text-xs text-fiscal-danger">{errors.motivo}</p>}
+                  {errors.motivo && <p className="mt-1 text-sm text-fiscal-danger">{errors.motivo}</p>}
                 </div>
 
                 <SeccionLineasCredito
@@ -288,30 +289,28 @@ export default function CreditNoteFormPage() {
                     </div>
                   </div>
                   <div className="flex gap-3 justify-end">
-                    <button
-                      type="button"
+                    <Button
+                      variant="ghost"
                       onClick={() => navigate(-1)}
                       disabled={guardando}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                     >
                       Cancelar
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
                       onClick={handleGuardarBorrador}
                       disabled={guardando}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                      loading={isSavingDraft}
                     >
-                      {isSavingDraft ? "Guardando..." : "Guardar Borrador"}
-                    </button>
-                    <button
-                      type="button"
+                      Guardar borrador
+                    </Button>
+                    <Button
                       onClick={handleEnviar}
                       disabled={guardando}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50"
+                      variant="primary"
+                      loading={isSending}
                     >
-                      {isSending ? "Enviando..." : "Enviar a DIAN"}
-                    </button>
+                      Enviar a DIAN
+                    </Button>
                   </div>
                 </div>
               </>

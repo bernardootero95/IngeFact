@@ -1,10 +1,14 @@
+import { Button, TableSkeleton, useTableView, Pagination } from "@ingefact/ui";
 
-export default function UserTable({ users, loading, onEdit }) {
+
+export default function UserTable({ users = [], loading, onEdit }) {
+  const view = useTableView(users);
+
   if (loading) {
     return (
-      <p className="text-sm text-neutralCustom-500 font-medium animate-pulse">
-        Cargando usuarios...
-      </p>
+      <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+        <TableSkeleton columns={5} label="Cargando usuarios..." />
+      </div>
     );
   }
 
@@ -13,16 +17,16 @@ export default function UserTable({ users, loading, onEdit }) {
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-neutralCustom-50 border-b border-neutralCustom-100">
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Nombre
             </th>
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Correo Electrónico
             </th>
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Estado
             </th>
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Acciones
             </th>
           </tr>
@@ -38,7 +42,7 @@ export default function UserTable({ users, loading, onEdit }) {
               </td>
             </tr>
           ) : (
-            users.map((user) => (
+            view.rows.map((user) => (
               <tr
                 key={user.id}
                 className="hover:bg-neutralCustom-50/50 transition-colors"
@@ -61,18 +65,19 @@ export default function UserTable({ users, loading, onEdit }) {
                   </span>
                 </td>
                 <td className="p-4 text-sm">
-                  <button
+                  <Button
                     onClick={() => onEdit(user)}
-                    className="text-brand-600 hover:text-brand-400 font-medium transition-colors"
+                    variant="link"
                   >
                     Editar
-                  </button>
+                  </Button>
                 </td>
               </tr>
             ))
           )}
         </tbody>
       </table>
+      <Pagination {...view.pagination} />
     </div>
   );
 }

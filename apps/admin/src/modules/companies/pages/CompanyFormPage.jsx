@@ -11,7 +11,7 @@ import {
   revocarApiKey,
 } from "@ingefact/core-api";
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const emptyForm = {
@@ -153,8 +153,7 @@ export default function CompanyFormPage() {
     }
   };
 
-  const handleRevokeKey = async (apiKeyId, nombre) => {
-    if (!window.confirm(`¿Revocar la key "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  const handleRevokeKey = async (apiKeyId) => {
     try {
       await revocarApiKey(id, apiKeyId);
       setApiKeyToast({ message: "API key revocada.", type: "success" });
@@ -359,19 +358,18 @@ export default function CompanyFormPage() {
               {isEditing ? "Actualiza los datos y el plan de este tenant." : "Crea un nuevo tenant y su plan de facturación."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate("/admin/companies")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-3xl">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -437,9 +435,9 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.razonSocial}
                             onChange={handleChange("razonSocial")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.razonSocial ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.razonSocial ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {errors.razonSocial && <p className="mt-1 text-xs text-fiscal-danger">{errors.razonSocial}</p>}
+                          {errors.razonSocial && <p className="mt-1 text-sm text-fiscal-danger">{errors.razonSocial}</p>}
                         </div>
 
                         <div>
@@ -451,7 +449,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.nombreComercial}
                             onChange={handleChange("nombreComercial")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           />
                         </div>
 
@@ -466,10 +464,10 @@ export default function CompanyFormPage() {
                               disabled={isEditing}
                               value={form.numeroIdentificacion}
                               onChange={handleNitChange}
-                              className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                              className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger field-invalid" : ""}`}
                             />
                             {errors.numeroIdentificacion && (
-                              <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{errors.numeroIdentificacion}</p>
+                              <p className="mt-1 text-sm text-fiscal-danger leading-tight">{errors.numeroIdentificacion}</p>
                             )}
                           </div>
                           <div className="col-span-1">
@@ -481,7 +479,7 @@ export default function CompanyFormPage() {
                               type="text"
                               readOnly
                               value={form.digitoVerificacion}
-                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${errors.digitoVerificacion ? "border-fiscal-danger" : "border-neutralCustom-200"}`}
+                              className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${errors.digitoVerificacion ? "border-fiscal-danger field-invalid" : ""}`}
                             />
                           </div>
                         </div>
@@ -499,7 +497,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.direccion}
                             onChange={handleChange("direccion")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           />
                         </div>
 
@@ -511,7 +509,7 @@ export default function CompanyFormPage() {
                             id="cf-departamento"
                             value={form.departamento}
                             onChange={handleDepartmentChange}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.departamento ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.departamento ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione un departamento...</option>
                             {catalogs.departments.map((d) => (
@@ -520,7 +518,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.departamento && <p className="mt-1 text-[10px] text-fiscal-danger">{errors.departamento}</p>}
+                          {errors.departamento && <p className="mt-1 text-sm text-fiscal-danger">{errors.departamento}</p>}
                         </div>
 
                         <div>
@@ -532,7 +530,7 @@ export default function CompanyFormPage() {
                             value={form.municipio}
                             onChange={handleChange("municipio")}
                             disabled={!form.departamento}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${errors.municipio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full disabled:opacity-50 disabled:cursor-not-allowed ${errors.municipio ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione un municipio...</option>
                             {filteredMunicipalities.map((m) => (
@@ -541,7 +539,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.municipio && <p className="mt-1 text-[10px] text-fiscal-danger">{errors.municipio}</p>}
+                          {errors.municipio && <p className="mt-1 text-sm text-fiscal-danger">{errors.municipio}</p>}
                         </div>
 
                         <div>
@@ -552,7 +550,7 @@ export default function CompanyFormPage() {
                             id="cf-regimen"
                             value={form.regimen}
                             onChange={handleChange("regimen")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.regimen ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.regimen ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione...</option>
                             {catalogs.regimes.map((r) => (
@@ -561,7 +559,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.regimen && <p className="mt-1 text-[10px] text-fiscal-danger">{errors.regimen}</p>}
+                          {errors.regimen && <p className="mt-1 text-sm text-fiscal-danger">{errors.regimen}</p>}
                         </div>
 
                         <div>
@@ -572,7 +570,7 @@ export default function CompanyFormPage() {
                             id="cf-tipo-org"
                             value={form.tipoOrganizacion}
                             onChange={handleChange("tipoOrganizacion")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.tipoOrganizacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.tipoOrganizacion ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione...</option>
                             {catalogs.orgTypes.map((o) => (
@@ -582,7 +580,7 @@ export default function CompanyFormPage() {
                             ))}
                           </select>
                           {errors.tipoOrganizacion && (
-                            <p className="mt-1 text-[10px] text-fiscal-danger">{errors.tipoOrganizacion}</p>
+                            <p className="mt-1 text-sm text-fiscal-danger">{errors.tipoOrganizacion}</p>
                           )}
                         </div>
 
@@ -594,7 +592,7 @@ export default function CompanyFormPage() {
                             id="cf-regimen-fiscal"
                             value={form.regimenFiscal}
                             onChange={handleChange("regimenFiscal")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           >
                             <option value="">Seleccione...</option>
                             <option value="48">48 - Responsable de IVA</option>
@@ -611,7 +609,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.telefono}
                             onChange={handleChange("telefono")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           />
                         </div>
                       </div>
@@ -634,10 +632,10 @@ export default function CompanyFormPage() {
                             disabled={isEditing}
                             value={form.correoElectronico}
                             onChange={handleChange("correoElectronico")}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
+                            className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                           />
                           {errors.correoElectronico && (
-                            <p className="mt-1 text-xs text-fiscal-danger">{errors.correoElectronico}</p>
+                            <p className="mt-1 text-sm text-fiscal-danger">{errors.correoElectronico}</p>
                           )}
                         </div>
 
@@ -651,10 +649,10 @@ export default function CompanyFormPage() {
                             disabled={isEditing}
                             value={form.nombreUsuario}
                             onChange={handleChange("nombreUsuario")}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
+                            className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                           />
                           {errors.nombreUsuario && (
-                            <p className="mt-1 text-xs text-fiscal-danger">{errors.nombreUsuario}</p>
+                            <p className="mt-1 text-sm text-fiscal-danger">{errors.nombreUsuario}</p>
                           )}
                           {!isEditing && (
                             <p className="mt-1 text-xs text-brand-600">
@@ -692,10 +690,10 @@ export default function CompanyFormPage() {
                             min="1"
                             value={form.maxDocumentos}
                             onChange={handleChange("maxDocumentos")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.maxDocumentos ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.maxDocumentos ? "border-fiscal-danger field-invalid" : ""}`}
                             placeholder="Ej: 1200"
                           />
-                          {errors.maxDocumentos && <p className="mt-1 text-xs text-fiscal-danger">{errors.maxDocumentos}</p>}
+                          {errors.maxDocumentos && <p className="mt-1 text-sm text-fiscal-danger">{errors.maxDocumentos}</p>}
                         </div>
 
                         <div className="hidden md:block" />
@@ -709,9 +707,9 @@ export default function CompanyFormPage() {
                             type="date"
                             value={form.fechaInicio}
                             onChange={handleChange("fechaInicio")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.fechaInicio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.fechaInicio ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {errors.fechaInicio && <p className="mt-1 text-xs text-fiscal-danger">{errors.fechaInicio}</p>}
+                          {errors.fechaInicio && <p className="mt-1 text-sm text-fiscal-danger">{errors.fechaInicio}</p>}
                         </div>
 
                         <div>
@@ -723,9 +721,9 @@ export default function CompanyFormPage() {
                             type="date"
                             value={form.fechaFin}
                             onChange={handleChange("fechaFin")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.fechaFin ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.fechaFin ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {errors.fechaFin && <p className="mt-1 text-xs text-fiscal-danger">{errors.fechaFin}</p>}
+                          {errors.fechaFin && <p className="mt-1 text-sm text-fiscal-danger">{errors.fechaFin}</p>}
                         </div>
 
                         <div>
@@ -736,7 +734,7 @@ export default function CompanyFormPage() {
                             id="cf-estado"
                             value={form.estadoEmpresa}
                             onChange={handleChange("estadoEmpresa")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           >
                             <option value="activo">Activo</option>
                             <option value="inactivo">Inactivo / Suspendido</option>
@@ -766,21 +764,13 @@ export default function CompanyFormPage() {
                             <code className="flex-1 px-3 py-2 bg-white border border-amber-200 rounded-brand-md text-xs break-all">
                               {generatedKey}
                             </code>
-                            <button
-                              type="button"
-                              onClick={handleCopyKey}
-                              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded-brand-md transition-colors shrink-0"
-                            >
+                            <Button variant="primary" className="shrink-0" onClick={handleCopyKey}>
                               Copiar
-                            </button>
+                            </Button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => setGeneratedKey(null)}
-                            className="mt-2 text-xs text-amber-700 hover:underline"
-                          >
+                          <Button variant="link" className="mt-2 text-xs" onClick={() => setGeneratedKey(null)}>
                             Ya la copié, ocultar
-                          </button>
+                          </Button>
                         </div>
                       )}
 
@@ -798,17 +788,18 @@ export default function CompanyFormPage() {
                               if (e.target.value.trim()) setNewKeyNameError("");
                             }}
                             placeholder="Ej: Integracion Sistema de Pedidos"
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${newKeyNameError ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${newKeyNameError ? "border-fiscal-danger field-invalid" : ""}`}
                           />
-                          {newKeyNameError && <p className="mt-1 text-xs text-fiscal-danger">{newKeyNameError}</p>}
+                          {newKeyNameError && <p className="mt-1 text-sm text-fiscal-danger">{newKeyNameError}</p>}
                         </div>
-                        <button
+                        <Button
                           type="submit"
-                          disabled={isGeneratingKey}
-                          className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          variant="primary"
+                          loading={isGeneratingKey}
+                          className="shrink-0"
                         >
-                          {isGeneratingKey ? "Generando..." : "Generar key"}
-                        </button>
+                          Generar key
+                        </Button>
                       </form>
 
                       {apiKeysLoading ? (
@@ -819,12 +810,12 @@ export default function CompanyFormPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="text-left text-xs text-neutralCustom-500 border-b border-neutralCustom-100">
-                              <th className="py-2 font-medium">Nombre</th>
-                              <th className="py-2 font-medium">Prefijo</th>
-                              <th className="py-2 font-medium">Creada</th>
-                              <th className="py-2 font-medium">Último uso</th>
-                              <th className="py-2 font-medium">Estado</th>
-                              <th className="py-2 font-medium"></th>
+                              <th scope="col" className="py-2 font-medium">Nombre</th>
+                              <th scope="col" className="py-2 font-medium">Prefijo</th>
+                              <th scope="col" className="py-2 font-medium">Creada</th>
+                              <th scope="col" className="py-2 font-medium">Último uso</th>
+                              <th scope="col" className="py-2 font-medium">Estado</th>
+                              <th scope="col" className="py-2 font-medium"></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -851,13 +842,21 @@ export default function CompanyFormPage() {
                                 </td>
                                 <td className="py-2 text-right">
                                   {!k.revocada && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRevokeKey(k.id, k.nombre)}
-                                      className="text-xs text-fiscal-danger hover:underline"
+                                    <ConfirmPopover
+                                      message={`¿Revocar la key "${k.nombre}"? Esta acción no se puede deshacer.`}
+                                      confirmLabel="Revocar"
+                                      onConfirm={() => handleRevokeKey(k.id)}
                                     >
-                                      Revocar
-                                    </button>
+                                      {({ ask }) => (
+                                        <Button
+                                          onClick={ask}
+                                          variant="link-danger"
+                                          className="text-xs"
+                                        >
+                                          Revocar
+                                        </Button>
+                                      )}
+                                    </ConfirmPopover>
                                   )}
                                 </td>
                               </tr>
@@ -869,32 +868,24 @@ export default function CompanyFormPage() {
                   )}
                 </div>
 
-                <div className="p-6 border-t border-neutralCustom-100 flex justify-end space-x-3 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => navigate("/admin/companies")}
-                    className="px-4 py-2 border border-neutralCustom-200 text-neutralCustom-600 text-sm font-medium rounded-brand-md hover:bg-neutralCustom-50 transition-colors"
-                  >
+                <div className="p-6 border-t border-neutralCustom-100 flex justify-end gap-3 shrink-0">
+                  <Button variant="ghost" onClick={() => navigate("/admin/companies")}>
                     Cancelar
-                  </button>
+                  </Button>
 
                   {activeTab === "empresa" ? (
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("suscripcion")}
-                      className="px-4 py-2 bg-neutralCustom-800 hover:bg-black text-white text-sm font-medium rounded-brand-md transition-colors"
-                    >
-                      Siguiente →
-                    </button>
+                    <Button variant="primary" onClick={() => setActiveTab("suscripcion")}>
+                      Siguiente
+                    </Button>
                   ) : activeTab === "suscripcion" ? (
-                    <button
+                    <Button
                       form="company-form"
                       type="submit"
-                      disabled={isSaving}
-                      className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="primary"
+                      loading={isSaving}
                     >
-                      {isSaving ? "Procesando..." : isEditing ? "Actualizar Tenant" : "Crear Tenant y Accesos"}
-                    </button>
+                      {isEditing ? "Guardar" : "Crear empresa"}
+                    </Button>
                   ) : null}
                 </div>
               </div>

@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNotasDebito, obtenerRepresentacionPdfNotaDebito, enviarNotaDebitoPorCorreo } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import IconButton from "../../../components/IconButton";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
@@ -66,6 +65,8 @@ export default function DebitNotesListPage() {
     fetchNotas(estado);
   }, [fetchNotas, estado]);
 
+
+  const view = useTableView(notas);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -79,12 +80,12 @@ export default function DebitNotesListPage() {
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-end items-center gap-3">
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                className="field"
               >
                 {ESTADOS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -95,34 +96,33 @@ export default function DebitNotesListPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando notas débito...
-              </div>
+              <TableSkeleton columns={7} label="Cargando notas débito..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
-                <button
+                <Button
                   onClick={() => fetchNotas(estado)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : notas.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Número</th>
-                    <th className="px-6 py-3 font-semibold">Factura asociada</th>
-                    <th className="px-6 py-3 font-semibold">Cliente</th>
-                    <th className="px-6 py-3 font-semibold">Fecha</th>
-                    <th className="px-6 py-3 font-semibold">Estado</th>
-                    <th className="px-6 py-3 text-right font-semibold">Total</th>
-                    <th className="px-6 py-3 text-right font-semibold">Acciones</th>
+                    <SortableTh sortKey="numero_completo" sort={view.sort} onSort={view.toggleSort}>Número</SortableTh>
+                    <SortableTh sortKey="factura_numero_completo" sort={view.sort} onSort={view.toggleSort}>Factura asociada</SortableTh>
+                    <SortableTh sortKey="cliente_nombre" sort={view.sort} onSort={view.toggleSort}>Cliente</SortableTh>
+                    <SortableTh sortKey="fecha" sort={view.sort} onSort={view.toggleSort}>Fecha</SortableTh>
+                    <SortableTh sortKey="estado" sort={view.sort} onSort={view.toggleSort}>Estado</SortableTh>
+                    <SortableTh sortKey="total" sort={view.sort} onSort={view.toggleSort} align="right">Total</SortableTh>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {notas.map((n) => (
+                  {view.rows.map((n) => (
                     <tr
                       key={n.id}
                       onClick={() => navigate(`/debit-notes/${n.id}`)}
@@ -132,15 +132,15 @@ export default function DebitNotesListPage() {
                         {n.numero_completo || "Sin enviar"}
                       </td>
                       <td className="px-6 py-4">
-                        <button
+                        <Button
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/invoices/${n.factura_id}`);
                           }}
-                          className="text-brand-600 hover:underline"
+                          variant="link"
                         >
                           {n.factura_numero_completo}
-                        </button>
+                        </Button>
                       </td>
                       <td className="px-6 py-4">{n.cliente_nombre}</td>
                       <td className="px-6 py-4">{n.fecha}</td>
@@ -216,6 +216,8 @@ export default function DebitNotesListPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">

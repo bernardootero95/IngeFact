@@ -4,6 +4,7 @@ import { changePassword } from "@ingefact/core-api";
 import { isStrongPassword } from "@ingefact/utils";
 import { useAuthStore } from "../store/authStore";
 import logo from "../../../assets/logo.png";
+import { Button } from "@ingefact/ui";
 
 function validateNewPassword(value) {
   if (!value) return "La contraseña es obligatoria.";
@@ -113,15 +114,15 @@ export default function ChangePasswordPage() {
               required
               value={currentPassword}
               onChange={handleCurrentChange}
-              className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 focus:outline-none transition-colors font-normal text-sm ${
+              className={`field field-lg w-full ${
                 fieldErrors.currentPassword
-                  ? "border-fiscal-danger focus:border-fiscal-danger"
-                  : "border-neutralCustom-100 focus:border-brand-400"
+                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                  : ""
               }`}
               placeholder="••••••••"
             />
             {fieldErrors.currentPassword && (
-              <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.currentPassword}</p>
+              <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.currentPassword}</p>
             )}
           </div>
 
@@ -135,14 +136,14 @@ export default function ChangePasswordPage() {
               required
               value={newPassword}
               onChange={handleNewChange}
-              className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 focus:outline-none transition-colors font-normal text-sm ${
+              className={`field field-lg w-full ${
                 fieldErrors.newPassword
-                  ? "border-fiscal-danger focus:border-fiscal-danger"
-                  : "border-neutralCustom-100 focus:border-brand-400"
+                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                  : ""
               }`}
               placeholder="••••••••"
             />
-            {fieldErrors.newPassword && <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.newPassword}</p>}
+            {fieldErrors.newPassword && <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.newPassword}</p>}
           </div>
 
           <div>
@@ -155,25 +156,29 @@ export default function ChangePasswordPage() {
               required
               value={confirmPassword}
               onChange={handleConfirmChange}
-              className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 focus:outline-none transition-colors font-normal text-sm ${
+              className={`field field-lg w-full ${
                 fieldErrors.confirmPassword
-                  ? "border-fiscal-danger focus:border-fiscal-danger"
-                  : "border-neutralCustom-100 focus:border-brand-400"
+                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                  : ""
               }`}
               placeholder="••••••••"
             />
             {fieldErrors.confirmPassword && (
-              <p className="mt-1 text-xs text-fiscal-danger">{fieldErrors.confirmPassword}</p>
+              <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.confirmPassword}</p>
             )}
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading || hasErrors}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+            className="mt-2"
           >
-            {loading ? "Guardando..." : "Cambiar contraseña"}
-          </button>
+            Cambiar contraseña
+          </Button>
         </form>
       </div>
     </div>

@@ -10,6 +10,7 @@ import {
 import { calculateNitDV } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 import { validateField, NIT_IDENTIFICATION_TYPE } from "./CustomerFormPage.validation";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = {
   tipo_identificacion: "",
@@ -223,21 +224,18 @@ export default function CustomerFormPage() {
                 : "Agrega una nueva empresa o persona a tu directorio."}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate(returnTo || "/customers")}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-3xl">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando...
-              </div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -271,7 +269,7 @@ export default function CustomerFormPage() {
                         name="tipo_identificacion"
                         value={formData.tipo_identificacion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         {catalogs.identificationTypes.map((type) => (
                           <option key={type.code} value={type.code}>
@@ -293,10 +291,10 @@ export default function CustomerFormPage() {
                             name="numero_identificacion"
                             value={formData.numero_identificacion}
                             onChange={handleChange}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                            className={`field w-full ${
                               errors.numero_identificacion
-                                ? "border-fiscal-danger"
-                                : "border-neutralCustom-200 focus:border-brand-400"
+                                ? "border-fiscal-danger field-invalid"
+                                : ""
                             }`}
                             placeholder="Ej. 900123456"
                           />
@@ -310,26 +308,26 @@ export default function CustomerFormPage() {
                               readOnly
                               value={formData.digito_verificacion}
                               title="Dígito de verificación (calculado automáticamente)"
-                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${
-                                errors.digito_verificacion ? "border-fiscal-danger" : "border-neutralCustom-200"
+                              className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${
+                                errors.digito_verificacion ? "border-fiscal-danger field-invalid" : ""
                               }`}
                             />
                           </div>
                         )}
-                        <button
-                          type="button"
+                        <Button
                           onClick={handleConsultDIAN}
                           disabled={isConsulting || !formData.numero_identificacion}
-                          className="px-3 py-2 bg-neutralCustom-800 hover:bg-neutralCustom-600 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          loading={isConsulting}
+                          className="shrink-0"
                         >
-                          {isConsulting ? "Consultando..." : "Consultar"}
-                        </button>
+                          Consultar
+                        </Button>
                       </div>
                       {errors.numero_identificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_identificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_identificacion}</p>
                       )}
                       {errors.digito_verificacion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">{errors.digito_verificacion}</p>
+                        <p className="mt-1 text-sm text-fiscal-danger">{errors.digito_verificacion}</p>
                       )}
                     </div>
                   </div>
@@ -358,12 +356,12 @@ export default function CustomerFormPage() {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.nombre ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.nombre ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. IngeFact S.A.S."
                     />
-                    {errors.nombre && <p className="mt-1 text-xs text-fiscal-danger">{errors.nombre}</p>}
+                    {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
                   </div>
 
                   <div>
@@ -376,15 +374,15 @@ export default function CustomerFormPage() {
                       name="correo_electronico"
                       value={formData.correo_electronico}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                      className={`field w-full ${
                         errors.correo_electronico
-                          ? "border-fiscal-danger"
-                          : "border-neutralCustom-200 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid"
+                          : ""
                       }`}
                       placeholder="facturacion@cliente.com"
                     />
                     {errors.correo_electronico && (
-                      <p className="mt-1 text-xs text-fiscal-danger">{errors.correo_electronico}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger">{errors.correo_electronico}</p>
                     )}
                   </div>
 
@@ -396,7 +394,7 @@ export default function CustomerFormPage() {
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 transition-colors"
+                      className="field w-full"
                       placeholder="Ej. 3001234567"
                     />
                   </div>
@@ -412,15 +410,15 @@ export default function CustomerFormPage() {
                       name="regimen_fiscal"
                       value={formData.regimen_fiscal}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none ${
-                        errors.regimen_fiscal ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.regimen_fiscal ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     >
                       <option value="">Seleccione...</option>
                       <option value="48">48 - Responsable de IVA</option>
                       <option value="49">49 - No responsable de IVA</option>
                     </select>
-                    {errors.regimen_fiscal && <p className="mt-1 text-xs text-fiscal-danger">{errors.regimen_fiscal}</p>}
+                    {errors.regimen_fiscal && <p className="mt-1 text-sm text-fiscal-danger">{errors.regimen_fiscal}</p>}
                   </div>
 
                   <div>
@@ -432,7 +430,7 @@ export default function CustomerFormPage() {
                       name="tipo_organizacion"
                       value={formData.tipo_organizacion}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       {catalogs.organizationTypes.map((org) => (
                         <option key={org.code} value={org.code}>
@@ -451,7 +449,7 @@ export default function CustomerFormPage() {
                       name="regimen"
                       value={formData.regimen}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       {catalogs.regimes.map((reg) => (
                         <option key={reg.code} value={reg.code}>
@@ -470,7 +468,7 @@ export default function CustomerFormPage() {
                       name="tributo"
                       value={formData.tributo}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       <option value="">Sin responsabilidad tributaria</option>
                       {catalogs.taxes.map((tax) => (
@@ -483,20 +481,20 @@ export default function CustomerFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
                     onClick={() => navigate(returnTo || "/customers")}
-                    className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                    variant="ghost"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isSaving || hasErrors}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    variant="primary"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Guardar Cliente"}
-                  </button>
+                    Guardar
+                  </Button>
                 </div>
               </form>
             )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFacturaRecibida, registrarEventoReceptor, listPublicReferenceTable } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import { Button } from "@ingefact/ui";
 import {
   TIPOS_EVENTO,
   TIPOS_QUE_REQUIEREN_GENERADOR,
@@ -17,7 +18,7 @@ const formatCOP = (value) =>
 
 const ESTADO_BADGE = {
   ACCEPTED: "bg-brand-50 text-brand-600",
-  ACCEPTED_WITH_OBSERVATIONS: "bg-fiscal-warning/10 text-fiscal-warning",
+  ACCEPTED_WITH_OBSERVATIONS: "bg-fiscal-warning/10 text-amber-700",
   REJECTED: "bg-fiscal-danger/10 text-fiscal-danger",
 };
 
@@ -151,12 +152,12 @@ export default function ReceivedInvoiceDetailPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button
+              <Button
                 onClick={() => navigate("/received-invoices")}
-                className="text-brand-600 hover:underline font-medium"
+                variant="link"
               >
-                Facturas Recibidas
-              </button>
+                Facturas recibidas
+              </Button>
               <span>/</span>
               <span>Detalle</span>
             </div>
@@ -199,7 +200,7 @@ export default function ReceivedInvoiceDetailPage() {
             <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
               <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Eventos registrados</h3>
               {factura.eventos.length === 0 ? (
-                <p className="text-sm text-neutralCustom-400 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md">
+                <p className="text-sm text-neutralCustom-500 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md">
                   Aún no has registrado ningún evento sobre esta factura.
                 </p>
               ) : (
@@ -219,7 +220,7 @@ export default function ReceivedInvoiceDetailPage() {
                         </span>
                       </div>
                       {evento.razon_rechazo && (
-                        <p className="text-xs text-fiscal-danger mt-2">{evento.razon_rechazo}</p>
+                        <p className="text-sm text-fiscal-danger mt-2">{evento.razon_rechazo}</p>
                       )}
                       {evento.notas && <p className="text-xs text-neutralCustom-600 mt-2">{evento.notas}</p>}
                       {evento.cude && (
@@ -254,8 +255,8 @@ export default function ReceivedInvoiceDetailPage() {
                     setTipo(e.target.value);
                     setErrors((prev) => ({ ...prev, tipo: validateTipo(e.target.value) }));
                   }}
-                  className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-                    errors.tipo ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                  className={`field w-full ${
+                    errors.tipo ? "border-fiscal-danger field-invalid" : ""
                   }`}
                 >
                   <option value="">Selecciona...</option>
@@ -265,7 +266,7 @@ export default function ReceivedInvoiceDetailPage() {
                     </option>
                   ))}
                 </select>
-                {errors.tipo && <p className="mt-1 text-xs text-fiscal-danger">{errors.tipo}</p>}
+                {errors.tipo && <p className="mt-1 text-sm text-fiscal-danger">{errors.tipo}</p>}
               </div>
 
               {TIPOS_QUE_REQUIEREN_GENERADOR.includes(tipo) && (
@@ -281,10 +282,10 @@ export default function ReceivedInvoiceDetailPage() {
                         name="tipo_identificacion"
                         value={generador.tipo_identificacion}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
+                        className={`field w-full ${
                           errors.generador_tipo_identificacion
-                            ? "border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400"
+                            ? "border-fiscal-danger field-invalid"
+                            : ""
                         }`}
                       >
                         <option value="">Selecciona...</option>
@@ -305,10 +306,10 @@ export default function ReceivedInvoiceDetailPage() {
                         name="numero_identificacion"
                         value={generador.numero_identificacion}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
+                        className={`field w-full ${
                           errors.generador_numero_identificacion
-                            ? "border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400"
+                            ? "border-fiscal-danger field-invalid"
+                            : ""
                         }`}
                       />
                     </div>
@@ -322,8 +323,8 @@ export default function ReceivedInvoiceDetailPage() {
                         name="nombres"
                         value={generador.nombres}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                          errors.generador_nombres ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field w-full ${
+                          errors.generador_nombres ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </div>
@@ -337,8 +338,8 @@ export default function ReceivedInvoiceDetailPage() {
                         name="apellidos"
                         value={generador.apellidos}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                          errors.generador_apellidos ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field w-full ${
+                          errors.generador_apellidos ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </div>
@@ -353,7 +354,7 @@ export default function ReceivedInvoiceDetailPage() {
                         value={generador.cargo}
                         onChange={handleGeneradorChange}
                         placeholder="Opcional"
-                        className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       />
                     </div>
                   </div>
@@ -373,8 +374,8 @@ export default function ReceivedInvoiceDetailPage() {
                         setClaimCode(e.target.value);
                         setErrors((prev) => ({ ...prev, claim_code: validateClaimCode(e.target.value) }));
                       }}
-                      className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                        errors.claim_code ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.claim_code ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     >
                       <option value="">Selecciona...</option>
@@ -384,7 +385,7 @@ export default function ReceivedInvoiceDetailPage() {
                         </option>
                       ))}
                     </select>
-                    {errors.claim_code && <p className="mt-1 text-xs text-fiscal-danger">{errors.claim_code}</p>}
+                    {errors.claim_code && <p className="mt-1 text-sm text-fiscal-danger">{errors.claim_code}</p>}
                   </div>
                   <div>
                     <label htmlFor="notas" className="block text-xs font-medium text-neutralCustom-600 mb-1">
@@ -396,20 +397,20 @@ export default function ReceivedInvoiceDetailPage() {
                       onChange={(e) => setNotas(e.target.value)}
                       rows={2}
                       placeholder="Opcional"
-                      className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     />
                   </div>
                 </div>
               )}
 
               <div className="flex justify-end pt-2">
-                <button
+                <Button
                   type="submit"
-                  disabled={isRegistering}
-                  className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                  variant="primary"
+                  loading={isRegistering}
                 >
-                  {isRegistering ? "Registrando..." : "Registrar Evento"}
-                </button>
+                  Registrar
+                </Button>
               </div>
             </form>
           </div>

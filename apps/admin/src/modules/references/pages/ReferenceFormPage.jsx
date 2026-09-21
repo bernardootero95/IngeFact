@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearReferenceRecord, actualizarReferenceRecord } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { tableTitles } from "../tableTitles";
+import { Button } from "@ingefact/ui";
 
 function validateCode(value) {
   return !value.trim() ? "El código es obligatorio." : "";
@@ -126,13 +127,12 @@ export default function ReferenceFormPage() {
             </h2>
             <p className="text-xs text-neutralCustom-500">Catálogo de referencia DIAN.</p>
           </div>
-          <button
-            type="button"
+          <Button
             onClick={() => navigate(`/admin/references/${tableName}`)}
-            className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+            variant="ghost"
           >
             Cancelar
-          </button>
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
@@ -157,15 +157,15 @@ export default function ReferenceFormPage() {
                     type="text"
                     value={code}
                     onChange={handleCodeChange}
-                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm font-mono focus:outline-none ${
+                    className={`field w-full font-mono ${
                       fieldErrors.code
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-100 focus:border-brand-400"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : ""
                     }`}
                     placeholder="Ej: 01"
                   />
                   {fieldErrors.code && (
-                    <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.code}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.code}</p>
                   )}
                 </div>
                 <div className="col-span-2">
@@ -177,15 +177,15 @@ export default function ReferenceFormPage() {
                     type="text"
                     value={value}
                     onChange={handleValueChange}
-                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                    className={`field w-full ${
                       fieldErrors.value
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-100 focus:border-brand-400"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : ""
                     }`}
                     placeholder="Descripción oficial"
                   />
                   {fieldErrors.value && (
-                    <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.value}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.value}</p>
                   )}
                 </div>
               </div>
@@ -201,15 +201,15 @@ export default function ReferenceFormPage() {
                       type="text"
                       value={deptCode}
                       onChange={handleDeptCodeChange}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm font-mono focus:outline-none ${
+                      className={`field w-full font-mono ${
                         fieldErrors.deptCode
-                          ? "border-fiscal-danger focus:border-fiscal-danger"
-                          : "border-neutralCustom-100 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                          : ""
                       }`}
                       placeholder="Ej: 08"
                     />
                     {fieldErrors.deptCode && (
-                      <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.deptCode}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.deptCode}</p>
                     )}
                   </div>
                   <div className="col-span-2">
@@ -221,15 +221,15 @@ export default function ReferenceFormPage() {
                       type="text"
                       value={deptValue}
                       onChange={handleDeptValueChange}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                      className={`field w-full ${
                         fieldErrors.deptValue
-                          ? "border-fiscal-danger focus:border-fiscal-danger"
-                          : "border-neutralCustom-100 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                          : ""
                       }`}
                       placeholder="Atlántico"
                     />
                     {fieldErrors.deptValue && (
-                      <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.deptValue}</p>
+                      <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.deptValue}</p>
                     )}
                   </div>
                 </div>
@@ -245,15 +245,15 @@ export default function ReferenceFormPage() {
                     type="text"
                     value={valueNade}
                     onChange={handleValueNadeChange}
-                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                    className={`field w-full ${
                       fieldErrors.valueNade
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-100 focus:border-brand-400"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : ""
                     }`}
                     placeholder="Valor estandarizado NADE"
                   />
                   {fieldErrors.valueNade && (
-                    <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{fieldErrors.valueNade}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.valueNade}</p>
                   )}
                 </div>
               )}
@@ -266,7 +266,7 @@ export default function ReferenceFormPage() {
                   id="ref-estado"
                   value={estado}
                   onChange={(e) => setEstado(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full"
                 >
                   <option value="activo">Activo</option>
                   <option value="inactivo">Inactivo</option>
@@ -274,20 +274,20 @@ export default function ReferenceFormPage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                <button
-                  type="button"
+                <Button
                   onClick={() => navigate(`/admin/references/${tableName}`)}
-                  className="px-4 py-2 text-neutralCustom-600 hover:bg-neutralCustom-100 text-sm font-medium rounded-brand-md transition-colors"
+                  variant="ghost"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   disabled={isSaving || hasErrors}
-                  className="px-6 py-2 bg-brand-600 hover:bg-brand-400 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="primary"
+                  loading={isSaving}
                 >
-                  {isSaving ? "Guardando..." : "Guardar"}
-                </button>
+                  Guardar
+                </Button>
               </div>
             </form>
           </div>

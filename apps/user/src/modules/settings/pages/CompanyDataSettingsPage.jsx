@@ -3,6 +3,7 @@ import { actualizarDatosEmpresa } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./CompanyDataSettingsPage.validation";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = { nombre_comercial: "", telefono: "", direccion: "" };
 
@@ -92,9 +93,7 @@ export default function CompanyDataSettingsPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-2xl space-y-6">
             {loadingEmpresa ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando datos de la empresa...
-              </div>
+              <FormSkeleton label="Cargando datos de la empresa..." />
             ) : (
               <>
                 <form
@@ -130,10 +129,10 @@ export default function CompanyDataSettingsPage() {
                         name="nombre_comercial"
                         value={formData.nombre_comercial}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.nombre_comercial
-                            ? "border-fiscal-danger focus:border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                            ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                            : "focus:ring-2 focus:ring-brand-50"
                         }`}
                       />
                       <p className="text-xs text-neutralCustom-500 mt-1">
@@ -141,7 +140,7 @@ export default function CompanyDataSettingsPage() {
                         diferir de la razón social).
                       </p>
                       {errors.nombre_comercial && (
-                        <p className="mt-1 text-xs text-fiscal-danger">
+                        <p className="mt-1 text-sm text-fiscal-danger">
                           {errors.nombre_comercial}
                         </p>
                       )}
@@ -157,15 +156,15 @@ export default function CompanyDataSettingsPage() {
                         name="telefono"
                         value={formData.telefono}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.telefono
-                            ? "border-fiscal-danger focus:border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                            ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                            : "focus:ring-2 focus:ring-brand-50"
                         }`}
                         placeholder="+57 1 234 5678"
                       />
                       {errors.telefono && (
-                        <p className="mt-1 text-xs text-fiscal-danger">
+                        <p className="mt-1 text-sm text-fiscal-danger">
                           {errors.telefono}
                         </p>
                       )}
@@ -181,36 +180,36 @@ export default function CompanyDataSettingsPage() {
                         name="direccion"
                         value={formData.direccion}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.direccion
-                            ? "border-fiscal-danger focus:border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                            ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                            : "focus:ring-2 focus:ring-brand-50"
                         }`}
                       />
                       {errors.direccion && (
-                        <p className="mt-1 text-xs text-fiscal-danger">
+                        <p className="mt-1 text-sm text-fiscal-danger">
                           {errors.direccion}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
-                    <button
-                      type="button"
+                  <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+                    <Button
+                      variant="ghost"
                       onClick={handleCancel}
                       disabled={isSaving}
-                      className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                     >
                       Cancelar
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
                       disabled={isSaving || hasErrors}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="primary"
+                      loading={isSaving}
                     >
-                      {isSaving ? "Guardando..." : "Guardar Cambios"}
-                    </button>
+                      Guardar
+                    </Button>
                   </div>
                 </form>
 
@@ -251,7 +250,7 @@ export default function CompanyDataSettingsPage() {
                         id="razon_social_display"
                         value={empresa?.razon_social || ""}
                         disabled
-                        className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
+                        className="field w-full bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -264,7 +263,7 @@ export default function CompanyDataSettingsPage() {
                           id="nit_display"
                           value={empresa?.numero_identificacion || ""}
                           disabled
-                          className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
+                          className="field w-full bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -276,7 +275,7 @@ export default function CompanyDataSettingsPage() {
                           id="correo_display"
                           value={empresa?.correo_electronico || ""}
                           disabled
-                          className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
+                          className="field w-full bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                         />
                       </div>
                     </div>

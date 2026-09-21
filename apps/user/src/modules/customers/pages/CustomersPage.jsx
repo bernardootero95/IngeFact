@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listClientes, deleteCliente } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function CustomersPage() {
@@ -39,7 +39,6 @@ export default function CustomersPage() {
   };
 
   const handleDelete = async (cliente) => {
-    if (!window.confirm(`¿Eliminar a "${cliente.nombre}" de tu directorio de clientes?`)) return;
     setDeletingId(cliente.id);
     try {
       await deleteCliente(cliente.id);
@@ -51,6 +50,8 @@ export default function CustomersPage() {
     }
   };
 
+
+  const view = useTableView(customers);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -65,12 +66,12 @@ export default function CustomersPage() {
               Gestiona las empresas y personas a las que vas a facturar.
             </p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/customers/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
             <svg
-              className="w-4 h-4 mr-2"
+              className="w-4 h-4"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -82,12 +83,12 @@ export default function CustomersPage() {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Nuevo Cliente
-          </button>
+            Nuevo cliente
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-between items-center">
               <div className="relative w-64">
                 <input
@@ -95,7 +96,7 @@ export default function CustomersPage() {
                   value={search}
                   onChange={handleSearchChange}
                   placeholder="Buscar por NIT o nombre..."
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full pl-9 pr-4"
                 />
                 <svg
                   className="w-4 h-4 absolute left-3 top-2.5 text-neutralCustom-400"
@@ -114,38 +115,35 @@ export default function CustomersPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando clientes...
-              </div>
+              <TableSkeleton columns={5} label="Cargando clientes..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los clientes: {loadError}
                 </p>
-                <button
+                <Button
                   onClick={() => fetchCustomers(search)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : customers.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Identificación</th>
-                    <th className="px-6 py-3 font-semibold">
-                      Razón Social / Nombre
-                    </th>
-                    <th className="px-6 py-3 font-semibold">Correo</th>
-                    <th className="px-6 py-3 font-semibold">Teléfono</th>
-                    <th className="px-6 py-3 text-right font-semibold">
+                    <SortableTh sortKey="numero_identificacion" sort={view.sort} onSort={view.toggleSort}>Identificación</SortableTh>
+                    <SortableTh sortKey="nombre" sort={view.sort} onSort={view.toggleSort}>Razón Social / Nombre</SortableTh>
+                    <SortableTh sortKey="correo_electronico" sort={view.sort} onSort={view.toggleSort}>Correo</SortableTh>
+                    <SortableTh sortKey="telefono" sort={view.sort} onSort={view.toggleSort}>Teléfono</SortableTh>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {customers.map((c) => (
+                  {view.rows.map((c) => (
                     <tr
                       key={c.id}
                       className="hover:bg-neutralCustom-50 transition-colors"
@@ -156,25 +154,35 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-6 py-4">{c.correo_electronico}</td>
                       <td className="px-6 py-4">{c.telefono || "-"}</td>
-                      <td className="px-6 py-4 text-right space-x-3">
-                        <button
-                          onClick={() => navigate(`/customers/${c.id}/edit`)}
-                          className="text-brand-600 hover:text-brand-400 text-xs font-medium"
-                        >
-                          Editar
-                        </button>
-                        <button
-                          onClick={() => handleDelete(c)}
-                          disabled={deletingId === c.id}
-                          className="text-fiscal-danger hover:text-red-400 text-xs font-medium disabled:opacity-50"
-                        >
-                          {deletingId === c.id ? "Eliminando..." : "Eliminar"}
-                        </button>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1">
+                          <IconButton title="Editar" onClick={() => navigate(`/customers/${c.id}/edit`)}>
+                            <PencilIcon />
+                          </IconButton>
+                          <ConfirmPopover
+                            message={`¿Eliminar a "${c.nombre}" de tu directorio de clientes?`}
+                            confirmLabel="Eliminar"
+                            onConfirm={() => handleDelete(c)}
+                          >
+                            {({ ask }) => (
+                              <IconButton
+                                title="Eliminar"
+                                variant="danger"
+                                onClick={ask}
+                                disabled={deletingId === c.id}
+                              >
+                                <TrashIcon />
+                              </IconButton>
+                            )}
+                          </ConfirmPopover>
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">
@@ -202,12 +210,12 @@ export default function CustomersPage() {
                 </p>
                 {!search && (
                   <div className="flex justify-center space-x-3">
-                    <button
+                    <Button
                       onClick={() => navigate("/customers/new")}
-                      className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                      variant="primary"
                     >
-                      Agregar Cliente
-                    </button>
+                      Nuevo cliente
+                    </Button>
                   </div>
                 )}
               </div>

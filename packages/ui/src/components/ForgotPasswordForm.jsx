@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isValidEmail } from "@ingefact/utils";
+import Button from "./Button.jsx";
 
 const validateEmail = (value) => {
   if (!value.trim()) return "El correo es obligatorio.";
@@ -67,7 +68,7 @@ export default function ForgotPasswordForm({
             </div>
             <Link
               to={loginPath}
-              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-400 transition-colors"
+              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
             >
               Volver a iniciar sesión
             </Link>
@@ -98,28 +99,33 @@ export default function ForgotPasswordForm({
                   required
                   value={email}
                   onChange={handleEmailChange}
-                  className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  className={`field field-lg w-full ${
                     fieldError
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder={emailPlaceholder}
                 />
-                {fieldError && <p className="mt-1 text-xs text-fiscal-danger">{fieldError}</p>}
+                {fieldError && <p className="mt-1 text-sm text-fiscal-danger">{fieldError}</p>}
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading || Boolean(fieldError)}
-                className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+                variant="primary"
+                size="lg"
+                fullWidth
+                title="Enviar enlace de recuperación"
+                loading={loading}
+                className="mt-2"
               >
-                {loading ? "Enviando..." : "Enviar enlace de recuperación"}
-              </button>
+                Enviar enlace
+              </Button>
             </form>
 
             <Link
               to={loginPath}
-              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-400 transition-colors mt-6"
+              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors mt-6"
             >
               Volver a iniciar sesión
             </Link>

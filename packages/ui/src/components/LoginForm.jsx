@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { isValidEmail } from "@ingefact/utils";
+import Button from "./Button.jsx";
 
 const validateEmail = (value) => {
   if (!value.trim()) return "El correo es obligatorio.";
@@ -109,15 +110,15 @@ export default function LoginForm({
               required
               value={email}
               onChange={handleEmailChange}
-              className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+              className={`field field-lg w-full ${
                 fieldErrors.email
-                  ? "border-fiscal-danger focus:border-fiscal-danger"
-                  : "border-neutralCustom-100 focus:border-brand-400"
+                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                  : ""
               }`}
               placeholder={emailPlaceholder}
             />
             {fieldErrors.email && (
-              <p className="mt-1 text-xs text-fiscal-danger">
+              <p className="mt-1 text-sm text-fiscal-danger">
                 {fieldErrors.email}
               </p>
             )}
@@ -130,7 +131,7 @@ export default function LoginForm({
               </label>
               <Link
                 to="/forgot-password"
-                className="text-xs font-medium text-brand-600 hover:text-brand-400 transition-colors"
+                className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -143,10 +144,10 @@ export default function LoginForm({
                 required
                 value={password}
                 onChange={handlePasswordChange}
-                className={`w-full pl-4 pr-10 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                className={`field field-lg w-full pl-4 pr-10 ${
                   fieldErrors.password
-                    ? "border-fiscal-danger focus:border-fiscal-danger"
-                    : "border-neutralCustom-100 focus:border-brand-400"
+                    ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                    : ""
                 }`}
                 placeholder="••••••••"
               />
@@ -154,6 +155,8 @@ export default function LoginForm({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutralCustom-500 hover:text-brand-600 transition-colors"
               >
                 {showPassword ? (
@@ -194,19 +197,23 @@ export default function LoginForm({
               </button>
             </div>
             {fieldErrors.password && (
-              <p className="mt-1 text-xs text-fiscal-danger">
+              <p className="mt-1 text-sm text-fiscal-danger">
                 {fieldErrors.password}
               </p>
             )}
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={loading || hasErrors}
-            className="w-full py-3 bg-brand-600 hover:bg-brand-400 text-white font-medium rounded-brand-md transition-colors focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-2"
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+            className="mt-2"
           >
-            {loading ? "Validando credenciales..." : "Iniciar sesión"}
-          </button>
+            Iniciar sesión
+          </Button>
         </form>
       </div>
     </div>

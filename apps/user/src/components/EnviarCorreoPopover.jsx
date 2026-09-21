@@ -1,11 +1,10 @@
-import { useState, useRef, useEffect, useId } from "react";
+import { useState, useId } from "react";
 import { createPortal } from "react-dom";
-import IconButton from "./IconButton";
 import { validateCorreoDestino } from "./EnviarCorreoPopover.validation";
+import { Button, IconButton, useAnchoredPopover } from "@ingefact/ui";
 
 const ANCHO = 288;
 const ALTO_ESTIMADO = 200;
-const MARGEN = 8;
 
 /**
  * Boton que pide un correo y envia el documento a ese destinatario. No es un
@@ -20,63 +19,31 @@ const MARGEN = 8;
 export default function EnviarCorreoPopover({
   variant = "icon",
   title = "Enviar por correo",
-  label = "Enviar por Correo",
+  label = "Enviar correo",
   defaultEmail = "",
   onEnviar,
   onEnviado,
 }) {
   const inputId = useId();
-  const triggerRef = useRef(null);
-  const panelRef = useRef(null);
-  const [open, setOpen] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
   const [correo, setCorreo] = useState("");
   const [error, setError] = useState("");
   const [sendError, setSendError] = useState(null);
   const [sending, setSending] = useState(false);
-
-  const close = () => {
-    setOpen(false);
-    setSendError(null);
-  };
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const closeIfOutside = (event) => {
-      if (panelRef.current?.contains(event.target) || triggerRef.current?.contains(event.target)) return;
-      setOpen(false);
-      setSendError(null);
-    };
-    const closeOnEscape = (event) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        setSendError(null);
-      }
-    };
-    const closeOnScroll = () => setOpen(false);
-    document.addEventListener("mousedown", closeIfOutside);
-    document.addEventListener("keydown", closeOnEscape);
-    window.addEventListener("scroll", closeOnScroll, true);
-    return () => {
-      document.removeEventListener("mousedown", closeIfOutside);
-      document.removeEventListener("keydown", closeOnEscape);
-      window.removeEventListener("scroll", closeOnScroll, true);
-    };
-  }, [open]);
+  const { triggerRef, panelRef, open, position, show, close } = useAnchoredPopover({
+    width: ANCHO,
+    estimatedHeight: ALTO_ESTIMADO,
+    onClose: () => setSendError(null),
+  });
 
   const handleToggle = () => {
     if (open) {
       close();
       return;
     }
-    const rect = triggerRef.current.getBoundingClientRect();
-    const left = Math.max(MARGEN, Math.min(rect.right - ANCHO, window.innerWidth - ANCHO - MARGEN));
-    const cabeAbajo = rect.bottom + MARGEN + ALTO_ESTIMADO <= window.innerHeight;
-    setPosition({ top: cabeAbajo ? rect.bottom + MARGEN : Math.max(MARGEN, rect.top - ALTO_ESTIMADO - MARGEN), left });
     setCorreo(defaultEmail);
     setError(defaultEmail ? validateCorreoDestino(defaultEmail) : "");
     setSendError(null);
-    setOpen(true);
+    show();
   };
 
   const handleChange = (e) => {
@@ -96,7 +63,7 @@ export default function EnviarCorreoPopover({
     setSendError(null);
     try {
       await onEnviar(correo.trim());
-      setOpen(false);
+      close();
       onEnviado?.(correo.trim());
     } catch (err) {
       setSendError(err.message);
@@ -118,13 +85,11 @@ export default function EnviarCorreoPopover({
         </svg>
       </IconButton>
     ) : (
-      <button
-        type="button"
+      <Button
         onClick={handleToggle}
-        className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors"
       >
         {label}
-      </button>
+      </Button>
     );
 
   return (
@@ -157,13 +122,9 @@ export default function EnviarCorreoPopover({
                 value={correo}
                 onChange={handleChange}
                 placeholder="correo@ejemplo.com"
-                className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                  error
-                    ? "border-fiscal-danger focus:border-fiscal-danger"
-                    : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
-                }`}
+                className={`field w-full ${error ? "border-fiscal-danger field-invalid" : ""}`}
               />
-              {error && <p className="mt-1 text-xs text-fiscal-danger">{error}</p>}
+              {error && <p className="mt-1 text-sm text-fiscal-danger">{error}</p>}
             </div>
 
             {sendError && (
@@ -173,21 +134,23 @@ export default function EnviarCorreoPopover({
             )}
 
             <div className="flex justify-end gap-2">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
                 onClick={close}
                 disabled={sending}
-                className="px-3 py-1.5 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                size="sm"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
                 disabled={sending || Boolean(error)}
-                className="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                size="sm"
+                loading={sending}
               >
-                {sending ? "Enviando..." : "Enviar"}
-              </button>
+                Enviar
+              </Button>
             </div>
           </form>,
           document.body,

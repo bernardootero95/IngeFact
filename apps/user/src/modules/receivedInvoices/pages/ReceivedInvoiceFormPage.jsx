@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { listProveedores, getProveedor, crearFacturaRecibida } from "@ingefact/core-api";
-import { SearchableSelect } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, FormSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateProveedor, validateCufe, validateFecha } from "./ReceivedInvoiceFormPage.validation";
 
@@ -99,12 +99,12 @@ export default function ReceivedInvoiceFormPage() {
         <header className="h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <button
+              <Button
                 onClick={() => navigate("/received-invoices")}
-                className="text-brand-600 hover:underline font-medium"
+                variant="link"
               >
-                Facturas Recibidas
-              </button>
+                Facturas recibidas
+              </Button>
               <span>/</span>
               <span>Nueva</span>
             </div>
@@ -118,7 +118,7 @@ export default function ReceivedInvoiceFormPage() {
         <div className="p-8 flex-1 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">Cargando...</div>
+              <FormSkeleton label="Cargando..." />
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
@@ -139,13 +139,14 @@ export default function ReceivedInvoiceFormPage() {
                     <label htmlFor="proveedor-select" className="block text-sm font-medium text-neutralCustom-800">
                       Proveedor <span className="text-fiscal-danger">*</span>
                     </label>
-                    <button
-                      type="button"
+                    <Button
                       onClick={irACrearProveedor}
-                      className="text-xs font-medium text-brand-600 hover:text-brand-400"
+                      variant="link"
+                      icon={PlusIcon}
+                      className="text-xs"
                     >
-                      + Nuevo Proveedor
-                    </button>
+                      Nuevo proveedor
+                    </Button>
                   </div>
                   <SearchableSelect
                     id="proveedor-select"
@@ -156,7 +157,7 @@ export default function ReceivedInvoiceFormPage() {
                     error={!!errors.proveedor}
                     formatOption={(opt) => opt.value}
                   />
-                  {errors.proveedor && <p className="mt-1 text-xs text-fiscal-danger">{errors.proveedor}</p>}
+                  {errors.proveedor && <p className="mt-1 text-sm text-fiscal-danger">{errors.proveedor}</p>}
                 </div>
 
                 <div>
@@ -172,11 +173,11 @@ export default function ReceivedInvoiceFormPage() {
                       setErrors((prev) => ({ ...prev, cufe: validateCufe(e.target.value) }));
                     }}
                     placeholder="Código único de facturación electrónica"
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm font-mono focus:outline-none ${
-                      errors.cufe ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full font-mono ${
+                      errors.cufe ? "border-fiscal-danger field-invalid" : ""
                     }`}
                   />
-                  {errors.cufe && <p className="mt-1 text-xs text-fiscal-danger">{errors.cufe}</p>}
+                  {errors.cufe && <p className="mt-1 text-sm text-fiscal-danger">{errors.cufe}</p>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -192,11 +193,11 @@ export default function ReceivedInvoiceFormPage() {
                         setFecha(e.target.value);
                         setErrors((prev) => ({ ...prev, fecha: validateFecha(e.target.value) }));
                       }}
-                      className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-                        errors.fecha ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.fecha ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     />
-                    {errors.fecha && <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha}</p>}
+                    {errors.fecha && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha}</p>}
                   </div>
 
                   <div>
@@ -209,7 +210,7 @@ export default function ReceivedInvoiceFormPage() {
                       value={numeroDocumentoProveedor}
                       onChange={(e) => setNumeroDocumentoProveedor(e.target.value)}
                       placeholder="Opcional"
-                      className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     />
                   </div>
                 </div>
@@ -226,7 +227,7 @@ export default function ReceivedInvoiceFormPage() {
                     value={montoTotal}
                     onChange={(e) => setMontoTotal(e.target.value)}
                     placeholder="Opcional, solo de referencia"
-                    className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   />
                 </div>
 
@@ -240,26 +241,26 @@ export default function ReceivedInvoiceFormPage() {
                     value={observaciones}
                     onChange={(e) => setObservaciones(e.target.value)}
                     placeholder="Opcional"
-                    className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   />
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <button
-                    type="button"
+                  <Button
+                    variant="ghost"
                     onClick={() => navigate("/received-invoices")}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    disabled={isSaving}
-                    className="px-6 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50"
+                    variant="primary"
+                    title="Registrar factura recibida"
+                    loading={isSaving}
                   >
-                    {isSaving ? "Guardando..." : "Registrar Factura Recibida"}
-                  </button>
+                    Registrar
+                  </Button>
                 </div>
               </form>
             )}

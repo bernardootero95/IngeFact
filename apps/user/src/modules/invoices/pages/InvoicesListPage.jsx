@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturas, obtenerRepresentacionPdfFactura, enviarFacturaPorCorreo } from "@ingefact/core-api";
-import { ToastAlert } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import IconButton from "../../../components/IconButton";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
@@ -86,6 +85,8 @@ export default function InvoicesListPage() {
     ? facturas.filter((f) => f.cliente_nombre.toLowerCase().includes(search.trim().toLowerCase()))
     : facturas;
 
+
+  const view = useTableView(facturasFiltradas);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -96,19 +97,19 @@ export default function InvoicesListPage() {
             <h2 className="text-lg font-medium text-neutralCustom-800">Facturas</h2>
             <p className="text-xs text-neutralCustom-500">Emite y consulta tus facturas electrónicas.</p>
           </div>
-          <button
+          <Button
             onClick={() => navigate("/invoices/new")}
-            className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors flex items-center shadow-sm"
+            variant="primary"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Nueva Factura
-          </button>
+            Nueva factura
+          </Button>
         </header>
 
         <div className="p-8 flex-1 overflow-y-auto">
-          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-between items-center gap-3">
               <div className="relative w-64">
                 <input
@@ -116,7 +117,7 @@ export default function InvoicesListPage() {
                   value={search}
                   onChange={handleSearchChange}
                   placeholder="Buscar por cliente..."
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full pl-9 pr-4"
                 />
                 <svg
                   className="w-4 h-4 absolute left-3 top-2.5 text-neutralCustom-400"
@@ -135,7 +136,7 @@ export default function InvoicesListPage() {
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                className="field"
               >
                 {ESTADOS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -146,33 +147,32 @@ export default function InvoicesListPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-                Cargando facturas...
-              </div>
+              <TableSkeleton columns={6} label="Cargando facturas..." />
             ) : loadError ? (
               <div className="p-12 text-center">
                 <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las facturas: {loadError}</p>
-                <button
+                <Button
                   onClick={() => fetchFacturas(estado)}
-                  className="px-4 py-2 border border-fiscal-danger text-fiscal-danger text-sm font-medium rounded-brand-md hover:bg-red-50 transition-colors"
+                  variant="danger"
                 >
                   Reintentar
-                </button>
+                </Button>
               </div>
             ) : facturasFiltradas.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Número</th>
-                    <th className="px-6 py-3 font-semibold">Cliente</th>
-                    <th className="px-6 py-3 font-semibold">Fecha</th>
-                    <th className="px-6 py-3 font-semibold">Estado</th>
-                    <th className="px-6 py-3 text-right font-semibold">Total</th>
-                    <th className="px-6 py-3 text-right font-semibold">Acciones</th>
+                    <SortableTh sortKey="numero_completo" sort={view.sort} onSort={view.toggleSort}>Número</SortableTh>
+                    <SortableTh sortKey="cliente_nombre" sort={view.sort} onSort={view.toggleSort}>Cliente</SortableTh>
+                    <SortableTh sortKey="fecha" sort={view.sort} onSort={view.toggleSort}>Fecha</SortableTh>
+                    <SortableTh sortKey="estado" sort={view.sort} onSort={view.toggleSort}>Estado</SortableTh>
+                    <SortableTh sortKey="total" sort={view.sort} onSort={view.toggleSort} align="right">Total</SortableTh>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {facturasFiltradas.map((f) => (
+                  {view.rows.map((f) => (
                     <tr
                       key={f.id}
                       onClick={() => navigate(`/invoices/${f.id}`)}
@@ -255,6 +255,8 @@ export default function InvoicesListPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">
@@ -276,12 +278,12 @@ export default function InvoicesListPage() {
                     : "Crea tu primera factura para empezar a facturar electrónicamente."}
                 </p>
                 {!search && !estado && (
-                  <button
+                  <Button
                     onClick={() => navigate("/invoices/new")}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors"
+                    variant="primary"
                   >
-                    Nueva Factura
-                  </button>
+                    Nueva factura
+                  </Button>
                 )}
               </div>
             )}

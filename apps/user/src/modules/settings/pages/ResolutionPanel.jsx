@@ -6,6 +6,7 @@ import {
   cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
+import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -170,7 +171,7 @@ export default function ResolutionPanel() {
   const vigenciaClase = vencida
     ? "text-fiscal-danger"
     : proximaAVencer
-      ? "text-fiscal-warning"
+      ? "text-amber-700"
       : "text-fiscal-info";
   const vigenciaTexto = vencida
     ? `Venció hace ${Math.abs(dias)} días.`
@@ -186,9 +187,7 @@ export default function ResolutionPanel() {
   return (
     <div className="max-w-2xl space-y-6">
       {loading ? (
-        <div className="p-12 text-center text-sm text-neutralCustom-500 animate-pulse">
-          Cargando resolución DIAN...
-        </div>
+        <FormSkeleton label="Cargando resolución DIAN..." />
       ) : (
         <>
           {loadError && (
@@ -288,14 +287,14 @@ export default function ResolutionPanel() {
                     name="numero_resolucion"
                     value={formData.numero_resolucion}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.numero_resolucion
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.numero_resolucion && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.numero_resolucion}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_resolucion}</p>
                   )}
                 </div>
                 <div>
@@ -308,14 +307,14 @@ export default function ResolutionPanel() {
                     name="prefijo"
                     value={formData.prefijo}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.prefijo
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.prefijo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.prefijo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.prefijo}</p>
                   )}
                 </div>
               </div>
@@ -332,14 +331,14 @@ export default function ResolutionPanel() {
                     name="rango_minimo"
                     value={formData.rango_minimo}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.rango_minimo
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.rango_minimo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.rango_minimo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_minimo}</p>
                   )}
                 </div>
                 <div>
@@ -353,14 +352,14 @@ export default function ResolutionPanel() {
                     name="rango_maximo"
                     value={formData.rango_maximo}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.rango_maximo
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.rango_maximo && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.rango_maximo}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_maximo}</p>
                   )}
                 </div>
               </div>
@@ -376,14 +375,14 @@ export default function ResolutionPanel() {
                     name="fecha_inicio"
                     value={formData.fecha_inicio}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.fecha_inicio
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.fecha_inicio && (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_inicio}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_inicio}</p>
                   )}
                 </div>
                 <div>
@@ -396,14 +395,14 @@ export default function ResolutionPanel() {
                     name="fecha_fin"
                     value={formData.fecha_fin}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.fecha_fin
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.fecha_fin ? (
-                    <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_fin}</p>
+                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_fin}</p>
                   ) : (
                     resolucion &&
                     formData.fecha_fin === resolucion.fecha_fin && (
@@ -423,14 +422,14 @@ export default function ResolutionPanel() {
                   name="technical_key"
                   value={formData.technical_key}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2.5 border rounded-brand-md text-sm font-mono focus:outline-none transition-colors ${
+                  className={`field w-full font-mono ${
                     errors.technical_key
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : "focus:ring-2 focus:ring-brand-50"
                   }`}
                 />
                 {errors.technical_key && (
-                  <p className="mt-1 text-xs text-fiscal-danger">{errors.technical_key}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{errors.technical_key}</p>
                 )}
               </div>
 
@@ -446,16 +445,16 @@ export default function ResolutionPanel() {
                   value={formData.consecutivo_actual}
                   onChange={handleChange}
                   placeholder={formData.rango_minimo || "Rango mínimo"}
-                  className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                  className={`field w-full ${
                     errors.consecutivo_actual
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : "focus:ring-2 focus:ring-brand-50"
                   }`}
                 />
                 {errors.consecutivo_actual ? (
-                  <p className="mt-1 text-xs text-fiscal-danger">{errors.consecutivo_actual}</p>
+                  <p className="mt-1 text-sm text-fiscal-danger">{errors.consecutivo_actual}</p>
                 ) : (
-                  <p className="mt-1 text-xs text-neutralCustom-500">
+                  <p className="mt-1 text-sm text-neutralCustom-500">
                     Déjalo vacío para iniciar en el rango mínimo. Solo
                     cámbialo si esta numeración ya tiene documentos
                     emitidos fuera de IngeFact (por ejemplo, al
@@ -465,30 +464,31 @@ export default function ResolutionPanel() {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
-              <button
-                type="button"
+            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+              <Button
                 onClick={handleCargarAlegra}
                 disabled={isLoadingAlegra || isValidating || isSaving}
-                className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Cargar la resolución desde Alegra"
+                loading={isLoadingAlegra}
               >
-                {isLoadingAlegra ? "Cargando..." : "Cargar desde Alegra"}
-              </button>
-              <button
-                type="button"
+                Importar
+              </Button>
+              <Button
                 onClick={handleValidar}
                 disabled={!resolucion || isValidating || isSaving}
-                className="px-4 py-2 bg-white border border-neutralCustom-200 hover:bg-neutralCustom-50 text-neutralCustom-800 text-sm font-medium rounded-brand-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Validar ante Alegra"
+                loading={isValidating}
               >
-                {isValidating ? "Validando..." : "Validar ante Alegra"}
-              </button>
-              <button
+                Validar
+              </Button>
+              <Button
                 type="submit"
                 disabled={isSaving || hasErrors}
-                className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-brand-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="primary"
+                loading={isSaving}
               >
-                {isSaving ? "Guardando..." : "Guardar Cambios"}
-              </button>
+                Guardar
+              </Button>
             </div>
           </form>
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getTenantDashboardKpis } from "@ingefact/core-api";
-import { SpinnerLoading } from "@ingefact/ui";
+import { SpinnerLoading, Button } from "@ingefact/ui";
 import { useAuthStore } from "../../auth/store/authStore";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
@@ -51,12 +51,14 @@ export default function Dashboard() {
                   <p className="text-sm text-fiscal-danger">
                     No se pudieron cargar las métricas: {kpisError}
                   </p>
-                  <button
+                  <Button
                     onClick={fetchKpis}
-                    className="px-3 py-1.5 bg-white border border-fiscal-danger text-fiscal-danger text-xs font-medium rounded-brand-md hover:bg-red-100 transition-colors shrink-0 ml-4"
+                    variant="danger"
+                    size="sm"
+                    className="shrink-0 ml-4"
                   >
                     Reintentar
-                  </button>
+                  </Button>
                 </div>
               )}
 

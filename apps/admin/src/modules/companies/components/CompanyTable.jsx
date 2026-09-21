@@ -1,11 +1,13 @@
+import { Button, TableSkeleton, useTableView, Pagination } from "@ingefact/ui";
 
-export default function CompanyTable({ companies, loading, onEdit }) {
+
+export default function CompanyTable({ companies = [], loading, onEdit }) {
+  const view = useTableView(companies);
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64 bg-white border border-neutralCustom-100 rounded-brand-lg">
-        <p className="text-sm font-medium text-neutralCustom-500 animate-pulse">
-          Cargando empresas...
-        </p>
+      <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
+        <TableSkeleton columns={6} label="Cargando empresas..." />
       </div>
     );
   }
@@ -39,25 +41,25 @@ export default function CompanyTable({ companies, loading, onEdit }) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-neutralCustom-50 border-b border-neutralCustom-100">
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                 Empresa (NIT)
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                 Suscripción
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                 Documentos
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                 Estado
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
                 Acciones
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutralCustom-100">
-            {companies.map((company) => {
+            {view.rows.map((company) => {
               const sub = company.suscripcion || null;
               const percentUsed = sub
                 ? Math.round((sub.documentos_usados / sub.max_documentos) * 100)
@@ -133,12 +135,12 @@ export default function CompanyTable({ companies, loading, onEdit }) {
                   </td>
 
                   <td className="p-4 text-sm">
-                    <button
+                    <Button
                       onClick={() => onEdit(company)}
-                      className="text-brand-600 hover:text-brand-400 font-medium transition-colors"
+                      variant="link"
                     >
                       Gestionar
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               );
@@ -146,6 +148,7 @@ export default function CompanyTable({ companies, loading, onEdit }) {
           </tbody>
         </table>
       </div>
+      <Pagination {...view.pagination} />
     </div>
   );
 }
