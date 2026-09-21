@@ -35,6 +35,12 @@ const fieldComponents = ({ addComponents, theme }) => {
         paddingTop: "0",
         paddingBottom: "0",
       },
+      // Sin flechitas de incremento en campos numericos (se hacia clic en ellas por error).
+      "&[type='number']": { MozAppearance: "textfield" },
+      "&[type='number']::-webkit-inner-spin-button, &[type='number']::-webkit-outer-spin-button": {
+        WebkitAppearance: "none",
+        margin: "0",
+      },
       "&:focus": {
         outline: `2px solid ${theme("colors.brand.400")}`,
         outlineOffset: "0px",

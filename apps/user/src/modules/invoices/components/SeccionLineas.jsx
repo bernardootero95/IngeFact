@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { SearchableSelect, Button, PlusIcon, IconButton, TrashIcon } from "@ingefact/ui";
 import { calcularLinea } from "@ingefact/utils";
 
@@ -26,6 +26,8 @@ export default function SeccionLineas({
   onFechaVencimientoChange,
   onCrearProducto,
 }) {
+  const productoFieldId = useId();
+  const cantidadFieldId = useId();
   const [productoId, setProductoId] = useState("");
   const [cantidad, setCantidad] = useState("1");
   const [addError, setAddError] = useState("");
@@ -74,8 +76,9 @@ export default function SeccionLineas({
 
       <div className="flex items-end gap-3 p-3 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md">
         <div className="flex-1">
-          <label className="block text-xs font-medium text-neutralCustom-500 mb-1">Producto / Servicio</label>
+          <label htmlFor={productoFieldId} className="block text-xs font-medium text-neutralCustom-500 mb-1">Producto / Servicio</label>
           <SearchableSelect
+            id={productoFieldId}
             options={productoOptions}
             value={productoId}
             onChange={(id) => {
@@ -87,8 +90,9 @@ export default function SeccionLineas({
           />
         </div>
         <div className="w-24">
-          <label className="block text-xs font-medium text-neutralCustom-500 mb-1">Cantidad</label>
+          <label htmlFor={cantidadFieldId} className="block text-xs font-medium text-neutralCustom-500 mb-1">Cantidad</label>
           <input
+            id={cantidadFieldId}
             type="number"
             min="0"
             step="1"
@@ -113,14 +117,14 @@ export default function SeccionLineas({
           <table className="w-full text-left text-sm min-w-[680px]">
             <thead>
               <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-200">
-                <th className="pb-2 font-semibold w-24">Cod</th>
-                <th className="pb-2 font-semibold">Descripción</th>
-                <th className="pb-2 font-semibold text-right w-20">Cant.</th>
-                <th className="pb-2 font-semibold text-right w-28">Precio Unit.</th>
-                <th className="pb-2 font-semibold text-right w-28">Subtotal</th>
-                <th className="pb-2 font-semibold text-right w-24">IVA</th>
-                <th className="pb-2 font-semibold text-right w-28">Total</th>
-                <th className="pb-2 w-8"></th>
+                <th scope="col" className="pb-2 font-semibold w-24">Cod</th>
+                <th scope="col" className="pb-2 font-semibold">Descripción</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-20">Cant.</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-28">Precio Unit.</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-28">Subtotal</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-24">IVA</th>
+                <th scope="col" className="pb-2 font-semibold text-right w-28">Total</th>
+                <th scope="col" className="pb-2 w-8"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutralCustom-100">

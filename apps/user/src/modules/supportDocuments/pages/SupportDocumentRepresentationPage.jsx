@@ -230,13 +230,13 @@ export default function SupportDocumentRepresentationPage() {
           <table className="w-full text-left text-xs mb-4 border-collapse border border-neutralCustom-300">
             <thead>
               <tr className="bg-neutralCustom-50 text-neutralCustom-500 uppercase">
-                <th className={`${celda} font-semibold`}>Cod</th>
-                <th className={`${celda} font-semibold`}>Descripción</th>
-                <th className={`${celda} text-right font-semibold`}>Cant.</th>
-                <th className={`${celda} text-right font-semibold`}>Precio Unit.</th>
-                {tieneImpuestos && <th className={`${celda} text-right font-semibold`}>Subtotal</th>}
-                {tieneImpuestos && <th className={`${celda} text-right font-semibold`}>IVA</th>}
-                <th className={`${celda} text-right font-semibold`}>Total</th>
+                <th scope="col" className={`${celda} font-semibold`}>Cod</th>
+                <th scope="col" className={`${celda} font-semibold`}>Descripción</th>
+                <th scope="col" className={`${celda} text-right font-semibold`}>Cant.</th>
+                <th scope="col" className={`${celda} text-right font-semibold`}>Precio Unit.</th>
+                {tieneImpuestos && <th scope="col" className={`${celda} text-right font-semibold`}>Subtotal</th>}
+                {tieneImpuestos && <th scope="col" className={`${celda} text-right font-semibold`}>IVA</th>}
+                <th scope="col" className={`${celda} text-right font-semibold`}>Total</th>
               </tr>
             </thead>
             <tbody>

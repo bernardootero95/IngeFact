@@ -13,10 +13,10 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
         <table className="w-full text-left text-sm min-w-[560px]">
           <thead>
             <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-200">
-              <th className="pb-2 font-semibold w-8"></th>
-              <th className="pb-2 font-semibold">Descripción</th>
-              <th className="pb-2 font-semibold text-right w-32">Cantidad</th>
-              <th className="pb-2 font-semibold text-right w-28">Subtotal</th>
+              <th scope="col" className="pb-2 font-semibold w-8"></th>
+              <th scope="col" className="pb-2 font-semibold">Descripción</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-32">Cantidad</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-28">Subtotal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutralCustom-100">

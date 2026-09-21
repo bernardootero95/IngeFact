@@ -13,12 +13,12 @@ export default function SeccionLineasCredito({ seleccion, error, onToggleLinea, 
         <table className="w-full text-left text-sm min-w-[680px]">
           <thead>
             <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-200">
-              <th className="pb-2 font-semibold w-8"></th>
-              <th className="pb-2 font-semibold">Descripción</th>
-              <th className="pb-2 font-semibold text-right w-24">Cant. original</th>
-              <th className="pb-2 font-semibold text-right w-24">Ya acreditado</th>
-              <th className="pb-2 font-semibold text-right w-32">Cant. a acreditar</th>
-              <th className="pb-2 font-semibold text-right w-28">Subtotal</th>
+              <th scope="col" className="pb-2 font-semibold w-8"></th>
+              <th scope="col" className="pb-2 font-semibold">Descripción</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-24">Cant. original</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-24">Ya acreditado</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-32">Cant. a acreditar</th>
+              <th scope="col" className="pb-2 font-semibold text-right w-28">Subtotal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutralCustom-100">

@@ -130,13 +130,13 @@ export default function CustomersPage() {
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Identificación</th>
-                    <th className="px-6 py-3 font-semibold">
+                    <th scope="col" className="px-6 py-3 font-semibold">Identificación</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">
                       Razón Social / Nombre
                     </th>
-                    <th className="px-6 py-3 font-semibold">Correo</th>
-                    <th className="px-6 py-3 font-semibold">Teléfono</th>
-                    <th className="px-6 py-3 text-right font-semibold">
+                    <th scope="col" className="px-6 py-3 font-semibold">Correo</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Teléfono</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Acciones
                     </th>
                   </tr>

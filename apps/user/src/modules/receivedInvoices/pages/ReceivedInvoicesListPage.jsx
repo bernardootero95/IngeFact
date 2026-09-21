@@ -91,11 +91,11 @@ export default function ReceivedInvoicesListPage() {
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Proveedor</th>
-                    <th className="px-6 py-3 font-semibold">CUFE</th>
-                    <th className="px-6 py-3 font-semibold">Fecha</th>
-                    <th className="px-6 py-3 font-semibold">Último evento</th>
-                    <th className="px-6 py-3 text-right font-semibold">Monto</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Proveedor</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">CUFE</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Fecha</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Último evento</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">Monto</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">

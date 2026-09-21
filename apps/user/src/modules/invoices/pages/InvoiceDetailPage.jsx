@@ -393,11 +393,11 @@ export default function InvoiceDetailPage() {
                 <table className="w-full text-left text-sm text-neutralCustom-600">
                   <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
                     <tr>
-                      <th className="px-6 py-2.5 font-semibold">Descripción</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
-                      <th className="px-6 py-2.5 text-right font-semibold">Total</th>
+                      <th scope="col" className="px-6 py-2.5 font-semibold">Descripción</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Precio</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Impuesto</th>
+                      <th scope="col" className="px-6 py-2.5 text-right font-semibold">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutralCustom-100">
@@ -438,10 +438,10 @@ export default function InvoiceDetailPage() {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-100">
-                        <th className="pb-2 font-semibold">Número</th>
-                        <th className="pb-2 font-semibold">Fecha</th>
-                        <th className="pb-2 font-semibold">Estado</th>
-                        <th className="pb-2 text-right font-semibold">Monto</th>
+                        <th scope="col" className="pb-2 font-semibold">Número</th>
+                        <th scope="col" className="pb-2 font-semibold">Fecha</th>
+                        <th scope="col" className="pb-2 font-semibold">Estado</th>
+                        <th scope="col" className="pb-2 text-right font-semibold">Monto</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutralCustom-100">
@@ -486,10 +486,10 @@ export default function InvoiceDetailPage() {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="text-xs text-neutralCustom-500 uppercase border-b border-neutralCustom-100">
-                        <th className="pb-2 font-semibold">Número</th>
-                        <th className="pb-2 font-semibold">Fecha</th>
-                        <th className="pb-2 font-semibold">Estado</th>
-                        <th className="pb-2 text-right font-semibold">Monto</th>
+                        <th scope="col" className="pb-2 font-semibold">Número</th>
+                        <th scope="col" className="pb-2 font-semibold">Fecha</th>
+                        <th scope="col" className="pb-2 font-semibold">Estado</th>
+                        <th scope="col" className="pb-2 text-right font-semibold">Monto</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutralCustom-100">

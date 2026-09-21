@@ -109,13 +109,13 @@ export default function DebitNotesListPage() {
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Número</th>
-                    <th className="px-6 py-3 font-semibold">Factura asociada</th>
-                    <th className="px-6 py-3 font-semibold">Cliente</th>
-                    <th className="px-6 py-3 font-semibold">Fecha</th>
-                    <th className="px-6 py-3 font-semibold">Estado</th>
-                    <th className="px-6 py-3 text-right font-semibold">Total</th>
-                    <th className="px-6 py-3 text-right font-semibold">Acciones</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Número</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Factura asociada</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Cliente</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Fecha</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Estado</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">Total</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">

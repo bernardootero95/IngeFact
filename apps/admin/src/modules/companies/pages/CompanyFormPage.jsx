@@ -810,12 +810,12 @@ export default function CompanyFormPage() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="text-left text-xs text-neutralCustom-500 border-b border-neutralCustom-100">
-                              <th className="py-2 font-medium">Nombre</th>
-                              <th className="py-2 font-medium">Prefijo</th>
-                              <th className="py-2 font-medium">Creada</th>
-                              <th className="py-2 font-medium">Último uso</th>
-                              <th className="py-2 font-medium">Estado</th>
-                              <th className="py-2 font-medium"></th>
+                              <th scope="col" className="py-2 font-medium">Nombre</th>
+                              <th scope="col" className="py-2 font-medium">Prefijo</th>
+                              <th scope="col" className="py-2 font-medium">Creada</th>
+                              <th scope="col" className="py-2 font-medium">Último uso</th>
+                              <th scope="col" className="py-2 font-medium">Estado</th>
+                              <th scope="col" className="py-2 font-medium"></th>
                             </tr>
                           </thead>
                           <tbody>

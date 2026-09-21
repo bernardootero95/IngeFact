@@ -39,19 +39,19 @@ export default function CompanyTable({ companies, loading, onEdit }) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-neutralCustom-50 border-b border-neutralCustom-100">
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                 Empresa (NIT)
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                 Suscripción
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                 Documentos
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                 Estado
               </th>
-              <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
+              <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
                 Acciones
               </th>
             </tr>

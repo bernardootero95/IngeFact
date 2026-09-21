@@ -137,14 +137,14 @@ export default function ProductsPage() {
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-3 font-semibold">Código</th>
-                    <th className="px-6 py-3 font-semibold">Nombre</th>
-                    <th className="px-6 py-3 font-semibold">Tipo</th>
-                    <th className="px-6 py-3 text-right font-semibold">
+                    <th scope="col" className="px-6 py-3 font-semibold">Código</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Nombre</th>
+                    <th scope="col" className="px-6 py-3 font-semibold">Tipo</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Precio
                     </th>
-                    <th className="px-6 py-3 font-semibold">Impuesto</th>
-                    <th className="px-6 py-3 text-right font-semibold">
+                    <th scope="col" className="px-6 py-3 font-semibold">Impuesto</th>
+                    <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Acciones
                     </th>
                   </tr>

@@ -15,16 +15,16 @@ export default function UserTable({ users, loading, onEdit }) {
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-neutralCustom-50 border-b border-neutralCustom-100">
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Nombre
             </th>
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Correo Electrónico
             </th>
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Estado
             </th>
-            <th className="p-4 text-sm font-medium text-neutralCustom-800">
+            <th scope="col" className="p-4 text-sm font-medium text-neutralCustom-800">
               Acciones
             </th>
           </tr>

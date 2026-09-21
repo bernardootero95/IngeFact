@@ -11,3 +11,4 @@ export { PlusIcon, PencilIcon, TrashIcon, ArrowLeftIcon, RefreshIcon } from "./c
 export { Skeleton, TableSkeleton, FormSkeleton } from "./components/Skeleton.jsx";
 export { default as ConfirmPopover } from "./components/ConfirmPopover.jsx";
 export { default as useAnchoredPopover } from "./hooks/useAnchoredPopover.js";
+export { default as preventNumberWheelChange } from "./utils/preventNumberWheelChange.js";

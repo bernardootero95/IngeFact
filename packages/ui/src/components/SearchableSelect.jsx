@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 
 /**
  * Select con búsqueda por texto, para catálogos largos (ej. unidades de
@@ -20,6 +20,7 @@ export default function SearchableSelect({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef(null);
+  const listId = useId();
 
   const selectedOption = options.find((opt) => opt.code === value);
 
@@ -56,6 +57,17 @@ export default function SearchableSelect({
       <input
         type="text"
         id={id}
+        role="combobox"
+        aria-expanded={isOpen}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        autoComplete="off"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setIsOpen(false);
+            setQuery("");
+          }
+        }}
         disabled={disabled}
         value={isOpen ? query : selectedOption ? formatOption(selectedOption) : ""}
         onChange={(e) => setQuery(e.target.value)}
@@ -71,11 +83,13 @@ export default function SearchableSelect({
         }`}
       />
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-neutralCustom-200 rounded-brand-md shadow-lg">
+        <div id={listId} role="listbox" className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-neutralCustom-200 rounded-brand-md shadow-lg">
           {filteredOptions.length > 0 ? (
             filteredOptions.map((opt) => (
               <button
                 type="button"
+                role="option"
+                aria-selected={opt.code === value}
                 key={opt.code}
                 onClick={() => handleSelect(opt)}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-brand-50 transition-colors"
@@ -84,7 +98,7 @@ export default function SearchableSelect({
               </button>
             ))
           ) : (
-            <div className="px-3 py-2 text-sm text-neutralCustom-400">
+            <div className="px-3 py-2 text-sm text-neutralCustom-500">
               Sin resultados
             </div>
           )}

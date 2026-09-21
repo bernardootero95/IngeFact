@@ -162,31 +162,31 @@ export default function ReferenceDetail() {
                 <table className="w-full text-left border-collapse relative">
                   <thead className="sticky top-0 bg-neutralCustom-50 z-10 shadow-sm border-b border-neutralCustom-100">
                     <tr>
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                         Código
                       </th>
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                         Descripción / Valor
                       </th>
                       {isMunicipio && (
                         <>
-                          <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                          <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                             Cód. Depto
                           </th>
-                          <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                          <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                             Departamento
                           </th>
                         </>
                       )}
                       {isNotaCredito && (
-                        <th className="p-4 text-sm font-semibold text-neutralCustom-800">
+                        <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
                           Valor NADE
                         </th>
                       )}
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                         Estado
                       </th>
-                      <th className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
+                      <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-24">
                         Acciones
                       </th>
                     </tr>

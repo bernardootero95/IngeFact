@@ -230,13 +230,13 @@ export default function CreditNoteRepresentationPage() {
         <table className="w-full text-left text-xs mb-4 border-collapse border border-neutralCustom-300">
           <thead>
             <tr className="bg-neutralCustom-50 text-neutralCustom-500 uppercase">
-              <th className="py-1.5 px-2 border border-neutralCustom-300 font-semibold">Cod</th>
-              <th className="py-1.5 px-2 border border-neutralCustom-300 font-semibold">Descripción</th>
-              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Cant.</th>
-              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Precio Unit.</th>
-              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Subtotal</th>
-              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">IVA</th>
-              <th className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Total</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 font-semibold">Cod</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 font-semibold">Descripción</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Cant.</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Precio Unit.</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Subtotal</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">IVA</th>
+              <th scope="col" className="py-1.5 px-2 border border-neutralCustom-300 text-right font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>

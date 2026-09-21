@@ -298,11 +298,11 @@ export default function SupportDocumentDetailPage() {
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-y border-neutralCustom-100">
                   <tr>
-                    <th className="px-6 py-2.5 font-semibold">Descripción</th>
-                    <th className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
-                    <th className="px-6 py-2.5 text-right font-semibold">Precio</th>
-                    {tieneImpuestos && <th className="px-6 py-2.5 text-right font-semibold">Impuesto</th>}
-                    <th className="px-6 py-2.5 text-right font-semibold">Total</th>
+                    <th scope="col" className="px-6 py-2.5 font-semibold">Descripción</th>
+                    <th scope="col" className="px-6 py-2.5 text-right font-semibold">Cantidad</th>
+                    <th scope="col" className="px-6 py-2.5 text-right font-semibold">Precio</th>
+                    {tieneImpuestos && <th scope="col" className="px-6 py-2.5 text-right font-semibold">Impuesto</th>}
+                    <th scope="col" className="px-6 py-2.5 text-right font-semibold">Total</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
