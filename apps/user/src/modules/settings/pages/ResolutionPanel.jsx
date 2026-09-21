@@ -171,7 +171,7 @@ export default function ResolutionPanel() {
   const vigenciaClase = vencida
     ? "text-fiscal-danger"
     : proximaAVencer
-      ? "text-fiscal-warning"
+      ? "text-amber-700"
       : "text-fiscal-info";
   const vigenciaTexto = vencida
     ? `Venció hace ${Math.abs(dias)} días.`

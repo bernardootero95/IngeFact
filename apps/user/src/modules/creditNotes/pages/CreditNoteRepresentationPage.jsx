@@ -302,7 +302,7 @@ export default function CreditNoteRepresentationPage() {
           </div>
         )}
 
-        <div className="text-[10px] text-neutralCustom-400 text-center border-t border-neutralCustom-200 pt-3 space-y-0.5">
+        <div className="text-[10px] text-neutralCustom-500 text-center border-t border-neutralCustom-200 pt-3 space-y-0.5">
           <p>
             {nota.cude
               ? "Documento generado por IngeFact — XML generado y firmado por el proveedor tecnológico: Alegra."

@@ -18,7 +18,7 @@ const formatCOP = (value) =>
 
 const ESTADO_BADGE = {
   ACCEPTED: "bg-brand-50 text-brand-600",
-  ACCEPTED_WITH_OBSERVATIONS: "bg-fiscal-warning/10 text-fiscal-warning",
+  ACCEPTED_WITH_OBSERVATIONS: "bg-fiscal-warning/10 text-amber-700",
   REJECTED: "bg-fiscal-danger/10 text-fiscal-danger",
 };
 
@@ -200,7 +200,7 @@ export default function ReceivedInvoiceDetailPage() {
             <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
               <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Eventos registrados</h3>
               {factura.eventos.length === 0 ? (
-                <p className="text-sm text-neutralCustom-400 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md">
+                <p className="text-sm text-neutralCustom-500 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md">
                   Aún no has registrado ningún evento sobre esta factura.
                 </p>
               ) : (

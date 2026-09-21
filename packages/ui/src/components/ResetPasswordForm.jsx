@@ -81,7 +81,7 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
             </div>
             <Link
               to={forgotPasswordPath}
-              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-400 transition-colors"
+              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
             >
               Solicitar un nuevo enlace
             </Link>

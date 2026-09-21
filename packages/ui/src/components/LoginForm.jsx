@@ -131,7 +131,7 @@ export default function LoginForm({
               </label>
               <Link
                 to="/forgot-password"
-                className="text-xs font-medium text-brand-600 hover:text-brand-400 transition-colors"
+                className="text-xs font-medium text-brand-600 hover:text-brand-700 transition-colors"
               >
                 ¿Olvidaste tu contraseña?
               </Link>

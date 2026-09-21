@@ -68,7 +68,7 @@ export default function ForgotPasswordForm({
             </div>
             <Link
               to={loginPath}
-              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-400 transition-colors"
+              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
             >
               Volver a iniciar sesión
             </Link>
@@ -125,7 +125,7 @@ export default function ForgotPasswordForm({
 
             <Link
               to={loginPath}
-              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-400 transition-colors mt-6"
+              className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors mt-6"
             >
               Volver a iniciar sesión
             </Link>

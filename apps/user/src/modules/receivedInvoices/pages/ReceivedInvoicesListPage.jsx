@@ -9,7 +9,7 @@ const formatCOP = (value) =>
 
 const ESTADO_BADGE = {
   ACCEPTED: "bg-brand-50 text-brand-600",
-  ACCEPTED_WITH_OBSERVATIONS: "bg-fiscal-warning/10 text-fiscal-warning",
+  ACCEPTED_WITH_OBSERVATIONS: "bg-fiscal-warning/10 text-amber-700",
   REJECTED: "bg-fiscal-danger/10 text-fiscal-danger",
 };
 

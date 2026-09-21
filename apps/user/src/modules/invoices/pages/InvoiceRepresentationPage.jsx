@@ -317,7 +317,7 @@ export default function InvoiceRepresentationPage() {
           </div>
         )}
 
-        <div className="text-[10px] text-neutralCustom-400 text-center border-t border-neutralCustom-200 pt-3 space-y-0.5">
+        <div className="text-[10px] text-neutralCustom-500 text-center border-t border-neutralCustom-200 pt-3 space-y-0.5">
           {resolucion && (
             <p>
               Autorizado DIAN para la Facturación Electrónica mediante la resolución {resolucion.numero_resolucion}{" "}

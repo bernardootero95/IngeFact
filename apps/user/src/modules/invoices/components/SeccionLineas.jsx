@@ -198,7 +198,7 @@ export default function SeccionLineas({
           </table>
         </div>
       ) : (
-        <p className="text-sm text-neutralCustom-400 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md mt-4">
+        <p className="text-sm text-neutralCustom-500 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md mt-4">
           Aún no has agregado productos. Búscalo arriba y dale a "+ Agregar".
         </p>
       )}
