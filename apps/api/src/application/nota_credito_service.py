@@ -17,6 +17,7 @@ from src.application.correo_documento import (
     enviar_nota_por_correo,
     resolver_destinatario,
 )
+from src.application.consecutivo import revertir_consecutivo
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.email_client import EmailClient
 from src.core.alegra_errors import map_alegra_error, map_government_response
@@ -329,6 +330,19 @@ class NotaCreditoService:
         self.db.commit()
         return consecutivo
 
+    def _revertir_consecutivo(self, empresa_id: uuid.UUID, consecutivo: int, tipo: str = "credito") -> bool:
+        """Deshace _incrementar_consecutivo() cuando Alegra rechazo el envio con un
+        4xx (no creo ninguna nota). Mismo criterio que
+        ResolucionDianService.revertir_consecutivo."""
+        return revertir_consecutivo(
+            self.db,
+            ConsecutivoNota,
+            consecutivo,
+            ConsecutivoNota.empresa_id == empresa_id,
+            ConsecutivoNota.tipo == tipo,
+            empresa_id=empresa_id,
+        )
+
     def enviar(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> NotaCredito:
         nota = self._obtener_editable(empresa_id, nota_id)
         factura = self._obtener_factura_aceptada(empresa_id, nota.factura_id)
@@ -342,6 +356,7 @@ class NotaCreditoService:
         try:
             respuesta = self._alegra_client.create_credit_note(payload)
         except AlegraApiError as exc:
+            self._revertir_consecutivo(empresa_id, consecutivo, "credito")
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body))
 
         self._aplicar_respuesta_envio(nota, consecutivo, respuesta)

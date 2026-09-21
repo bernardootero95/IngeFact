@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.application.documento_soporte_service import DocumentoSoporteService
-from src.core.alegra_client import AlegraApiError
+from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.documento_soporte import CrearDocumentoSoporteRequest, LineaDocumentoSoporteRequest
 from src.infrastructure.db.models import Empresa, Producto, Proveedor, ResolucionDocumentoSoporte
 
@@ -604,3 +604,41 @@ def test_enviar_por_correo_proveedor_sin_correo_pero_con_correo_pedido_envia(db_
 
     assert enviados == ["otro@example.com"]
 
+
+
+def test_enviar_tras_un_rechazo_4xx_de_alegra_reutiliza_el_mismo_numero(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    resolucion = _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(error=AlegraApiError(400, {"errors": [{"message": "dato invalido"}]}))
+    service = DocumentoSoporteService(db_session, alegra_client=fake)
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 1  # el numero no se quemo
+
+    fake._error = None
+    fake._response = {"supportDocument": {"id": "ds-1", "fullNumber": "SEDS2", "legalStatus": "ACCEPTED"}}
+    enviado = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+    assert enviado.consecutivo == 2
+
+
+def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    resolucion = _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(error=AlegraTransientError("timeout"))
+    service = DocumentoSoporteService(db_session, alegra_client=fake)
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+    assert exc_info.value.status_code == 502
+
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 2

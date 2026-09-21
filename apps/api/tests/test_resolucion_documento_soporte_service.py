@@ -151,3 +151,34 @@ def test_incrementar_consecutivo_es_seguro_bajo_concurrencia(db_session):
         h.join()
 
     assert sorted(resultados) == list(range(rango_minimo + 1, rango_minimo + n_hilos + 1))
+
+
+def test_revertir_consecutivo_deshace_el_incremento(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDocumentoSoporteService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    consecutivo = service.incrementar_consecutivo(empresa.id)  # 101
+
+    assert service.revertir_consecutivo(empresa.id, consecutivo) is True
+
+    resolucion = (
+        db_session.query(ResolucionDocumentoSoporte).filter(ResolucionDocumentoSoporte.empresa_id == empresa.id).one()
+    )
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 100
+
+
+def test_revertir_consecutivo_no_aplica_si_otro_envio_ya_avanzo_el_contador(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDocumentoSoporteService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    primero = service.incrementar_consecutivo(empresa.id)
+    service.incrementar_consecutivo(empresa.id)
+
+    assert service.revertir_consecutivo(empresa.id, primero) is False
+
+    resolucion = (
+        db_session.query(ResolucionDocumentoSoporte).filter(ResolucionDocumentoSoporte.empresa_id == empresa.id).one()
+    )
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 102

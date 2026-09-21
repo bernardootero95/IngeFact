@@ -6,7 +6,7 @@ from fastapi import HTTPException
 import base64
 
 from src.application.factura_service import FacturaService, notificar_factura_aceptada
-from src.core.alegra_client import AlegraApiError
+from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.factura import ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Producto, ResolucionDian, Suscripcion
 
@@ -601,7 +601,9 @@ def test_enviar_error_alegra_se_mapea_y_no_queda_en_estado_intermedio(db_session
     sin_cambios = service.obtener(empresa.id, factura.id)
     assert sin_cambios.estado == "borrador"
     resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
-    assert resolucion.consecutivo_actual == 2  # el consecutivo si avanzo, comportamiento aceptado (ver plan)
+    db_session.refresh(resolucion)
+    # Alegra rechazo el payload sin crear ningun documento: el consecutivo se devuelve para no quemar el numero.
+    assert resolucion.consecutivo_actual == 1
 
 
 def test_obtener_url_xml_pide_una_url_fresca_a_alegra(db_session):
@@ -956,3 +958,45 @@ def test_enviar_con_impuesto_excluido_manda_base_reducida_a_alegra(db_session):
     assert totales["taxTotal"] == 8142.86
     assert totales["payableTotal"] == 60000.00
 
+
+
+def test_enviar_tras_un_rechazo_4xx_de_alegra_reutiliza_el_mismo_numero(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(error=AlegraApiError(400, {"errors": [{"message": "instance requires x"}]}))
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    # El usuario corrige el dato y reenvia: no debe haber un hueco en la numeracion.
+    fake._error = None
+    fake._response = {"invoice": {"id": "inv-1", "fullNumber": "SETP2", "legalStatus": "ACCEPTED"}}
+    enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    assert enviada.consecutivo == 2
+
+
+def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_session):
+    # Un timeout/5xx es ambiguo: Alegra pudo haber creado el documento igual, asi que
+    # devolver el numero podria reutilizar uno ya emitido ante la DIAN.
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(error=AlegraTransientError("timeout"))
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    assert exc_info.value.status_code == 502
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 2

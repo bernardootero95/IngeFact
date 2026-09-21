@@ -742,3 +742,56 @@ def test_nota_credito_parcial_conserva_proporcion_del_impuesto_excluido(db_sessi
     item = fake.last_credit_note_payload["items"][0]
     assert item["taxes"][0]["taxableAmount"] == 42857.14
     assert fake.last_credit_note_payload["totalAmounts"]["taxableTotal"] == 42857.14
+
+
+def _consecutivo_actual_credito(db_session, empresa_id) -> int:
+    from src.infrastructure.db.models import ConsecutivoNota
+
+    db_session.expire_all()
+    fila = (
+        db_session.query(ConsecutivoNota)
+        .filter(ConsecutivoNota.empresa_id == empresa_id, ConsecutivoNota.tipo == "credito")
+        .one_or_none()
+    )
+    return fila.consecutivo_actual if fila else 0
+
+
+def test_enviar_tras_un_rechazo_4xx_de_alegra_reutiliza_el_mismo_numero(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_error = AlegraApiError(400, {"errors": [{"message": "instance requires x"}]})
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, nota.id)
+
+    # Alegra no creo nada: el contador vuelve a su valor anterior (no se quema el numero).
+    assert _consecutivo_actual_credito(db_session, empresa.id) == 0
+
+    fake.credit_note_error = None
+    fake.credit_note_response = {"creditNote": {"id": "n-1", "legalStatus": "ACCEPTED"}}
+    enviada = service.enviar(empresa.id, nota.id)
+    assert enviada.consecutivo == 1
+
+
+def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_session):
+    from src.core.alegra_client import AlegraTransientError
+
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto)
+    fake.credit_note_error = AlegraTransientError("timeout")
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id))
+
+    # Timeout/5xx es ambiguo (Alegra pudo crear la nota): el numero no se devuelve.
+    with pytest.raises(Exception):
+        service.enviar(empresa.id, nota.id)
+
+    assert _consecutivo_actual_credito(db_session, empresa.id) == 1

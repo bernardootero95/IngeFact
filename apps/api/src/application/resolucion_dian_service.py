@@ -6,6 +6,7 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from src.core.alegra_client import AlegraApiError, AlegraClient
+from src.application.consecutivo import revertir_consecutivo
 from src.core.alegra_errors import map_alegra_error
 from src.domain.resolucion_dian import CargarResolucionAlegraResponse, GuardarResolucionDianRequest
 from src.infrastructure.db.models import Empresa, ResolucionDian
@@ -159,3 +160,11 @@ class ResolucionDianService:
                 status.HTTP_409_CONFLICT, "Se agoto el rango de numeracion de la Resolucion DIAN configurada."
             )
         return fila[0]
+
+    def revertir_consecutivo(self, empresa_id: uuid.UUID, consecutivo: int) -> bool:
+        """Devuelve el numero obtenido con incrementar_consecutivo() cuando Alegra
+        rechazo el envio con un 4xx (no creo ningun documento). Ver
+        src/application/consecutivo.py para cuando es seguro y cuando no."""
+        return revertir_consecutivo(
+            self.db, ResolucionDian, consecutivo, ResolucionDian.empresa_id == empresa_id, empresa_id=empresa_id
+        )

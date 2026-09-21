@@ -225,3 +225,42 @@ def test_incrementar_consecutivo_es_seguro_bajo_concurrencia(db_session):
 
     final = db_session.get(ResolucionDian, ResolucionDianService(db_session).obtener(empresa.id).id)
     assert final.consecutivo_actual == rango_minimo + n_hilos
+
+
+def test_revertir_consecutivo_deshace_el_incremento(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    consecutivo = service.incrementar_consecutivo(empresa.id)  # 101
+
+    assert service.revertir_consecutivo(empresa.id, consecutivo) is True
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 100
+
+
+def test_revertir_consecutivo_no_aplica_si_otro_envio_ya_avanzo_el_contador(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    primero = service.incrementar_consecutivo(empresa.id)  # 101
+    service.incrementar_consecutivo(empresa.id)  # 102 -- otro envio concurrente
+
+    # Revertir el 101 pisaria el 102 ya emitido: no se toca nada (el 101 queda "quemado").
+    assert service.revertir_consecutivo(empresa.id, primero) is False
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 102
+
+
+def test_revertir_el_primer_consecutivo_vuelve_a_permitir_editar_el_rango_minimo(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+    service.revertir_consecutivo(empresa.id, service.incrementar_consecutivo(empresa.id))
+
+    # Ningun documento llego a existir: el rango ya no debe estar bloqueado.
+    actualizada = service.guardar(empresa.id, _payload(rango_minimo=200, rango_maximo=1000))
+    assert actualizada.consecutivo_actual == 200

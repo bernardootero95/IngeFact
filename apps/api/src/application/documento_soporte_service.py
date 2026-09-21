@@ -288,6 +288,8 @@ class DocumentoSoporteService:
         try:
             respuesta = self._alegra_client.create_support_document(payload)
         except AlegraApiError as exc:
+            # 4xx: Alegra no creo nada -- se devuelve el numero (ver application/consecutivo.py).
+            resolucion_service.revertir_consecutivo(empresa_id, consecutivo)
             raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
         except AlegraTransientError as exc:
             raise HTTPException(
