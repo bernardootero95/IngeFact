@@ -1,7 +1,9 @@
-import { Button, TableSkeleton } from "@ingefact/ui";
+import { Button, TableSkeleton, useTableView, Pagination } from "@ingefact/ui";
 
 
-export default function CompanyTable({ companies, loading, onEdit }) {
+export default function CompanyTable({ companies = [], loading, onEdit }) {
+  const view = useTableView(companies);
+
   if (loading) {
     return (
       <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
@@ -57,7 +59,7 @@ export default function CompanyTable({ companies, loading, onEdit }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-neutralCustom-100">
-            {companies.map((company) => {
+            {view.rows.map((company) => {
               const sub = company.suscripcion || null;
               const percentUsed = sub
                 ? Math.round((sub.documentos_usados / sub.max_documentos) * 100)
@@ -146,6 +148,7 @@ export default function CompanyTable({ companies, loading, onEdit }) {
           </tbody>
         </table>
       </div>
+      <Pagination {...view.pagination} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listImpuestosEmpresa, deleteImpuestoEmpresa, listPublicReferenceTable } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function TaxesSettingsPage() {
@@ -48,6 +48,8 @@ export default function TaxesSettingsPage() {
 
   const tributoNombre = (code) => tributosCatalog.find((t) => t.code === code)?.value || code;
 
+
+  const view = useTableView(taxes);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -101,18 +103,19 @@ export default function TaxesSettingsPage() {
                 </Button>
               </div>
             ) : taxes.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold">Tributo</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Tarifa</th>
+                    <SortableTh sortKey="tributo" sort={view.sort} onSort={view.toggleSort}>Tributo</SortableTh>
+                    <SortableTh sortKey="tarifa" sort={view.sort} onSort={view.toggleSort}>Tarifa</SortableTh>
                     <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Acciones
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {taxes.map((t) => (
+                  {view.rows.map((t) => (
                     <tr
                       key={t.id}
                       className="hover:bg-neutralCustom-50 transition-colors"
@@ -148,6 +151,8 @@ export default function TaxesSettingsPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">

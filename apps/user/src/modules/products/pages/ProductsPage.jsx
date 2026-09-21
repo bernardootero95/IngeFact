@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProductos, deleteProducto } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const formatCOP = (value) =>
@@ -57,6 +57,8 @@ export default function ProductsPage() {
     }
   };
 
+
+  const view = useTableView(products);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -134,15 +136,14 @@ export default function ProductsPage() {
                 </Button>
               </div>
             ) : products.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold">Código</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Nombre</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Tipo</th>
-                    <th scope="col" className="px-6 py-3 text-right font-semibold">
-                      Precio
-                    </th>
+                    <SortableTh sortKey="codigo" sort={view.sort} onSort={view.toggleSort}>Código</SortableTh>
+                    <SortableTh sortKey="nombre" sort={view.sort} onSort={view.toggleSort}>Nombre</SortableTh>
+                    <SortableTh sortKey="tipo" sort={view.sort} onSort={view.toggleSort}>Tipo</SortableTh>
+                    <SortableTh sortKey="precio" sort={view.sort} onSort={view.toggleSort} align="right">Precio</SortableTh>
                     <th scope="col" className="px-6 py-3 font-semibold">Impuesto</th>
                     <th scope="col" className="px-6 py-3 text-right font-semibold">
                       Acciones
@@ -150,7 +151,7 @@ export default function ProductsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {products.map((p) => (
+                  {view.rows.map((p) => (
                     <tr
                       key={p.id}
                       className="hover:bg-neutralCustom-50 transition-colors"
@@ -193,6 +194,8 @@ export default function ProductsPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">

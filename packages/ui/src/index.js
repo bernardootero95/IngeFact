@@ -12,3 +12,6 @@ export { Skeleton, TableSkeleton, FormSkeleton } from "./components/Skeleton.jsx
 export { default as ConfirmPopover } from "./components/ConfirmPopover.jsx";
 export { default as useAnchoredPopover } from "./hooks/useAnchoredPopover.js";
 export { default as preventNumberWheelChange } from "./utils/preventNumberWheelChange.js";
+export { default as useTableView } from "./hooks/useTableView.js";
+export { default as SortableTh } from "./components/SortableTh.jsx";
+export { default as Pagination } from "./components/Pagination.jsx";

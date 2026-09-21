@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listProveedores, deleteProveedor } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 export default function SuppliersPage() {
@@ -50,6 +50,8 @@ export default function SuppliersPage() {
     }
   };
 
+
+  const view = useTableView(suppliers);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -111,18 +113,19 @@ export default function SuppliersPage() {
                 </Button>
               </div>
             ) : suppliers.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold">Identificación</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Razón Social / Nombre</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Correo</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Teléfono</th>
+                    <SortableTh sortKey="numero_identificacion" sort={view.sort} onSort={view.toggleSort}>Identificación</SortableTh>
+                    <SortableTh sortKey="nombre" sort={view.sort} onSort={view.toggleSort}>Razón Social / Nombre</SortableTh>
+                    <SortableTh sortKey="correo_electronico" sort={view.sort} onSort={view.toggleSort}>Correo</SortableTh>
+                    <SortableTh sortKey="telefono" sort={view.sort} onSort={view.toggleSort}>Teléfono</SortableTh>
                     <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {suppliers.map((p) => (
+                  {view.rows.map((p) => (
                     <tr key={p.id} className="hover:bg-neutralCustom-50 transition-colors">
                       <td className="px-6 py-4">{p.numero_identificacion}</td>
                       <td className="px-6 py-4 font-medium text-neutralCustom-800">{p.nombre}</td>
@@ -155,6 +158,8 @@ export default function SuppliersPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">

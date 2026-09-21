@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturasRecibidas } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import { Button, TableSkeleton } from "@ingefact/ui";
+import { Button, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -50,6 +50,8 @@ export default function ReceivedInvoicesListPage() {
     fetchFacturas();
   }, [fetchFacturas]);
 
+
+  const view = useTableView(facturas);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -88,18 +90,19 @@ export default function ReceivedInvoicesListPage() {
                 </Button>
               </div>
             ) : facturas.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold">Proveedor</th>
+                    <SortableTh sortKey="proveedor_nombre" sort={view.sort} onSort={view.toggleSort}>Proveedor</SortableTh>
                     <th scope="col" className="px-6 py-3 font-semibold">CUFE</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Fecha</th>
+                    <SortableTh sortKey="fecha" sort={view.sort} onSort={view.toggleSort}>Fecha</SortableTh>
                     <th scope="col" className="px-6 py-3 font-semibold">Último evento</th>
-                    <th scope="col" className="px-6 py-3 text-right font-semibold">Monto</th>
+                    <SortableTh sortKey="monto_total" sort={view.sort} onSort={view.toggleSort} align="right">Monto</SortableTh>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {facturas.map((f) => (
+                  {view.rows.map((f) => (
                     <tr
                       key={f.id}
                       onClick={() => navigate(`/received-invoices/${f.id}`)}
@@ -123,6 +126,8 @@ export default function ReceivedInvoicesListPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">

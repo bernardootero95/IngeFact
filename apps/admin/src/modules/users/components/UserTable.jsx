@@ -1,7 +1,9 @@
-import { Button, TableSkeleton } from "@ingefact/ui";
+import { Button, TableSkeleton, useTableView, Pagination } from "@ingefact/ui";
 
 
-export default function UserTable({ users, loading, onEdit }) {
+export default function UserTable({ users = [], loading, onEdit }) {
+  const view = useTableView(users);
+
   if (loading) {
     return (
       <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm overflow-hidden">
@@ -40,7 +42,7 @@ export default function UserTable({ users, loading, onEdit }) {
               </td>
             </tr>
           ) : (
-            users.map((user) => (
+            view.rows.map((user) => (
               <tr
                 key={user.id}
                 className="hover:bg-neutralCustom-50/50 transition-colors"
@@ -75,6 +77,7 @@ export default function UserTable({ users, loading, onEdit }) {
           )}
         </tbody>
       </table>
+      <Pagination {...view.pagination} />
     </div>
   );
 }

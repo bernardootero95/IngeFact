@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNotasCredito, obtenerRepresentacionPdfNotaCredito, enviarNotaCreditoPorCorreo } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, TableSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -65,6 +65,8 @@ export default function CreditNotesListPage() {
     fetchNotas(estado);
   }, [fetchNotas, estado]);
 
+
+  const view = useTableView(notas);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -106,20 +108,21 @@ export default function CreditNotesListPage() {
                 </Button>
               </div>
             ) : notas.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold">Número</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Factura asociada</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Cliente</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Fecha</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Estado</th>
-                    <th scope="col" className="px-6 py-3 text-right font-semibold">Total</th>
+                    <SortableTh sortKey="numero_completo" sort={view.sort} onSort={view.toggleSort}>Número</SortableTh>
+                    <SortableTh sortKey="factura_numero_completo" sort={view.sort} onSort={view.toggleSort}>Factura asociada</SortableTh>
+                    <SortableTh sortKey="cliente_nombre" sort={view.sort} onSort={view.toggleSort}>Cliente</SortableTh>
+                    <SortableTh sortKey="fecha" sort={view.sort} onSort={view.toggleSort}>Fecha</SortableTh>
+                    <SortableTh sortKey="estado" sort={view.sort} onSort={view.toggleSort}>Estado</SortableTh>
+                    <SortableTh sortKey="total" sort={view.sort} onSort={view.toggleSort} align="right">Total</SortableTh>
                     <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {notas.map((n) => (
+                  {view.rows.map((n) => (
                     <tr
                       key={n.id}
                       onClick={() => navigate(`/credit-notes/${n.id}`)}
@@ -213,6 +216,8 @@ export default function CreditNotesListPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">

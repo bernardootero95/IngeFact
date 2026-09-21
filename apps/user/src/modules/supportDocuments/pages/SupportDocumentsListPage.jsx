@@ -5,7 +5,7 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
 } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, TableSkeleton } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -54,6 +54,8 @@ export default function SupportDocumentsListPage() {
     fetchDocumentos();
   }, [fetchDocumentos]);
 
+
+  const view = useTableView(documentos);
   return (
     <div className="min-h-screen flex bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -92,19 +94,20 @@ export default function SupportDocumentsListPage() {
                 </Button>
               </div>
             ) : documentos.length > 0 ? (
+              <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
                   <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold">Número</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Proveedor</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Fecha</th>
-                    <th scope="col" className="px-6 py-3 font-semibold">Estado</th>
-                    <th scope="col" className="px-6 py-3 text-right font-semibold">Total</th>
+                    <SortableTh sortKey="numero_completo" sort={view.sort} onSort={view.toggleSort}>Número</SortableTh>
+                    <SortableTh sortKey="proveedor_nombre" sort={view.sort} onSort={view.toggleSort}>Proveedor</SortableTh>
+                    <SortableTh sortKey="fecha" sort={view.sort} onSort={view.toggleSort}>Fecha</SortableTh>
+                    <SortableTh sortKey="estado" sort={view.sort} onSort={view.toggleSort}>Estado</SortableTh>
+                    <SortableTh sortKey="total" sort={view.sort} onSort={view.toggleSort} align="right">Total</SortableTh>
                     <th scope="col" className="px-6 py-3 text-right font-semibold">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
-                  {documentos.map((d) => (
+                  {view.rows.map((d) => (
                     <tr
                       key={d.id}
                       onClick={() => navigate(`/support-documents/${d.id}`)}
@@ -187,6 +190,8 @@ export default function SupportDocumentsListPage() {
                   ))}
                 </tbody>
               </table>
+              <Pagination {...view.pagination} />
+            </>
             ) : (
               <div className="p-16 text-center">
                 <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-brand-50 mb-4">
