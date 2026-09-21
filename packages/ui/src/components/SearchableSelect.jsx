@@ -64,10 +64,10 @@ export default function SearchableSelect({
           setQuery("");
         }}
         placeholder={placeholder}
-        className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
+        className={`field w-full disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
           error
-            ? "border-fiscal-danger"
-            : "border-neutralCustom-200 focus:border-brand-400"
+            ? "border-fiscal-danger field-invalid"
+            : ""
         }`}
       />
       {isOpen && (

@@ -239,8 +239,8 @@ export default function DebitNoteFormPage() {
                   <select
                     value={motivoCodigo}
                     onChange={(e) => setMotivoCodigo(e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                      errors.motivo ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full ${
+                      errors.motivo ? "border-fiscal-danger field-invalid" : ""
                     }`}
                   >
                     {motivos.map((opt) => (

@@ -266,7 +266,7 @@ export default function SupplierFormPage() {
                         name="tipo_identificacion"
                         value={formData.tipo_identificacion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         {catalogs.identificationTypes.map((type) => (
                           <option key={type.code} value={type.code}>
@@ -288,10 +288,10 @@ export default function SupplierFormPage() {
                             name="numero_identificacion"
                             value={formData.numero_identificacion}
                             onChange={handleChange}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                            className={`field w-full ${
                               errors.numero_identificacion
-                                ? "border-fiscal-danger"
-                                : "border-neutralCustom-200 focus:border-brand-400"
+                                ? "border-fiscal-danger field-invalid"
+                                : ""
                             }`}
                             placeholder="Ej. 900123456"
                           />
@@ -305,8 +305,8 @@ export default function SupplierFormPage() {
                               readOnly
                               value={formData.digito_verificacion}
                               title="Dígito de verificación (calculado automáticamente)"
-                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${
-                                errors.digito_verificacion ? "border-fiscal-danger" : "border-neutralCustom-200"
+                              className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${
+                                errors.digito_verificacion ? "border-fiscal-danger field-invalid" : ""
                               }`}
                             />
                           </div>
@@ -353,8 +353,8 @@ export default function SupplierFormPage() {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.nombre ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.nombre ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. Papelería Nacional S.A.S."
                     />
@@ -371,10 +371,10 @@ export default function SupplierFormPage() {
                       name="correo_electronico"
                       value={formData.correo_electronico}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                      className={`field w-full ${
                         errors.correo_electronico
-                          ? "border-fiscal-danger"
-                          : "border-neutralCustom-200 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid"
+                          : ""
                       }`}
                       placeholder="contacto@proveedor.com"
                     />
@@ -391,7 +391,7 @@ export default function SupplierFormPage() {
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 transition-colors"
+                      className="field w-full"
                       placeholder="Ej. 3001234567"
                     />
                   </div>
@@ -416,7 +416,7 @@ export default function SupplierFormPage() {
                         name="tipo_organizacion"
                         value={formData.tipo_organizacion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         <option value="">Sin especificar</option>
                         {catalogs.orgTypes.map((type) => (
@@ -437,7 +437,7 @@ export default function SupplierFormPage() {
                         name="direccion"
                         value={formData.direccion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                         placeholder="Ej. Cra 1 # 2-3"
                       />
                     </div>
@@ -451,7 +451,7 @@ export default function SupplierFormPage() {
                         name="departamento"
                         value={formData.departamento}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         <option value="">Seleccione un departamento...</option>
                         {catalogs.departments.map((d) => (
@@ -472,7 +472,7 @@ export default function SupplierFormPage() {
                         value={formData.municipio}
                         onChange={handleChange}
                         disabled={!formData.departamento}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="field w-full disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="">Seleccione un municipio...</option>
                         {catalogs.municipalities

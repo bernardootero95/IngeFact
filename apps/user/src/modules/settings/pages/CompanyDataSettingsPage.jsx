@@ -131,10 +131,10 @@ export default function CompanyDataSettingsPage() {
                         name="nombre_comercial"
                         value={formData.nombre_comercial}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.nombre_comercial
-                            ? "border-fiscal-danger focus:border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                            ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                            : "focus:ring-2 focus:ring-brand-50"
                         }`}
                       />
                       <p className="text-xs text-neutralCustom-500 mt-1">
@@ -158,10 +158,10 @@ export default function CompanyDataSettingsPage() {
                         name="telefono"
                         value={formData.telefono}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.telefono
-                            ? "border-fiscal-danger focus:border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                            ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                            : "focus:ring-2 focus:ring-brand-50"
                         }`}
                         placeholder="+57 1 234 5678"
                       />
@@ -182,10 +182,10 @@ export default function CompanyDataSettingsPage() {
                         name="direccion"
                         value={formData.direccion}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.direccion
-                            ? "border-fiscal-danger focus:border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                            ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                            : "focus:ring-2 focus:ring-brand-50"
                         }`}
                       />
                       {errors.direccion && (
@@ -252,7 +252,7 @@ export default function CompanyDataSettingsPage() {
                         id="razon_social_display"
                         value={empresa?.razon_social || ""}
                         disabled
-                        className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
+                        className="field w-full bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -265,7 +265,7 @@ export default function CompanyDataSettingsPage() {
                           id="nit_display"
                           value={empresa?.numero_identificacion || ""}
                           disabled
-                          className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
+                          className="field w-full bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                         />
                       </div>
                       <div>
@@ -277,7 +277,7 @@ export default function CompanyDataSettingsPage() {
                           id="correo_display"
                           value={empresa?.correo_electronico || ""}
                           disabled
-                          className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
+                          className="field w-full bg-neutralCustom-50 text-neutralCustom-500 cursor-not-allowed"
                         />
                       </div>
                     </div>

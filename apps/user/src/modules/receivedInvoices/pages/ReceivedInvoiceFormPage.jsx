@@ -173,8 +173,8 @@ export default function ReceivedInvoiceFormPage() {
                       setErrors((prev) => ({ ...prev, cufe: validateCufe(e.target.value) }));
                     }}
                     placeholder="Código único de facturación electrónica"
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm font-mono focus:outline-none ${
-                      errors.cufe ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full font-mono ${
+                      errors.cufe ? "border-fiscal-danger field-invalid" : ""
                     }`}
                   />
                   {errors.cufe && <p className="mt-1 text-xs text-fiscal-danger">{errors.cufe}</p>}
@@ -193,8 +193,8 @@ export default function ReceivedInvoiceFormPage() {
                         setFecha(e.target.value);
                         setErrors((prev) => ({ ...prev, fecha: validateFecha(e.target.value) }));
                       }}
-                      className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-                        errors.fecha ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.fecha ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     />
                     {errors.fecha && <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha}</p>}
@@ -210,7 +210,7 @@ export default function ReceivedInvoiceFormPage() {
                       value={numeroDocumentoProveedor}
                       onChange={(e) => setNumeroDocumentoProveedor(e.target.value)}
                       placeholder="Opcional"
-                      className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     />
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export default function ReceivedInvoiceFormPage() {
                     value={montoTotal}
                     onChange={(e) => setMontoTotal(e.target.value)}
                     placeholder="Opcional, solo de referencia"
-                    className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   />
                 </div>
 
@@ -241,7 +241,7 @@ export default function ReceivedInvoiceFormPage() {
                     value={observaciones}
                     onChange={(e) => setObservaciones(e.target.value)}
                     placeholder="Opcional"
-                    className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   />
                 </div>
 

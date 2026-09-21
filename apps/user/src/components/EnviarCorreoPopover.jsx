@@ -155,10 +155,10 @@ export default function EnviarCorreoPopover({
                 value={correo}
                 onChange={handleChange}
                 placeholder="correo@ejemplo.com"
-                className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                className={`field w-full ${
                   error
-                    ? "border-fiscal-danger focus:border-fiscal-danger"
-                    : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                    ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                    : "focus:ring-2 focus:ring-brand-50"
                 }`}
               />
               {error && <p className="mt-1 text-xs text-fiscal-danger">{error}</p>}

@@ -255,8 +255,8 @@ export default function ReceivedInvoiceDetailPage() {
                     setTipo(e.target.value);
                     setErrors((prev) => ({ ...prev, tipo: validateTipo(e.target.value) }));
                   }}
-                  className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none ${
-                    errors.tipo ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                  className={`field w-full ${
+                    errors.tipo ? "border-fiscal-danger field-invalid" : ""
                   }`}
                 >
                   <option value="">Selecciona...</option>
@@ -282,10 +282,10 @@ export default function ReceivedInvoiceDetailPage() {
                         name="tipo_identificacion"
                         value={generador.tipo_identificacion}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
+                        className={`field w-full ${
                           errors.generador_tipo_identificacion
-                            ? "border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400"
+                            ? "border-fiscal-danger field-invalid"
+                            : ""
                         }`}
                       >
                         <option value="">Selecciona...</option>
@@ -306,10 +306,10 @@ export default function ReceivedInvoiceDetailPage() {
                         name="numero_identificacion"
                         value={generador.numero_identificacion}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
+                        className={`field w-full ${
                           errors.generador_numero_identificacion
-                            ? "border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400"
+                            ? "border-fiscal-danger field-invalid"
+                            : ""
                         }`}
                       />
                     </div>
@@ -323,8 +323,8 @@ export default function ReceivedInvoiceDetailPage() {
                         name="nombres"
                         value={generador.nombres}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                          errors.generador_nombres ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field w-full ${
+                          errors.generador_nombres ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </div>
@@ -338,8 +338,8 @@ export default function ReceivedInvoiceDetailPage() {
                         name="apellidos"
                         value={generador.apellidos}
                         onChange={handleGeneradorChange}
-                        className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                          errors.generador_apellidos ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field w-full ${
+                          errors.generador_apellidos ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </div>
@@ -354,7 +354,7 @@ export default function ReceivedInvoiceDetailPage() {
                         value={generador.cargo}
                         onChange={handleGeneradorChange}
                         placeholder="Opcional"
-                        className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       />
                     </div>
                   </div>
@@ -374,8 +374,8 @@ export default function ReceivedInvoiceDetailPage() {
                         setClaimCode(e.target.value);
                         setErrors((prev) => ({ ...prev, claim_code: validateClaimCode(e.target.value) }));
                       }}
-                      className={`w-full px-3 py-2 border rounded-brand-md text-sm focus:outline-none ${
-                        errors.claim_code ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.claim_code ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     >
                       <option value="">Selecciona...</option>
@@ -397,7 +397,7 @@ export default function ReceivedInvoiceDetailPage() {
                       onChange={(e) => setNotas(e.target.value)}
                       rows={2}
                       placeholder="Opcional"
-                      className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     />
                   </div>
                 </div>

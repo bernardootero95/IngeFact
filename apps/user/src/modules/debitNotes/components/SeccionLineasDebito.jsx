@@ -49,8 +49,8 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
                       value={linea.cantidad}
                       disabled={!linea.incluida}
                       onChange={(e) => onCantidadChange(linea.facturaLinea.id, e.target.value)}
-                      className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
-                        cantidadInvalida ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field field-sm w-full text-right disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
+                        cantidadInvalida ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     />
                   </td>

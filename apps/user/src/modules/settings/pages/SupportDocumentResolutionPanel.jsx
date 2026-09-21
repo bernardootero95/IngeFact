@@ -181,10 +181,10 @@ export default function SupportDocumentResolutionPanel() {
                     name="numero_resolucion"
                     value={formData.numero_resolucion}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.numero_resolucion
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.numero_resolucion && (
@@ -201,10 +201,10 @@ export default function SupportDocumentResolutionPanel() {
                     name="prefijo"
                     value={formData.prefijo}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.prefijo
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.prefijo && <p className="mt-1 text-xs text-fiscal-danger">{errors.prefijo}</p>}
@@ -223,10 +223,10 @@ export default function SupportDocumentResolutionPanel() {
                     name="rango_minimo"
                     value={formData.rango_minimo}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.rango_minimo
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.rango_minimo && (
@@ -244,10 +244,10 @@ export default function SupportDocumentResolutionPanel() {
                     name="rango_maximo"
                     value={formData.rango_maximo}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.rango_maximo
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.rango_maximo && (
@@ -267,10 +267,10 @@ export default function SupportDocumentResolutionPanel() {
                     name="fecha_inicio"
                     value={formData.fecha_inicio}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.fecha_inicio
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.fecha_inicio && (
@@ -287,10 +287,10 @@ export default function SupportDocumentResolutionPanel() {
                     name="fecha_fin"
                     value={formData.fecha_fin}
                     onChange={handleChange}
-                    className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                    className={`field w-full ${
                       errors.fecha_fin
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : "focus:ring-2 focus:ring-brand-50"
                     }`}
                   />
                   {errors.fecha_fin && <p className="mt-1 text-xs text-fiscal-danger">{errors.fecha_fin}</p>}
@@ -309,10 +309,10 @@ export default function SupportDocumentResolutionPanel() {
                   value={formData.consecutivo_actual}
                   onChange={handleChange}
                   placeholder={formData.rango_minimo || "Rango mínimo"}
-                  className={`w-full px-4 py-2.5 border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                  className={`field w-full ${
                     errors.consecutivo_actual
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-200 focus:border-brand-400 focus:ring-2 focus:ring-brand-50"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : "focus:ring-2 focus:ring-brand-50"
                   }`}
                 />
                 {errors.consecutivo_actual ? (

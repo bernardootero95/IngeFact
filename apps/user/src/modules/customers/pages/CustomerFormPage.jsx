@@ -271,7 +271,7 @@ export default function CustomerFormPage() {
                         name="tipo_identificacion"
                         value={formData.tipo_identificacion}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                        className="field w-full"
                       >
                         {catalogs.identificationTypes.map((type) => (
                           <option key={type.code} value={type.code}>
@@ -293,10 +293,10 @@ export default function CustomerFormPage() {
                             name="numero_identificacion"
                             value={formData.numero_identificacion}
                             onChange={handleChange}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                            className={`field w-full ${
                               errors.numero_identificacion
-                                ? "border-fiscal-danger"
-                                : "border-neutralCustom-200 focus:border-brand-400"
+                                ? "border-fiscal-danger field-invalid"
+                                : ""
                             }`}
                             placeholder="Ej. 900123456"
                           />
@@ -310,8 +310,8 @@ export default function CustomerFormPage() {
                               readOnly
                               value={formData.digito_verificacion}
                               title="Dígito de verificación (calculado automáticamente)"
-                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${
-                                errors.digito_verificacion ? "border-fiscal-danger" : "border-neutralCustom-200"
+                              className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${
+                                errors.digito_verificacion ? "border-fiscal-danger field-invalid" : ""
                               }`}
                             />
                           </div>
@@ -358,8 +358,8 @@ export default function CustomerFormPage() {
                       name="nombre"
                       value={formData.nombre}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.nombre ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.nombre ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. IngeFact S.A.S."
                     />
@@ -376,10 +376,10 @@ export default function CustomerFormPage() {
                       name="correo_electronico"
                       value={formData.correo_electronico}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                      className={`field w-full ${
                         errors.correo_electronico
-                          ? "border-fiscal-danger"
-                          : "border-neutralCustom-200 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid"
+                          : ""
                       }`}
                       placeholder="facturacion@cliente.com"
                     />
@@ -396,7 +396,7 @@ export default function CustomerFormPage() {
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400 transition-colors"
+                      className="field w-full"
                       placeholder="Ej. 3001234567"
                     />
                   </div>
@@ -412,8 +412,8 @@ export default function CustomerFormPage() {
                       name="regimen_fiscal"
                       value={formData.regimen_fiscal}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none ${
-                        errors.regimen_fiscal ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.regimen_fiscal ? "border-fiscal-danger field-invalid" : ""
                       }`}
                     >
                       <option value="">Seleccione...</option>
@@ -432,7 +432,7 @@ export default function CustomerFormPage() {
                       name="tipo_organizacion"
                       value={formData.tipo_organizacion}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       {catalogs.organizationTypes.map((org) => (
                         <option key={org.code} value={org.code}>
@@ -451,7 +451,7 @@ export default function CustomerFormPage() {
                       name="regimen"
                       value={formData.regimen}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       {catalogs.regimes.map((reg) => (
                         <option key={reg.code} value={reg.code}>
@@ -470,7 +470,7 @@ export default function CustomerFormPage() {
                       name="tributo"
                       value={formData.tributo}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       <option value="">Sin responsabilidad tributaria</option>
                       {catalogs.taxes.map((tax) => (

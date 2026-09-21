@@ -83,7 +83,7 @@ export default function DebitNotesListPage() {
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                className="field"
               >
                 {ESTADOS.map((opt) => (
                   <option key={opt.value} value={opt.value}>

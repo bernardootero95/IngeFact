@@ -217,7 +217,7 @@ export default function ProductFormPage() {
                       name="tipo"
                       value={formData.tipo}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                      className="field w-full"
                     >
                       {TIPOS_PRODUCTO.map((t) => (
                         <option key={t.value} value={t.value}>
@@ -237,8 +237,8 @@ export default function ProductFormPage() {
                       name="codigo"
                       value={formData.codigo}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.codigo ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.codigo ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. PROD-001"
                     />
@@ -256,8 +256,8 @@ export default function ProductFormPage() {
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                      errors.nombre ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full ${
+                      errors.nombre ? "border-fiscal-danger field-invalid" : ""
                     }`}
                     placeholder="Ej. Asesoría contable mensual"
                   />
@@ -272,7 +272,7 @@ export default function ProductFormPage() {
                     value={formData.descripcion}
                     onChange={handleChange}
                     rows={2}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                     placeholder="Detalle opcional del producto o servicio"
                   />
                 </div>
@@ -290,8 +290,8 @@ export default function ProductFormPage() {
                       name="precio"
                       value={formData.precio}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                        errors.precio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                      className={`field w-full ${
+                        errors.precio ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="0.00"
                     />
@@ -323,7 +323,7 @@ export default function ProductFormPage() {
                     name="impuestoKey"
                     value={formData.impuestoKey}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   >
                     <option value="">Excluido de impuestos</option>
                     {impuestoOptions.map((o) => (
@@ -354,10 +354,10 @@ export default function ProductFormPage() {
                         name="valor_impuesto_excluido"
                         value={formData.valor_impuesto_excluido}
                         onChange={handleChange}
-                        className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
+                        className={`field w-full ${
                           errors.valor_impuesto_excluido
-                            ? "border-fiscal-danger"
-                            : "border-neutralCustom-200 focus:border-brand-400"
+                            ? "border-fiscal-danger field-invalid"
+                            : ""
                         }`}
                         placeholder="0.00"
                       />

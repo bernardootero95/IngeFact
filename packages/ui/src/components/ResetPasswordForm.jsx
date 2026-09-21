@@ -118,10 +118,10 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                   required
                   value={password}
                   onChange={handlePasswordChange}
-                  className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  className={`field field-lg w-full ${
                     fieldErrors.password
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="••••••••"
                 />
@@ -140,10 +140,10 @@ export default function ResetPasswordForm({ logo, subtitle, token, onSubmit, log
                   required
                   value={confirmPassword}
                   onChange={handleConfirmChange}
-                  className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  className={`field field-lg w-full ${
                     fieldErrors.confirmPassword
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="••••••••"
                 />

@@ -157,10 +157,10 @@ export default function ReferenceFormPage() {
                     type="text"
                     value={code}
                     onChange={handleCodeChange}
-                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm font-mono focus:outline-none ${
+                    className={`field w-full font-mono ${
                       fieldErrors.code
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-100 focus:border-brand-400"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : ""
                     }`}
                     placeholder="Ej: 01"
                   />
@@ -177,10 +177,10 @@ export default function ReferenceFormPage() {
                     type="text"
                     value={value}
                     onChange={handleValueChange}
-                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                    className={`field w-full ${
                       fieldErrors.value
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-100 focus:border-brand-400"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : ""
                     }`}
                     placeholder="Descripción oficial"
                   />
@@ -201,10 +201,10 @@ export default function ReferenceFormPage() {
                       type="text"
                       value={deptCode}
                       onChange={handleDeptCodeChange}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm font-mono focus:outline-none ${
+                      className={`field w-full font-mono ${
                         fieldErrors.deptCode
-                          ? "border-fiscal-danger focus:border-fiscal-danger"
-                          : "border-neutralCustom-100 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                          : ""
                       }`}
                       placeholder="Ej: 08"
                     />
@@ -221,10 +221,10 @@ export default function ReferenceFormPage() {
                       type="text"
                       value={deptValue}
                       onChange={handleDeptValueChange}
-                      className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                      className={`field w-full ${
                         fieldErrors.deptValue
-                          ? "border-fiscal-danger focus:border-fiscal-danger"
-                          : "border-neutralCustom-100 focus:border-brand-400"
+                          ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                          : ""
                       }`}
                       placeholder="Atlántico"
                     />
@@ -245,10 +245,10 @@ export default function ReferenceFormPage() {
                     type="text"
                     value={valueNade}
                     onChange={handleValueNadeChange}
-                    className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                    className={`field w-full ${
                       fieldErrors.valueNade
-                        ? "border-fiscal-danger focus:border-fiscal-danger"
-                        : "border-neutralCustom-100 focus:border-brand-400"
+                        ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                        : ""
                     }`}
                     placeholder="Valor estandarizado NADE"
                   />
@@ -266,7 +266,7 @@ export default function ReferenceFormPage() {
                   id="ref-estado"
                   value={estado}
                   onChange={(e) => setEstado(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full"
                 >
                   <option value="activo">Activo</option>
                   <option value="inactivo">Inactivo</option>

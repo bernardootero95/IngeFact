@@ -141,7 +141,7 @@ export default function TaxPresetFormPage() {
                     name="tributo"
                     value={formData.tributo}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                    className="field w-full"
                   >
                     {tributos.map((t) => (
                       <option key={t.code} value={t.code}>
@@ -164,8 +164,8 @@ export default function TaxPresetFormPage() {
                     name="tarifa"
                     value={formData.tarifa}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none transition-colors ${
-                      errors.tarifa ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                    className={`field w-full ${
+                      errors.tarifa ? "border-fiscal-danger field-invalid" : ""
                     }`}
                     placeholder="Ej. 19"
                   />

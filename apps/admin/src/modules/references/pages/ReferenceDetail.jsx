@@ -148,7 +148,7 @@ export default function ReferenceDetail() {
               placeholder="Buscar por código o descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 bg-white border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400 shadow-sm"
+              className="field w-full shadow-sm"
             />
           </div>
 

@@ -436,7 +436,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.razonSocial}
                             onChange={handleChange("razonSocial")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.razonSocial ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.razonSocial ? "border-fiscal-danger field-invalid" : ""}`}
                           />
                           {errors.razonSocial && <p className="mt-1 text-xs text-fiscal-danger">{errors.razonSocial}</p>}
                         </div>
@@ -450,7 +450,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.nombreComercial}
                             onChange={handleChange("nombreComercial")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           />
                         </div>
 
@@ -465,7 +465,7 @@ export default function CompanyFormPage() {
                               disabled={isEditing}
                               value={form.numeroIdentificacion}
                               onChange={handleNitChange}
-                              className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                              className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger field-invalid" : ""}`}
                             />
                             {errors.numeroIdentificacion && (
                               <p className="mt-1 text-[10px] text-fiscal-danger leading-tight">{errors.numeroIdentificacion}</p>
@@ -480,7 +480,7 @@ export default function CompanyFormPage() {
                               type="text"
                               readOnly
                               value={form.digitoVerificacion}
-                              className={`w-full px-3 py-2 bg-neutralCustom-100 border rounded-brand-md text-sm text-center font-bold text-neutralCustom-600 focus:outline-none cursor-not-allowed ${errors.digitoVerificacion ? "border-fiscal-danger" : "border-neutralCustom-200"}`}
+                              className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${errors.digitoVerificacion ? "border-fiscal-danger field-invalid" : ""}`}
                             />
                           </div>
                         </div>
@@ -498,7 +498,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.direccion}
                             onChange={handleChange("direccion")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           />
                         </div>
 
@@ -510,7 +510,7 @@ export default function CompanyFormPage() {
                             id="cf-departamento"
                             value={form.departamento}
                             onChange={handleDepartmentChange}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.departamento ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.departamento ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione un departamento...</option>
                             {catalogs.departments.map((d) => (
@@ -531,7 +531,7 @@ export default function CompanyFormPage() {
                             value={form.municipio}
                             onChange={handleChange("municipio")}
                             disabled={!form.departamento}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${errors.municipio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full disabled:opacity-50 disabled:cursor-not-allowed ${errors.municipio ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione un municipio...</option>
                             {filteredMunicipalities.map((m) => (
@@ -551,7 +551,7 @@ export default function CompanyFormPage() {
                             id="cf-regimen"
                             value={form.regimen}
                             onChange={handleChange("regimen")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.regimen ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.regimen ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione...</option>
                             {catalogs.regimes.map((r) => (
@@ -571,7 +571,7 @@ export default function CompanyFormPage() {
                             id="cf-tipo-org"
                             value={form.tipoOrganizacion}
                             onChange={handleChange("tipoOrganizacion")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.tipoOrganizacion ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.tipoOrganizacion ? "border-fiscal-danger field-invalid" : ""}`}
                           >
                             <option value="">Seleccione...</option>
                             {catalogs.orgTypes.map((o) => (
@@ -593,7 +593,7 @@ export default function CompanyFormPage() {
                             id="cf-regimen-fiscal"
                             value={form.regimenFiscal}
                             onChange={handleChange("regimenFiscal")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           >
                             <option value="">Seleccione...</option>
                             <option value="48">48 - Responsable de IVA</option>
@@ -610,7 +610,7 @@ export default function CompanyFormPage() {
                             type="text"
                             value={form.telefono}
                             onChange={handleChange("telefono")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           />
                         </div>
                       </div>
@@ -633,7 +633,7 @@ export default function CompanyFormPage() {
                             disabled={isEditing}
                             value={form.correoElectronico}
                             onChange={handleChange("correoElectronico")}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
+                            className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                           />
                           {errors.correoElectronico && (
                             <p className="mt-1 text-xs text-fiscal-danger">{errors.correoElectronico}</p>
@@ -650,7 +650,7 @@ export default function CompanyFormPage() {
                             disabled={isEditing}
                             value={form.nombreUsuario}
                             onChange={handleChange("nombreUsuario")}
-                            className={`w-full px-3 py-2 bg-white border rounded-brand-md text-sm focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger" : "border-brand-200 focus:border-brand-400"}`}
+                            className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                           />
                           {errors.nombreUsuario && (
                             <p className="mt-1 text-xs text-fiscal-danger">{errors.nombreUsuario}</p>
@@ -691,7 +691,7 @@ export default function CompanyFormPage() {
                             min="1"
                             value={form.maxDocumentos}
                             onChange={handleChange("maxDocumentos")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.maxDocumentos ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.maxDocumentos ? "border-fiscal-danger field-invalid" : ""}`}
                             placeholder="Ej: 1200"
                           />
                           {errors.maxDocumentos && <p className="mt-1 text-xs text-fiscal-danger">{errors.maxDocumentos}</p>}
@@ -708,7 +708,7 @@ export default function CompanyFormPage() {
                             type="date"
                             value={form.fechaInicio}
                             onChange={handleChange("fechaInicio")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.fechaInicio ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.fechaInicio ? "border-fiscal-danger field-invalid" : ""}`}
                           />
                           {errors.fechaInicio && <p className="mt-1 text-xs text-fiscal-danger">{errors.fechaInicio}</p>}
                         </div>
@@ -722,7 +722,7 @@ export default function CompanyFormPage() {
                             type="date"
                             value={form.fechaFin}
                             onChange={handleChange("fechaFin")}
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${errors.fechaFin ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${errors.fechaFin ? "border-fiscal-danger field-invalid" : ""}`}
                           />
                           {errors.fechaFin && <p className="mt-1 text-xs text-fiscal-danger">{errors.fechaFin}</p>}
                         </div>
@@ -735,7 +735,7 @@ export default function CompanyFormPage() {
                             id="cf-estado"
                             value={form.estadoEmpresa}
                             onChange={handleChange("estadoEmpresa")}
-                            className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                            className="field w-full"
                           >
                             <option value="activo">Activo</option>
                             <option value="inactivo">Inactivo / Suspendido</option>
@@ -789,7 +789,7 @@ export default function CompanyFormPage() {
                               if (e.target.value.trim()) setNewKeyNameError("");
                             }}
                             placeholder="Ej: Integracion Sistema de Pedidos"
-                            className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-sm focus:outline-none ${newKeyNameError ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"}`}
+                            className={`field w-full ${newKeyNameError ? "border-fiscal-danger field-invalid" : ""}`}
                           />
                           {newKeyNameError && <p className="mt-1 text-xs text-fiscal-danger">{newKeyNameError}</p>}
                         </div>

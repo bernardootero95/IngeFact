@@ -99,10 +99,10 @@ export default function ForgotPasswordForm({
                   required
                   value={email}
                   onChange={handleEmailChange}
-                  className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                  className={`field field-lg w-full ${
                     fieldError
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder={emailPlaceholder}
                 />

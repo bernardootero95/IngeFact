@@ -72,7 +72,7 @@ export default function SeccionLineasDocumentoSoporte({
             step="1"
             value={cantidad}
             onChange={(e) => setCantidad(e.target.value)}
-            className="w-full px-3 py-2 border border-neutralCustom-200 rounded-brand-md text-sm text-right focus:outline-none focus:border-brand-400"
+            className="field w-full text-right"
           />
         </div>
         <Button
@@ -121,8 +121,8 @@ export default function SeccionLineasDocumentoSoporte({
                         step="1"
                         value={linea.cantidad}
                         onChange={(e) => onLineaCantidadChange(index, e.target.value)}
-                        className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none ${
-                          cantidadInvalida ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field field-sm w-full text-right ${
+                          cantidadInvalida ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </td>
@@ -133,8 +133,8 @@ export default function SeccionLineasDocumentoSoporte({
                         step="0.01"
                         value={linea.precio_unitario}
                         onChange={(e) => onLineaPrecioChange(index, e.target.value)}
-                        className={`w-full px-2 py-1.5 border rounded-brand-md text-sm text-right focus:outline-none ${
-                          precioInvalido ? "border-fiscal-danger" : "border-neutralCustom-200 focus:border-brand-400"
+                        className={`field field-sm w-full text-right ${
+                          precioInvalido ? "border-fiscal-danger field-invalid" : ""
                         }`}
                       />
                     </td>

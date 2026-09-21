@@ -10,7 +10,56 @@
  * - brand.400 y neutralCustom.400 no llegan a 4.5:1 sobre blanco: usarlos para
  *   bordes/iconos decorativos, no para texto sobre fondo claro.
  */
+/**
+ * Estilo unico de inputs/selects/textareas. Alturas iguales a las del Button:
+ * field = 38px, field-sm = 30px, field-lg = 44px. Lleva foco visible (outline de
+ * 2px, no solo cambio de borde) y placeholder con contraste 4.5:1. Para marcar
+ * un error se agrega `field-invalid` (borde y foco en rojo).
+ */
+const fieldComponents = ({ addComponents, theme }) => {
+  addComponents({
+    ".field": {
+      backgroundColor: "#fff",
+      color: theme("colors.neutralCustom.800"),
+      border: `1px solid ${theme("colors.neutralCustom.200")}`,
+      borderRadius: theme("borderRadius.brand-md"),
+      padding: "0.5rem 0.75rem",
+      minHeight: "2.375rem",
+      fontSize: "0.875rem",
+      lineHeight: "1.25rem",
+      transition: "border-color 150ms ease, outline-color 150ms ease",
+      "&::placeholder": { color: theme("colors.neutralCustom.500") },
+      // Chrome agrega alto propio a los campos de fecha/hora por el icono del selector.
+      "&[type='date'], &[type='time'], &[type='datetime-local'], &[type='month']": {
+        height: "2.375rem",
+        paddingTop: "0",
+        paddingBottom: "0",
+      },
+      "&:focus": {
+        outline: `2px solid ${theme("colors.brand.400")}`,
+        outlineOffset: "0px",
+        borderColor: theme("colors.brand.400"),
+      },
+      "&:disabled": {
+        backgroundColor: theme("colors.neutralCustom.50"),
+        color: theme("colors.neutralCustom.500"),
+        cursor: "not-allowed",
+      },
+    },
+    ".field-sm": { padding: "0.25rem 0.5rem", minHeight: "1.875rem" },
+    ".field-lg": { padding: "0.6875rem 1rem", minHeight: "2.75rem" },
+    ".field-invalid": {
+      borderColor: theme("colors.fiscal.danger"),
+      "&:focus": {
+        outlineColor: theme("colors.fiscal.danger"),
+        borderColor: theme("colors.fiscal.danger"),
+      },
+    },
+  });
+};
+
 export default {
+  plugins: [fieldComponents],
   theme: {
     extend: {
       colors: {

@@ -119,10 +119,10 @@ export default function UserFormPage() {
                   type="text"
                   value={nombre}
                   onChange={handleNameChange}
-                  className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none ${
+                  className={`field w-full ${
                     fieldErrors.nombre
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="Nombre completo"
                 />
@@ -140,10 +140,10 @@ export default function UserFormPage() {
                   value={email}
                   disabled={isEditing}
                   onChange={handleEmailChange}
-                  className={`w-full px-3 py-2 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none disabled:opacity-60 disabled:bg-neutralCustom-100 disabled:cursor-not-allowed ${
+                  className={`field w-full disabled:opacity-60 disabled:bg-neutralCustom-100 disabled:cursor-not-allowed ${
                     fieldErrors.email && !isEditing
-                      ? "border-fiscal-danger focus:border-fiscal-danger"
-                      : "border-neutralCustom-100 focus:border-brand-400"
+                      ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                      : ""
                   }`}
                   placeholder="correo@ingefact.com"
                 />
@@ -160,7 +160,7 @@ export default function UserFormPage() {
                   id="user-estado"
                   value={estado}
                   onChange={(e) => setEstado(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md text-neutralCustom-800 text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full"
                 >
                   <option value="activo">Activo</option>
                   <option value="inactivo">Inactivo</option>

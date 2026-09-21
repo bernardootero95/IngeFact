@@ -110,10 +110,10 @@ export default function LoginForm({
               required
               value={email}
               onChange={handleEmailChange}
-              className={`w-full px-4 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+              className={`field field-lg w-full ${
                 fieldErrors.email
-                  ? "border-fiscal-danger focus:border-fiscal-danger"
-                  : "border-neutralCustom-100 focus:border-brand-400"
+                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                  : ""
               }`}
               placeholder={emailPlaceholder}
             />
@@ -144,10 +144,10 @@ export default function LoginForm({
                 required
                 value={password}
                 onChange={handlePasswordChange}
-                className={`w-full pl-4 pr-10 py-2.5 bg-neutralCustom-50 border rounded-brand-md text-neutralCustom-800 placeholder-neutralCustom-500 focus:outline-none transition-colors font-normal text-sm ${
+                className={`field field-lg w-full pl-4 pr-10 ${
                   fieldErrors.password
-                    ? "border-fiscal-danger focus:border-fiscal-danger"
-                    : "border-neutralCustom-100 focus:border-brand-400"
+                    ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
+                    : ""
                 }`}
                 placeholder="••••••••"
               />

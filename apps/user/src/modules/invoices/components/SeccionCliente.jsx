@@ -133,7 +133,7 @@ export default function SeccionCliente({
             id="fecha"
             value={fecha}
             onChange={(e) => onFechaChange(e.target.value)}
-            className="w-full px-4 py-2.5 border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+            className="field w-full"
           />
         </div>
       </div>

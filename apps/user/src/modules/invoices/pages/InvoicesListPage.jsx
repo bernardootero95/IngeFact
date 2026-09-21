@@ -115,7 +115,7 @@ export default function InvoicesListPage() {
                   value={search}
                   onChange={handleSearchChange}
                   placeholder="Buscar por cliente..."
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                  className="field w-full pl-9 pr-4"
                 />
                 <svg
                   className="w-4 h-4 absolute left-3 top-2.5 text-neutralCustom-400"
@@ -134,7 +134,7 @@ export default function InvoicesListPage() {
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="px-3 py-2 bg-white border border-neutralCustom-200 rounded-brand-md text-sm focus:outline-none focus:border-brand-400"
+                className="field"
               >
                 {ESTADOS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
