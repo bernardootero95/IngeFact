@@ -458,8 +458,9 @@ def test_enviar_accepted_with_observations_guarda_notificaciones_dian(db_session
 def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_session):
     """Una factura rechazada no es un callejon sin salida: el usuario corrige
     los datos (PUT), la factura vuelve a 'borrador' con los datos del intento
-    fallido limpios, y un reenvio pide un consecutivo nuevo (no se puede
-    reusar el numero rechazado ante la DIAN)."""
+    fallido limpios, y un reenvio reutiliza el MISMO consecutivo -- la DIAN
+    si vio el intento rechazado, pero Alegra permite reenviar el mismo
+    `number` mientras no quede ACCEPTED (ver docs/alegra-investigacion.md)."""
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)
     producto = _crear_producto(db_session, empresa.id)
@@ -497,8 +498,8 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
         ),
     )
     assert corregida.estado == "borrador"
-    assert corregida.consecutivo is None
-    assert corregida.numero_completo is None
+    # El numero se conserva -- se reenviara con el mismo consecutivo.
+    assert corregida.consecutivo == 2
     assert corregida.cufe is None
     assert corregida.razon_rechazo is None
     assert corregida.notificaciones_dian is None
@@ -507,7 +508,7 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
         "invoice": {
             "id": "inv-2",
             "cufe": "cufe-aceptada",
-            "fullNumber": "SETP2",
+            "fullNumber": "SETP1",
             "legalStatus": "ACCEPTED",
         }
     }
@@ -516,8 +517,42 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
     assert reenviada.estado == "aceptada"
     assert reenviada.cufe == "cufe-aceptada"
     assert reenviada.razon_rechazo is None
-    # consecutivo nuevo, no se reutiliza el 2 ya rechazado ante la DIAN.
-    assert reenviada.consecutivo == 3
+    # Mismo consecutivo del intento rechazado -- no se pidio uno nuevo.
+    assert reenviada.consecutivo == 2
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    db_session.refresh(resolucion)
+    # El reenvio no volvio a incrementar el contador.
+    assert resolucion.consecutivo_actual == 2
+
+
+def test_dos_rechazos_seguidos_de_la_misma_factura_reusan_siempre_el_mismo_numero(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "REJECTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    for _ in range(2):
+        corregida = service.actualizar_borrador(
+            empresa.id,
+            factura.id,
+            ActualizarFacturaRequest(
+                cliente_id=cliente.id,
+                fecha=date.today(),
+                lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=1)],
+            ),
+        )
+        assert corregida.consecutivo == 2
+        rechazada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+        assert rechazada.consecutivo == 2
+        assert rechazada.estado == "rechazada"
 
 
 def test_eliminar_factura_rechazada_es_soft_delete(db_session):
@@ -999,4 +1034,40 @@ def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_sessio
 
     resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
     db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 2
+
+
+def test_reenvio_de_rechazada_que_vuelve_a_fallar_no_toca_el_contador(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "fullNumber": "SETP1", "legalStatus": "REJECTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+    service.actualizar_borrador(
+        empresa.id,
+        factura.id,
+        ActualizarFacturaRequest(
+            cliente_id=cliente.id,
+            fecha=date.today(),
+            lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=1)],
+        ),
+    )
+
+    # El reenvio esta vez lo rechaza Alegra mismo (4xx), no la DIAN.
+    fake._response = None
+    fake._error = AlegraApiError(400, {"errors": [{"message": "instance requires x"}]})
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
+
+    resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
+    db_session.refresh(resolucion)
+    # El reenvio no incremento el contador (reutilizo el 2), asi que el 4xx
+    # tampoco debe decrementarlo -- si lo hiciera, bajaria a 1 aunque el
+    # numero 2 sigue legitimamente asignado a esta factura.
     assert resolucion.consecutivo_actual == 2

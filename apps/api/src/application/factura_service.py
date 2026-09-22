@@ -281,14 +281,15 @@ class FacturaService:
         subtotal, total_impuestos, total = self._totales(lineas)
 
         if factura.estado == "rechazada":
-            # Corregir una factura rechazada la vuelve a dejar como borrador
-            # -- el intento anterior (consecutivo/CUFE/razon de rechazo) ya
-            # no aplica, un reenvio pedira un consecutivo nuevo (ver
-            # enviar()). No se puede reutilizar el numero rechazado ante la
-            # DIAN, asi que no tiene sentido conservar esos datos.
+            # Corregir una factura rechazada la vuelve a dejar como borrador.
+            # consecutivo/numero_completo NO se limpian: un rechazo (legalStatus
+            # REJECTED, la DIAN si vio el intento) se reenvia con el MISMO numero
+            # -- confirmado contra el sandbox real que Alegra acepta reenviar el
+            # mismo `number` varias veces mientras no quede ACCEPTED, generando
+            # un invoice.id/cufe nuevo cada vez (ver docs/alegra-investigacion.md,
+            # hallazgo de idempotencia). El resto si son datos del intento
+            # anterior y no del documento, esos se limpian.
             factura.estado = "borrador"
-            factura.consecutivo = None
-            factura.numero_completo = None
             factura.alegra_invoice_id = None
             factura.cufe = None
             factura.qr_code_content = None
@@ -342,7 +343,10 @@ class FacturaService:
         if contar_documentos_usados(self.db, suscripcion) >= suscripcion.max_documentos:
             raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
 
-        consecutivo = resolucion_service.incrementar_consecutivo(empresa_id)
+        # Reenvio de una factura rechazada: reutiliza el numero ya asignado (ver
+        # actualizar_borrador) en vez de pedir uno nuevo.
+        es_reenvio = factura.consecutivo is not None
+        consecutivo = factura.consecutivo if es_reenvio else resolucion_service.incrementar_consecutivo(empresa_id)
         payload = self._construir_payload_alegra(
             empresa, resolucion, factura, consecutivo, forma_pago, metodo_pago, fecha_vencimiento
         )
@@ -353,9 +357,11 @@ class FacturaService:
             # Alegra respondio (rechazo por dato invalido, resolucion, etc.) --
             # es un error del request, no una falla de infraestructura, por
             # eso 400 y no 502 (que aqui confundia al frontend con una caida
-            # del gateway). Un 4xx significa que no creo ningun documento: se
-            # devuelve el numero para no dejar un hueco en la resolucion DIAN.
-            resolucion_service.revertir_consecutivo(empresa_id, consecutivo)
+            # del gateway). Un 4xx significa que no creo ningun documento: si el
+            # numero se pidio en este intento (no es un reenvio, que ya lo
+            # traia) se devuelve para no dejar un hueco en la resolucion DIAN.
+            if not es_reenvio:
+                resolucion_service.revertir_consecutivo(empresa_id, consecutivo)
             raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
         except AlegraTransientError as exc:
             raise HTTPException(

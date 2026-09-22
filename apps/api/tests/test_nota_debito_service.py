@@ -324,14 +324,16 @@ def test_editar_nota_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_sessio
         ),
     )
     assert corregida.estado == "borrador"
-    assert corregida.consecutivo is None
+    # El numero se conserva -- se reenviara con el mismo consecutivo.
+    assert corregida.consecutivo == 1
 
     fake.debit_note_response = {"debitNote": {"id": "dn-2", "cude": "cude-aceptada", "legalStatus": "ACCEPTED"}}
     reenviada = service.enviar(empresa.id, nota.id)
 
     assert reenviada.estado == "aceptada"
     assert reenviada.cude == "cude-aceptada"
-    assert reenviada.consecutivo == 2
+    # Mismo consecutivo del intento rechazado -- no se pidio uno nuevo.
+    assert reenviada.consecutivo == 1
 
 
 def test_enviar_error_alegra_se_mapea_502(db_session):
@@ -608,3 +610,37 @@ def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_sessio
         service.enviar(empresa.id, nota.id)
 
     assert _consecutivo_actual_debito(db_session, empresa.id) == 1
+
+
+def test_reenvio_de_rechazada_que_vuelve_a_fallar_no_toca_el_contador(db_session):
+    from src.infrastructure.db.models import ConsecutivoNota
+
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    fake.debit_note_response = {"debitNote": {"id": "dn-1", "legalStatus": "REJECTED"}}
+    service = NotaDebitoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id, cantidad=1))
+    service.enviar(empresa.id, nota.id)
+    service.actualizar_borrador(
+        empresa.id,
+        nota.id,
+        ActualizarNotaDebitoRequest(
+            motivo_codigo="4", lineas=[LineaNotaDebitoRequest(factura_linea_id=factura.lineas[0].id, cantidad=1)]
+        ),
+    )
+
+    fake.debit_note_response = None
+    fake.debit_note_error = AlegraApiError(400, {"errors": [{"message": "instance requires x"}]})
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, nota.id)
+
+    contador = (
+        db_session.query(ConsecutivoNota)
+        .filter(ConsecutivoNota.empresa_id == empresa.id, ConsecutivoNota.tipo == "debito")
+        .one()
+    )
+    db_session.refresh(contador)
+    assert contador.consecutivo_actual == 1

@@ -241,9 +241,9 @@ class NotaDebitoService:
         subtotal, total_impuestos, total = self._totales(lineas)
 
         if nota.estado == "rechazada":
+            # consecutivo/numero_completo NO se limpian -- mismo criterio que
+            # NotaCreditoService.actualizar_borrador: se reenvia con el MISMO numero.
             nota.estado = "borrador"
-            nota.consecutivo = None
-            nota.numero_completo = None
             nota.alegra_debit_note_id = None
             nota.cude = None
             nota.qr_code_content = None
@@ -300,13 +300,17 @@ class NotaDebitoService:
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
 
-        consecutivo = self._incrementar_consecutivo(empresa_id)
+        # Reenvio de una nota rechazada: reutiliza el numero ya asignado (ver
+        # actualizar_borrador) en vez de pedir uno nuevo.
+        es_reenvio = nota.consecutivo is not None
+        consecutivo = nota.consecutivo if es_reenvio else self._incrementar_consecutivo(empresa_id)
         payload = self._construir_payload_alegra(empresa, factura, nota, consecutivo)
 
         try:
             respuesta = self._alegra_client.create_debit_note(payload)
         except AlegraApiError as exc:
-            self._revertir_consecutivo(empresa_id, consecutivo)
+            if not es_reenvio:
+                self._revertir_consecutivo(empresa_id, consecutivo)
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body))
 
         self._aplicar_respuesta_envio(nota, consecutivo, respuesta)
