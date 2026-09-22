@@ -375,7 +375,18 @@ def test_rechazado_se_puede_corregir_y_reenviar(db_session):
 
     corregido = service.actualizar_borrador(empresa.id, documento.id, _payload(proveedor.id, producto.id))
     assert corregido.estado == "borrador"
-    assert corregido.consecutivo is None
+    # El numero se conserva -- se reenviara con el mismo consecutivo (la DIAN
+    # si vio el intento rechazado, pero Alegra permite reenviar el mismo
+    # `number` mientras no quede ACCEPTED).
+    assert corregido.consecutivo == 2
+
+    fake._response = {
+        "supportDocument": {"id": "ds-2", "cuds": "cuds-2", "fullNumber": "SEDS1", "legalStatus": "ACCEPTED"}
+    }
+    reenviado = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+    assert reenviado.estado == "aceptado"
+    # Mismo consecutivo del intento rechazado -- no se pidio uno nuevo.
+    assert reenviado.consecutivo == 2
 
 
 _XML_CON_FIRMA = (
@@ -641,4 +652,28 @@ def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_sessio
     assert exc_info.value.status_code == 502
 
     db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == 2
+
+
+def test_reenvio_de_rechazado_que_vuelve_a_fallar_no_toca_el_contador(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    resolucion = _crear_resolucion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"supportDocument": {"id": "ds-1", "fullNumber": "SEDS1", "legalStatus": "REJECTED", "governmentResponse": {}}}
+    )
+    service = DocumentoSoporteService(db_session, alegra_client=fake)
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+    service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+    service.actualizar_borrador(empresa.id, documento.id, _payload(proveedor.id, producto.id))
+
+    fake._response = None
+    fake._error = AlegraApiError(400, {"errors": [{"message": "dato invalido"}]})
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+
+    db_session.refresh(resolucion)
+    # El reenvio no incremento el contador (reutilizo el 2), asi que el 4xx
+    # tampoco debe decrementarlo.
     assert resolucion.consecutivo_actual == 2

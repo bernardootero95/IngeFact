@@ -507,8 +507,10 @@ def test_editar_nota_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_sessio
         ),
     )
     assert corregida.estado == "borrador"
-    assert corregida.consecutivo is None
-    assert corregida.numero_completo is None
+    # El numero se conserva -- se reenviara con el mismo consecutivo (la DIAN
+    # si vio el intento rechazado, pero Alegra permite reenviar el mismo
+    # `number` mientras no quede ACCEPTED).
+    assert corregida.consecutivo == 1
     assert corregida.cude is None
     assert corregida.razon_rechazo is None
     assert corregida.notificaciones_dian is None
@@ -519,9 +521,9 @@ def test_editar_nota_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_sessio
     assert reenviada.estado == "aceptada"
     assert reenviada.cude == "cude-aceptada"
     assert reenviada.razon_rechazo is None
-    # consecutivo nuevo, no se reutiliza el 1 ya rechazado ante la DIAN.
-    assert reenviada.consecutivo == 2
-    assert reenviada.numero_completo == "NC-000002"
+    # Mismo consecutivo del intento rechazado -- no se pidio uno nuevo.
+    assert reenviada.consecutivo == 1
+    assert reenviada.numero_completo == "NC-000001"
 
 
 def test_eliminar_nota_rechazada_es_soft_delete(db_session):
@@ -795,3 +797,38 @@ def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_sessio
         service.enviar(empresa.id, nota.id)
 
     assert _consecutivo_actual_credito(db_session, empresa.id) == 1
+
+
+def test_reenvio_de_rechazada_que_vuelve_a_fallar_no_toca_el_contador(db_session):
+    from src.infrastructure.db.models import ConsecutivoNota
+
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    fake.credit_note_response = {"creditNote": {"id": "cn-1", "legalStatus": "REJECTED"}}
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id, cantidad=1))
+    service.enviar(empresa.id, nota.id)
+    service.actualizar_borrador(
+        empresa.id,
+        nota.id,
+        ActualizarNotaCreditoRequest(
+            motivo_codigo="3",
+            lineas=[LineaNotaCreditoRequest(factura_linea_id=factura.lineas[0].id, cantidad=2)],
+        ),
+    )
+
+    fake.credit_note_response = None
+    fake.credit_note_error = AlegraApiError(400, {"errors": [{"message": "instance requires x"}]})
+    with pytest.raises(HTTPException):
+        service.enviar(empresa.id, nota.id)
+
+    contador = (
+        db_session.query(ConsecutivoNota)
+        .filter(ConsecutivoNota.empresa_id == empresa.id, ConsecutivoNota.tipo == "credito")
+        .one()
+    )
+    db_session.refresh(contador)
+    assert contador.consecutivo_actual == 1

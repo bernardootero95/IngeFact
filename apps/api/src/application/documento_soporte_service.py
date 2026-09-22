@@ -238,12 +238,11 @@ class DocumentoSoporteService:
         subtotal, total_impuestos, total = self._totales(lineas)
 
         if documento.estado == "rechazado":
-            # Corregir un documento rechazado lo vuelve a dejar como
-            # borrador -- mismo criterio que FacturaService, el intento
-            # anterior (consecutivo/cuds/razon de rechazo) ya no aplica.
+            # Corregir un documento rechazado lo vuelve a dejar como borrador.
+            # consecutivo/numero_completo NO se limpian -- mismo criterio que
+            # FacturaService.actualizar_borrador: se reenvia con el MISMO numero.
+            # El resto si son datos del intento anterior y se limpian.
             documento.estado = "borrador"
-            documento.consecutivo = None
-            documento.numero_completo = None
             documento.alegra_support_document_id = None
             documento.cuds = None
             documento.qr_code_content = None
@@ -282,14 +281,19 @@ class DocumentoSoporteService:
         resolucion_service = ResolucionDocumentoSoporteService(self.db)
         resolucion = resolucion_service.obtener_o_404(empresa_id)
 
-        consecutivo = resolucion_service.incrementar_consecutivo(empresa_id)
+        # Reenvio de un documento rechazado: reutiliza el numero ya asignado (ver
+        # actualizar_borrador) en vez de pedir uno nuevo.
+        es_reenvio = documento.consecutivo is not None
+        consecutivo = documento.consecutivo if es_reenvio else resolucion_service.incrementar_consecutivo(empresa_id)
         payload = self._construir_payload_alegra(empresa, resolucion, documento, consecutivo, forma_pago, metodo_pago)
 
         try:
             respuesta = self._alegra_client.create_support_document(payload)
         except AlegraApiError as exc:
-            # 4xx: Alegra no creo nada -- se devuelve el numero (ver application/consecutivo.py).
-            resolucion_service.revertir_consecutivo(empresa_id, consecutivo)
+            # 4xx: Alegra no creo nada. Si el numero se pidio en este intento (no
+            # es un reenvio, que ya lo traia) se devuelve (ver application/consecutivo.py).
+            if not es_reenvio:
+                resolucion_service.revertir_consecutivo(empresa_id, consecutivo)
             raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
         except AlegraTransientError as exc:
             raise HTTPException(
