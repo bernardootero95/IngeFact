@@ -50,6 +50,15 @@ class CreateEmpresaAlegraService:
                 "city": data.municipio or "11001",
                 "country": "CO",
             },
+            # Alegra puede enviarle al cliente (customer.email de la factura) su
+            # propio correo de notificacion cuando genera un documento electronico
+            # valido -- IngeFact ya envia el suyo (notificar_factura_aceptada,
+            # Resend) y el cliente terminaba recibiendo los dos. Se deshabilita el
+            # de Alegra al crear la empresa asociada (confirmado contra
+            # https://e-provider-docs.alegra.com/reference/createcompany).
+            # Aplica solo a empresas nuevas -- ver scripts/deshabilitar_notificacion_alegra.py
+            # para las ya provisionadas.
+            "notificationByEmail": {"enabled": False},
         }
 
     def crear(self, data: CrearEmpresaRequest) -> Empresa:

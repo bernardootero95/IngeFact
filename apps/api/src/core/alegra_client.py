@@ -59,6 +59,15 @@ class AlegraClient:
         body = self._request("POST", "/companies", json=payload)
         return body["company"]
 
+    def update_company(self, company_id: str, payload: dict) -> dict:
+        """PATCH /companies/{id} -- actualiza solo los campos enviados (no hace
+        falta mandar la empresa completa). Usado para desactivar
+        notificationByEmail en empresas ya provisionadas (ver
+        scripts/deshabilitar_notificacion_alegra.py); confirmado contra
+        https://e-provider-docs.alegra.com/reference/updatecompany."""
+        body = self._request("PATCH", f"/companies/{company_id}", json=payload)
+        return body["company"]
+
     def get_reference_catalog(self, path: str, key: str) -> list[dict]:
         """GET generico para los catalogos DIAN de Alegra (/dian/*). `key` es
         el nombre de la clave bajo la que responde el arreglo (ej. `{"departments": [...]}`)."""

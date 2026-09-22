@@ -17,6 +17,7 @@ class FakeAlegraClient:
 
     def create_company(self, payload):
         self.calls += 1
+        self.last_payload = payload
         if self.fail_times and self.calls <= self.fail_times:
             raise AlegraTransientError("timeout simulado")
         if self.company_exc:
@@ -58,6 +59,10 @@ def test_crear_empresa_exitosa(db_session, monkeypatch, request):
     estados = [h.estado for h in historial]
     assert "creado_en_alegra" in estados
     assert "test_set_creado" in estados
+
+    # Alegra no debe mandarle al cliente su propio correo de notificacion --
+    # IngeFact ya envia el suyo (notificar_factura_aceptada).
+    assert fake_client.last_payload["notificationByEmail"] == {"enabled": False}
 
 
 def test_crear_empresa_nit_duplicado(db_session, monkeypatch):
