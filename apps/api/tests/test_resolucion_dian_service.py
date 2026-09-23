@@ -255,6 +255,39 @@ def test_revertir_consecutivo_no_aplica_si_otro_envio_ya_avanzo_el_contador(db_s
     assert resolucion.consecutivo_actual == 102
 
 
+def test_guardar_permite_cargar_resolucion_nueva_cuando_la_vigente_se_agoto(db_session):
+    """Caso real reportado: la resolucion vigente llego a rango_maximo y el
+    tenant necesita cargar la resolucion de renovacion (numero/rango
+    distintos) -- ya no debe bloquearse con el 409, y el consecutivo debe
+    arrancar en el nuevo rango_minimo."""
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=2))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual llega a 2 == rango_maximo: agotada
+
+    renovada = service.guardar(
+        empresa.id,
+        _payload(numero_resolucion="18760000099", rango_minimo=5000, rango_maximo=6000),
+    )
+
+    assert renovada.numero_resolucion == "18760000099"
+    assert renovada.rango_minimo == 5000
+    assert renovada.consecutivo_actual == 5000
+    todas = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).all()
+    assert len(todas) == 1  # sigue siendo upsert sobre la misma fila, no historial
+
+
+def test_guardar_sigue_bloqueando_cambio_de_rango_si_aun_quedan_numeros(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=1000))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual pasa a 2, muy lejos de agotarse
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.guardar(empresa.id, _payload(rango_minimo=5000, rango_maximo=6000))
+    assert exc_info.value.status_code == 409
+
+
 def test_revertir_el_primer_consecutivo_vuelve_a_permitir_editar_el_rango_minimo(db_session):
     empresa = _crear_empresa(db_session)
     service = ResolucionDianService(db_session)

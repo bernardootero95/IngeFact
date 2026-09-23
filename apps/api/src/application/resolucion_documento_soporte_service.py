@@ -35,21 +35,30 @@ class ResolucionDocumentoSoporteService:
         self, empresa_id: uuid.UUID, data: GuardarResolucionDocumentoSoporteRequest
     ) -> ResolucionDocumentoSoporte:
         """Upsert, mismo criterio de bloqueo de rango/consecutivo que
-        ResolucionDianService.guardar -- ver ese docstring."""
+        ResolucionDianService.guardar -- ver ese docstring (incluye permitir
+        cargar una resolucion de renovacion, con rango distinto, una vez que
+        la vigente se agota)."""
         resolucion = self.obtener(empresa_id)
+        existia = resolucion is not None
         if resolucion is None:
             resolucion = ResolucionDocumentoSoporte(empresa_id=empresa_id)
             consecutivo_iniciado = False
+            agotada = False
         else:
             consecutivo_iniciado = resolucion.consecutivo_actual > resolucion.rango_minimo
+            agotada = resolucion.consecutivo_actual >= resolucion.rango_maximo
 
-        if consecutivo_iniciado and data.rango_minimo != resolucion.rango_minimo:
+        cambia_rango = existia and data.rango_minimo != resolucion.rango_minimo
+
+        if consecutivo_iniciado and not agotada and cambia_rango:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
-                "No se puede modificar el rango minimo: ya se emitieron documentos con la numeracion actual.",
+                "No se puede modificar el rango minimo: la resolucion actual "
+                "todavia tiene numeros disponibles. Solo se puede cargar una "
+                "resolucion nueva cuando la vigente se agota.",
             )
 
-        if consecutivo_iniciado and data.consecutivo_actual is not None:
+        if consecutivo_iniciado and not cambia_rango and data.consecutivo_actual is not None:
             if data.consecutivo_actual < resolucion.consecutivo_actual:
                 raise HTTPException(
                     status.HTTP_409_CONFLICT,
@@ -64,7 +73,7 @@ class ResolucionDocumentoSoporteService:
         resolucion.fecha_fin = data.fecha_fin
         if data.consecutivo_actual is not None:
             resolucion.consecutivo_actual = data.consecutivo_actual
-        elif not consecutivo_iniciado:
+        elif not consecutivo_iniciado or cambia_rango:
             resolucion.consecutivo_actual = data.rango_minimo
 
         self.db.add(resolucion)
