@@ -17,3 +17,4 @@ slowapi==0.1.9
 qrcode[pil]==8.0
 weasyprint==70.0
 num2words==0.5.14
+tzdata==2026.3

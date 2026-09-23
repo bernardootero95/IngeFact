@@ -8,6 +8,7 @@ from datetime import datetime
 from num2words import num2words
 
 from src.application.reference_table_service import ReferenceTableService
+from src.core.tiempo import ZONA_HORARIA_COLOMBIA
 
 MONEDA = "COP"
 
@@ -92,9 +93,14 @@ def nombre_responsabilidad_fiscal(registros, code: str | None) -> str | None:
 
 
 def formatear_fecha_hora(dt: datetime | None) -> str:
+    """`dt` es un datetime aware en UTC (fecha_envio/fecha_respuesta, ver
+    los modelos) -- se convierte a hora de Colombia antes de formatear.
+    Sin esto, la representacion grafica mostraba la hora UTC cruda (ej.
+    20:38 en vez de las 15:38 que muestra la propia representacion de la
+    DIAN para el mismo documento, hallazgo real comparando ambos PDF)."""
     if dt is None:
         return "-"
-    return dt.strftime("%d/%m/%Y %H:%M:%S")
+    return dt.astimezone(ZONA_HORARIA_COLOMBIA).strftime("%d/%m/%Y %H:%M:%S")
 
 
 def agrupar_impuestos(lineas, tributos) -> list[dict]:

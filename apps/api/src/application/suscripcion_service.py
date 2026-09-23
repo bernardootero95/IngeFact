@@ -1,11 +1,12 @@
 import logging
-from datetime import datetime, time, timezone
+from datetime import datetime, time
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_alerta_cuota
+from src.core.tiempo import ZONA_HORARIA_COLOMBIA
 from src.infrastructure.db.models import Empresa, Factura, NotaCredito, NotaDebito, Suscripcion, UsuarioEmpresa
 
 logger = logging.getLogger(__name__)
@@ -19,9 +20,17 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
     Suscripcion.documentos_usados, que nunca se incrementa en ningun lado
     del codigo (columna legacy, ver el modelo). Una Factura 'anulada' sigue
     contando: el documento si se emitio y consumio un cupo, la Nota Credito
-    que la anulo es un documento aparte que tambien cuenta."""
-    inicio = datetime.combine(suscripcion.fecha_inicio, time.min, tzinfo=timezone.utc)
-    fin = datetime.combine(suscripcion.fecha_fin, time.max, tzinfo=timezone.utc)
+    que la anulo es un documento aparte que tambien cuenta.
+
+    fecha_inicio/fecha_fin son fechas de calendario en Colombia (las fija
+    el admin en /admin/companies), no UTC -- anclarlas a medianoche/fin de
+    dia UTC directamente corta las ultimas ~5 horas del ultimo dia del
+    periodo (hallazgo real: un documento enviado entre las 7pm y la
+    medianoche hora Colombia del dia de fecha_fin quedaba fuera del
+    conteo). Se combinan en America/Bogota; la comparacion contra
+    fecha_envio (datetime aware en UTC) es correcta sin importar la zona."""
+    inicio = datetime.combine(suscripcion.fecha_inicio, time.min, tzinfo=ZONA_HORARIA_COLOMBIA)
+    fin = datetime.combine(suscripcion.fecha_fin, time.max, tzinfo=ZONA_HORARIA_COLOMBIA)
 
     total = db.execute(
         select(func.count())

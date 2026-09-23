@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { listProveedores, getProveedor, crearFacturaRecibida } from "@ingefact/core-api";
+import { fechaHoyColombia } from "@ingefact/utils";
 import { SearchableSelect, Button, PlusIcon, FormSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateProveedor, validateCufe, validateFecha } from "./ReceivedInvoiceFormPage.validation";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = fechaHoyColombia;
 
 export default function ReceivedInvoiceFormPage() {
   const navigate = useNavigate();
