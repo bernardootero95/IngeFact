@@ -125,6 +125,27 @@ def test_deducciones_salud_pension_son_obligatorias():
         _payload("00000000-0000-0000-0000-000000000000", deducciones={})
 
 
+def test_banco_es_obligatorio_si_metodo_es_consignacion_bancaria():
+    with pytest.raises(ValueError, match="Consignaci"):
+        _payload("00000000-0000-0000-0000-000000000000", metodo_pago="42")
+
+
+def test_banco_no_es_obligatorio_si_metodo_no_es_consignacion_bancaria():
+    payload = _payload("00000000-0000-0000-0000-000000000000", metodo_pago="10")
+    assert payload.banco is None
+
+
+def test_banco_completo_permite_metodo_consignacion_bancaria():
+    payload = _payload(
+        "00000000-0000-0000-0000-000000000000",
+        metodo_pago="42",
+        banco="Bancolombia",
+        tipo_cuenta="Ahorros",
+        numero_cuenta="123456789",
+    )
+    assert payload.metodo_pago == "42"
+
+
 def test_crear_borrador_copia_snapshot_del_empleado(db_session):
     empresa = _crear_empresa(db_session)
     empleado = _crear_empleado(db_session, empresa.id)

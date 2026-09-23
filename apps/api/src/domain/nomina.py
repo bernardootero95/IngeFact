@@ -3,6 +3,11 @@ from typing import Any
 
 from pydantic import BaseModel, field_validator, model_validator
 
+# Codigo DIAN de "Consignacion bancaria" en el catalogo metodos_pago -- solo
+# en ese caso el schema de Alegra espera Banco/TipoCuenta/NumeroCuenta (los
+# demas metodos no los usan, ver docs/alegra-investigacion.md).
+METODO_PAGO_CONSIGNACION_BANCARIA = "42"
+
 
 class GuardarNominaRequest(BaseModel):
     """`devengados`/`deducciones` viajan tal cual el schema de Alegra (ver
@@ -66,6 +71,18 @@ class GuardarNominaRequest(BaseModel):
     def fechas_coherentes(self) -> "GuardarNominaRequest":
         if self.fecha_liquidacion_fin < self.fecha_liquidacion_inicio:
             raise ValueError("La fecha fin de liquidacion no puede ser anterior a la fecha inicio.")
+        return self
+
+    @model_validator(mode="after")
+    def datos_bancarios_si_consignacion(self) -> "GuardarNominaRequest":
+        if self.metodo_pago == METODO_PAGO_CONSIGNACION_BANCARIA:
+            faltantes = [
+                campo
+                for campo, valor in (("banco", self.banco), ("tipo_cuenta", self.tipo_cuenta), ("numero_cuenta", self.numero_cuenta))
+                if not (valor or "").strip()
+            ]
+            if faltantes:
+                raise ValueError("Banco, tipo de cuenta y número de cuenta son obligatorios cuando el método de pago es Consignación bancaria.")
         return self
 
 

@@ -27,6 +27,10 @@ const num = (v) => (v === "" || v === null || v === undefined ? 0 : Number(v) ||
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value || 0);
 
+const CODIGO_FORMA_CONTADO = "1";
+// Solo con este metodo el schema de la DIAN espera Banco/TipoCuenta/NumeroCuenta.
+const CODIGO_METODO_CONSIGNACION_BANCARIA = "42";
+
 export default function PayrollFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -63,6 +67,7 @@ export default function PayrollFormPage() {
   const [sueldoTrabajado, setSueldoTrabajado] = useState("");
   const [transporteActivo, setTransporteActivo] = useState(false);
   const [transporteMonto, setTransporteMonto] = useState("");
+  const [horasExtraActivo, setHorasExtraActivo] = useState(false);
   const [horasExtra, setHorasExtra] = useState({});
   const [vacacionesActivo, setVacacionesActivo] = useState(false);
   const [vacaciones, setVacaciones] = useState({ fechaInicio: "", fechaFin: "", cantidad: "", pago: "" });
@@ -135,7 +140,7 @@ export default function PayrollFormPage() {
         cargarDevengadosDeducciones(nomina.devengados, nomina.deducciones);
       } else {
         setPeriodoNomina(periodos[0]?.code || "");
-        setFormaPago(formasPago[0]?.code || "");
+        setFormaPago(formasPago.find((f) => f.code === CODIGO_FORMA_CONTADO)?.code || formasPago[0]?.code || "");
         setMetodoPago(metodosPago.filter((m) => m.code !== "1")[0]?.code || "");
       }
     } catch (error) {
@@ -167,6 +172,7 @@ export default function PayrollFormPage() {
       if (entrada) nuevasHoras[code] = { cantidad: String(entrada.Cantidad ?? ""), pago: String(entrada.Pago ?? "") };
     });
     setHorasExtra(nuevasHoras);
+    if (Object.keys(nuevasHoras).length > 0) setHorasExtraActivo(true);
 
     const vac = devengados?.Vacaciones?.VacacionesComunes?.[0];
     if (vac) {
@@ -268,13 +274,15 @@ export default function PayrollFormPage() {
       devTotal += num(transporteMonto);
     }
 
-    HORAS_EXTRA_TIPOS.forEach(({ code, bloque, item }) => {
-      const entrada = horasExtra[code];
-      if (entrada && num(entrada.pago) > 0) {
-        dev[bloque] = { [item]: [{ Cantidad: num(entrada.cantidad), Porcentaje: code, Pago: num(entrada.pago) }] };
-        devTotal += num(entrada.pago);
-      }
-    });
+    if (horasExtraActivo) {
+      HORAS_EXTRA_TIPOS.forEach(({ code, bloque, item }) => {
+        const entrada = horasExtra[code];
+        if (entrada && num(entrada.pago) > 0) {
+          dev[bloque] = { [item]: [{ Cantidad: num(entrada.cantidad), Porcentaje: code, Pago: num(entrada.pago) }] };
+          devTotal += num(entrada.pago);
+        }
+      });
+    }
 
     if (vacacionesActivo && num(vacaciones.pago) > 0) {
       dev.Vacaciones = {
@@ -383,6 +391,7 @@ export default function PayrollFormPage() {
     sueldoTrabajado,
     transporteActivo,
     transporteMonto,
+    horasExtraActivo,
     horasExtra,
     vacacionesActivo,
     vacaciones,
@@ -403,8 +412,18 @@ export default function PayrollFormPage() {
     otrasDeducciones,
   ]);
 
+  const esConsignacionBancaria = metodoPago === CODIGO_METODO_CONSIGNACION_BANCARIA;
+
   const puedeGuardar =
-    empleadoId && periodoNomina && fechaInicio && fechaFin && fechaPago && formaPago && metodoPago && num(sueldoTrabajado) > 0;
+    empleadoId &&
+    periodoNomina &&
+    fechaInicio &&
+    fechaFin &&
+    fechaPago &&
+    formaPago &&
+    metodoPago &&
+    num(sueldoTrabajado) > 0 &&
+    (!esConsignacionBancaria || (banco.trim() && tipoCuenta.trim() && numeroCuenta.trim()));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -418,9 +437,9 @@ export default function PayrollFormPage() {
       fecha_pago: [fechaPago],
       forma_pago: formaPago,
       metodo_pago: metodoPago,
-      banco: banco.trim() || null,
-      tipo_cuenta: tipoCuenta.trim() || null,
-      numero_cuenta: numeroCuenta.trim() || null,
+      banco: esConsignacionBancaria ? banco.trim() || null : null,
+      tipo_cuenta: esConsignacionBancaria ? tipoCuenta.trim() || null : null,
+      numero_cuenta: esConsignacionBancaria ? numeroCuenta.trim() || null : null,
       devengados,
       deducciones,
       devengados_total: devengadosTotal,
@@ -567,37 +586,41 @@ export default function PayrollFormPage() {
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label htmlFor="banco" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Banco
-                      </label>
-                      <input type="text" id="banco" value={banco} onChange={(e) => setBanco(e.target.value)} className="field w-full" />
-                    </div>
-                    <div>
-                      <label htmlFor="tipo-cuenta" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Tipo de Cuenta
-                      </label>
-                      <input
-                        type="text"
-                        id="tipo-cuenta"
-                        value={tipoCuenta}
-                        onChange={(e) => setTipoCuenta(e.target.value)}
-                        className="field w-full"
-                        placeholder="Ahorros / Corriente"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="numero-cuenta" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Número de Cuenta
-                      </label>
-                      <input
-                        type="text"
-                        id="numero-cuenta"
-                        value={numeroCuenta}
-                        onChange={(e) => setNumeroCuenta(e.target.value)}
-                        className="field w-full"
-                      />
-                    </div>
+                    {esConsignacionBancaria && (
+                      <>
+                        <div>
+                          <label htmlFor="banco" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                            Banco <span className="text-fiscal-danger">*</span>
+                          </label>
+                          <input type="text" id="banco" value={banco} onChange={(e) => setBanco(e.target.value)} className="field w-full" />
+                        </div>
+                        <div>
+                          <label htmlFor="tipo-cuenta" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                            Tipo de Cuenta <span className="text-fiscal-danger">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="tipo-cuenta"
+                            value={tipoCuenta}
+                            onChange={(e) => setTipoCuenta(e.target.value)}
+                            className="field w-full"
+                            placeholder="Ahorros / Corriente"
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="numero-cuenta" className="block text-sm font-medium text-neutralCustom-600 mb-1">
+                            Número de Cuenta <span className="text-fiscal-danger">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            id="numero-cuenta"
+                            value={numeroCuenta}
+                            onChange={(e) => setNumeroCuenta(e.target.value)}
+                            className="field w-full"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -638,8 +661,7 @@ export default function PayrollFormPage() {
                     <CampoMonto label="Monto" value={transporteMonto} onChange={setTransporteMonto} />
                   </SeccionToggle>
 
-                  <div className="border-t border-neutralCustom-100 pt-4">
-                    <p className="text-sm font-medium text-neutralCustom-700 mb-2">Horas Extra y Recargos</p>
+                  <SeccionToggle titulo="Horas Extra y Recargos" activo={horasExtraActivo} onToggle={setHorasExtraActivo}>
                     <div className="space-y-2">
                       {HORAS_EXTRA_TIPOS.map(({ code }) => (
                         <FilaHoraExtra
@@ -651,7 +673,7 @@ export default function PayrollFormPage() {
                         />
                       ))}
                     </div>
-                  </div>
+                  </SeccionToggle>
 
                   <SeccionToggle titulo="Vacaciones" activo={vacacionesActivo} onToggle={setVacacionesActivo}>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
