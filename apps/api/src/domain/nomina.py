@@ -93,6 +93,7 @@ class NominaResponse(BaseModel):
     estado: str
     cune: str | None
     razon_rechazo: str | None
+    notificaciones_dian: list | None
     fecha_envio: datetime | None
     fecha_respuesta: datetime | None
     creado: datetime
@@ -127,6 +128,7 @@ class NominaResponse(BaseModel):
             estado=nomina.estado,
             cune=nomina.cune,
             razon_rechazo=nomina.razon_rechazo,
+            notificaciones_dian=nomina.notificaciones_dian,
             fecha_envio=nomina.fecha_envio,
             fecha_respuesta=nomina.fecha_respuesta,
             creado=nomina.creado,

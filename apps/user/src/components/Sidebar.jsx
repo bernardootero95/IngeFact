@@ -34,6 +34,7 @@ const navItems = [
       { name: "Notas Débito", path: "/debit-notes" },
       { name: "Facturas Recibidas", path: "/received-invoices" },
       { name: "Documento Soporte", path: "/support-documents" },
+      { name: "Nómina", path: "/payroll" },
     ],
   },
   {

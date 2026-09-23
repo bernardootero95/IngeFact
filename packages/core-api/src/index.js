@@ -61,6 +61,18 @@ export {
   deleteEmpleado,
 } from "./services/empleados.js";
 export {
+  listNomina,
+  getNomina,
+  crearBorradorNomina,
+  actualizarBorradorNomina,
+  eliminarBorradorNomina,
+  enviarNomina,
+  anularNomina,
+  enviarNominaPorCorreo,
+  obtenerUrlXmlNomina,
+  obtenerRepresentacionPdfNomina,
+} from "./services/nomina.js";
+export {
   listDocumentosSoporte,
   getDocumentoSoporte,
   crearBorradorDocumentoSoporte,

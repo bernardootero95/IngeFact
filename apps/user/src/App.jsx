@@ -33,6 +33,9 @@ import SupportDocumentsListPage from "./modules/supportDocuments/pages/SupportDo
 import SupportDocumentFormPage from "./modules/supportDocuments/pages/SupportDocumentFormPage";
 import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportDocumentDetailPage";
 import SupportDocumentRepresentationPage from "./modules/supportDocuments/pages/SupportDocumentRepresentationPage";
+import PayrollsListPage from "./modules/payroll/pages/PayrollsListPage";
+import PayrollFormPage from "./modules/payroll/pages/PayrollFormPage";
+import PayrollDetailPage from "./modules/payroll/pages/PayrollDetailPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
@@ -390,6 +393,42 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SupportDocumentDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll"
+          element={
+            <ProtectedRoute>
+              <PayrollsListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll/new"
+          element={
+            <ProtectedRoute>
+              <PayrollFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll/:id/edit"
+          element={
+            <ProtectedRoute>
+              <PayrollFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll/:id"
+          element={
+            <ProtectedRoute>
+              <PayrollDetailPage />
             </ProtectedRoute>
           }
         />
