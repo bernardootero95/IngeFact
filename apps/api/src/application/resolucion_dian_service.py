@@ -8,7 +8,11 @@ from sqlalchemy.orm import Session
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.application.consecutivo import revertir_consecutivo
 from src.core.alegra_errors import map_alegra_error
-from src.domain.resolucion_dian import CargarResolucionAlegraResponse, GuardarResolucionDianRequest
+from src.domain.resolucion_dian import (
+    CargarResolucionAlegraResponse,
+    GuardarResolucionDianRequest,
+    ListaResolucionesAlegraResponse,
+)
 from src.infrastructure.db.models import Empresa, ResolucionDian
 
 
@@ -100,12 +104,15 @@ class ResolucionDianService:
         self.db.refresh(resolucion)
         return resolucion
 
-    def cargar_desde_alegra(self, empresa_id: uuid.UUID) -> CargarResolucionAlegraResponse:
-        """GET /resolutions/{nit} (solo produccion) -- trae la primera
-        resolucion que Alegra tiene registrada para el NIT del tenant, para
-        precargar el formulario sin escribirla a mano. No persiste nada;
-        el tenant confirma con "Guardar Cambios" (mismo patron que
-        "Consultar DIAN" en Clientes)."""
+    def cargar_desde_alegra(self, empresa_id: uuid.UUID) -> ListaResolucionesAlegraResponse:
+        """GET /resolutions/{nit} (solo produccion) -- trae TODAS las
+        resoluciones que Alegra tiene registradas para el NIT del tenant
+        (puede haber mas de una: la agotada/vencida y la de renovacion).
+        Alegra no expone ningun campo de estado ni orden documentado (ver
+        docstring de ListaResolucionesAlegraResponse), asi que no se adivina
+        cual es la vigente -- se devuelven todas para que el tenant elija.
+        No persiste nada; el tenant confirma con "Guardar Cambios" (mismo
+        patron que "Consultar DIAN" en Clientes)."""
         empresa = self.db.get(Empresa, empresa_id)
 
         try:
@@ -120,15 +127,19 @@ class ResolucionDianService:
                 "Alegra no tiene ninguna resolucion DIAN registrada todavia para esta empresa.",
             )
 
-        primera = resoluciones[0]
-        return CargarResolucionAlegraResponse(
-            numero_resolucion=primera["resolutionNumber"],
-            prefijo=primera["prefix"],
-            rango_minimo=primera["minNumber"],
-            rango_maximo=primera["maxNumber"],
-            fecha_inicio=primera["startDate"],
-            fecha_fin=primera["endDate"],
-            technical_key=primera["technicalKey"],
+        return ListaResolucionesAlegraResponse(
+            resoluciones=[
+                CargarResolucionAlegraResponse(
+                    numero_resolucion=r["resolutionNumber"],
+                    prefijo=r["prefix"],
+                    rango_minimo=r["minNumber"],
+                    rango_maximo=r["maxNumber"],
+                    fecha_inicio=r["startDate"],
+                    fecha_fin=r["endDate"],
+                    technical_key=r["technicalKey"],
+                )
+                for r in resoluciones
+            ]
         )
 
     def validar_ante_alegra(self, empresa_id: uuid.UUID) -> ResolucionDian:

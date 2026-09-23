@@ -62,6 +62,7 @@ export default function ResolutionPanel() {
   const [saveError, setSaveError] = useState(null);
   const [isValidating, setIsValidating] = useState(false);
   const [isLoadingAlegra, setIsLoadingAlegra] = useState(false);
+  const [opcionesAlegra, setOpcionesAlegra] = useState(null);
 
   const fetchResolucion = useCallback(async () => {
     setLoading(true);
@@ -129,22 +130,34 @@ export default function ResolutionPanel() {
     }
   };
 
+  const aplicarDatosAlegra = (datos) => {
+    setFormData((prev) => ({
+      ...prev,
+      numero_resolucion: datos.numero_resolucion,
+      prefijo: datos.prefijo,
+      rango_minimo: String(datos.rango_minimo),
+      rango_maximo: String(datos.rango_maximo),
+      fecha_inicio: datos.fecha_inicio,
+      fecha_fin: datos.fecha_fin,
+      technical_key: datos.technical_key,
+    }));
+    setErrors({});
+    setOpcionesAlegra(null);
+  };
+
   const handleCargarAlegra = async () => {
     setIsLoadingAlegra(true);
     setSaveError(null);
+    setOpcionesAlegra(null);
     try {
-      const datos = await cargarResolucionDesdeAlegra();
-      setFormData((prev) => ({
-        ...prev,
-        numero_resolucion: datos.numero_resolucion,
-        prefijo: datos.prefijo,
-        rango_minimo: String(datos.rango_minimo),
-        rango_maximo: String(datos.rango_maximo),
-        fecha_inicio: datos.fecha_inicio,
-        fecha_fin: datos.fecha_fin,
-        technical_key: datos.technical_key,
-      }));
-      setErrors({});
+      const { resoluciones } = await cargarResolucionDesdeAlegra();
+      if (resoluciones.length === 1) {
+        aplicarDatosAlegra(resoluciones[0]);
+      } else {
+        // Alegra no indica cual resolucion esta vigente -- con mas de una
+        // registrada (ej. la agotada y la de renovacion), el tenant elige.
+        setOpcionesAlegra(resoluciones);
+      }
     } catch (error) {
       setSaveError(error.message);
     } finally {
@@ -264,6 +277,44 @@ export default function ResolutionPanel() {
                 {saveError}
               </div>
             )}
+
+            {opcionesAlegra && (
+              <div className="mb-4 border border-neutralCustom-200 rounded-brand-md p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <p className="text-sm font-medium text-neutralCustom-800">
+                    Alegra tiene {opcionesAlegra.length} resoluciones
+                    registradas para tu NIT. Elige cuál importar:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setOpcionesAlegra(null)}
+                    className="text-xs text-neutralCustom-500 hover:text-neutralCustom-700 shrink-0 ml-3"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+                {opcionesAlegra.map((opcion) => (
+                  <div
+                    key={`${opcion.numero_resolucion}-${opcion.rango_minimo}`}
+                    className="flex justify-between items-center gap-3 bg-neutralCustom-100/60 rounded-brand-md p-3"
+                  >
+                    <div className="text-sm text-neutralCustom-700">
+                      <p className="font-semibold">
+                        {opcion.prefijo} · Resolución {opcion.numero_resolucion}
+                      </p>
+                      <p className="text-xs text-neutralCustom-500">
+                        Rango {opcion.rango_minimo}–{opcion.rango_maximo} ·
+                        Vigencia {opcion.fecha_inicio} a {opcion.fecha_fin}
+                      </p>
+                    </div>
+                    <Button type="button" onClick={() => aplicarDatosAlegra(opcion)}>
+                      Usar esta
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {resolucion?.estado_validacion === "error" && resolucion.mensaje_validacion && (
               <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {resolucion.mensaje_validacion}
