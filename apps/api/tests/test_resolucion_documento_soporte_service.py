@@ -87,6 +87,39 @@ def test_guardar_bloquea_retroceder_consecutivo_ya_incrementado(db_session):
     assert exc_info.value.status_code == 409
 
 
+def test_guardar_permite_cargar_resolucion_nueva_cuando_la_vigente_se_agoto(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDocumentoSoporteService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=2))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual llega a 2 == rango_maximo: agotada
+
+    renovada = service.guardar(
+        empresa.id,
+        _payload(numero_resolucion="18760000098", rango_minimo=5000, rango_maximo=6000),
+    )
+
+    assert renovada.numero_resolucion == "18760000098"
+    assert renovada.rango_minimo == 5000
+    assert renovada.consecutivo_actual == 5000
+    todas = (
+        db_session.query(ResolucionDocumentoSoporte)
+        .filter(ResolucionDocumentoSoporte.empresa_id == empresa.id)
+        .all()
+    )
+    assert len(todas) == 1
+
+
+def test_guardar_sigue_bloqueando_cambio_de_rango_si_aun_quedan_numeros(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDocumentoSoporteService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=1000))
+    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual pasa a 2, muy lejos de agotarse
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.guardar(empresa.id, _payload(rango_minimo=5000, rango_maximo=6000))
+    assert exc_info.value.status_code == 409
+
+
 def test_guardar_permite_fijar_consecutivo_actual_manualmente(db_session):
     empresa = _crear_empresa(db_session)
 
