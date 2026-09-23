@@ -20,6 +20,26 @@ def test_create_company_parses_nested_response(client):
 
 
 @respx.mock
+def test_update_company_parses_nested_response_and_patches(client):
+    route = respx.patch(f"{client._base_url}/companies/abc123").mock(
+        return_value=httpx.Response(200, json={"company": {"id": "abc123", "notificationByEmail": {"enabled": False}}})
+    )
+    company = client.update_company("abc123", {"notificationByEmail": {"enabled": False}})
+    assert company["notificationByEmail"] == {"enabled": False}
+    assert route.calls[0].request.method == "PATCH"
+
+
+@respx.mock
+def test_update_company_4xx_raises_api_error(client):
+    respx.patch(f"{client._base_url}/companies/abc123").mock(
+        return_value=httpx.Response(404, json={"errors": [{"message": "company not found"}]})
+    )
+    with pytest.raises(AlegraApiError) as exc_info:
+        client.update_company("abc123", {"notificationByEmail": {"enabled": False}})
+    assert exc_info.value.status_code == 404
+
+
+@respx.mock
 def test_create_test_set_parses_singular_testset(client):
     respx.post(f"{client._base_url}/test-sets").mock(
         return_value=httpx.Response(201, json={"testSet": {"id": "ts1", "status": "ACCEPTED"}})
