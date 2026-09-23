@@ -1,10 +1,49 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getDashboardKpis } from "@ingefact/core-api";
 import { useAuthStore } from "../../auth/store/authStore";
 import Sidebar from "../../../components/Sidebar";
 import { SpinnerLoading, Button } from "@ingefact/ui";
 
+function ClienteAlertaList({ titulo, descripcion, clientes, emptyLabel, renderMetrica, onVerCliente }) {
+  return (
+    <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
+      <h3 className="text-base font-medium text-neutralCustom-800">{titulo}</h3>
+      <p className="text-xs text-neutralCustom-500 mt-0.5 mb-4">{descripcion}</p>
+
+      {clientes.length === 0 ? (
+        <p className="text-sm text-neutralCustom-500">{emptyLabel}</p>
+      ) : (
+        <ul className="divide-y divide-neutralCustom-100">
+          {clientes.map((cliente) => (
+            <li
+              key={cliente.empresa_id}
+              className="py-3 flex items-center justify-between gap-3 first:pt-0 last:pb-0"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-neutralCustom-800 truncate">
+                  {cliente.razon_social}
+                </p>
+                <p className="text-xs text-neutralCustom-500 mt-0.5">{renderMetrica(cliente)}</p>
+              </div>
+              <Button
+                onClick={() => onVerCliente(cliente.empresa_id)}
+                variant="link"
+                size="sm"
+                className="shrink-0"
+              >
+                Gestionar
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { profile } = useAuthStore();
   const [kpis, setKpis] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,6 +119,34 @@ export default function Dashboard() {
                   {kpis?.empresas_con_error_alegra ?? 0}
                 </p>
               </div>
+            </div>
+          )}
+
+          {!loading && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ClienteAlertaList
+                titulo="Clientes próximos a vencer"
+                descripcion="Plan a 30 días o menos de su fecha fin (o ya vencido)."
+                clientes={kpis?.clientes_proximos_a_vencer ?? []}
+                emptyLabel="Ningún cliente vence pronto."
+                onVerCliente={(id) => navigate(`/admin/companies/${id}/edit`)}
+                renderMetrica={(c) =>
+                  c.dias_para_vencer < 0
+                    ? `Venció hace ${Math.abs(c.dias_para_vencer)} días (${c.fecha_fin_plan})`
+                    : `Vence en ${c.dias_para_vencer} días (${c.fecha_fin_plan})`
+                }
+              />
+
+              <ClienteAlertaList
+                titulo="Clientes próximos a agotar su cupo"
+                descripcion="90% o más de los documentos de su plan ya usados."
+                clientes={kpis?.clientes_proximos_a_agotar_cupo ?? []}
+                emptyLabel="Ningún cliente está cerca de su cupo."
+                onVerCliente={(id) => navigate(`/admin/companies/${id}/edit`)}
+                renderMetrica={(c) =>
+                  `${c.documentos_usados} / ${c.max_documentos} documentos (${c.porcentaje_usado}%)`
+                }
+              />
             </div>
           )}
 
