@@ -18,6 +18,7 @@ from src.core.security import hash_password
 from src.infrastructure.db.models import (
     Cliente,
     DocumentoSoporte,
+    Empleado,
     Empresa,
     Factura,
     FacturaRecibida,
@@ -103,6 +104,32 @@ def proveedor_de_empresa_a(db_session, empresa_a):
     db_session.refresh(proveedor)
 
     return proveedor
+
+
+@pytest.fixture
+def empleado_de_empresa_a(db_session, empresa_a):
+    empresa, _cliente, _producto, _factura = empresa_a
+
+    empleado = Empleado(
+        empresa_id=empresa.id,
+        tipo_documento="13",
+        numero_documento="555555555",
+        primer_apellido="Perez",
+        primer_nombre="Juan",
+        tipo_trabajador="01",
+        subtipo_trabajador="00",
+        tipo_contrato="1",
+        sueldo=2000000,
+        lugar_trabajo_municipio="11001",
+        lugar_trabajo_direccion="Calle 1 # 2-3",
+        fecha_ingreso=date.today(),
+        estado="activo",
+    )
+    db_session.add(empleado)
+    db_session.commit()
+    db_session.refresh(empleado)
+
+    return empleado
 
 
 @pytest.fixture
@@ -318,6 +345,29 @@ def test_tenant_can_read_its_own_proveedor(api_client, empresa_a, proveedor_de_e
 
     assert response.status_code == 200
     assert response.json()["id"] == str(proveedor.id)
+
+
+def test_tenant_cannot_read_another_tenants_empleado(api_client, empresa_a, empresa_b, empleado_de_empresa_a):
+    empleado_a = empleado_de_empresa_a
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/empleados/{empleado_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_empleado(api_client, empresa_a, empleado_de_empresa_a):
+    empleado = empleado_de_empresa_a
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/empleados/{empleado.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(empleado.id)
 
 
 def test_tenant_cannot_read_another_tenants_factura_recibida(

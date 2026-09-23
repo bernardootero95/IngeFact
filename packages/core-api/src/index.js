@@ -54,6 +54,13 @@ export {
   consultarProveedorDian,
 } from "./services/proveedores.js";
 export {
+  listEmpleados,
+  getEmpleado,
+  createEmpleado,
+  updateEmpleado,
+  deleteEmpleado,
+} from "./services/empleados.js";
+export {
   listDocumentosSoporte,
   getDocumentoSoporte,
   crearBorradorDocumentoSoporte,

@@ -50,6 +50,7 @@ const navItems = [
     children: [
       { name: "Clientes", path: "/customers" },
       { name: "Proveedores", path: "/suppliers" },
+      { name: "Empleados", path: "/employees" },
     ],
   },
   {

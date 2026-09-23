@@ -24,6 +24,8 @@ import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import SuppliersPage from "./modules/suppliers/pages/SuppliersPage";
 import SupplierFormPage from "./modules/suppliers/pages/SupplierFormPage";
+import EmployeesPage from "./modules/employees/pages/EmployeesPage";
+import EmployeeFormPage from "./modules/employees/pages/EmployeeFormPage";
 import ReceivedInvoicesListPage from "./modules/receivedInvoices/pages/ReceivedInvoicesListPage";
 import ReceivedInvoiceFormPage from "./modules/receivedInvoices/pages/ReceivedInvoiceFormPage";
 import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/ReceivedInvoiceDetailPage";
@@ -289,6 +291,33 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SupplierFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/employees"
+          element={
+            <ProtectedRoute>
+              <EmployeesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/employees/new"
+          element={
+            <ProtectedRoute>
+              <EmployeeFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/employees/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EmployeeFormPage />
             </ProtectedRoute>
           }
         />
