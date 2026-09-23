@@ -49,9 +49,9 @@ class GuardarResolucionDianRequest(BaseModel):
 
 
 class CargarResolucionAlegraResponse(BaseModel):
-    """Datos de la primera resolucion que Alegra tiene registrada para el NIT
-    del tenant (GET /resolutions/{nit}, solo produccion). El tenant revisa y
-    confirma con "Guardar Cambios" -- no se persiste automaticamente."""
+    """Una resolucion tal como la tiene registrada Alegra para el NIT del
+    tenant (GET /resolutions/{nit}, solo produccion). El tenant elige cual
+    usar y confirma con "Guardar Cambios" -- no se persiste automaticamente."""
 
     numero_resolucion: str
     prefijo: str
@@ -60,6 +60,17 @@ class CargarResolucionAlegraResponse(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     technical_key: str
+
+
+class ListaResolucionesAlegraResponse(BaseModel):
+    """Todas las resoluciones que Alegra tiene registradas para el NIT del
+    tenant -- GET /resolutions/{nit} las devuelve todas en un arreglo, sin
+    ningun campo de estado (activa/agotada/vencida) ni orden documentado
+    (confirmado contra https://e-provider-docs.alegra.com/reference/getresolutions,
+    2026-09-22), asi que no hay forma confiable de adivinar cual es la
+    vigente del lado del backend. El tenant elige la correcta a mano."""
+
+    resoluciones: list[CargarResolucionAlegraResponse]
 
 
 class ResolucionDianResponse(BaseModel):

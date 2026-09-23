@@ -169,6 +169,62 @@ def test_validar_ante_alegra_error_guarda_mensaje_mapeado(db_session):
     assert "produccion" in resolucion.mensaje_validacion.lower()
 
 
+def _resolucion_alegra(**overrides) -> dict:
+    data = {
+        "resolutionNumber": "18760000001",
+        "prefix": "SETP",
+        "minNumber": 1,
+        "maxNumber": 1000,
+        "startDate": "2026-01-01",
+        "endDate": "2030-01-01",
+        "technicalKey": "fc8eac422eba16e22ffd8c6f94b3f40a6e38162c",
+    }
+    data.update(overrides)
+    return data
+
+
+def test_cargar_desde_alegra_devuelve_todas_las_resoluciones(db_session):
+    """Alegra no marca cual resolucion esta vigente ni trae orden
+    documentado (confirmado contra su documentacion oficial) -- con dos
+    resoluciones registradas (la agotada y la de renovacion), el backend ya
+    no debe quedarse solo con la primera: le pasa las dos al tenant para que
+    el elija cual importar."""
+    empresa = _crear_empresa(db_session)
+    agotada = _resolucion_alegra(resolutionNumber="18760000001", minNumber=1, maxNumber=1000)
+    nueva = _resolucion_alegra(resolutionNumber="18760000099", prefix="SETQ", minNumber=5000, maxNumber=6000)
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [agotada, nueva]})
+    )
+
+    resultado = service.cargar_desde_alegra(empresa.id)
+
+    assert len(resultado.resoluciones) == 2
+    numeros = {r.numero_resolucion for r in resultado.resoluciones}
+    assert numeros == {"18760000001", "18760000099"}
+    nueva_importada = next(r for r in resultado.resoluciones if r.numero_resolucion == "18760000099")
+    assert nueva_importada.rango_minimo == 5000
+    assert nueva_importada.rango_maximo == 6000
+
+
+def test_cargar_desde_alegra_sin_resoluciones_da_404(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session, alegra_client=_FakeAlegraClient(response={"resolutions": []}))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.cargar_desde_alegra(empresa.id)
+    assert exc_info.value.status_code == 404
+
+
+def test_cargar_desde_alegra_error_alegra_da_400(db_session):
+    empresa = _crear_empresa(db_session)
+    error = AlegraApiError(404, {"errors": [{"code": "AEP9006", "message": "Environment not supported"}]})
+    service = ResolucionDianService(db_session, alegra_client=_FakeAlegraClient(error=error))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.cargar_desde_alegra(empresa.id)
+    assert exc_info.value.status_code == 400
+
+
 def test_obtener_o_404_sin_resolucion(db_session):
     empresa = _crear_empresa(db_session)
     with pytest.raises(HTTPException) as exc_info:

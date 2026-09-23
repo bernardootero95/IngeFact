@@ -19,10 +19,11 @@ export async function validarResolucionDian() {
 }
 
 /**
- * Trae la primera resolucion que Alegra tiene registrada para el NIT del
- * tenant (solo funciona contra Alegra produccion). No persiste nada -- el
- * caller debe llenar el formulario con el resultado y dejar que el tenant
- * confirme con "Guardar Cambios".
+ * Trae TODAS las resoluciones que Alegra tiene registradas para el NIT del
+ * tenant (solo funciona contra Alegra produccion) -- Alegra no marca cual
+ * esta vigente, asi que devuelve `{ resoluciones: [...] }` y el caller debe
+ * dejar que el tenant elija cual usar antes de confirmar con "Guardar
+ * Cambios". No persiste nada.
  */
 export async function cargarResolucionDesdeAlegra() {
   return apiRequest("/api/v1/tenant/resolucion/cargar-alegra");
