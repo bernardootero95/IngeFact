@@ -83,6 +83,10 @@ def _no_real_pdf(monkeypatch):
         "src.application.documento_soporte_service.generar_representacion_pdf_documento_soporte",
         lambda db, documento, firma_digital: b"%PDF-fake%",
     )
+    monkeypatch.setattr(
+        "src.application.nomina_service.generar_representacion_pdf_nomina",
+        lambda db, nomina: b"%PDF-fake%",
+    )
 
 
 _engine = create_engine(TEST_DATABASE_URL)

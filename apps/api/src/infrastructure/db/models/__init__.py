@@ -6,6 +6,7 @@ from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
 from src.infrastructure.db.models.factura import Factura, FacturaLinea
 from src.infrastructure.db.models.factura_recibida import EventoReceptor, FacturaRecibida
 from src.infrastructure.db.models.impuesto_empresa import ImpuestoEmpresa
+from src.infrastructure.db.models.nomina import ConsecutivoNomina, Nomina
 from src.infrastructure.db.models.nota_credito import ConsecutivoNota, NotaCredito, NotaCreditoLinea
 from src.infrastructure.db.models.nota_debito import NotaDebito, NotaDebitoLinea
 from src.infrastructure.db.models.plan import Plan
@@ -41,6 +42,8 @@ __all__ = [
     "NotaDebito",
     "NotaDebitoLinea",
     "ConsecutivoNota",
+    "Nomina",
+    "ConsecutivoNomina",
     "ImpuestoEmpresa",
     "Suscripcion",
     "ResolucionDian",

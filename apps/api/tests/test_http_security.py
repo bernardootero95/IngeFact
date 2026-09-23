@@ -22,6 +22,7 @@ from src.infrastructure.db.models import (
     Empresa,
     Factura,
     FacturaRecibida,
+    Nomina,
     Producto,
     Proveedor,
     UsuarioAdmin,
@@ -130,6 +131,33 @@ def empleado_de_empresa_a(db_session, empresa_a):
     db_session.refresh(empleado)
 
     return empleado
+
+
+@pytest.fixture
+def nomina_de_empresa_a(db_session, empresa_a, empleado_de_empresa_a):
+    empresa, _cliente, _producto, _factura = empresa_a
+
+    nomina = Nomina(
+        empresa_id=empresa.id,
+        empleado_id=empleado_de_empresa_a.id,
+        estado="borrador",
+        periodo_nomina="5",
+        fecha_liquidacion_inicio=date.today(),
+        fecha_liquidacion_fin=date.today(),
+        fecha_pago=[date.today().isoformat()],
+        forma_pago="1",
+        metodo_pago="10",
+        devengados={"Basico": {"DiasTrabajados": 30, "SueldoTrabajado": 2000000}},
+        deducciones={"Salud": {"Porcentaje": 4, "Deduccion": 80000}, "FondoPension": {"Porcentaje": 4, "Deduccion": 80000}},
+        devengados_total=2000000,
+        deducciones_total=160000,
+        comprobante_total=1840000,
+    )
+    db_session.add(nomina)
+    db_session.commit()
+    db_session.refresh(nomina)
+
+    return nomina
 
 
 @pytest.fixture
@@ -368,6 +396,29 @@ def test_tenant_can_read_its_own_empleado(api_client, empresa_a, empleado_de_emp
 
     assert response.status_code == 200
     assert response.json()["id"] == str(empleado.id)
+
+
+def test_tenant_cannot_read_another_tenants_nomina(api_client, empresa_a, empresa_b, nomina_de_empresa_a):
+    nomina_a = nomina_de_empresa_a
+    token_b = _login(api_client, "usuario-b@example.com", "ClaveTenantB123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/nomina/{nomina_a.id}", headers=_auth_headers(token_b)
+    )
+
+    assert response.status_code == 404
+
+
+def test_tenant_can_read_its_own_nomina(api_client, empresa_a, nomina_de_empresa_a):
+    nomina = nomina_de_empresa_a
+    token_a = _login(api_client, "usuario-a@example.com", "ClaveTenantA123!")
+
+    response = api_client.get(
+        f"/api/v1/tenant/nomina/{nomina.id}", headers=_auth_headers(token_a)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(nomina.id)
 
 
 def test_tenant_cannot_read_another_tenants_factura_recibida(
