@@ -16,6 +16,12 @@ VALID_TABLES = (
     "tipos_unidad",
     "conceptos_nota_credito",
     "conceptos_nota_debito",
+    "tipos_trabajador",
+    "subtipos_trabajador",
+    "tipos_contrato_nomina",
+    "periodos_nomina",
+    "tipos_hora_extra",
+    "tipos_incapacidad",
 )
 
 
@@ -26,6 +32,7 @@ class ReferenceRecordRequest(BaseModel):
     department_code: str | None = None
     department_value: str | None = None
     value_nade: str | None = None
+    percentage: str | None = None
 
     @field_validator("code", "value")
     @classmethod
@@ -51,6 +58,7 @@ class ReferenceRecordResponse(BaseModel):
     department_code: str | None = None
     department_value: str | None = None
     value_nade: str | None = None
+    percentage: str | None = None
     actualizado: datetime
 
     @staticmethod
@@ -63,5 +71,6 @@ class ReferenceRecordResponse(BaseModel):
             department_code=getattr(record, "department_code", None),
             department_value=getattr(record, "department_value", None),
             value_nade=getattr(record, "value_nade", None),
+            percentage=getattr(record, "percentage", None),
             actualizado=record.actualizado,
         )

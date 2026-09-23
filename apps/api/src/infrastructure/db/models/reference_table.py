@@ -50,6 +50,12 @@ REFERENCE_TABLE_NAMES = (
     "tipos_unidad",
     "conceptos_nota_credito",
     "conceptos_nota_debito",
+    "tipos_trabajador",
+    "subtipos_trabajador",
+    "tipos_contrato_nomina",
+    "periodos_nomina",
+    "tipos_hora_extra",
+    "tipos_incapacidad",
 )
 
 Pais = _make_reference_model("paises")
@@ -71,6 +77,17 @@ TipoIdentificacion = _make_reference_model("tipos_identificacion")
 TipoUnidad = _make_reference_model("tipos_unidad")
 ConceptoNotaCredito = _make_reference_model("conceptos_nota_credito", {"value_nade": Column(String(255))})
 ConceptoNotaDebito = _make_reference_model("conceptos_nota_debito", {"value_nade": Column(String(255))})
+TipoTrabajador = _make_reference_model("tipos_trabajador")
+SubtipoTrabajador = _make_reference_model("subtipos_trabajador")
+TipoContratoNomina = _make_reference_model("tipos_contrato_nomina")
+PeriodoNomina = _make_reference_model("periodos_nomina")
+# "percentage" es el porcentaje DIAN fijo de cada tipo de hora extra (ej. Hora
+# Extra Diurna = 25.00) -- confirmado contra el sandbox real (Fase 5, ver
+# docs/alegra-investigacion.md): cada bloque Devengados.HEDs/HENs/etc del
+# payload de nomina exige un unico codigo fijo de esta tabla, no una eleccion
+# libre por linea.
+TipoHoraExtra = _make_reference_model("tipos_hora_extra", {"percentage": Column(String(10))})
+TipoIncapacidad = _make_reference_model("tipos_incapacidad")
 
 REFERENCE_TABLE_MODELS = {
     "paises": Pais,
@@ -86,4 +103,10 @@ REFERENCE_TABLE_MODELS = {
     "tipos_unidad": TipoUnidad,
     "conceptos_nota_credito": ConceptoNotaCredito,
     "conceptos_nota_debito": ConceptoNotaDebito,
+    "tipos_trabajador": TipoTrabajador,
+    "subtipos_trabajador": SubtipoTrabajador,
+    "tipos_contrato_nomina": TipoContratoNomina,
+    "periodos_nomina": PeriodoNomina,
+    "tipos_hora_extra": TipoHoraExtra,
+    "tipos_incapacidad": TipoIncapacidad,
 }
