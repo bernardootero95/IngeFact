@@ -10,6 +10,7 @@ import {
   actualizarBorradorFactura,
   enviarFactura,
 } from "@ingefact/core-api";
+import { fechaHoyColombia } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 import SeccionCliente from "../components/SeccionCliente";
 import SeccionLineas from "../components/SeccionLineas";
@@ -26,7 +27,7 @@ import {
 
 const FORMA_PAGO_CREDITO = "2";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = fechaHoyColombia;
 
 const DRAFT_KEY = "ingefact:invoice-form-draft";
 

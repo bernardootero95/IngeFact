@@ -14,6 +14,7 @@ from src.application.suscripcion_service import contar_documentos_usados, revisa
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.calculo_linea import base_gravable_iva, calcular_linea
+from src.core.tiempo import fecha_documento_colombia
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -522,7 +523,7 @@ def _enviar_correo_factura(
     pdf_bytes = generar_representacion_pdf(db, factura, firma_digital)
 
     empresa = db.get(Empresa, factura.empresa_id)
-    fecha_mostrar = factura.fecha_envio or datetime.combine(factura.fecha, datetime.min.time())
+    fecha_mostrar = fecha_documento_colombia(factura.fecha_envio, factura.fecha)
     subject, html = plantilla_factura_cliente(
         razon_social_emisor=empresa.razon_social,
         nombre_cliente=factura.cliente.nombre,

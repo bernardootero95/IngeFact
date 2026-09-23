@@ -14,6 +14,7 @@ from src.core.representacion_pdf_common import (
     agrupar_impuestos,
     cargar_catalogos_comunes,
     formatear_cop,
+    formatear_fecha_hora,
     monto_en_letras,
     nombre_catalogo,
     render_adquiriente_html,
@@ -66,9 +67,9 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
         </div>
         """
 
-    fecha_emision = factura.fecha_envio.strftime("%d/%m/%Y %H:%M:%S") if factura.fecha_envio else str(factura.fecha)
+    fecha_emision = formatear_fecha_hora(factura.fecha_envio) if factura.fecha_envio else str(factura.fecha)
     fecha_validacion_html = (
-        f'<p><strong>Fecha de Validacion:</strong> {factura.fecha_respuesta.strftime("%d/%m/%Y %H:%M:%S")}</p>'
+        f"<p><strong>Fecha de Validacion:</strong> {formatear_fecha_hora(factura.fecha_respuesta)}</p>"
         if factura.fecha_respuesta
         else ""
     )

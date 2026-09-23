@@ -1,9 +1,10 @@
-from datetime import date, datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.application.suscripcion_service import UMBRAL_ALERTA_CUOTA, contar_documentos_usados
+from src.core.tiempo import ZONA_HORARIA_COLOMBIA, hoy_colombia
 from src.infrastructure.db.models import DocumentoSoporte, Empresa, Factura, NotaCredito, NotaDebito, Suscripcion
 
 DIAS_ALERTA_VENCIMIENTO_PLAN = 30
@@ -51,9 +52,15 @@ class DashboardService:
         `estado != 'borrador'` (se intento enviar, sin importar si la DIAN
         lo acepto o rechazo) es la metrica de actividad de la plataforma,
         no de facturacion (para eso esta contar_documentos_usados, que solo
-        cuenta aceptados y no incluye Documento Soporte)."""
-        ahora = datetime.now(timezone.utc)
-        inicio_mes = datetime(ahora.year, ahora.month, 1, tzinfo=timezone.utc)
+        cuenta aceptados y no incluye Documento Soporte).
+
+        "Este mes" es el mes calendario en hora de Colombia, no la del
+        servidor (en produccion el contenedor corre en UTC) -- el limite
+        del 1ro de mes se calcula en America/Bogota y luego se compara tal
+        cual contra `fecha_envio` (datetime aware, Python normaliza la
+        comparacion entre zonas correctamente)."""
+        ahora_co = datetime.now(ZONA_HORARIA_COLOMBIA)
+        inicio_mes = datetime(ahora_co.year, ahora_co.month, 1, tzinfo=ZONA_HORARIA_COLOMBIA)
 
         total = 0
         for modelo in DOCUMENTOS_EMITIDOS:
@@ -71,8 +78,9 @@ class DashboardService:
         Resolucion DIAN) y cupo de documentos (90%, mismo umbral que
         revisar_alerta_cuota_por_empresa usa para avisarle por correo al
         tenant -- se reutiliza para que el admin vea la misma senal antes
-        de que el cliente la reciba)."""
-        hoy = date.today()
+        de que el cliente la reciba). "Hoy" es el dia calendario en
+        Colombia, no el del servidor -- ver hoy_colombia()."""
+        hoy = hoy_colombia()
         filas = self.db.execute(
             select(Suscripcion, Empresa)
             .join(Empresa, Empresa.id == Suscripcion.empresa_id)

@@ -1,6 +1,8 @@
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 from src.core.representacion_pdf_common import (
+    formatear_fecha_hora,
     nombre_regimen_fiscal,
     nombre_responsabilidad_fiscal,
     render_adquiriente_html,
@@ -29,6 +31,26 @@ def _catalogos(**overrides):
     }
     base.update(overrides)
     return base
+
+
+def test_formatear_fecha_hora_convierte_utc_a_colombia():
+    """Caso real (comparado contra la representacion grafica oficial de la
+    DIAN para el mismo documento): fecha_envio se guarda en UTC, pero la
+    hora que debe verse en el PDF es la de Colombia (UTC-5) -- sin
+    convertir, 22/09/2026 20:38:44 UTC se mostraba tal cual en vez de
+    22/09/2026 15:38:44."""
+    dt_utc = datetime(2026, 9, 22, 20, 38, 44, tzinfo=timezone.utc)
+    assert formatear_fecha_hora(dt_utc) == "22/09/2026 15:38:44"
+
+
+def test_formatear_fecha_hora_puede_cambiar_el_dia_calendario():
+    # 02:15 UTC del dia 1 == 21:15 del dia anterior en Colombia (UTC-5).
+    dt_utc = datetime(2026, 9, 1, 2, 15, 0, tzinfo=timezone.utc)
+    assert formatear_fecha_hora(dt_utc) == "31/08/2026 21:15:00"
+
+
+def test_formatear_fecha_hora_none_da_guion():
+    assert formatear_fecha_hora(None) == "-"
 
 
 def test_nombre_responsabilidad_fiscal_oculta_el_generico_no_aplica():

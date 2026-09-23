@@ -11,6 +11,7 @@ from src.core.representacion_pdf_common import (
     agrupar_impuestos,
     cargar_catalogos_comunes,
     formatear_cop,
+    formatear_fecha_hora,
     monto_en_letras,
     nombre_catalogo,
     render_adquiriente_html,
@@ -52,9 +53,9 @@ def generar_representacion_pdf_nota_credito(db: Session, nota: NotaCredito, firm
         </div>
         """
 
-    fecha_emision = nota.fecha_envio.strftime("%d/%m/%Y %H:%M:%S") if nota.fecha_envio else str(nota.fecha)
+    fecha_emision = formatear_fecha_hora(nota.fecha_envio) if nota.fecha_envio else str(nota.fecha)
     fecha_validacion_html = (
-        f'<p><strong>Fecha de Validacion:</strong> {nota.fecha_respuesta.strftime("%d/%m/%Y %H:%M:%S")}</p>'
+        f"<p><strong>Fecha de Validacion:</strong> {formatear_fecha_hora(nota.fecha_respuesta)}</p>"
         if nota.fecha_respuesta
         else ""
     )

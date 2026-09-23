@@ -10,6 +10,7 @@ import {
   enviarDocumentoSoporte,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
+import { fechaHoyColombia } from "@ingefact/utils";
 import { SearchableSelect, Button, PlusIcon, FormSkeleton } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDocumentoSoporte from "../components/SeccionLineasDocumentoSoporte";
@@ -17,7 +18,7 @@ import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSopor
 import { validateFormaPago, validateMetodoPago } from "../components/SeccionPagoDocumentoSoporte.validation";
 import { validateProveedor, validateFecha, validateLineas, calcularTotales } from "./SupportDocumentFormPage.validation";
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = fechaHoyColombia;
 
 const DRAFT_KEY = "ingefact:support-document-form-draft";
 

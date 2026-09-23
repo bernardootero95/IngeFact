@@ -12,6 +12,7 @@ from src.application.resolucion_documento_soporte_service import ResolucionDocum
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
+from src.core.tiempo import fecha_documento_colombia
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -492,7 +493,7 @@ def _enviar_correo_documento_soporte(
     pdf_bytes = generar_representacion_pdf_documento_soporte(db, documento, firma_digital)
 
     empresa = db.get(Empresa, documento.empresa_id)
-    fecha_mostrar = documento.fecha_envio or datetime.combine(documento.fecha, datetime.min.time())
+    fecha_mostrar = fecha_documento_colombia(documento.fecha_envio, documento.fecha)
     subject, html = plantilla_documento_soporte_proveedor(
         razon_social_adquiriente=empresa.razon_social,
         nombre_proveedor=documento.proveedor.nombre,

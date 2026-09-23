@@ -3,7 +3,6 @@
 errores del reenvio manual y el correo de las notas."""
 
 import base64
-from datetime import datetime
 from typing import Callable
 
 from fastapi import HTTPException, status
@@ -12,6 +11,7 @@ from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import QR_CONTENT_ID, plantilla_nota_cliente
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import formatear_cop
+from src.core.tiempo import fecha_documento_colombia
 from src.infrastructure.db.models import Empresa
 
 
@@ -67,7 +67,7 @@ def enviar_nota_por_correo(
     pdf_bytes = servicio.generar_pdf_representacion(nota.empresa_id, nota.id)
 
     empresa = servicio.db.get(Empresa, nota.empresa_id)
-    fecha_mostrar = nota.fecha_envio or datetime.combine(nota.fecha, datetime.min.time())
+    fecha_mostrar = fecha_documento_colombia(nota.fecha_envio, nota.fecha)
     subject, html = plantilla_nota_cliente(
         tipo=tipo,
         razon_social_emisor=empresa.razon_social,
