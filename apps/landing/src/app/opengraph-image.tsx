@@ -43,7 +43,7 @@ export default async function OpengraphImage() {
             color: "#EAF5E9",
           }}
         >
-          Facturación electrónica DIAN Colombia
+          Facturación, nómina y documento soporte DIAN
         </div>
       </div>
     ),

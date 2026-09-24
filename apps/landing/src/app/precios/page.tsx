@@ -6,6 +6,8 @@ import { FaqList } from "@/components/ui/FaqList";
 import { PricingConditions } from "@/components/ui/PricingConditions";
 import { PRICING_PACKAGES } from "@/data/pricing";
 import { PRICING_FAQ } from "@/data/faq";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqJsonLd, softwareJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Precios",
@@ -17,6 +19,8 @@ export const metadata: Metadata = {
 export default function PreciosPage() {
   return (
     <SiteLayout active="precios">
+      <JsonLd data={softwareJsonLd()} />
+      <JsonLd data={faqJsonLd(PRICING_FAQ)} />
       <section className="bg-neutralCustom-50 px-6 py-16 text-center md:px-16">
         <h1 className="mb-3.5 text-[32px] font-extrabold text-neutralCustom-800 md:text-[38px]">
           Elige cuántos documentos necesitas

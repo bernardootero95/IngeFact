@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { SiteLayout } from "@/components/layout/SiteLayout";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { ALL_GUIDES, findGuideBySlug } from "@/data/guides";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { breadcrumbJsonLd } from "@/lib/seo";
 
 export function generateStaticParams() {
   return ALL_GUIDES.map((guide) => ({ slug: guide.slug }));
@@ -35,6 +37,12 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <SiteLayout active="instructivos">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Instructivos", path: "/instructivos" },
+          { name: guide.title, path: `/instructivos/${slug}` },
+        ])}
+      />
       <section className="bg-neutralCustom-50 px-6 py-14 md:px-16">
         <div className="mx-auto max-w-[720px]">
           <nav aria-label="Ruta de navegación" className="mb-6 flex flex-wrap items-center gap-1.5 text-[13px] text-neutralCustom-500">

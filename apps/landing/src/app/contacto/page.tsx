@@ -7,6 +7,8 @@ import { NewTabHint } from "@/components/ui/NewTabHint";
 import { WHATSAPP_DISPLAY, buildWhatsAppLink } from "@/lib/whatsapp";
 import { BUSINESS } from "@/data/business";
 import { CONTACT_FAQ } from "@/data/faq";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Contacto",
@@ -17,6 +19,7 @@ export const metadata: Metadata = {
 export default function ContactoPage() {
   return (
     <SiteLayout active="contacto">
+      <JsonLd data={faqJsonLd(CONTACT_FAQ)} />
       <section className="bg-neutralCustom-50 px-6 py-16 text-center md:px-16">
         <h1 className="mb-3.5 text-[32px] font-extrabold text-neutralCustom-800 md:text-[38px]">Hablemos</h1>
         <p className="mx-auto max-w-[520px] text-base text-neutralCustom-500">

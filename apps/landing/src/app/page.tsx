@@ -11,9 +11,13 @@ import { HOME_FEATURES } from "@/data/features";
 import { PRICING_HIGHLIGHTS } from "@/data/pricing";
 import { BUSINESS } from "@/data/business";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { softwareJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Facturación, nómina electrónica y documento soporte DIAN",
+  // absolute: la plantilla "%s | IngeFact" no aplica a la página raíz, así que
+  // la marca va escrita aquí.
+  title: { absolute: "IngeFact: facturación electrónica, nómina y documento soporte DIAN" },
   description:
     "Emite facturas, notas, nómina electrónica y documento soporte, y acepta las facturas que recibes (RADIAN), desde un solo lugar.",
   alternates: { canonical: "/" },
@@ -22,6 +26,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <SiteLayout active="inicio">
+      <JsonLd data={softwareJsonLd()} />
       <section className="flex flex-col items-center gap-12 bg-neutralCustom-50 px-6 py-16 md:flex-row md:justify-between md:px-16 md:py-20">
         <div className="max-w-[560px]">
           <span className="mb-5 inline-block rounded-full bg-brand-50 px-3.5 py-1.5 text-[13px] font-bold text-brand-600">
