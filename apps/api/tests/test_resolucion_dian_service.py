@@ -166,7 +166,8 @@ def test_validar_ante_alegra_error_guarda_mensaje_mapeado(db_session):
     resolucion = service.validar_ante_alegra(empresa.id)
 
     assert resolucion.estado_validacion == "error"
-    assert "produccion" in resolucion.mensaje_validacion.lower()
+    assert "producción" in resolucion.mensaje_validacion.lower()
+    assert "alegra" not in resolucion.mensaje_validacion.lower()
 
 
 def _resolucion_alegra(**overrides) -> dict:

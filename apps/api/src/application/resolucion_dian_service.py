@@ -128,7 +128,7 @@ class ResolucionDianService:
         if not resoluciones:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
-                "Alegra no tiene ninguna resolucion DIAN registrada todavia para esta empresa.",
+                "No encontramos resoluciones DIAN registradas para tu empresa. Revisa que la hayas tramitado ante la DIAN.",
             )
 
         return ListaResolucionesAlegraResponse(

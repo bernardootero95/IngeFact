@@ -97,10 +97,10 @@ export default function Dashboard() {
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg p-6 shadow-sm flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-neutralCustom-500">
-                      Conexión con Alegra
+                      Facturación electrónica
                     </p>
                     <p className="text-base font-medium text-neutralCustom-800 mt-1">
-                      {conectadoAlegra ? "Conectada" : "Sin conectar"}
+                      {conectadoAlegra ? "Habilitada" : "Pendiente de habilitar"}
                     </p>
                   </div>
                   <span

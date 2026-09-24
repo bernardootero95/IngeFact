@@ -268,8 +268,8 @@ export default function ResolutionPanel() {
             </h3>
             <p className="text-xs text-neutralCustom-500 mb-6">
               Estos valores los emite la DIAN. Guárdalos tal como
-              aparecen en tu resolución, o cárgalos automáticamente
-              desde Alegra si ya están registrados ahí.
+              aparecen en tu resolución, o impórtalos automáticamente
+              si ya están registrados ante la DIAN.
             </p>
 
             {saveError && (
@@ -282,7 +282,7 @@ export default function ResolutionPanel() {
               <div className="mb-4 border border-neutralCustom-200 rounded-brand-md p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium text-neutralCustom-800">
-                    Alegra tiene {opcionesAlegra.length} resoluciones
+                    Encontramos {opcionesAlegra.length} resoluciones
                     registradas para tu NIT. Elige cuál importar:
                   </p>
                   <button
@@ -322,7 +322,7 @@ export default function ResolutionPanel() {
             )}
             {resolucion?.estado_validacion === "validada" && (
               <div className="mb-4 p-3 bg-brand-50 border border-brand-400 text-brand-700 text-sm rounded-brand-md">
-                Resolución validada correctamente ante Alegra.
+                Resolución validada correctamente.
               </div>
             )}
 
@@ -516,8 +516,8 @@ export default function ResolutionPanel() {
                   <p className="mt-1 text-sm text-neutralCustom-500">
                     Déjalo vacío para iniciar en el rango mínimo. Solo
                     cámbialo si esta numeración ya tiene documentos
-                    emitidos fuera de IngeFact (por ejemplo, al
-                    cargarla desde Alegra).
+                    emitidos fuera de IngeFact (por ejemplo, con otro
+                    software de facturación).
                   </p>
                 )}
               </div>
@@ -527,7 +527,7 @@ export default function ResolutionPanel() {
               <Button
                 onClick={handleCargarAlegra}
                 disabled={isLoadingAlegra || isValidating || isSaving}
-                title="Cargar la resolución desde Alegra"
+                title="Importar la resolución registrada ante la DIAN"
                 loading={isLoadingAlegra}
               >
                 Importar
@@ -535,7 +535,7 @@ export default function ResolutionPanel() {
               <Button
                 onClick={handleValidar}
                 disabled={!resolucion || isValidating || isSaving}
-                title="Validar ante Alegra"
+                title="Validar la resolución"
                 loading={isValidating}
               >
                 Validar

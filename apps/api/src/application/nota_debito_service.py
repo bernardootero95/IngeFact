@@ -72,14 +72,14 @@ class NotaDebitoService:
     def obtener_url_xml(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> str:
         nota = self.obtener(empresa_id, nota_id)
         if not nota.alegra_debit_note_id:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta nota debito todavia no fue enviada a Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Esta nota débito todavía no fue enviada a la DIAN.")
         try:
             respuesta = self._alegra_client.get_debit_note(nota.alegra_debit_note_id)
         except AlegraApiError as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body))
         url = (respuesta.get("files") or {}).get("xml")
         if not url:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Alegra no tiene un XML disponible para esta nota.")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "El XML de este documento todavía no está disponible. Intenta de nuevo en unos minutos.")
         return url
 
     def obtener_firma_digital(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> str:
@@ -298,7 +298,7 @@ class NotaDebitoService:
         factura = self._obtener_factura_aceptada(empresa_id, nota.factura_id)
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
 
         # Reenvio de una nota rechazada: reutiliza el numero ya asignado (ver
         # actualizar_borrador) en vez de pedir uno nuevo.

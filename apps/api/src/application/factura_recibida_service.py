@@ -143,7 +143,7 @@ class FacturaRecibidaService:
         factura_recibida = self.obtener(empresa_id, factura_recibida_id)
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
 
         numero = self._generar_numero_evento()
         payload = self._construir_payload_evento(empresa, factura_recibida, numero, data)
@@ -155,7 +155,7 @@ class FacturaRecibidaService:
         except AlegraTransientError as exc:
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
-                "Alegra no esta respondiendo en este momento. Intenta de nuevo en unos minutos.",
+                "El servicio de facturación electrónica no está respondiendo en este momento. Intenta de nuevo en unos minutos.",
             ) from exc
 
         event = respuesta.get("event") or {}
