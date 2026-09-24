@@ -237,6 +237,7 @@ def test_incrementar_consecutivo_se_agota_en_el_rango_maximo(db_session):
     service = ResolucionDianService(db_session)
     service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=2))
 
+    assert service.incrementar_consecutivo(empresa.id) == 1
     assert service.incrementar_consecutivo(empresa.id) == 2
 
     with pytest.raises(HTTPException) as exc_info:
@@ -244,11 +245,23 @@ def test_incrementar_consecutivo_se_agota_en_el_rango_maximo(db_session):
     assert exc_info.value.status_code == 409
 
 
+def test_incrementar_consecutivo_devuelve_rango_minimo_la_primera_vez(db_session):
+    """Bug real reportado 2026-09-24: el primer documento emitido se saltaba
+    rango_minimo porque incrementar_consecutivo devolvia el valor YA
+    incrementado (rango_minimo + 1) en vez del numero recien asignado."""
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(db_session)
+    service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
+
+    assert service.incrementar_consecutivo(empresa.id) == 100
+    assert service.incrementar_consecutivo(empresa.id) == 101
+
+
 def test_incrementar_consecutivo_es_seguro_bajo_concurrencia(db_session):
     """Blindaje contra condiciones de carrera: N hilos con sesiones de BD
     independientes incrementando la misma resolucion a la vez no deben
-    repetir ni saltarse ningun numero -- el resultado final debe ser
-    exactamente rango_minimo + N."""
+    repetir ni saltarse ningun numero -- los N numeros asignados deben ser
+    exactamente rango_minimo..rango_minimo+N-1 (sin huecos ni repetidos)."""
     empresa = _crear_empresa(db_session)
     rango_minimo = 1
     n_hilos = 20
@@ -277,7 +290,7 @@ def test_incrementar_consecutivo_es_seguro_bajo_concurrencia(db_session):
     for h in hilos:
         h.join()
 
-    assert sorted(resultados) == list(range(rango_minimo + 1, rango_minimo + n_hilos + 1))
+    assert sorted(resultados) == list(range(rango_minimo, rango_minimo + n_hilos))
 
     final = db_session.get(ResolucionDian, ResolucionDianService(db_session).obtener(empresa.id).id)
     assert final.consecutivo_actual == rango_minimo + n_hilos
@@ -287,7 +300,7 @@ def test_revertir_consecutivo_deshace_el_incremento(db_session):
     empresa = _crear_empresa(db_session)
     service = ResolucionDianService(db_session)
     service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
-    consecutivo = service.incrementar_consecutivo(empresa.id)  # 101
+    consecutivo = service.incrementar_consecutivo(empresa.id)  # usa el 100
 
     assert service.revertir_consecutivo(empresa.id, consecutivo) is True
 
@@ -300,10 +313,10 @@ def test_revertir_consecutivo_no_aplica_si_otro_envio_ya_avanzo_el_contador(db_s
     empresa = _crear_empresa(db_session)
     service = ResolucionDianService(db_session)
     service.guardar(empresa.id, _payload(rango_minimo=100, rango_maximo=1000))
-    primero = service.incrementar_consecutivo(empresa.id)  # 101
-    service.incrementar_consecutivo(empresa.id)  # 102 -- otro envio concurrente
+    primero = service.incrementar_consecutivo(empresa.id)  # usa el 100
+    service.incrementar_consecutivo(empresa.id)  # usa el 101 -- otro envio concurrente
 
-    # Revertir el 101 pisaria el 102 ya emitido: no se toca nada (el 101 queda "quemado").
+    # Revertir el 100 pisaria el 101 ya emitido: no se toca nada (el 100 queda "quemado").
     assert service.revertir_consecutivo(empresa.id, primero) is False
 
     resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
@@ -319,7 +332,8 @@ def test_guardar_permite_cargar_resolucion_nueva_cuando_la_vigente_se_agoto(db_s
     empresa = _crear_empresa(db_session)
     service = ResolucionDianService(db_session)
     service.guardar(empresa.id, _payload(rango_minimo=1, rango_maximo=2))
-    service.incrementar_consecutivo(empresa.id)  # consecutivo_actual llega a 2 == rango_maximo: agotada
+    service.incrementar_consecutivo(empresa.id)  # usa el 1
+    service.incrementar_consecutivo(empresa.id)  # usa el 2 == rango_maximo: agotada
 
     renovada = service.guardar(
         empresa.id,

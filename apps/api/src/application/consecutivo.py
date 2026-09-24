@@ -26,14 +26,22 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 
-def revertir_consecutivo(db: Session, tabla: Any, consecutivo: int, *condiciones: Any, empresa_id: uuid.UUID) -> bool:
+def revertir_consecutivo(
+    db: Session, tabla: Any, consecutivo: int, *condiciones: Any, empresa_id: uuid.UUID, offset: int = 0
+) -> bool:
     """Deshace un incremento de `tabla.consecutivo_actual` con un UPDATE atomico.
 
-    Solo actua si el contador sigue siendo exactamente `consecutivo` (el valor que
-    este mismo envio recibio): si otro envio concurrente ya lo avanzo, el WHERE no
-    coincide y no se toca nada, porque revertir reutilizaria un numero que ese otro
-    envio ya emitio. En ese caso el numero queda consumido (mismo criterio que un
-    timeout).
+    Solo actua si el contador sigue siendo exactamente el que dejo ese mismo envio:
+    si otro envio concurrente ya lo avanzo, el WHERE no coincide y no se toca nada,
+    porque revertir reutilizaria un numero que ese otro envio ya emitio. En ese caso
+    el numero queda consumido (mismo criterio que un timeout).
+
+    `offset` es la diferencia entre el valor de la columna en este momento y
+    `consecutivo` (el valor que devolvio incrementar_consecutivo). 0 por defecto:
+    la columna guarda directamente el ultimo numero usado (ConsecutivoNota/
+    ConsecutivoNomina). ResolucionDianService/ResolucionDocumentoSoporteService
+    usan offset=1 porque ahi la columna guarda el PROXIMO numero a usar, no el
+    ultimo usado (ver el docstring de ResolucionDianService.incrementar_consecutivo).
 
     Es "mejor esfuerzo": si la reversion falla no debe tapar el error original de
     Alegra que el llamador esta a punto de devolver. Retorna True si revirtio.
@@ -41,8 +49,8 @@ def revertir_consecutivo(db: Session, tabla: Any, consecutivo: int, *condiciones
     try:
         resultado = db.execute(
             update(tabla)
-            .where(*condiciones, tabla.consecutivo_actual == consecutivo)
-            .values(consecutivo_actual=consecutivo - 1)
+            .where(*condiciones, tabla.consecutivo_actual == consecutivo + offset)
+            .values(consecutivo_actual=consecutivo - 1 + offset)
         )
         db.commit()
     except SQLAlchemyError:

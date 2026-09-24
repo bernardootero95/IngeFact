@@ -137,7 +137,7 @@ export default function SupportDocumentResolutionPanel() {
               </div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="opacity-90">
-                  Consecutivo actual: {resolucion.prefijo}-{resolucion.consecutivo_actual}
+                  Próximo número: {resolucion.prefijo}-{resolucion.consecutivo_actual}
                 </span>
                 <span className="opacity-90">Vence: {resolucion.fecha_fin}</span>
               </div>
