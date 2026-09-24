@@ -5,6 +5,7 @@ es el ADQUIRIENTE (quien emite el documento) y el Proveedor es el vendedor."""
 from sqlalchemy.orm import Session
 
 from src.application.reference_table_service import ReferenceTableService
+from src.core.legal import PIE_SOFTWARE_DOCUMENTO
 from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
@@ -165,7 +166,7 @@ def generar_representacion_pdf_documento_soporte(
       {firma_html}
 
       <div class="pie">
-        <p>Documento generado por IngeFact -- XML generado y firmado por el proveedor tecnologico: Alegra.</p>
+        <p>{PIE_SOFTWARE_DOCUMENTO}</p>
       </div>
     </body>
     </html>

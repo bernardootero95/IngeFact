@@ -11,6 +11,7 @@ import {
 } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import { Button, ArrowLeftIcon } from "@ingefact/ui";
+import { PIE_SOFTWARE_DOCUMENTO, PIE_BORRADOR } from "../../../utils/pieLegalDocumento";
 
 const MONEDA = "COP";
 
@@ -328,8 +329,8 @@ export default function InvoiceRepresentationPage() {
           )}
           <p>
             {factura.cufe
-              ? "Documento generado por IngeFact — XML generado y firmado por el proveedor tecnológico: Alegra."
-              : "Documento generado por IngeFact — vista previa de borrador, aún no enviado al proveedor tecnológico."}
+              ? PIE_SOFTWARE_DOCUMENTO
+              : PIE_BORRADOR}
           </p>
         </div>
         </div>
