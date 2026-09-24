@@ -6,10 +6,7 @@ import { WHATSAPP_DISPLAY } from "@/lib/whatsapp";
  * reembolsos). El Estatuto del Consumidor (Ley 1480 de 2011, art. 50) y
  * la Ley 1581 de 2012 exigen publicar la identidad del responsable.
  *
- * Titular, nombre comercial, NIT, dirección y correo confirmados por el
- * usuario (2026-09-24).
- * TODO: el horario (entre corchetes) aún NO está confirmado; reemplazarlo
- * antes de publicar.
+ * Todos los datos confirmados por el usuario (2026-09-24).
  */
 export const BUSINESS = {
   marca: "IngeFact",
@@ -26,7 +23,8 @@ export const BUSINESS = {
   // Mismo buzón para PQR y para solicitudes de datos personales (Ley 1581).
   correoDatosPersonales: "contacto@tecnoingenieriabo.com",
   telefono: WHATSAPP_DISPLAY,
-  horario: "[lunes a viernes, 8:00 a.m. – 6:00 p.m.]",
+  horario:
+    "lunes a viernes de 8:00 a.m. a 5:00 p.m. y sábados de 8:00 a.m. a 12:00 m. Domingos y festivos, solo soporte urgente",
   sitio: "https://ingefact.com",
   app: "https://app.ingefact.com",
   regimenIva: "No responsable de IVA",
