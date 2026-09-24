@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_dian_service import ResolucionDianService
-from src.application.suscripcion_service import contar_documentos_usados, revisar_alerta_cuota_por_empresa
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.calculo_linea import base_gravable_iva, calcular_linea
@@ -26,7 +26,7 @@ from src.core.factura_pdf import generar_representacion_pdf
 from src.core.nit import dv_para_customer_alegra
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
-from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto, Suscripcion
+from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto
 
 logger = logging.getLogger(__name__)
 
@@ -336,13 +336,7 @@ class FacturaService:
         if resolucion.fecha_fin < date_cls.today():
             raise HTTPException(status.HTTP_409_CONFLICT, "La Resolucion DIAN configurada ya esta vencida.")
 
-        suscripcion = self.db.execute(
-            select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
-        ).scalar_one_or_none()
-        if suscripcion is None:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa no tiene una suscripcion activa.")
-        if contar_documentos_usados(self.db, suscripcion) >= suscripcion.max_documentos:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
+        verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una factura rechazada: reutiliza el numero ya asignado (ver
         # actualizar_borrador) en vez de pedir uno nuevo.

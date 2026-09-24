@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.consecutivo import revertir_consecutivo
+from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -189,6 +190,7 @@ class NominaService:
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
+        verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una nomina rechazada: reutiliza el numero ya asignado
         # (ver actualizar_borrador) en vez de pedir uno nuevo.
@@ -213,6 +215,8 @@ class NominaService:
         self.db.add(nomina)
         self.db.commit()
         self.db.refresh(nomina)
+        if nomina.estado == "aceptada":
+            revisar_alerta_cuota_sin_romper(self.db, empresa_id)
         return self.obtener(empresa_id, nomina.id)
 
     def anular(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> Nomina:

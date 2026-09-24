@@ -6,10 +6,12 @@ from fastapi import HTTPException
 from src.application.nomina_service import NominaService
 from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.nomina import GuardarNominaRequest
-from src.infrastructure.db.models import ConsecutivoNomina, Empleado, Empresa
+from src.infrastructure.db.models import ConsecutivoNomina, Empleado, Empresa, Suscripcion
 
 
-def _crear_empresa(db_session, **overrides) -> Empresa:
+def _crear_empresa(db_session, *, max_documentos=100, **overrides) -> Empresa:
+    """Con suscripcion activa por defecto: enviar() exige cupo disponible
+    (verificar_cupo_disponible). max_documentos=0 simula el cupo agotado."""
     data = {
         "razon_social": "Empresa Demo SAS",
         "numero_identificacion": "900618467",
@@ -25,6 +27,16 @@ def _crear_empresa(db_session, **overrides) -> Empresa:
     db_session.add(empresa)
     db_session.commit()
     db_session.refresh(empresa)
+    db_session.add(
+        Suscripcion(
+            empresa_id=empresa.id,
+            max_documentos=max_documentos,
+            fecha_inicio=date(2000, 1, 1),
+            fecha_fin=date(2100, 12, 31),
+            estado="activa",
+        )
+    )
+    db_session.commit()
     return empresa
 
 
@@ -200,6 +212,20 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
     assert enviada.numero_completo == "NE1"
     assert enviada.cune == "cune-1"
     assert enviada.firma_digital == "firma-1"
+
+
+def test_enviar_con_cupo_agotado_falla_409_sin_gastar_numeracion(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=0)
+    empleado = _crear_empleado(db_session, empresa.id)
+    service = NominaService(db_session, alegra_client=_FakeAlegraClient())
+    nomina = service.crear_borrador(empresa.id, _payload(empleado.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, nomina.id)
+
+    assert exc_info.value.status_code == 409
+    assert "cupo" in exc_info.value.detail
+    assert db_session.query(ConsecutivoNomina).count() == 0
 
 
 def test_enviar_rechazada_por_dian_guarda_razon(db_session):

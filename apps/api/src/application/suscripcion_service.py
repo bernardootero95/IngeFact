@@ -1,13 +1,23 @@
 import logging
 from datetime import datetime, time
 
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_alerta_cuota
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA
-from src.infrastructure.db.models import Empresa, Factura, NotaCredito, NotaDebito, Suscripcion, UsuarioEmpresa
+from src.infrastructure.db.models import (
+    DocumentoSoporte,
+    Empresa,
+    Factura,
+    Nomina,
+    NotaCredito,
+    NotaDebito,
+    Suscripcion,
+    UsuarioEmpresa,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +25,11 @@ UMBRAL_ALERTA_CUOTA = 0.9
 
 
 def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
-    """Cuenta Facturas + Notas Credito + Notas Debito aceptadas por la DIAN
-    dentro del periodo de la suscripcion -- reemplaza la lectura de
+    """Cuenta Facturas + Notas Credito + Notas Debito + Documentos Soporte +
+    comprobantes de Nomina aceptados por la DIAN dentro del periodo de la
+    suscripcion (todo documento electronico consume cupo, decision de
+    negocio del 2026-09-24 -- la landing lo publica asi; los eventos del
+    receptor/RADIAN no son documentos y no cuentan) -- reemplaza la lectura de
     Suscripcion.documentos_usados, que nunca se incrementa en ningun lado
     del codigo (columna legacy, ver el modelo). Una Factura 'anulada' sigue
     contando: el documento si se emitio y consumio un cupo, la Nota Credito
@@ -43,13 +56,21 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
         )
     ).scalar_one()
 
-    for modelo in (NotaCredito, NotaDebito):
+    # Nomina anulada cuenta igual que Factura anulada (el comprobante si se
+    # emitio). Documento Soporte usa el estado en masculino ("aceptado").
+    estados_por_modelo = (
+        (NotaCredito, ("aceptada",)),
+        (NotaDebito, ("aceptada",)),
+        (DocumentoSoporte, ("aceptado",)),
+        (Nomina, ("aceptada", "anulada")),
+    )
+    for modelo, estados in estados_por_modelo:
         total += db.execute(
             select(func.count())
             .select_from(modelo)
             .where(
                 modelo.empresa_id == suscripcion.empresa_id,
-                modelo.estado == "aceptada",
+                modelo.estado.in_(estados),
                 modelo.fecha_envio >= inicio,
                 modelo.fecha_envio <= fin,
             )
@@ -58,13 +79,28 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
     return total
 
 
+def verificar_cupo_disponible(db: Session, empresa_id) -> None:
+    """Bloquea la emision de un documento nuevo (Factura, Documento Soporte,
+    Nomina) si la empresa no tiene suscripcion activa o ya agoto su cupo.
+    Las Notas Credito/Debito no pasan por aca a proposito: corrigen un
+    documento ya emitido y no deben quedar bloqueadas por falta de cupo."""
+    suscripcion = db.execute(
+        select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
+    ).scalar_one_or_none()
+    if suscripcion is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa no tiene una suscripcion activa.")
+    if contar_documentos_usados(db, suscripcion) >= suscripcion.max_documentos:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
+
+
 def revisar_alerta_cuota_por_empresa(
     db: Session, empresa_id, email_client: EmailClient | None = None
 ) -> None:
     """Best-effort: revisa si la suscripcion activa de la empresa cruzo el
     90% de su cupo y, si es la primera vez, avisa por correo. Se llama
     desde los mismos puntos que notifican la aceptacion de un documento
-    (Factura/NotaCredito/NotaDebito) -- nunca debe romper ese flujo."""
+    (Factura/NotaCredito/NotaDebito/DocumentoSoporte/Nomina) -- nunca debe
+    romper ese flujo."""
     suscripcion = db.execute(
         select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
     ).scalar_one_or_none()
@@ -95,3 +131,13 @@ def revisar_alerta_cuota_por_empresa(
     suscripcion.alerta_cuota_enviada = True
     db.add(suscripcion)
     db.commit()
+
+
+def revisar_alerta_cuota_sin_romper(db: Session, empresa_id) -> None:
+    """Igual que revisar_alerta_cuota_por_empresa pero tragando cualquier
+    error: el documento ya quedo aceptado ante la DIAN, un fallo al revisar
+    la cuota no debe convertirse en un error para el usuario."""
+    try:
+        revisar_alerta_cuota_por_empresa(db, empresa_id)
+    except Exception as exc:  # noqa: BLE001 -- best-effort, ver docstring.
+        logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", empresa_id, exc)

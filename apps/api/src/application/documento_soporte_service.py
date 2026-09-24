@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_documento_soporte_service import ResolucionDocumentoSoporteService
+from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
@@ -107,10 +108,8 @@ def _construir_supplier_alegra(proveedor: Proveedor) -> dict:
 class DocumentoSoporteService:
     """Documento Soporte de Adquisiciones -- envia a Alegra/DIAN mismo patron que
     FacturaService pero con su propia resolucion de numeracion
-    (ResolucionDocumentoSoporteService) y sin cupo de Suscripcion (esa
-    cuenta solo Facturas, ver contar_documentos_usados -- Documento Soporte
-    no consume el cupo del plan, decision explicita de no extender esa
-    logica sin que el usuario lo pida)."""
+    (ResolucionDocumentoSoporteService). Consume cupo del plan igual que una
+    Factura (ver contar_documentos_usados, decision de negocio 2026-09-24)."""
 
     def __init__(self, db: Session, alegra_client: AlegraClient | None = None):
         self.db = db
@@ -278,6 +277,7 @@ class DocumentoSoporteService:
             raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
 
         validar_proveedor_para_documento_soporte(documento.proveedor)
+        verificar_cupo_disponible(self.db, empresa_id)
 
         resolucion_service = ResolucionDocumentoSoporteService(self.db)
         resolucion = resolucion_service.obtener_o_404(empresa_id)
@@ -310,6 +310,8 @@ class DocumentoSoporteService:
 
         documento_actualizado = self.obtener(empresa_id, documento.id)
         notificar_documento_soporte_aceptado(self.db, documento_actualizado, self._alegra_client)
+        if documento_actualizado.estado == "aceptado":
+            revisar_alerta_cuota_sin_romper(self.db, empresa_id)
         return documento_actualizado
 
     def obtener_url_xml(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> str:
