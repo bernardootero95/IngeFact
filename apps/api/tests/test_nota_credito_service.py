@@ -674,7 +674,7 @@ def test_enviar_por_correo_manda_qr_pdf_y_xml_al_correo_pedido(db_session, monke
     assert len(enviados) == 1
     correo = enviados[0]
     assert correo["to"] == "otro@example.com"
-    assert nota.numero_completo in correo["subject"] and "credito" in correo["subject"]
+    assert nota.numero_completo in correo["subject"] and "crédito" in correo["subject"]
     assert "cude-1" in correo["html"]
     assert [a["filename"] for a in correo["attachments"]] == [
         f"{nota.numero_completo}.png",
