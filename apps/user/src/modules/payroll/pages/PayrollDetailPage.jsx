@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   getNomina,
   getEmpleado,
@@ -111,6 +111,7 @@ function ConceptosBloque({ titulo, bloque, total }) {
 export default function PayrollDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const location = useLocation();
 
   const [nomina, setNomina] = useState(null);
   const [empleadoCorreo, setEmpleadoCorreo] = useState("");
@@ -153,6 +154,14 @@ export default function PayrollDetailPage() {
   useEffect(() => {
     cargarDatos();
   }, [cargarDatos]);
+
+  useEffect(() => {
+    if (location.state?.enviarError) {
+      setToast({ message: location.state.enviarError, type: "error" });
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   const handleEliminar = async () => {
     setIsDeleting(true);

@@ -4,6 +4,7 @@ import {
   getNomina,
   crearBorradorNomina,
   actualizarBorradorNomina,
+  enviarNomina,
   listEmpleados,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
@@ -40,6 +41,7 @@ export default function PayrollFormPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingToDian, setIsSendingToDian] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
   const [empleados, setEmpleados] = useState([]);
@@ -425,10 +427,7 @@ export default function PayrollFormPage() {
     num(sueldoTrabajado) > 0 &&
     (!esConsignacionBancaria || (banco.trim() && tipoCuenta.trim() && numeroCuenta.trim()));
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!puedeGuardar) return;
-
+  const guardarBorrador = async () => {
     const payload = {
       empleado_id: empleadoId,
       periodo_nomina: periodoNomina,
@@ -448,20 +447,48 @@ export default function PayrollFormPage() {
       notas: notas.trim() || null,
     };
 
+    if (isEditing) {
+      await actualizarBorradorNomina(id, payload);
+      return id;
+    }
+    const creada = await crearBorradorNomina(payload);
+    return creada.id;
+  };
+
+  const handleGuardarBorrador = async (e) => {
+    e.preventDefault();
+    if (!puedeGuardar) return;
+
     setIsSaving(true);
     setSaveError(null);
     try {
-      if (isEditing) {
-        await actualizarBorradorNomina(id, payload);
-        navigate(`/payroll/${id}`);
-      } else {
-        const creada = await crearBorradorNomina(payload);
-        navigate(`/payroll/${creada.id}`);
-      }
+      const nominaId = await guardarBorrador();
+      navigate(`/payroll/${nominaId}`);
     } catch (error) {
       setSaveError(error.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleGuardarYEnviar = async () => {
+    if (!puedeGuardar) return;
+
+    setIsSendingToDian(true);
+    setSaveError(null);
+    try {
+      const nominaId = await guardarBorrador();
+      try {
+        await enviarNomina(nominaId);
+      } catch (error) {
+        navigate(`/payroll/${nominaId}`, { state: { enviarError: error.message } });
+        return;
+      }
+      navigate(`/payroll/${nominaId}`);
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setIsSendingToDian(false);
     }
   };
 
@@ -475,7 +502,7 @@ export default function PayrollFormPage() {
             <h2 className="text-lg font-medium text-neutralCustom-800">
               {isEditing ? "Editar Comprobante de Nómina" : "Nuevo Comprobante de Nómina"}
             </h2>
-            <p className="hidden sm:block text-xs text-neutralCustom-500">Borrador -- se envía a la DIAN desde el detalle.</p>
+            <p className="hidden sm:block text-xs text-neutralCustom-500">Guarda como borrador o envíalo directamente a la DIAN.</p>
           </div>
           <Button onClick={() => navigate("/payroll")} variant="ghost">
             Cancelar
@@ -489,7 +516,7 @@ export default function PayrollFormPage() {
             ) : loadError ? (
               <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">{loadError}</div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleGuardarBorrador} className="space-y-6">
                 {saveError && (
                   <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">{saveError}</div>
                 )}
@@ -801,11 +828,20 @@ export default function PayrollFormPage() {
                 </div>
 
                 <div className="flex justify-end gap-3 pb-8">
-                  <Button onClick={() => navigate("/payroll")} variant="ghost">
+                  <Button onClick={() => navigate("/payroll")} variant="ghost" disabled={isSaving || isSendingToDian}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={isSaving || !puedeGuardar} variant="primary" loading={isSaving}>
+                  <Button type="submit" disabled={isSaving || isSendingToDian || !puedeGuardar} loading={isSaving}>
                     Guardar Borrador
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleGuardarYEnviar}
+                    disabled={isSaving || isSendingToDian || !puedeGuardar}
+                    variant="primary"
+                    loading={isSendingToDian}
+                  >
+                    Enviar a DIAN
                   </Button>
                 </div>
               </form>
