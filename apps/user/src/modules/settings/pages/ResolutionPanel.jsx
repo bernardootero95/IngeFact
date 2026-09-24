@@ -238,7 +238,7 @@ export default function ResolutionPanel() {
               </div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="opacity-90">
-                  Consecutivo actual: {resolucion.prefijo}-
+                  Próximo número: {resolucion.prefijo}-
                   {resolucion.consecutivo_actual}
                 </span>
                 <span className="opacity-90">
@@ -558,7 +558,7 @@ export default function ResolutionPanel() {
               />
             </svg>
             <p className="text-xs text-neutralCustom-600 leading-relaxed">
-              El consecutivo interno
+              El próximo número
               {resolucion ? ` (${resolucion.consecutivo_actual})` : ""}{" "}
               lo calcula y controla IngeFact automáticamente al emitir
               cada factura. Puedes ajustarlo manualmente en el campo

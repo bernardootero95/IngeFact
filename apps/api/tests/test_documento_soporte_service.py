@@ -279,7 +279,7 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptado(db_session):
     enviado = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
 
     assert enviado.estado == "aceptado"
-    assert enviado.consecutivo == 2  # pre-incremento: consecutivo_actual arranca en rango_minimo=1
+    assert enviado.consecutivo == 1  # el primer numero asignado es rango_minimo (bug corregido 2026-09-24)
     assert enviado.numero_completo == "SEDS1"
     assert enviado.cuds == "cuds-1"
 
@@ -378,7 +378,7 @@ def test_rechazado_se_puede_corregir_y_reenviar(db_session):
     # El numero se conserva -- se reenviara con el mismo consecutivo (la DIAN
     # si vio el intento rechazado, pero Alegra permite reenviar el mismo
     # `number` mientras no quede ACCEPTED).
-    assert corregido.consecutivo == 2
+    assert corregido.consecutivo == 1
 
     fake._response = {
         "supportDocument": {"id": "ds-2", "cuds": "cuds-2", "fullNumber": "SEDS1", "legalStatus": "ACCEPTED"}
@@ -386,7 +386,7 @@ def test_rechazado_se_puede_corregir_y_reenviar(db_session):
     reenviado = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
     assert reenviado.estado == "aceptado"
     # Mismo consecutivo del intento rechazado -- no se pidio uno nuevo.
-    assert reenviado.consecutivo == 2
+    assert reenviado.consecutivo == 1
 
 
 _XML_CON_FIRMA = (
@@ -635,7 +635,7 @@ def test_enviar_tras_un_rechazo_4xx_de_alegra_reutiliza_el_mismo_numero(db_sessi
     fake._error = None
     fake._response = {"supportDocument": {"id": "ds-1", "fullNumber": "SEDS2", "legalStatus": "ACCEPTED"}}
     enviado = service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
-    assert enviado.consecutivo == 2
+    assert enviado.consecutivo == 1
 
 
 def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_session):

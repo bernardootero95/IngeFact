@@ -46,7 +46,11 @@ class ResolucionDocumentoSoporteService:
             agotada = False
         else:
             consecutivo_iniciado = resolucion.consecutivo_actual > resolucion.rango_minimo
-            agotada = resolucion.consecutivo_actual >= resolucion.rango_maximo
+            # consecutivo_actual es el PROXIMO numero a usar (ver
+            # incrementar_consecutivo) -- si es igual a rango_maximo todavia
+            # queda ese ultimo numero disponible, solo esta agotada cuando
+            # ya lo supera.
+            agotada = resolucion.consecutivo_actual > resolucion.rango_maximo
 
         cambia_rango = existia and data.rango_minimo != resolucion.rango_minimo
 
@@ -83,15 +87,16 @@ class ResolucionDocumentoSoporteService:
 
     def incrementar_consecutivo(self, empresa_id: uuid.UUID) -> int:
         """UPDATE atomico de una sola sentencia, mismo patron que
-        ResolucionDianService.incrementar_consecutivo."""
+        ResolucionDianService.incrementar_consecutivo -- ver ese docstring
+        para el porque de RETURNING (consecutivo_actual - 1) y WHERE <=."""
         resultado = self.db.execute(
             update(ResolucionDocumentoSoporte)
             .where(
                 ResolucionDocumentoSoporte.empresa_id == empresa_id,
-                ResolucionDocumentoSoporte.consecutivo_actual < ResolucionDocumentoSoporte.rango_maximo,
+                ResolucionDocumentoSoporte.consecutivo_actual <= ResolucionDocumentoSoporte.rango_maximo,
             )
             .values(consecutivo_actual=ResolucionDocumentoSoporte.consecutivo_actual + 1)
-            .returning(ResolucionDocumentoSoporte.consecutivo_actual)
+            .returning(ResolucionDocumentoSoporte.consecutivo_actual - 1)
         )
         fila = resultado.first()
         self.db.commit()
@@ -116,4 +121,5 @@ class ResolucionDocumentoSoporteService:
             consecutivo,
             ResolucionDocumentoSoporte.empresa_id == empresa_id,
             empresa_id=empresa_id,
+            offset=1,
         )

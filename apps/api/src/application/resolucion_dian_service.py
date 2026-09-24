@@ -66,7 +66,11 @@ class ResolucionDianService:
             agotada = False
         else:
             consecutivo_iniciado = resolucion.consecutivo_actual > resolucion.rango_minimo
-            agotada = resolucion.consecutivo_actual >= resolucion.rango_maximo
+            # consecutivo_actual es el PROXIMO numero a usar (ver
+            # incrementar_consecutivo) -- si es igual a rango_maximo todavia
+            # queda ese ultimo numero disponible, solo esta agotada cuando
+            # ya lo supera.
+            agotada = resolucion.consecutivo_actual > resolucion.rango_maximo
 
         cambia_rango = existia and data.rango_minimo != resolucion.rango_minimo
 
@@ -166,15 +170,24 @@ class ResolucionDianService:
         filas en conflicto sin necesidad de un SELECT ... FOR UPDATE
         explicito. Pensado para que Sprint 8 (emision de facturas) solo
         tenga que llamarlo; no se expone por ruta todavia porque no hay
-        nada que lo dispare en este sprint."""
+        nada que lo dispare en este sprint.
+
+        `consecutivo_actual` en la fila representa el PROXIMO numero a usar
+        (arranca en rango_minimo, ver guardar()) -- el UPDATE lo deja listo
+        para la siguiente llamada (+1) pero RETURNING devuelve el valor
+        anterior (el que se le asigna al documento actual). Antes devolvia
+        el valor ya incrementado, lo que se saltaba rango_minimo la primera
+        vez que se emitia un documento (bug real reportado 2026-09-24). El
+        WHERE usa <= (no <) porque con esta semantica todavia se puede usar
+        el numero == rango_maximo (el ultimo valido del rango)."""
         resultado = self.db.execute(
             update(ResolucionDian)
             .where(
                 ResolucionDian.empresa_id == empresa_id,
-                ResolucionDian.consecutivo_actual < ResolucionDian.rango_maximo,
+                ResolucionDian.consecutivo_actual <= ResolucionDian.rango_maximo,
             )
             .values(consecutivo_actual=ResolucionDian.consecutivo_actual + 1)
-            .returning(ResolucionDian.consecutivo_actual)
+            .returning(ResolucionDian.consecutivo_actual - 1)
         )
         fila = resultado.first()
         self.db.commit()
@@ -193,5 +206,10 @@ class ResolucionDianService:
         rechazo el envio con un 4xx (no creo ningun documento). Ver
         src/application/consecutivo.py para cuando es seguro y cuando no."""
         return revertir_consecutivo(
-            self.db, ResolucionDian, consecutivo, ResolucionDian.empresa_id == empresa_id, empresa_id=empresa_id
+            self.db,
+            ResolucionDian,
+            consecutivo,
+            ResolucionDian.empresa_id == empresa_id,
+            empresa_id=empresa_id,
+            offset=1,
         )

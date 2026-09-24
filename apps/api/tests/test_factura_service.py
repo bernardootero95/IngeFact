@@ -358,9 +358,9 @@ def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
     assert enviada.estado == "aceptada"
     assert enviada.cufe == "cufe-123"
     assert enviada.qr_code_content == "NumFac: SETP1\nCUFE: cufe-123"
-    # incrementar_consecutivo es pre-incremento: con rango_minimo=1, el primer
-    # numero realmente asignado es 2 (comportamiento ya probado en Sprint 5).
-    assert enviada.consecutivo == 2
+    # El primer numero realmente asignado es rango_minimo (1) -- bug real
+    # corregido 2026-09-24, antes se saltaba al 2.
+    assert enviada.consecutivo == 1
     assert enviada.numero_completo == "SETP1"
     assert enviada.fecha_envio is not None
     assert enviada.fecha_respuesta is not None
@@ -486,7 +486,7 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
     factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
     rechazada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
     assert rechazada.estado == "rechazada"
-    assert rechazada.consecutivo == 2
+    assert rechazada.consecutivo == 1
 
     corregida = service.actualizar_borrador(
         empresa.id,
@@ -499,7 +499,7 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
     )
     assert corregida.estado == "borrador"
     # El numero se conserva -- se reenviara con el mismo consecutivo.
-    assert corregida.consecutivo == 2
+    assert corregida.consecutivo == 1
     assert corregida.cufe is None
     assert corregida.razon_rechazo is None
     assert corregida.notificaciones_dian is None
@@ -518,7 +518,7 @@ def test_editar_factura_rechazada_la_vuelve_a_borrador_y_permite_reenviar(db_ses
     assert reenviada.cufe == "cufe-aceptada"
     assert reenviada.razon_rechazo is None
     # Mismo consecutivo del intento rechazado -- no se pidio uno nuevo.
-    assert reenviada.consecutivo == 2
+    assert reenviada.consecutivo == 1
 
     resolucion = db_session.query(ResolucionDian).filter(ResolucionDian.empresa_id == empresa.id).one()
     db_session.refresh(resolucion)
@@ -549,9 +549,9 @@ def test_dos_rechazos_seguidos_de_la_misma_factura_reusan_siempre_el_mismo_numer
                 lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=1)],
             ),
         )
-        assert corregida.consecutivo == 2
+        assert corregida.consecutivo == 1
         rechazada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
-        assert rechazada.consecutivo == 2
+        assert rechazada.consecutivo == 1
         assert rechazada.estado == "rechazada"
 
 
@@ -1013,7 +1013,7 @@ def test_enviar_tras_un_rechazo_4xx_de_alegra_reutiliza_el_mismo_numero(db_sessi
     fake._response = {"invoice": {"id": "inv-1", "fullNumber": "SETP2", "legalStatus": "ACCEPTED"}}
     enviada = service.enviar(empresa.id, factura.id, forma_pago="1", metodo_pago="10")
 
-    assert enviada.consecutivo == 2
+    assert enviada.consecutivo == 1
 
 
 def test_enviar_error_transitorio_de_alegra_no_revierte_el_consecutivo(db_session):

@@ -147,10 +147,9 @@ def test_flujo_completo_login_cliente_producto_factura_enviar_aceptada(db_sessio
 
     assert factura_enviada["estado"] == "aceptada"
     assert factura_enviada["cufe"] == "cufe-e2e-1"
-    # incrementar_consecutivo es pre-incremento: con consecutivo_actual=1 al
-    # crear la resolucion, el primer numero realmente asignado es 2 (mismo
-    # comportamiento ya probado en test_factura_service.py, Sprint 5).
-    assert factura_enviada["consecutivo"] == 2
+    # El primer numero realmente asignado es rango_minimo (1) -- bug real
+    # corregido 2026-09-24, antes se saltaba al 2.
+    assert factura_enviada["consecutivo"] == 1
     assert factura_enviada["numero_completo"] == "SETP1"
 
     db_session.refresh(resolucion)
