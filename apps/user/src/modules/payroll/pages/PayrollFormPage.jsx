@@ -106,57 +106,6 @@ export default function PayrollFormPage() {
     deuda: "",
   });
 
-  const cargarDatos = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const [empleadosData, periodos, formasPago, metodosPago, tiposIncapacidad, nomina] = await Promise.all([
-        listEmpleados(),
-        listPublicReferenceTable("periodos_nomina"),
-        listPublicReferenceTable("formas_pago"),
-        listPublicReferenceTable("metodos_pago"),
-        listPublicReferenceTable("tipos_incapacidad"),
-        isEditing ? getNomina(id) : Promise.resolve(null),
-      ]);
-
-      setEmpleados(empleadosData);
-      setCatalogos({
-        periodos,
-        formasPago,
-        metodosPago: metodosPago.filter((m) => m.code !== "1"),
-        tiposIncapacidad,
-      });
-
-      if (nomina) {
-        setEmpleadoId(nomina.empleado_id);
-        setPeriodoNomina(nomina.periodo_nomina);
-        setFechaInicio(nomina.fecha_liquidacion_inicio);
-        setFechaFin(nomina.fecha_liquidacion_fin);
-        setFechaPago(nomina.fecha_pago?.[0] || today());
-        setFormaPago(nomina.forma_pago);
-        setMetodoPago(nomina.metodo_pago);
-        setBanco(nomina.banco || "");
-        setTipoCuenta(nomina.tipo_cuenta || "");
-        setNumeroCuenta(nomina.numero_cuenta || "");
-        setNotas(nomina.notas || "");
-        cargarDevengadosDeducciones(nomina.devengados, nomina.deducciones);
-      } else {
-        setPeriodoNomina(periodos[0]?.code || "");
-        setFormaPago(formasPago.find((f) => f.code === CODIGO_FORMA_CONTADO)?.code || formasPago[0]?.code || "");
-        setMetodoPago(metodosPago.filter((m) => m.code !== "1")[0]?.code || "");
-      }
-    } catch (error) {
-      setLoadError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [id, isEditing]);
-
-  useEffect(() => {
-    cargarDatos();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cargarDatos]);
-
   function cargarDevengadosDeducciones(devengados, deducciones) {
     const basico = devengados?.Basico || {};
     setDiasTrabajados(String(basico.DiasTrabajados ?? "30"));
@@ -248,6 +197,57 @@ export default function PayrollFormPage() {
       deuda: String(deducciones?.Deuda ?? ""),
     });
   }
+
+  const cargarDatos = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const [empleadosData, periodos, formasPago, metodosPago, tiposIncapacidad, nomina] = await Promise.all([
+        listEmpleados(),
+        listPublicReferenceTable("periodos_nomina"),
+        listPublicReferenceTable("formas_pago"),
+        listPublicReferenceTable("metodos_pago"),
+        listPublicReferenceTable("tipos_incapacidad"),
+        isEditing ? getNomina(id) : Promise.resolve(null),
+      ]);
+
+      setEmpleados(empleadosData);
+      setCatalogos({
+        periodos,
+        formasPago,
+        metodosPago: metodosPago.filter((m) => m.code !== "1"),
+        tiposIncapacidad,
+      });
+
+      if (nomina) {
+        setEmpleadoId(nomina.empleado_id);
+        setPeriodoNomina(nomina.periodo_nomina);
+        setFechaInicio(nomina.fecha_liquidacion_inicio);
+        setFechaFin(nomina.fecha_liquidacion_fin);
+        setFechaPago(nomina.fecha_pago?.[0] || today());
+        setFormaPago(nomina.forma_pago);
+        setMetodoPago(nomina.metodo_pago);
+        setBanco(nomina.banco || "");
+        setTipoCuenta(nomina.tipo_cuenta || "");
+        setNumeroCuenta(nomina.numero_cuenta || "");
+        setNotas(nomina.notas || "");
+        cargarDevengadosDeducciones(nomina.devengados, nomina.deducciones);
+      } else {
+        setPeriodoNomina(periodos[0]?.code || "");
+        setFormaPago(formasPago.find((f) => f.code === CODIGO_FORMA_CONTADO)?.code || formasPago[0]?.code || "");
+        setMetodoPago(metodosPago.filter((m) => m.code !== "1")[0]?.code || "");
+      }
+    } catch (error) {
+      setLoadError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, isEditing]);
+
+  useEffect(() => {
+    cargarDatos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cargarDatos]);
 
   const handleSelectEmpleado = (nuevoId) => {
     setEmpleadoId(nuevoId);
@@ -693,7 +693,6 @@ export default function PayrollFormPage() {
                       {HORAS_EXTRA_TIPOS.map(({ code }) => (
                         <FilaHoraExtra
                           key={code}
-                          codigo={code}
                           etiqueta={HORAS_EXTRA_LABEL[code]}
                           valor={horasExtra[code] || { cantidad: "", pago: "" }}
                           onChange={(valor) => setHorasExtra((prev) => ({ ...prev, [code]: valor }))}
@@ -904,7 +903,7 @@ function CampoFecha({ label, value, onChange }) {
   );
 }
 
-function FilaHoraExtra({ codigo, etiqueta, valor, onChange }) {
+function FilaHoraExtra({ etiqueta, valor, onChange }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_160px] gap-3 items-end">
       <p className="text-sm text-neutralCustom-600">{etiqueta}</p>
