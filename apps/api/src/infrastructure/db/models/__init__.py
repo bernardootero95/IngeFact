@@ -1,3 +1,4 @@
+from src.infrastructure.db.models.aceptacion_legal import AceptacionLegal
 from src.infrastructure.db.models.api_key import ApiKey
 from src.infrastructure.db.models.cliente import Cliente
 from src.infrastructure.db.models.documento_soporte import DocumentoSoporte, DocumentoSoporteLinea
@@ -21,6 +22,7 @@ from src.infrastructure.db.models.usuario_admin import UsuarioAdmin
 from src.infrastructure.db.models.usuario_empresa import UsuarioEmpresa
 
 __all__ = [
+    "AceptacionLegal",
     "ApiKey",
     "Cliente",
     "Proveedor",

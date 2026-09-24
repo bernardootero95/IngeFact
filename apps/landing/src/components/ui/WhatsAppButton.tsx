@@ -1,4 +1,5 @@
 import { WhatsAppIcon } from "@/components/ui/icons";
+import { NewTabHint } from "@/components/ui/NewTabHint";
 import { WHATSAPP_DISPLAY, buildWhatsAppLink } from "@/lib/whatsapp";
 
 interface WhatsAppButtonProps {
@@ -17,6 +18,7 @@ export function WhatsAppButton({ message, label, className = "" }: WhatsAppButto
     >
       <WhatsAppIcon className="h-4 w-4" />
       {label ?? WHATSAPP_DISPLAY}
+      <NewTabHint />
     </a>
   );
 }

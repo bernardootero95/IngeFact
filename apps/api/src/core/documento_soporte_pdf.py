@@ -5,6 +5,8 @@ es el ADQUIRIENTE (quien emite el documento) y el Proveedor es el vendedor."""
 from sqlalchemy.orm import Session
 
 from src.application.reference_table_service import ReferenceTableService
+from src.core.legal import PIE_SOFTWARE_DOCUMENTO
+from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
     CSS,
@@ -85,8 +87,6 @@ def _render_tabla_lineas_html(documento: DocumentoSoporte) -> str:
 def generar_representacion_pdf_documento_soporte(
     db: Session, documento: DocumentoSoporte, firma_digital: str | None
 ) -> bytes:
-    from weasyprint import HTML  # import perezoso, ver factura_pdf.py
-
     empresa = db.get(Empresa, documento.empresa_id)
     proveedor = documento.proveedor
 
@@ -96,6 +96,10 @@ def generar_representacion_pdf_documento_soporte(
     metodo_pago = nombre_catalogo(tabla_ref.listar("metodos_pago"), documento.metodo_pago)
     impuestos = agrupar_impuestos(documento.lineas, catalogos["tributos"])
     qr_base64 = generar_qr_png_base64(documento.qr_code_content or "")
+
+    # Todo texto interpolado de aqui en adelante sale escapado (pdf_render.py).
+    documento, empresa, proveedor = map(escapado, (documento, empresa, proveedor))
+    firma_digital = escapado(firma_digital)
 
     firma_html = ""
     if firma_digital:
@@ -162,10 +166,10 @@ def generar_representacion_pdf_documento_soporte(
       {firma_html}
 
       <div class="pie">
-        <p>Documento generado por IngeFact -- XML generado y firmado por el proveedor tecnologico: Alegra.</p>
+        <p>{PIE_SOFTWARE_DOCUMENTO}</p>
       </div>
     </body>
     </html>
     """
 
-    return HTML(string=html).write_pdf()
+    return render_pdf(html)

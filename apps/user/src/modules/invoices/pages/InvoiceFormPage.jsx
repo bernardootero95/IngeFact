@@ -376,13 +376,13 @@ export default function InvoiceFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
               <>
                 {razonRechazo && (
-                  <div className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     <p className="font-semibold mb-1">Esta factura fue rechazada por la DIAN</p>
                     <p>{razonRechazo}</p>
                     <p className="mt-1 text-xs">

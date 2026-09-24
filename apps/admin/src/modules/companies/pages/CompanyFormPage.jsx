@@ -11,7 +11,7 @@ import {
   revocarApiKey,
 } from "@ingefact/core-api";
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
-import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover, FieldError, fieldA11y } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 
 const emptyForm = {
@@ -371,7 +371,7 @@ export default function CompanyFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
@@ -418,7 +418,7 @@ export default function CompanyFormPage() {
 
                 <div className="p-6">
                   {saveError && (
-                    <div className="mb-6 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                    <div role="alert" className="mb-6 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                       {saveError}
                     </div>
                   )}
@@ -436,8 +436,9 @@ export default function CompanyFormPage() {
                             value={form.razonSocial}
                             onChange={handleChange("razonSocial")}
                             className={`field w-full ${errors.razonSocial ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-razon-social", errors.razonSocial)}
                           />
-                          {errors.razonSocial && <p className="mt-1 text-sm text-fiscal-danger">{errors.razonSocial}</p>}
+                          {errors.razonSocial && <FieldError fieldId={"cf-razon-social"}>{errors.razonSocial}</FieldError>}
                         </div>
 
                         <div>
@@ -465,9 +466,10 @@ export default function CompanyFormPage() {
                               value={form.numeroIdentificacion}
                               onChange={handleNitChange}
                               className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.numeroIdentificacion ? "border-fiscal-danger field-invalid" : ""}`}
+                              {...fieldA11y("cf-nit", errors.numeroIdentificacion)}
                             />
                             {errors.numeroIdentificacion && (
-                              <p className="mt-1 text-sm text-fiscal-danger leading-tight">{errors.numeroIdentificacion}</p>
+                              <FieldError fieldId={"cf-nit"}>{errors.numeroIdentificacion}</FieldError>
                             )}
                           </div>
                           <div className="col-span-1">
@@ -510,6 +512,7 @@ export default function CompanyFormPage() {
                             value={form.departamento}
                             onChange={handleDepartmentChange}
                             className={`field w-full ${errors.departamento ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-departamento", errors.departamento)}
                           >
                             <option value="">Seleccione un departamento...</option>
                             {catalogs.departments.map((d) => (
@@ -518,7 +521,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.departamento && <p className="mt-1 text-sm text-fiscal-danger">{errors.departamento}</p>}
+                          {errors.departamento && <FieldError fieldId={"cf-departamento"}>{errors.departamento}</FieldError>}
                         </div>
 
                         <div>
@@ -531,6 +534,7 @@ export default function CompanyFormPage() {
                             onChange={handleChange("municipio")}
                             disabled={!form.departamento}
                             className={`field w-full disabled:opacity-50 disabled:cursor-not-allowed ${errors.municipio ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-municipio", errors.municipio)}
                           >
                             <option value="">Seleccione un municipio...</option>
                             {filteredMunicipalities.map((m) => (
@@ -539,7 +543,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.municipio && <p className="mt-1 text-sm text-fiscal-danger">{errors.municipio}</p>}
+                          {errors.municipio && <FieldError fieldId={"cf-municipio"}>{errors.municipio}</FieldError>}
                         </div>
 
                         <div>
@@ -551,6 +555,7 @@ export default function CompanyFormPage() {
                             value={form.regimen}
                             onChange={handleChange("regimen")}
                             className={`field w-full ${errors.regimen ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-regimen", errors.regimen)}
                           >
                             <option value="">Seleccione...</option>
                             {catalogs.regimes.map((r) => (
@@ -559,7 +564,7 @@ export default function CompanyFormPage() {
                               </option>
                             ))}
                           </select>
-                          {errors.regimen && <p className="mt-1 text-sm text-fiscal-danger">{errors.regimen}</p>}
+                          {errors.regimen && <FieldError fieldId={"cf-regimen"}>{errors.regimen}</FieldError>}
                         </div>
 
                         <div>
@@ -571,6 +576,7 @@ export default function CompanyFormPage() {
                             value={form.tipoOrganizacion}
                             onChange={handleChange("tipoOrganizacion")}
                             className={`field w-full ${errors.tipoOrganizacion ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-tipo-org", errors.tipoOrganizacion)}
                           >
                             <option value="">Seleccione...</option>
                             {catalogs.orgTypes.map((o) => (
@@ -580,7 +586,7 @@ export default function CompanyFormPage() {
                             ))}
                           </select>
                           {errors.tipoOrganizacion && (
-                            <p className="mt-1 text-sm text-fiscal-danger">{errors.tipoOrganizacion}</p>
+                            <FieldError fieldId={"cf-tipo-org"}>{errors.tipoOrganizacion}</FieldError>
                           )}
                         </div>
 
@@ -633,9 +639,10 @@ export default function CompanyFormPage() {
                             value={form.correoElectronico}
                             onChange={handleChange("correoElectronico")}
                             className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
+                            {...fieldA11y("cf-correo", errors.correoElectronico)}
                           />
                           {errors.correoElectronico && (
-                            <p className="mt-1 text-sm text-fiscal-danger">{errors.correoElectronico}</p>
+                            <FieldError fieldId={"cf-correo"}>{errors.correoElectronico}</FieldError>
                           )}
                         </div>
 
@@ -650,9 +657,10 @@ export default function CompanyFormPage() {
                             value={form.nombreUsuario}
                             onChange={handleChange("nombreUsuario")}
                             className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.nombreUsuario ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
+                            {...fieldA11y("cf-nombre-usuario", errors.nombreUsuario)}
                           />
                           {errors.nombreUsuario && (
-                            <p className="mt-1 text-sm text-fiscal-danger">{errors.nombreUsuario}</p>
+                            <FieldError fieldId={"cf-nombre-usuario"}>{errors.nombreUsuario}</FieldError>
                           )}
                           {!isEditing && (
                             <p className="mt-1 text-xs text-brand-600">
@@ -692,8 +700,9 @@ export default function CompanyFormPage() {
                             onChange={handleChange("maxDocumentos")}
                             className={`field w-full ${errors.maxDocumentos ? "border-fiscal-danger field-invalid" : ""}`}
                             placeholder="Ej: 1200"
+                            {...fieldA11y("cf-max-docs", errors.maxDocumentos)}
                           />
-                          {errors.maxDocumentos && <p className="mt-1 text-sm text-fiscal-danger">{errors.maxDocumentos}</p>}
+                          {errors.maxDocumentos && <FieldError fieldId={"cf-max-docs"}>{errors.maxDocumentos}</FieldError>}
                         </div>
 
                         <div className="hidden md:block" />
@@ -708,8 +717,9 @@ export default function CompanyFormPage() {
                             value={form.fechaInicio}
                             onChange={handleChange("fechaInicio")}
                             className={`field w-full ${errors.fechaInicio ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-fecha-inicio", errors.fechaInicio)}
                           />
-                          {errors.fechaInicio && <p className="mt-1 text-sm text-fiscal-danger">{errors.fechaInicio}</p>}
+                          {errors.fechaInicio && <FieldError fieldId={"cf-fecha-inicio"}>{errors.fechaInicio}</FieldError>}
                         </div>
 
                         <div>
@@ -722,8 +732,9 @@ export default function CompanyFormPage() {
                             value={form.fechaFin}
                             onChange={handleChange("fechaFin")}
                             className={`field w-full ${errors.fechaFin ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-fecha-fin", errors.fechaFin)}
                           />
-                          {errors.fechaFin && <p className="mt-1 text-sm text-fiscal-danger">{errors.fechaFin}</p>}
+                          {errors.fechaFin && <FieldError fieldId={"cf-fecha-fin"}>{errors.fechaFin}</FieldError>}
                         </div>
 
                         <div>
@@ -789,8 +800,9 @@ export default function CompanyFormPage() {
                             }}
                             placeholder="Ej: Integracion Sistema de Pedidos"
                             className={`field w-full ${newKeyNameError ? "border-fiscal-danger field-invalid" : ""}`}
+                            {...fieldA11y("cf-nueva-key", newKeyNameError)}
                           />
-                          {newKeyNameError && <p className="mt-1 text-sm text-fiscal-danger">{newKeyNameError}</p>}
+                          {newKeyNameError && <FieldError fieldId={"cf-nueva-key"}>{newKeyNameError}</FieldError>}
                         </div>
                         <Button
                           type="submit"

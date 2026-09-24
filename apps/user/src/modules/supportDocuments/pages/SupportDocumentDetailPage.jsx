@@ -139,7 +139,7 @@ export default function SupportDocumentDetailPage() {
       <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
         <Sidebar />
         <main className="flex-1 p-8">
-          <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+          <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
             {loadError || "Documento Soporte no encontrado."}
           </div>
         </main>
@@ -247,7 +247,7 @@ export default function SupportDocumentDetailPage() {
               )}
 
               {documento.estado === "rechazado" && documento.razon_rechazo && (
-                <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
+                <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
                   <p className="font-medium">{documento.razon_rechazo}</p>
                 </div>
               )}
@@ -349,7 +349,7 @@ export default function SupportDocumentDetailPage() {
                 <h3 className="text-base font-semibold text-neutralCustom-800">Enviar a la DIAN</h3>
 
                 {sendError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     {sendError}
                   </div>
                 )}

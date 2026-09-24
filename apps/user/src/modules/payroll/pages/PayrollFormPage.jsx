@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { createContext, useState, useEffect, useCallback, useContext, useId, useMemo } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   getNomina,
@@ -514,11 +514,11 @@ export default function PayrollFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">{loadError}</div>
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">{loadError}</div>
             ) : (
               <form onSubmit={handleGuardarBorrador} className="space-y-6">
                 {saveError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">{saveError}</div>
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">{saveError}</div>
                 )}
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-4">
@@ -526,7 +526,7 @@ export default function PayrollFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="empleado-select" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Empleado <span className="text-fiscal-danger">*</span>
+                        Empleado <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <div className="flex gap-2">
                         <div className="flex-1">
@@ -549,7 +549,7 @@ export default function PayrollFormPage() {
                     </div>
                     <div>
                       <label htmlFor="periodo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Período de Nómina <span className="text-fiscal-danger">*</span>
+                        Período de Nómina <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select id="periodo" value={periodoNomina} onChange={(e) => setPeriodoNomina(e.target.value)} className="field w-full">
                         {catalogos.periodos.map((p) => (
@@ -561,7 +561,7 @@ export default function PayrollFormPage() {
                     </div>
                     <div>
                       <label htmlFor="fecha-inicio" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Inicio de Liquidación <span className="text-fiscal-danger">*</span>
+                        Inicio de Liquidación <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="date"
@@ -573,13 +573,13 @@ export default function PayrollFormPage() {
                     </div>
                     <div>
                       <label htmlFor="fecha-fin" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Fin de Liquidación <span className="text-fiscal-danger">*</span>
+                        Fin de Liquidación <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input type="date" id="fecha-fin" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="field w-full" />
                     </div>
                     <div>
                       <label htmlFor="fecha-pago" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Fecha de Pago <span className="text-fiscal-danger">*</span>
+                        Fecha de Pago <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input type="date" id="fecha-pago" value={fechaPago} onChange={(e) => setFechaPago(e.target.value)} className="field w-full" />
                     </div>
@@ -591,7 +591,7 @@ export default function PayrollFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="forma-pago" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Forma de Pago <span className="text-fiscal-danger">*</span>
+                        Forma de Pago <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select id="forma-pago" value={formaPago} onChange={(e) => setFormaPago(e.target.value)} className="field w-full">
                         {catalogos.formasPago.map((f) => (
@@ -603,7 +603,7 @@ export default function PayrollFormPage() {
                     </div>
                     <div>
                       <label htmlFor="metodo-pago" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Método de Pago <span className="text-fiscal-danger">*</span>
+                        Método de Pago <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select id="metodo-pago" value={metodoPago} onChange={(e) => setMetodoPago(e.target.value)} className="field w-full">
                         {catalogos.metodosPago.map((m) => (
@@ -617,13 +617,13 @@ export default function PayrollFormPage() {
                       <>
                         <div>
                           <label htmlFor="banco" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                            Banco <span className="text-fiscal-danger">*</span>
+                            Banco <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                           </label>
                           <input type="text" id="banco" value={banco} onChange={(e) => setBanco(e.target.value)} className="field w-full" />
                         </div>
                         <div>
                           <label htmlFor="tipo-cuenta" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                            Tipo de Cuenta <span className="text-fiscal-danger">*</span>
+                            Tipo de Cuenta <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                           </label>
                           <input
                             type="text"
@@ -636,7 +636,7 @@ export default function PayrollFormPage() {
                         </div>
                         <div>
                           <label htmlFor="numero-cuenta" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                            Número de Cuenta <span className="text-fiscal-danger">*</span>
+                            Número de Cuenta <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                           </label>
                           <input
                             type="text"
@@ -657,7 +657,7 @@ export default function PayrollFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="dias-trabajados" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Días Trabajados <span className="text-fiscal-danger">*</span>
+                        Días Trabajados <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="number"
@@ -671,7 +671,7 @@ export default function PayrollFormPage() {
                     </div>
                     <div>
                       <label htmlFor="sueldo-trabajado" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Sueldo Básico <span className="text-fiscal-danger">*</span>
+                        Sueldo Básico <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="number"
@@ -732,8 +732,9 @@ export default function PayrollFormPage() {
                   <SeccionToggle titulo="Incapacidad" activo={incapacidadActivo} onToggle={setIncapacidadActivo}>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-neutralCustom-500 mb-1">Tipo</label>
+                        <label htmlFor="incapacidad-tipo" className="block text-xs font-medium text-neutralCustom-500 mb-1">Tipo</label>
                         <select
+                          id="incapacidad-tipo"
                           value={incapacidad.tipo}
                           onChange={(e) => setIncapacidad((p) => ({ ...p, tipo: e.target.value }))}
                           className="field w-full"
@@ -862,44 +863,81 @@ const HORAS_EXTRA_LABEL = {
   7: "Hora Recargo Nocturno Dom./Fest.",
 };
 
+// Titulo de la seccion que envuelve a un campo, para anteponerlo en el
+// nombre accesible: "Pago" se repite en Vacaciones, Prima, Cesantias...
+const ContextoSeccion = createContext(null);
+
 function SeccionToggle({ titulo, activo, onToggle, children }) {
   return (
     <div className="border-t border-neutralCustom-100 pt-4">
       <label className="flex items-center gap-2 text-sm font-medium text-neutralCustom-700 mb-2">
-        <input type="checkbox" checked={activo} onChange={(e) => onToggle(e.target.checked)} className="h-4 w-4 rounded border-neutralCustom-300" />
+        <input
+          type="checkbox"
+          checked={activo}
+          onChange={(e) => onToggle(e.target.checked)}
+          className="h-4 w-4 rounded border-neutralCustom-300"
+        />
         {titulo}
       </label>
-      {activo && <div className="pl-6">{children}</div>}
+      {activo && (
+        <ContextoSeccion.Provider value={titulo}>
+          <div className="pl-6">{children}</div>
+        </ContextoSeccion.Provider>
+      )}
     </div>
   );
 }
 
-function CampoMonto({ label, value, onChange, required }) {
+/**
+ * Campo con etiqueta asociada (htmlFor/id). `contexto` (o, si no se pasa, el
+ * titulo de la SeccionToggle que lo contiene) se antepone solo para lectores
+ * de pantalla, porque la etiqueta visible se repite entre secciones.
+ */
+function Campo({ label, contexto: contextoProp, required, children }) {
+  const id = useId();
+  const contextoSeccion = useContext(ContextoSeccion);
+  const contexto = contextoProp ?? contextoSeccion;
   return (
     <div>
-      <label className="block text-xs font-medium text-neutralCustom-500 mb-1">
-        {label} {required && <span className="text-fiscal-danger">*</span>}
+      <label htmlFor={id} className="block text-xs font-medium text-neutralCustom-500 mb-1">
+        {contexto && <span className="sr-only">{contexto}: </span>}
+        {label}
+        {required && (
+          <>
+            {" "}
+            <span className="text-fiscal-danger" aria-hidden="true">*</span>
+            <span className="sr-only"> (obligatorio)</span>
+          </>
+        )}
       </label>
-      <input type="number" min="0" value={value} onChange={(e) => onChange(e.target.value)} className="field w-full" placeholder="0" />
+      {children(id)}
     </div>
   );
 }
 
-function CampoNumero({ label, value, onChange }) {
+function CampoMonto({ label, value, onChange, required, contexto }) {
   return (
-    <div>
-      <label className="block text-xs font-medium text-neutralCustom-500 mb-1">{label}</label>
-      <input type="number" min="0" value={value} onChange={(e) => onChange(e.target.value)} className="field w-full" />
-    </div>
+    <Campo label={label} contexto={contexto} required={required}>
+      {(id) => (
+        <input id={id} type="number" min="0" value={value} onChange={(e) => onChange(e.target.value)} className="field w-full" placeholder="0" />
+      )}
+    </Campo>
   );
 }
 
-function CampoFecha({ label, value, onChange }) {
+function CampoNumero({ label, value, onChange, contexto }) {
   return (
-    <div>
-      <label className="block text-xs font-medium text-neutralCustom-500 mb-1">{label}</label>
-      <input type="date" value={value} onChange={(e) => onChange(e.target.value)} className="field w-full" />
-    </div>
+    <Campo label={label} contexto={contexto}>
+      {(id) => <input id={id} type="number" min="0" value={value} onChange={(e) => onChange(e.target.value)} className="field w-full" />}
+    </Campo>
+  );
+}
+
+function CampoFecha({ label, value, onChange, contexto }) {
+  return (
+    <Campo label={label} contexto={contexto}>
+      {(id) => <input id={id} type="date" value={value} onChange={(e) => onChange(e.target.value)} className="field w-full" />}
+    </Campo>
   );
 }
 
@@ -907,8 +945,8 @@ function FilaHoraExtra({ etiqueta, valor, onChange }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-[1fr_120px_160px] gap-3 items-end">
       <p className="text-sm text-neutralCustom-600">{etiqueta}</p>
-      <CampoNumero label="Cantidad" value={valor.cantidad} onChange={(v) => onChange({ ...valor, cantidad: v })} />
-      <CampoMonto label="Pago" value={valor.pago} onChange={(v) => onChange({ ...valor, pago: v })} />
+      <CampoNumero label="Cantidad" contexto={etiqueta} value={valor.cantidad} onChange={(v) => onChange({ ...valor, cantidad: v })} />
+      <CampoMonto label="Pago" contexto={etiqueta} value={valor.pago} onChange={(v) => onChange({ ...valor, pago: v })} />
     </div>
   );
 }

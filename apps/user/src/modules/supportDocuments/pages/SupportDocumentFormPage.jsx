@@ -11,7 +11,7 @@ import {
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import { fechaHoyColombia } from "@ingefact/utils";
-import { SearchableSelect, Button, PlusIcon, FormSkeleton } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, FormSkeleton, FieldError } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDocumentoSoporte from "../components/SeccionLineasDocumentoSoporte";
 import SeccionPagoDocumentoSoporte from "../components/SeccionPagoDocumentoSoporte";
@@ -312,13 +312,13 @@ export default function SupportDocumentFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
               <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                 {razonRechazo && (
-                  <div className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     <p className="font-semibold mb-1">Este documento fue rechazado por la DIAN</p>
                     <p>{razonRechazo}</p>
                     <p className="mt-1 text-xs">
@@ -334,7 +334,7 @@ export default function SupportDocumentFormPage() {
                     <div>
                       <div className="flex items-center justify-between mb-1.5">
                         <label htmlFor="proveedor-select" className="block text-sm font-medium text-neutralCustom-800">
-                          Proveedor <span className="text-fiscal-danger">*</span>
+                          Proveedor <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                         </label>
                         <Button
                           onClick={() => irACrear("/suppliers/new")}
@@ -351,10 +351,10 @@ export default function SupportDocumentFormPage() {
                         value={proveedor?.id || ""}
                         onChange={handleSelectProveedor}
                         placeholder="Selecciona un proveedor..."
-                        error={!!errors.proveedor}
+                        error={errors.proveedor}
                         formatOption={(opt) => opt.value}
                       />
-                      {errors.proveedor && <p className="mt-1 text-sm text-fiscal-danger">{errors.proveedor}</p>}
+                      <FieldError fieldId="proveedor-select">{errors.proveedor}</FieldError>
                     </div>
 
                     <div>
@@ -404,7 +404,7 @@ export default function SupportDocumentFormPage() {
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   {saveError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                    <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                       {saveError}
                     </div>
                   )}

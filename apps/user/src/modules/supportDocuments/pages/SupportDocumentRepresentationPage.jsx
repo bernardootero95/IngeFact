@@ -10,6 +10,7 @@ import {
 } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import { Button, ArrowLeftIcon } from "@ingefact/ui";
+import { PIE_SOFTWARE_DOCUMENTO, PIE_BORRADOR } from "../../../utils/pieLegalDocumento";
 
 const MONEDA = "COP";
 
@@ -97,7 +98,7 @@ export default function SupportDocumentRepresentationPage() {
   if (loadError) {
     return (
       <div className="p-4 md:p-8 max-w-2xl mx-auto">
-        <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+        <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
           {loadError}
         </div>
       </div>
@@ -299,8 +300,8 @@ export default function SupportDocumentRepresentationPage() {
           <div className="text-[10px] text-neutralCustom-500 text-center border-t border-neutralCustom-200 pt-3 space-y-0.5">
             <p>
               {documento.cuds
-                ? "Documento generado por IngeFact — XML generado y firmado por el proveedor tecnológico: Alegra."
-                : "Documento generado por IngeFact — vista previa de borrador, aún no enviado al proveedor tecnológico."}
+                ? PIE_SOFTWARE_DOCUMENTO
+                : PIE_BORRADOR}
             </p>
           </div>
         </div>

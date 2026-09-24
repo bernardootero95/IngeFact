@@ -1,7 +1,7 @@
 import { useState, useId } from "react";
 import { createPortal } from "react-dom";
 import { validateCorreoDestino } from "./EnviarCorreoPopover.validation";
-import { Button, IconButton, useAnchoredPopover } from "@ingefact/ui";
+import { Button, IconButton, useAnchoredPopover, FieldError, fieldA11y } from "@ingefact/ui";
 
 const ANCHO = 288;
 const ALTO_ESTIMADO = 200;
@@ -123,12 +123,13 @@ export default function EnviarCorreoPopover({
                 onChange={handleChange}
                 placeholder="correo@ejemplo.com"
                 className={`field w-full ${error ? "border-fiscal-danger field-invalid" : ""}`}
+                {...fieldA11y(inputId, error)}
               />
-              {error && <p className="mt-1 text-sm text-fiscal-danger">{error}</p>}
+              {error && <FieldError fieldId={inputId}>{error}</FieldError>}
             </div>
 
             {sendError && (
-              <div className="p-2 bg-red-50 border border-fiscal-danger text-fiscal-danger text-xs rounded-brand-md">
+              <div role="alert" className="p-2 bg-red-50 border border-fiscal-danger text-fiscal-danger text-xs rounded-brand-md">
                 {sendError}
               </div>
             )}

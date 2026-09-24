@@ -6,7 +6,7 @@ Basado en los hallazgos reales documentados en apps/api/docs/alegra-investigacio
 """
 
 ERROR_CODE_MAP: dict[str, str] = {
-    "AEP9006": "Esta operacion solo esta disponible en el ambiente de produccion de Alegra.",
+    "AEP9006": "Esta operación solo está disponible en el ambiente de producción.",
 }
 
 GOVERNMENT_RESPONSE_CODE_MAP: dict[str, str] = {
@@ -26,14 +26,14 @@ def map_alegra_error(status_code: int, body: dict) -> str:
     if messages:
         if any("requires property" in m for m in messages):
             faltantes = ", ".join(messages)
-            return f"Alegra rechazo la solicitud por datos faltantes: {faltantes}"
-        return "Alegra rechazo la solicitud: " + "; ".join(messages)
+            return f"El proveedor tecnológico rechazó la solicitud por datos faltantes: {faltantes}"
+        return "El proveedor tecnológico rechazó la solicitud: " + "; ".join(messages)
 
     if status_code == 404:
-        return "El recurso solicitado no existe en Alegra."
+        return "El recurso solicitado no existe."
     if status_code >= 500:
-        return "Alegra no esta respondiendo en este momento. Se reintentara automaticamente."
-    return f"Alegra rechazo la solicitud (HTTP {status_code})."
+        return "El servicio de facturación electrónica no está respondiendo en este momento. Se reintentará automáticamente."
+    return f"El proveedor tecnológico rechazó la solicitud (HTTP {status_code})."
 
 
 def map_government_response(code: str, message: str) -> str:

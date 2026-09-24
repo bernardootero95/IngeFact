@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { listProveedores, getProveedor, crearFacturaRecibida } from "@ingefact/core-api";
 import { fechaHoyColombia } from "@ingefact/utils";
-import { SearchableSelect, Button, PlusIcon, FormSkeleton } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateProveedor, validateCufe, validateFecha } from "./ReceivedInvoiceFormPage.validation";
 
@@ -121,7 +121,7 @@ export default function ReceivedInvoiceFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
@@ -130,7 +130,7 @@ export default function ReceivedInvoiceFormPage() {
                 className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-5"
               >
                 {saveError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     {saveError}
                   </div>
                 )}
@@ -138,7 +138,7 @@ export default function ReceivedInvoiceFormPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label htmlFor="proveedor-select" className="block text-sm font-medium text-neutralCustom-800">
-                      Proveedor <span className="text-fiscal-danger">*</span>
+                      Proveedor <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <Button
                       onClick={irACrearProveedor}
@@ -155,15 +155,15 @@ export default function ReceivedInvoiceFormPage() {
                     value={proveedor?.id || ""}
                     onChange={handleSelectProveedor}
                     placeholder="Selecciona un proveedor..."
-                    error={!!errors.proveedor}
+                    error={errors.proveedor}
                     formatOption={(opt) => opt.value}
                   />
-                  {errors.proveedor && <p className="mt-1 text-sm text-fiscal-danger">{errors.proveedor}</p>}
+                  <FieldError fieldId="proveedor-select">{errors.proveedor}</FieldError>
                 </div>
 
                 <div>
                   <label htmlFor="cufe" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                    CUFE <span className="text-fiscal-danger">*</span>
+                    CUFE <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                   </label>
                   <input
                     type="text"
@@ -177,14 +177,15 @@ export default function ReceivedInvoiceFormPage() {
                     className={`field w-full font-mono ${
                       errors.cufe ? "border-fiscal-danger field-invalid" : ""
                     }`}
+                    {...fieldA11y("cufe", errors.cufe)}
                   />
-                  {errors.cufe && <p className="mt-1 text-sm text-fiscal-danger">{errors.cufe}</p>}
+                  {errors.cufe && <FieldError fieldId={"cufe"}>{errors.cufe}</FieldError>}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="fecha" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                      Fecha <span className="text-fiscal-danger">*</span>
+                      Fecha <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <input
                       type="date"
@@ -197,8 +198,9 @@ export default function ReceivedInvoiceFormPage() {
                       className={`field w-full ${
                         errors.fecha ? "border-fiscal-danger field-invalid" : ""
                       }`}
+                      {...fieldA11y("fecha", errors.fecha)}
                     />
-                    {errors.fecha && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha}</p>}
+                    {errors.fecha && <FieldError fieldId={"fecha"}>{errors.fecha}</FieldError>}
                   </div>
 
                   <div>

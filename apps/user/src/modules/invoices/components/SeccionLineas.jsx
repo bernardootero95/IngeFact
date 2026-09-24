@@ -1,5 +1,5 @@
 import { useState, useEffect, useId } from "react";
-import { SearchableSelect, Button, PlusIcon, IconButton, TrashIcon } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, IconButton, TrashIcon, FieldError, fieldA11y } from "@ingefact/ui";
 import { calcularLinea } from "@ingefact/utils";
 
 const formatCOP = (value) =>
@@ -167,10 +167,12 @@ export default function SeccionLineas({
                         min="0"
                         step="1"
                         value={linea.cantidad}
+                        aria-label={`Cantidad de ${linea.producto?.nombre ?? "la línea"}`}
                         onChange={(e) => onLineaCantidadChange(index, e.target.value)}
                         className={`field field-sm w-full text-right ${
                           cantidadInvalida ? "border-fiscal-danger field-invalid" : ""
                         }`}
+                        aria-invalid={cantidadInvalida || undefined}
                       />
                     </td>
                     <td className="py-2 pr-2 align-top">
@@ -179,10 +181,12 @@ export default function SeccionLineas({
                         min="0"
                         step="0.01"
                         value={linea.precio_unitario}
+                        aria-label={`Precio unitario de ${linea.producto?.nombre ?? "la línea"}`}
                         onChange={(e) => onLineaPrecioChange(index, e.target.value)}
                         className={`field field-sm w-full text-right ${
                           precioInvalido ? "border-fiscal-danger field-invalid" : ""
                         }`}
+                        aria-invalid={precioInvalido || undefined}
                       />
                     </td>
                     <td className="py-2 pr-2 text-right align-top">{formatCOP(subtotalLinea)}</td>
@@ -211,7 +215,7 @@ export default function SeccionLineas({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-neutralCustom-100">
         <div>
           <label htmlFor="forma_pago" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-            Forma de pago <span className="text-fiscal-danger">*</span>
+            Forma de pago <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
           </label>
           <select
             id="forma_pago"
@@ -230,7 +234,7 @@ export default function SeccionLineas({
         </div>
         <div>
           <label htmlFor="metodo_pago" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-            Método de pago <span className="text-fiscal-danger">*</span>
+            Método de pago <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
           </label>
           <select
             id="metodo_pago"
@@ -239,6 +243,7 @@ export default function SeccionLineas({
             className={`field w-full ${
               errores.metodoPago ? "border-fiscal-danger field-invalid" : ""
             }`}
+            {...fieldA11y("metodo_pago", errores.metodoPago)}
           >
             {metodosPago.map((opt) => (
               <option key={opt.code} value={opt.code}>
@@ -246,13 +251,13 @@ export default function SeccionLineas({
               </option>
             ))}
           </select>
-          {errores.metodoPago && <p className="mt-1 text-sm text-fiscal-danger">{errores.metodoPago}</p>}
+          {errores.metodoPago && <FieldError fieldId={"metodo_pago"}>{errores.metodoPago}</FieldError>}
         </div>
 
         {formaPago === FORMA_PAGO_CREDITO && (
           <div>
             <label htmlFor="fecha_vencimiento" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-              Fecha de vencimiento <span className="text-fiscal-danger">*</span>
+              Fecha de vencimiento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
             </label>
             <input
               type="date"
@@ -262,8 +267,9 @@ export default function SeccionLineas({
               className={`field w-full ${
                 errores.fechaVencimiento ? "border-fiscal-danger field-invalid" : ""
               }`}
+              {...fieldA11y("fecha_vencimiento", errores.fechaVencimiento)}
             />
-            {errores.fechaVencimiento && <p className="mt-1 text-sm text-fiscal-danger">{errores.fechaVencimiento}</p>}
+            {errores.fechaVencimiento && <FieldError fieldId={"fecha_vencimiento"}>{errores.fechaVencimiento}</FieldError>}
           </div>
         )}
       </div>

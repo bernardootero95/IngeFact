@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNomina, obtenerRepresentacionPdfNomina, enviarNominaPorCorreo } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -82,7 +82,7 @@ export default function PayrollsListPage() {
               <TableSkeleton columns={6} label="Cargando..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
                 <Button onClick={fetchNominas} variant="danger">
                   Reintentar
                 </Button>
@@ -102,12 +102,10 @@ export default function PayrollsListPage() {
                   </thead>
                   <tbody className="divide-y divide-neutralCustom-100">
                     {view.rows.map((n) => (
-                      <tr
-                        key={n.id}
-                        onClick={() => navigate(`/payroll/${n.id}`)}
-                        className="hover:bg-neutralCustom-50 transition-colors cursor-pointer"
-                      >
-                        <td className="px-6 py-4 font-medium text-neutralCustom-800">{n.numero_completo || "Borrador"}</td>
+                      <ClickableRow key={n.id} to={`/payroll/${n.id}`}>
+                        <td className="px-6 py-4 font-medium text-neutralCustom-800">
+                          <ClickableRow.Link to={`/payroll/${n.id}`}>{n.numero_completo || "Borrador"}</ClickableRow.Link>
+                        </td>
                         <td className="px-6 py-4">{n.empleado_nombre}</td>
                         <td className="px-6 py-4">{n.fecha_liquidacion_fin}</td>
                         <td className="px-6 py-4">
@@ -121,7 +119,7 @@ export default function PayrollsListPage() {
                         </td>
                         <td className="px-6 py-4 text-right font-medium text-neutralCustom-800">{formatCOP(n.comprobante_total)}</td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1">
                             <IconButton
                               title={n.estado === "aceptada" ? "Ver representación gráfica" : "Vista previa"}
                               onClick={() => handleVerRepresentacion(n)}
@@ -174,7 +172,7 @@ export default function PayrollsListPage() {
                             </IconButton>
                           </div>
                         </td>
-                      </tr>
+                      </ClickableRow>
                     ))}
                   </tbody>
                 </table>

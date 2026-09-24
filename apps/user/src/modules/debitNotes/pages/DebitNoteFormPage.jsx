@@ -11,7 +11,7 @@ import {
 import Sidebar from "../../../components/Sidebar";
 import SeccionLineasDebito from "../components/SeccionLineasDebito";
 import { validateMotivo, validateLineasDebito, calcularTotalesNota } from "./DebitNoteFormPage.validation";
-import { Button, FormSkeleton } from "@ingefact/ui";
+import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -198,13 +198,13 @@ export default function DebitNoteFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
               <>
                 {razonRechazo && (
-                  <div className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-4 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     <p className="font-semibold mb-1">Esta nota débito fue rechazada por la DIAN</p>
                     <p>{razonRechazo}</p>
                     <p className="mt-1 text-xs">
@@ -234,14 +234,18 @@ export default function DebitNoteFormPage() {
                 </div>
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
-                  <h3 className="text-base font-semibold text-neutralCustom-800 mb-1">Motivo</h3>
+                  <h3 className="text-base font-semibold text-neutralCustom-800 mb-1">
+                    <label htmlFor="motivo">Motivo</label>
+                  </h3>
                   <p className="text-xs text-neutralCustom-500 mb-3">Catálogo DIAN de conceptos de nota débito</p>
                   <select
+                    id="motivo"
                     value={motivoCodigo}
                     onChange={(e) => setMotivoCodigo(e.target.value)}
                     className={`field w-full ${
                       errors.motivo ? "border-fiscal-danger field-invalid" : ""
                     }`}
+                    {...fieldA11y("motivo", errors.motivo)}
                   >
                     {motivos.map((opt) => (
                       <option key={opt.code} value={opt.code}>
@@ -249,7 +253,7 @@ export default function DebitNoteFormPage() {
                       </option>
                     ))}
                   </select>
-                  {errors.motivo && <p className="mt-1 text-sm text-fiscal-danger">{errors.motivo}</p>}
+                  {errors.motivo && <FieldError fieldId="motivo">{errors.motivo}</FieldError>}
                 </div>
 
                 <SeccionLineasDebito
@@ -261,7 +265,7 @@ export default function DebitNoteFormPage() {
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   {saveError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                    <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                       {saveError}
                     </div>
                   )}

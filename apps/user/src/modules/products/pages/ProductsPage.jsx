@@ -102,7 +102,7 @@ export default function ProductsPage() {
                   type="text"
                   value={search}
                   onChange={handleSearchChange}
-                  placeholder="Buscar por código o nombre..."
+                  aria-label="Buscar productos por código o nombre" placeholder="Buscar por código o nombre..."
                   className="field w-full pl-9 pr-4"
                 />
                 <svg
@@ -125,7 +125,7 @@ export default function ProductsPage() {
               <TableSkeleton columns={6} label="Cargando productos..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los productos: {loadError}
                 </p>
                 <Button

@@ -6,7 +6,7 @@ import {
   cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
-import { Button, FormSkeleton } from "@ingefact/ui";
+import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -204,7 +204,7 @@ export default function ResolutionPanel() {
       ) : (
         <>
           {loadError && (
-            <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+            <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
               {loadError}
             </div>
           )}
@@ -268,12 +268,12 @@ export default function ResolutionPanel() {
             </h3>
             <p className="text-xs text-neutralCustom-500 mb-6">
               Estos valores los emite la DIAN. Guárdalos tal como
-              aparecen en tu resolución, o cárgalos automáticamente
-              desde Alegra si ya están registrados ahí.
+              aparecen en tu resolución, o impórtalos automáticamente
+              si ya están registrados ante la DIAN.
             </p>
 
             {saveError && (
-              <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {saveError}
               </div>
             )}
@@ -282,7 +282,7 @@ export default function ResolutionPanel() {
               <div className="mb-4 border border-neutralCustom-200 rounded-brand-md p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium text-neutralCustom-800">
-                    Alegra tiene {opcionesAlegra.length} resoluciones
+                    Encontramos {opcionesAlegra.length} resoluciones
                     registradas para tu NIT. Elige cuál importar:
                   </p>
                   <button
@@ -316,13 +316,13 @@ export default function ResolutionPanel() {
             )}
 
             {resolucion?.estado_validacion === "error" && resolucion.mensaje_validacion && (
-              <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {resolucion.mensaje_validacion}
               </div>
             )}
             {resolucion?.estado_validacion === "validada" && (
               <div className="mb-4 p-3 bg-brand-50 border border-brand-400 text-brand-700 text-sm rounded-brand-md">
-                Resolución validada correctamente ante Alegra.
+                Resolución validada correctamente.
               </div>
             )}
 
@@ -343,9 +343,10 @@ export default function ResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("numero_resolucion", errors.numero_resolucion)}
                   />
                   {errors.numero_resolucion && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_resolucion}</p>
+                    <FieldError fieldId={"numero_resolucion"}>{errors.numero_resolucion}</FieldError>
                   )}
                 </div>
                 <div>
@@ -363,9 +364,10 @@ export default function ResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("prefijo", errors.prefijo)}
                   />
                   {errors.prefijo && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.prefijo}</p>
+                    <FieldError fieldId={"prefijo"}>{errors.prefijo}</FieldError>
                   )}
                 </div>
               </div>
@@ -387,9 +389,10 @@ export default function ResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("rango_minimo", errors.rango_minimo)}
                   />
                   {errors.rango_minimo && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_minimo}</p>
+                    <FieldError fieldId={"rango_minimo"}>{errors.rango_minimo}</FieldError>
                   )}
                 </div>
                 <div>
@@ -408,9 +411,10 @@ export default function ResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("rango_maximo", errors.rango_maximo)}
                   />
                   {errors.rango_maximo && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_maximo}</p>
+                    <FieldError fieldId={"rango_maximo"}>{errors.rango_maximo}</FieldError>
                   )}
                 </div>
               </div>
@@ -431,9 +435,10 @@ export default function ResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("fecha_inicio", errors.fecha_inicio)}
                   />
                   {errors.fecha_inicio && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_inicio}</p>
+                    <FieldError fieldId={"fecha_inicio"}>{errors.fecha_inicio}</FieldError>
                   )}
                 </div>
                 <div>
@@ -451,9 +456,10 @@ export default function ResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("fecha_fin", errors.fecha_fin)}
                   />
                   {errors.fecha_fin ? (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_fin}</p>
+                    <FieldError fieldId={"fecha_fin"}>{errors.fecha_fin}</FieldError>
                   ) : (
                     resolucion &&
                     formData.fecha_fin === resolucion.fecha_fin && (
@@ -478,9 +484,10 @@ export default function ResolutionPanel() {
                       ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                       : "focus:ring-2 focus:ring-brand-50"
                   }`}
+                  {...fieldA11y("technical_key", errors.technical_key)}
                 />
                 {errors.technical_key && (
-                  <p className="mt-1 text-sm text-fiscal-danger">{errors.technical_key}</p>
+                  <FieldError fieldId={"technical_key"}>{errors.technical_key}</FieldError>
                 )}
               </div>
 
@@ -501,15 +508,16 @@ export default function ResolutionPanel() {
                       ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                       : "focus:ring-2 focus:ring-brand-50"
                   }`}
+                  {...fieldA11y("consecutivo_actual", errors.consecutivo_actual)}
                 />
                 {errors.consecutivo_actual ? (
-                  <p className="mt-1 text-sm text-fiscal-danger">{errors.consecutivo_actual}</p>
+                  <FieldError fieldId={"consecutivo_actual"}>{errors.consecutivo_actual}</FieldError>
                 ) : (
                   <p className="mt-1 text-sm text-neutralCustom-500">
                     Déjalo vacío para iniciar en el rango mínimo. Solo
                     cámbialo si esta numeración ya tiene documentos
-                    emitidos fuera de IngeFact (por ejemplo, al
-                    cargarla desde Alegra).
+                    emitidos fuera de IngeFact (por ejemplo, con otro
+                    software de facturación).
                   </p>
                 )}
               </div>
@@ -519,7 +527,7 @@ export default function ResolutionPanel() {
               <Button
                 onClick={handleCargarAlegra}
                 disabled={isLoadingAlegra || isValidating || isSaving}
-                title="Cargar la resolución desde Alegra"
+                title="Importar la resolución registrada ante la DIAN"
                 loading={isLoadingAlegra}
               >
                 Importar
@@ -527,7 +535,7 @@ export default function ResolutionPanel() {
               <Button
                 onClick={handleValidar}
                 disabled={!resolucion || isValidating || isSaving}
-                title="Validar ante Alegra"
+                title="Validar la resolución"
                 loading={isValidating}
               >
                 Validar

@@ -2,7 +2,12 @@ interface IconProps {
   className?: string;
 }
 
+// Todos los íconos son decorativos: el texto que los acompaña ya da el
+// significado, así que se ocultan a lectores de pantalla.
+const a11yProps = { "aria-hidden": true, focusable: "false" } as const;
+
 const strokeProps = {
+  ...a11yProps,
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 2,
@@ -54,7 +59,7 @@ export function ChartIcon({ className }: IconProps) {
 
 export function WhatsAppIcon({ className }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" {...a11yProps}>
       <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8.9-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.4-.4.1-.1.2-.2.2-.4.1-.1 0-.3 0-.4 0-.1-.6-1.4-.8-1.9-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.4c.1.2 1.6 2.5 4 3.5.6.2 1 .4 1.3.5.6.2 1.1.1 1.5.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.4-.3z" />
     </svg>
   );
@@ -131,6 +136,38 @@ export function CheckIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...strokeProps} strokeWidth={3}>
       <path d="M20 6L9 17l-5-5" />
+    </svg>
+  );
+}
+
+export function PayrollIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
+      <rect x="3" y="6" width="18" height="13" rx="2" />
+      <path d="M3 10h18" />
+      <circle cx="8.5" cy="14.5" r="1.5" />
+      <path d="M13 14h5" />
+      <path d="M13 16.5h3" />
+    </svg>
+  );
+}
+
+export function ReceiptIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
+      <path d="M5 3h14v18l-2.5-1.5L14 21l-2-1.5L10 21l-2.5-1.5L5 21V3z" />
+      <path d="M9 8h6" />
+      <path d="M9 12h6" />
+    </svg>
+  );
+}
+
+export function InboxCheckIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...strokeProps}>
+      <path d="M3 13l3-8h12l3 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z" />
+      <path d="M3 13h5l1 2h6l1-2h5" />
+      <path d="M9.5 8.5l2 2 3.5-3.5" />
     </svg>
   );
 }

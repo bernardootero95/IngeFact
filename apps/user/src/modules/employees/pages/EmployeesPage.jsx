@@ -90,7 +90,7 @@ export default function EmployeesPage() {
                   type="text"
                   value={search}
                   onChange={handleSearchChange}
-                  placeholder="Buscar por documento o nombre..."
+                  aria-label="Buscar empleados por documento o nombre" placeholder="Buscar por documento o nombre..."
                   className="field w-full pl-9 pr-4"
                 />
                 <svg
@@ -113,7 +113,7 @@ export default function EmployeesPage() {
               <TableSkeleton columns={5} label="Cargando empleados..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar los empleados: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar los empleados: {loadError}</p>
                 <Button onClick={() => fetchEmployees(search)} variant="danger">
                   Reintentar
                 </Button>

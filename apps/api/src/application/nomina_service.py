@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.consecutivo import revertir_consecutivo
+from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -188,7 +189,8 @@ class NominaService:
         nomina = self._obtener_editable(empresa_id, nomina_id)
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una nomina rechazada: reutiliza el numero ya asignado
         # (ver actualizar_borrador) en vez de pedir uno nuevo.
@@ -205,7 +207,7 @@ class NominaService:
         except AlegraTransientError as exc:
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
-                "Alegra no esta respondiendo en este momento. Intenta de nuevo en unos minutos.",
+                "El servicio de facturación electrónica no está respondiendo en este momento. Intenta de nuevo en unos minutos.",
             ) from exc
 
         self._aplicar_respuesta_envio(nomina, consecutivo, respuesta)
@@ -213,6 +215,8 @@ class NominaService:
         self.db.add(nomina)
         self.db.commit()
         self.db.refresh(nomina)
+        if nomina.estado == "aceptada":
+            revisar_alerta_cuota_sin_romper(self.db, empresa_id)
         return self.obtener(empresa_id, nomina.id)
 
     def anular(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> Nomina:
@@ -234,7 +238,7 @@ class NominaService:
         except AlegraTransientError as exc:
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
-                "Alegra no esta respondiendo en este momento. Intenta de nuevo en unos minutos.",
+                "El servicio de facturación electrónica no está respondiendo en este momento. Intenta de nuevo en unos minutos.",
             ) from exc
 
         cancelacion = respuesta.get("cancellation") or {}
@@ -253,14 +257,14 @@ class NominaService:
         cada llamada, nunca se persiste."""
         nomina = self.obtener(empresa_id, nomina_id)
         if not nomina.alegra_payroll_id:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta nomina todavia no fue enviada a Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Esta nómina todavía no fue enviada a la DIAN.")
         try:
             respuesta = self._alegra_client.get_payroll(nomina.alegra_payroll_id)
         except AlegraApiError as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body)) from exc
         url = (respuesta.get("files") or {}).get("xml")
         if not url:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Alegra no tiene un XML disponible para esta nomina.")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "El XML de este documento todavía no está disponible. Intenta de nuevo en unos minutos.")
         return url
 
     def generar_pdf_representacion(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> bytes:

@@ -6,10 +6,12 @@ from fastapi import HTTPException
 from src.application.documento_soporte_service import DocumentoSoporteService
 from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.documento_soporte import CrearDocumentoSoporteRequest, LineaDocumentoSoporteRequest
-from src.infrastructure.db.models import Empresa, Producto, Proveedor, ResolucionDocumentoSoporte
+from src.infrastructure.db.models import Empresa, Suscripcion, Producto, Proveedor, ResolucionDocumentoSoporte
 
 
-def _crear_empresa(db_session, **overrides) -> Empresa:
+def _crear_empresa(db_session, *, max_documentos=100, **overrides) -> Empresa:
+    """Con suscripcion activa por defecto: enviar() exige cupo disponible
+    (verificar_cupo_disponible). max_documentos=0 simula el cupo agotado."""
     data = {
         "razon_social": "Empresa Demo SAS",
         "numero_identificacion": "900618467",
@@ -24,6 +26,16 @@ def _crear_empresa(db_session, **overrides) -> Empresa:
     db_session.add(empresa)
     db_session.commit()
     db_session.refresh(empresa)
+    db_session.add(
+        Suscripcion(
+            empresa_id=empresa.id,
+            max_documentos=max_documentos,
+            fecha_inicio=date(2000, 1, 1),
+            fecha_fin=date(2100, 12, 31),
+            estado="activa",
+        )
+    )
+    db_session.commit()
     return empresa
 
 
@@ -211,6 +223,24 @@ def test_enviar_sin_resolucion_falla_404(db_session):
     with pytest.raises(HTTPException) as exc_info:
         service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
     assert exc_info.value.status_code == 404
+
+
+def test_enviar_con_cupo_agotado_falla_409_sin_gastar_numeracion(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=0)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    resolucion = _crear_resolucion(db_session, empresa.id)
+    consecutivo_inicial = resolucion.consecutivo_actual
+    service = DocumentoSoporteService(db_session, alegra_client=_FakeAlegraClient())
+    documento = service.crear_borrador(empresa.id, _payload(proveedor.id, producto.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, documento.id, forma_pago="1", metodo_pago="10")
+
+    assert exc_info.value.status_code == 409
+    assert "cupo" in exc_info.value.detail
+    db_session.refresh(resolucion)
+    assert resolucion.consecutivo_actual == consecutivo_inicial
 
 
 def test_enviar_proveedor_con_cedula_falla_409(db_session):

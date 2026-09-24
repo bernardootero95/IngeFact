@@ -1,5 +1,12 @@
 import type { ComponentType } from "react";
-import { ChartIcon, InvoiceIcon, ShieldCheckIcon, UsersIcon } from "@/components/ui/icons";
+import {
+  ChartIcon,
+  InboxCheckIcon,
+  InvoiceIcon,
+  PayrollIcon,
+  ReceiptIcon,
+  UsersIcon,
+} from "@/components/ui/icons";
 
 export interface Feature {
   icon: ComponentType<{ className?: string }>;
@@ -10,30 +17,39 @@ export interface Feature {
 export const HOME_FEATURES: Feature[] = [
   {
     icon: InvoiceIcon,
-    title: "Facturación en minutos",
-    description: "Emite facturas, notas crédito y débito con validez ante la DIAN en segundos, sin instalar nada.",
+    title: "Facturación electrónica",
+    description: "Emite facturas de venta, notas crédito y notas débito y envíalas a la DIAN desde el navegador.",
   },
   {
-    icon: ShieldCheckIcon,
-    title: "Cumplimiento DIAN automático",
-    description: "Numeración, resolución y firma digital gestionadas por nosotros. Tú factura, nosotros cuidamos la norma.",
+    icon: PayrollIcon,
+    title: "Nómina electrónica",
+    description: "Registra a tus empleados y transmite el comprobante de nómina de cada uno, con devengados y deducciones.",
+  },
+  {
+    icon: ReceiptIcon,
+    title: "Documento soporte",
+    description: "Soporta tus compras a proveedores no obligados a facturar con su propia numeración autorizada.",
+  },
+  {
+    icon: InboxCheckIcon,
+    title: "Aceptación de facturas (RADIAN)",
+    description: "Registra acuse de recibo, recibo del bien o servicio, aceptación o reclamo de las facturas que te emiten.",
   },
   {
     icon: UsersIcon,
-    title: "Clientes y productos organizados",
-    description: "Guarda tus terceros y tu catálogo una sola vez y reutilízalos en cada factura.",
+    title: "Terceros y catálogo",
+    description: "Guarda clientes, proveedores, empleados y productos una sola vez y reutilízalos en cada documento.",
   },
   {
     icon: ChartIcon,
-    title: "Reportes claros",
-    description: "Visualiza cuántos documentos has emitido y cuánto cupo te queda, sin hojas de cálculo.",
+    title: "Control de tu paquete",
+    description: "Consulta cuántos documentos has usado y recibe un aviso por correo al llegar al 90 % de tu paquete.",
   },
 ];
 
 export interface FeatureItem {
   title: string;
   description: string;
-  soon?: boolean;
 }
 
 export interface FeatureCategory {
@@ -47,45 +63,67 @@ export const FEATURE_CATEGORIES: FeatureCategory[] = [
   {
     icon: InvoiceIcon,
     title: "Facturación electrónica",
-    intro: "Emite los documentos que tu operación necesita, siempre con validez legal.",
+    intro: "Los documentos de venta que tu operación necesita.",
     items: [
-      { title: "Factura de venta electrónica", description: "Crea y envía facturas con validez ante la DIAN en pocos pasos." },
-      { title: "Notas crédito y débito", description: "Ajusta o anula documentos ya emitidos sin salir de la plataforma." },
-      { title: "Numeración controlada", description: "El consecutivo de tu resolución se lleva de forma automática, sin duplicados." },
-      { title: "Firma y CUFE automáticos", description: "Cada documento sale firmado digitalmente y con su código único de factura." },
+      { title: "Factura de venta electrónica", description: "Crea la factura, envíala a la DIAN y consulta su respuesta en la misma pantalla." },
+      { title: "Notas crédito y débito", description: "Corrige, ajusta o anula facturas ya aceptadas, de forma total o parcial." },
+      { title: "Numeración controlada", description: "El consecutivo de tu resolución avanza solo al enviar, nunca al guardar un borrador." },
+      { title: "PDF, XML y correo", description: "Descarga la representación gráfica y el XML, o envíalos por correo a tu cliente." },
     ],
   },
   {
-    icon: ShieldCheckIcon,
-    title: "Cumplimiento DIAN",
-    intro: "La normativa cambia; tu operación no debería frenarse por eso.",
+    icon: PayrollIcon,
+    title: "Nómina electrónica",
+    intro: "Transmite a la DIAN el soporte de pago de tus empleados.",
     items: [
-      { title: "Resolución configurable", description: "Registra tu rango autorizado y IngeFact controla el consecutivo por ti." },
-      { title: "XML y CUFE válidos", description: "Documentos generados según el estándar exigido por la DIAN." },
-      { title: "Alertas de cupo", description: "Te avisamos por correo cuando tu cupo de documentos esté por agotarse." },
-      { title: "Estado por documento", description: "Consulta si cada factura fue aceptada, rechazada o está en proceso." },
+      { title: "Empleados", description: "Registra tipo de trabajador, contrato, salario y lugar de trabajo una sola vez." },
+      { title: "Devengados y deducciones", description: "Básico, auxilio de transporte, horas extra, vacaciones, prima, cesantías, incapacidades, salud, pensión y más." },
+      { title: "Envío y anulación", description: "Transmite el comprobante a la DIAN y, si hace falta, anúlalo con su propia numeración." },
+      { title: "Comprobante para el empleado", description: "Genera el PDF y envíalo por correo al empleado." },
+    ],
+  },
+  {
+    icon: ReceiptIcon,
+    title: "Documento soporte",
+    intro: "Para compras a personas o empresas no obligadas a facturar.",
+    items: [
+      { title: "Proveedores", description: "Registra tus proveedores con los datos que exige la DIAN para este documento." },
+      { title: "Resolución propia", description: "Configura la numeración autorizada para documento soporte, separada de la de facturación." },
+      { title: "Envío a la DIAN", description: "Transmite el documento y consulta si fue aceptado o rechazado, con el motivo." },
+      { title: "PDF y XML", description: "Descarga la representación gráfica y el XML, o envíalos al proveedor." },
+    ],
+  },
+  {
+    icon: InboxCheckIcon,
+    title: "Aceptación de facturas (RADIAN)",
+    intro: "Gestiona las facturas electrónicas que te emiten tus proveedores.",
+    items: [
+      { title: "Facturas recibidas", description: "Registra la factura que recibiste a partir de su CUFE." },
+      { title: "Acuse de recibo", description: "Informa a la DIAN que recibiste la factura electrónica." },
+      { title: "Recibo del bien o servicio", description: "Deja constancia de que recibiste lo facturado." },
+      { title: "Aceptación o reclamo", description: "Acepta expresamente la factura o regístrale un reclamo con su motivo." },
     ],
   },
   {
     icon: UsersIcon,
-    title: "Clientes y productos",
-    intro: "Configura una vez, reutiliza en cada factura.",
+    title: "Terceros y catálogo",
+    intro: "Configura una vez, reutiliza en cada documento.",
     items: [
-      { title: "Clientes validados", description: "Registra terceros con NIT o cédula verificados antes de facturar." },
-      { title: "Consulta automática", description: "Autocompleta los datos del adquiriente consultando su NIT ante la DIAN." },
+      { title: "Clientes", description: "Registra identificación, régimen y responsabilidad fiscal de cada cliente." },
+      { title: "Consulta de adquiriente", description: "Autocompleta nombre y correo de un cliente a partir de su NIT, cuando la DIAN tiene el dato." },
       { title: "Catálogo de productos", description: "Guarda tus productos y servicios para agregarlos en un clic." },
       { title: "Impuestos configurables", description: "Define el IVA u otros tributos aplicables a cada producto." },
     ],
   },
   {
     icon: ChartIcon,
-    title: "Reportes y panel",
+    title: "Panel y control",
     intro: "Entiende tu operación de un vistazo.",
     items: [
-      { title: "Dashboard en tiempo real", description: "Documentos emitidos y disponibles de tu plan, siempre visibles." },
-      { title: "Historial de facturación", description: "Consulta cualquier documento emitido por tu empresa." },
-      { title: "Estado de tu cupo", description: "Sabe cuántos documentos te quedan disponibles este mes." },
-      { title: "Reportes exportables", description: "Próximamente: exporta tu historial en Excel o PDF.", soon: true },
+      { title: "Panel principal", description: "Documentos emitidos, clientes registrados y documentos disponibles de tu paquete." },
+      { title: "Historial por módulo", description: "Consulta y ordena cualquier documento emitido por tu empresa." },
+      { title: "Estado ante la DIAN", description: "Consulta si cada documento fue aceptado, rechazado o sigue en proceso." },
+      { title: "Aviso de paquete", description: "Te avisamos por correo cuando usaste el 90 % de los documentos de tu paquete." },
     ],
   },
 ];

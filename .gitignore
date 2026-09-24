@@ -22,6 +22,7 @@ build
 !apps/api/docs/*.md
 !apps/api/README.md
 !apps/user/README.md
+!deploy/README.md
 
 # Supabase temporales
 supabase/.temp

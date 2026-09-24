@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { getEmpleado, createEmpleado, updateEmpleado, listPublicReferenceTable } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./EmployeeFormPage.validation";
-import { Button, FormSkeleton } from "@ingefact/ui";
+import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
   tipo_documento: "",
@@ -230,7 +230,7 @@ export default function EmployeeFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
@@ -239,7 +239,7 @@ export default function EmployeeFormPage() {
                 className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-6"
               >
                 {saveError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     {saveError}
                   </div>
                 )}
@@ -249,7 +249,7 @@ export default function EmployeeFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="tipo_documento" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Tipo de Documento <span className="text-fiscal-danger">*</span>
+                        Tipo de Documento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="tipo_documento"
@@ -267,7 +267,7 @@ export default function EmployeeFormPage() {
                     </div>
                     <div>
                       <label htmlFor="numero_documento" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Número de Documento <span className="text-fiscal-danger">*</span>
+                        Número de Documento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -277,15 +277,16 @@ export default function EmployeeFormPage() {
                         onChange={handleChange}
                         className={`field w-full ${errors.numero_documento ? "border-fiscal-danger field-invalid" : ""}`}
                         placeholder="Ej. 1000000000"
+                        {...fieldA11y("numero_documento", errors.numero_documento)}
                       />
-                      {errors.numero_documento && <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_documento}</p>}
+                      {errors.numero_documento && <FieldError fieldId={"numero_documento"}>{errors.numero_documento}</FieldError>}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="primer_nombre" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Primer Nombre <span className="text-fiscal-danger">*</span>
+                        Primer Nombre <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -294,8 +295,9 @@ export default function EmployeeFormPage() {
                         value={formData.primer_nombre}
                         onChange={handleChange}
                         className={`field w-full ${errors.primer_nombre ? "border-fiscal-danger field-invalid" : ""}`}
+                        {...fieldA11y("primer_nombre", errors.primer_nombre)}
                       />
-                      {errors.primer_nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.primer_nombre}</p>}
+                      {errors.primer_nombre && <FieldError fieldId={"primer_nombre"}>{errors.primer_nombre}</FieldError>}
                     </div>
                     <div>
                       <label htmlFor="otros_nombres" className="block text-sm font-medium text-neutralCustom-600 mb-1">
@@ -312,7 +314,7 @@ export default function EmployeeFormPage() {
                     </div>
                     <div>
                       <label htmlFor="primer_apellido" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Primer Apellido <span className="text-fiscal-danger">*</span>
+                        Primer Apellido <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -321,8 +323,9 @@ export default function EmployeeFormPage() {
                         value={formData.primer_apellido}
                         onChange={handleChange}
                         className={`field w-full ${errors.primer_apellido ? "border-fiscal-danger field-invalid" : ""}`}
+                        {...fieldA11y("primer_apellido", errors.primer_apellido)}
                       />
-                      {errors.primer_apellido && <p className="mt-1 text-sm text-fiscal-danger">{errors.primer_apellido}</p>}
+                      {errors.primer_apellido && <FieldError fieldId={"primer_apellido"}>{errors.primer_apellido}</FieldError>}
                     </div>
                     <div>
                       <label htmlFor="segundo_apellido" className="block text-sm font-medium text-neutralCustom-600 mb-1">
@@ -375,7 +378,7 @@ export default function EmployeeFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="tipo_trabajador" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Tipo de Trabajador <span className="text-fiscal-danger">*</span>
+                        Tipo de Trabajador <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="tipo_trabajador"
@@ -383,6 +386,7 @@ export default function EmployeeFormPage() {
                         value={formData.tipo_trabajador}
                         onChange={handleChange}
                         className={`field w-full ${errors.tipo_trabajador ? "border-fiscal-danger field-invalid" : ""}`}
+                        {...fieldA11y("tipo_trabajador", errors.tipo_trabajador)}
                       >
                         <option value="">Seleccione...</option>
                         {catalogs.workerTypes.map((t) => (
@@ -391,11 +395,11 @@ export default function EmployeeFormPage() {
                           </option>
                         ))}
                       </select>
-                      {errors.tipo_trabajador && <p className="mt-1 text-sm text-fiscal-danger">{errors.tipo_trabajador}</p>}
+                      {errors.tipo_trabajador && <FieldError fieldId={"tipo_trabajador"}>{errors.tipo_trabajador}</FieldError>}
                     </div>
                     <div>
                       <label htmlFor="subtipo_trabajador" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Subtipo de Trabajador <span className="text-fiscal-danger">*</span>
+                        Subtipo de Trabajador <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="subtipo_trabajador"
@@ -403,6 +407,7 @@ export default function EmployeeFormPage() {
                         value={formData.subtipo_trabajador}
                         onChange={handleChange}
                         className={`field w-full ${errors.subtipo_trabajador ? "border-fiscal-danger field-invalid" : ""}`}
+                        {...fieldA11y("subtipo_trabajador", errors.subtipo_trabajador)}
                       >
                         <option value="">Seleccione...</option>
                         {catalogs.workerSubtypes.map((t) => (
@@ -412,12 +417,12 @@ export default function EmployeeFormPage() {
                         ))}
                       </select>
                       {errors.subtipo_trabajador && (
-                        <p className="mt-1 text-sm text-fiscal-danger">{errors.subtipo_trabajador}</p>
+                        <FieldError fieldId={"subtipo_trabajador"}>{errors.subtipo_trabajador}</FieldError>
                       )}
                     </div>
                     <div>
                       <label htmlFor="tipo_contrato" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Tipo de Contrato <span className="text-fiscal-danger">*</span>
+                        Tipo de Contrato <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="tipo_contrato"
@@ -425,6 +430,7 @@ export default function EmployeeFormPage() {
                         value={formData.tipo_contrato}
                         onChange={handleChange}
                         className={`field w-full ${errors.tipo_contrato ? "border-fiscal-danger field-invalid" : ""}`}
+                        {...fieldA11y("tipo_contrato", errors.tipo_contrato)}
                       >
                         <option value="">Seleccione...</option>
                         {catalogs.contractTypes.map((t) => (
@@ -433,11 +439,11 @@ export default function EmployeeFormPage() {
                           </option>
                         ))}
                       </select>
-                      {errors.tipo_contrato && <p className="mt-1 text-sm text-fiscal-danger">{errors.tipo_contrato}</p>}
+                      {errors.tipo_contrato && <FieldError fieldId={"tipo_contrato"}>{errors.tipo_contrato}</FieldError>}
                     </div>
                     <div>
                       <label htmlFor="sueldo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Sueldo <span className="text-fiscal-danger">*</span>
+                        Sueldo <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="number"
@@ -449,8 +455,9 @@ export default function EmployeeFormPage() {
                         onChange={handleChange}
                         className={`field w-full ${errors.sueldo ? "border-fiscal-danger field-invalid" : ""}`}
                         placeholder="Ej. 2000000"
+                        {...fieldA11y("sueldo", errors.sueldo)}
                       />
-                      {errors.sueldo && <p className="mt-1 text-sm text-fiscal-danger">{errors.sueldo}</p>}
+                      {errors.sueldo && <FieldError fieldId={"sueldo"}>{errors.sueldo}</FieldError>}
                     </div>
                     <div>
                       <label htmlFor="codigo_trabajador" className="block text-sm font-medium text-neutralCustom-600 mb-1">
@@ -494,7 +501,7 @@ export default function EmployeeFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="fecha_ingreso" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Fecha de Ingreso <span className="text-fiscal-danger">*</span>
+                        Fecha de Ingreso <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="date"
@@ -503,8 +510,9 @@ export default function EmployeeFormPage() {
                         value={formData.fecha_ingreso}
                         onChange={handleChange}
                         className={`field w-full ${errors.fecha_ingreso ? "border-fiscal-danger field-invalid" : ""}`}
+                        {...fieldA11y("fecha_ingreso", errors.fecha_ingreso)}
                       />
-                      {errors.fecha_ingreso && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_ingreso}</p>}
+                      {errors.fecha_ingreso && <FieldError fieldId={"fecha_ingreso"}>{errors.fecha_ingreso}</FieldError>}
                     </div>
                     <div>
                       <label htmlFor="fecha_retiro" className="block text-sm font-medium text-neutralCustom-600 mb-1">
@@ -518,8 +526,9 @@ export default function EmployeeFormPage() {
                         onChange={handleChange}
                         className={`field w-full ${errors.fecha_retiro ? "border-fiscal-danger field-invalid" : ""}`}
                         placeholder="Solo si ya no trabaja contigo"
+                        {...fieldA11y("fecha_retiro", errors.fecha_retiro)}
                       />
-                      {errors.fecha_retiro && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_retiro}</p>}
+                      {errors.fecha_retiro && <FieldError fieldId={"fecha_retiro"}>{errors.fecha_retiro}</FieldError>}
                     </div>
                   </div>
                 </div>
@@ -547,7 +556,7 @@ export default function EmployeeFormPage() {
                     </div>
                     <div>
                       <label htmlFor="lugar_trabajo_municipio" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Municipio <span className="text-fiscal-danger">*</span>
+                        Municipio <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="lugar_trabajo_municipio"
@@ -558,6 +567,7 @@ export default function EmployeeFormPage() {
                         className={`field w-full disabled:opacity-50 disabled:cursor-not-allowed ${
                           errors.lugar_trabajo_municipio ? "border-fiscal-danger field-invalid" : ""
                         }`}
+                        {...fieldA11y("lugar_trabajo_municipio", errors.lugar_trabajo_municipio)}
                       >
                         <option value="">Seleccione un municipio...</option>
                         {municipiosFiltrados.map((m) => (
@@ -567,12 +577,12 @@ export default function EmployeeFormPage() {
                         ))}
                       </select>
                       {errors.lugar_trabajo_municipio && (
-                        <p className="mt-1 text-sm text-fiscal-danger">{errors.lugar_trabajo_municipio}</p>
+                        <FieldError fieldId={"lugar_trabajo_municipio"}>{errors.lugar_trabajo_municipio}</FieldError>
                       )}
                     </div>
                     <div className="md:col-span-2">
                       <label htmlFor="lugar_trabajo_direccion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Dirección <span className="text-fiscal-danger">*</span>
+                        Dirección <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -582,9 +592,10 @@ export default function EmployeeFormPage() {
                         onChange={handleChange}
                         className={`field w-full ${errors.lugar_trabajo_direccion ? "border-fiscal-danger field-invalid" : ""}`}
                         placeholder="Ej. Calle 15 # 2-23"
+                        {...fieldA11y("lugar_trabajo_direccion", errors.lugar_trabajo_direccion)}
                       />
                       {errors.lugar_trabajo_direccion && (
-                        <p className="mt-1 text-sm text-fiscal-danger">{errors.lugar_trabajo_direccion}</p>
+                        <FieldError fieldId={"lugar_trabajo_direccion"}>{errors.lugar_trabajo_direccion}</FieldError>
                       )}
                     </div>
                   </div>

@@ -36,6 +36,7 @@ export default function SeccionLineasCredito({ seleccion, error, onToggleLinea, 
                       type="checkbox"
                       checked={linea.incluida}
                       disabled={sinDisponible}
+                      aria-label={`Incluir ${linea.facturaLinea.descripcion}`}
                       onChange={(e) => onToggleLinea(linea.facturaLinea.id, e.target.checked)}
                       className="w-4 h-4 accent-brand-600"
                     />
@@ -56,6 +57,7 @@ export default function SeccionLineasCredito({ seleccion, error, onToggleLinea, 
                       step="1"
                       value={linea.cantidad}
                       disabled={!linea.incluida}
+                      aria-label={`Cantidad a acreditar de ${linea.facturaLinea.descripcion}`}
                       onChange={(e) => onCantidadChange(linea.facturaLinea.id, e.target.value)}
                       className={`field field-sm w-full text-right disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
                         cantidadInvalida ? "border-fiscal-danger field-invalid" : ""

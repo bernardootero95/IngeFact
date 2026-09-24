@@ -5,7 +5,7 @@ import {
   obtenerRepresentacionPdfDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
 } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -85,7 +85,7 @@ export default function SupportDocumentsListPage() {
               <TableSkeleton columns={6} label="Cargando..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
                 <Button
                   onClick={fetchDocumentos}
                   variant="danger"
@@ -108,13 +108,9 @@ export default function SupportDocumentsListPage() {
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
                   {view.rows.map((d) => (
-                    <tr
-                      key={d.id}
-                      onClick={() => navigate(`/support-documents/${d.id}`)}
-                      className="hover:bg-neutralCustom-50 transition-colors cursor-pointer"
-                    >
+                    <ClickableRow key={d.id} to={`/support-documents/${d.id}`}>
                       <td className="px-6 py-4 font-medium text-neutralCustom-800">
-                        {d.numero_completo || "Borrador"}
+                        <ClickableRow.Link to={`/support-documents/${d.id}`}>{d.numero_completo || "Borrador"}</ClickableRow.Link>
                       </td>
                       <td className="px-6 py-4">{d.proveedor_nombre}</td>
                       <td className="px-6 py-4">{d.fecha}</td>
@@ -131,7 +127,7 @@ export default function SupportDocumentsListPage() {
                         {formatCOP(d.total)}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
                           <IconButton
                             title={d.estado === "aceptado" ? "Ver representación gráfica" : "Vista previa"}
                             onClick={() => handleVerRepresentacion(d)}
@@ -186,7 +182,7 @@ export default function SupportDocumentsListPage() {
                           </IconButton>
                         </div>
                       </td>
-                    </tr>
+                    </ClickableRow>
                   ))}
                 </tbody>
               </table>

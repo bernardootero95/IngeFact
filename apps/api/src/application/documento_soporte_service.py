@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_documento_soporte_service import ResolucionDocumentoSoporteService
+from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
@@ -107,10 +108,8 @@ def _construir_supplier_alegra(proveedor: Proveedor) -> dict:
 class DocumentoSoporteService:
     """Documento Soporte de Adquisiciones -- envia a Alegra/DIAN mismo patron que
     FacturaService pero con su propia resolucion de numeracion
-    (ResolucionDocumentoSoporteService) y sin cupo de Suscripcion (esa
-    cuenta solo Facturas, ver contar_documentos_usados -- Documento Soporte
-    no consume el cupo del plan, decision explicita de no extender esa
-    logica sin que el usuario lo pida)."""
+    (ResolucionDocumentoSoporteService). Consume cupo del plan igual que una
+    Factura (ver contar_documentos_usados, decision de negocio 2026-09-24)."""
 
     def __init__(self, db: Session, alegra_client: AlegraClient | None = None):
         self.db = db
@@ -275,9 +274,10 @@ class DocumentoSoporteService:
         documento = self._obtener_editable(empresa_id, documento_id)
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
 
         validar_proveedor_para_documento_soporte(documento.proveedor)
+        verificar_cupo_disponible(self.db, empresa_id)
 
         resolucion_service = ResolucionDocumentoSoporteService(self.db)
         resolucion = resolucion_service.obtener_o_404(empresa_id)
@@ -299,7 +299,7 @@ class DocumentoSoporteService:
         except AlegraTransientError as exc:
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
-                "Alegra no esta respondiendo en este momento. Intenta de nuevo en unos minutos.",
+                "El servicio de facturación electrónica no está respondiendo en este momento. Intenta de nuevo en unos minutos.",
             ) from exc
 
         self._aplicar_respuesta_envio(documento, resolucion, consecutivo, forma_pago, metodo_pago, respuesta)
@@ -310,6 +310,8 @@ class DocumentoSoporteService:
 
         documento_actualizado = self.obtener(empresa_id, documento.id)
         notificar_documento_soporte_aceptado(self.db, documento_actualizado, self._alegra_client)
+        if documento_actualizado.estado == "aceptado":
+            revisar_alerta_cuota_sin_romper(self.db, empresa_id)
         return documento_actualizado
 
     def obtener_url_xml(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> str:
@@ -318,7 +320,7 @@ class DocumentoSoporteService:
         documento = self.obtener(empresa_id, documento_id)
         if not documento.alegra_support_document_id:
             raise HTTPException(
-                status.HTTP_409_CONFLICT, "Este documento soporte todavia no fue enviado a Alegra."
+                status.HTTP_409_CONFLICT, "Este documento soporte todavía no fue enviado a la DIAN."
             )
         try:
             respuesta = self._alegra_client.get_support_document(documento.alegra_support_document_id)
@@ -326,7 +328,7 @@ class DocumentoSoporteService:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, map_alegra_error(exc.status_code, exc.body)) from exc
         url = (respuesta.get("files") or {}).get("xml")
         if not url:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Alegra no tiene un XML disponible para este documento.")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "El XML de este documento todavía no está disponible. Intenta de nuevo en unos minutos.")
         return url
 
     def obtener_firma_digital(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> str:

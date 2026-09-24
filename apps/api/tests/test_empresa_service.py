@@ -139,7 +139,7 @@ def test_crear_empresa_provisiona_usuario_tenant_con_clave_temporal(db_session, 
     # guardado corresponde a la misma clave que se envio.
     import re
 
-    clave_temporal = re.search(r"font-family:monospace;\">([^<]+)</td>", correo["html"]).group(1)
+    clave_temporal = re.search(r"font-family:monospace;[^\"]*\">([^<]+)</td>", correo["html"]).group(1)
     assert verify_password(clave_temporal, usuario.password_hash)
 
 

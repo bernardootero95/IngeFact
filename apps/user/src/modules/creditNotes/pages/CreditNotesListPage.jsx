@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listNotasCredito, obtenerRepresentacionPdfNotaCredito, enviarNotaCreditoPorCorreo } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -84,6 +84,7 @@ export default function CreditNotesListPage() {
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-end items-center gap-3">
               <select
                 value={estado}
+                aria-label="Filtrar por estado"
                 onChange={(e) => setEstado(e.target.value)}
                 className="field"
               >
@@ -99,7 +100,7 @@ export default function CreditNotesListPage() {
               <TableSkeleton columns={7} label="Cargando notas crédito..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
                 <Button
                   onClick={() => fetchNotas(estado)}
                   variant="danger"
@@ -123,13 +124,9 @@ export default function CreditNotesListPage() {
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
                   {view.rows.map((n) => (
-                    <tr
-                      key={n.id}
-                      onClick={() => navigate(`/credit-notes/${n.id}`)}
-                      className="hover:bg-neutralCustom-50 transition-colors cursor-pointer"
-                    >
+                    <ClickableRow key={n.id} to={`/credit-notes/${n.id}`}>
                       <td className="px-6 py-4 font-medium text-neutralCustom-800">
-                        {n.numero_completo || "Sin enviar"}
+                        <ClickableRow.Link to={`/credit-notes/${n.id}`}>{n.numero_completo || "Sin enviar"}</ClickableRow.Link>
                       </td>
                       <td className="px-6 py-4">
                         <Button
@@ -157,7 +154,7 @@ export default function CreditNotesListPage() {
                         {formatCOP(n.total)}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
                           <IconButton
                             title={n.cude ? "Ver representación gráfica" : "Vista previa (borrador)"}
                             onClick={() => handleVerRepresentacion(n)}
@@ -212,7 +209,7 @@ export default function CreditNotesListPage() {
                           </IconButton>
                         </div>
                       </td>
-                    </tr>
+                    </ClickableRow>
                   ))}
                 </tbody>
               </table>

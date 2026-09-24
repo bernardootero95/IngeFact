@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_dian_service import ResolucionDianService
-from src.application.suscripcion_service import contar_documentos_usados, revisar_alerta_cuota_por_empresa
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.calculo_linea import base_gravable_iva, calcular_linea
@@ -26,7 +26,7 @@ from src.core.factura_pdf import generar_representacion_pdf
 from src.core.nit import dv_para_customer_alegra
 from src.core.xml_utils import extraer_firma_digital
 from src.domain.factura import FORMA_PAGO_CREDITO, ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
-from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto, Suscripcion
+from src.infrastructure.db.models import Cliente, Empresa, Factura, FacturaLinea, Producto
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class FacturaService:
         -- nunca se persiste, se vuelve a pedir a Alegra cada vez."""
         factura = self.obtener(empresa_id, factura_id)
         if not factura.alegra_invoice_id:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta factura todavia no fue enviada a Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Esta factura todavía no fue enviada a la DIAN.")
 
         try:
             respuesta = self._alegra_client.get_invoice(factura.alegra_invoice_id)
@@ -116,7 +116,7 @@ class FacturaService:
 
         url = (respuesta.get("files") or {}).get("xml")
         if not url:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "Alegra no tiene un XML disponible para esta factura.")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "El XML de este documento todavía no está disponible. Intenta de nuevo en unos minutos.")
         return url
 
     def obtener_firma_digital(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> str:
@@ -329,20 +329,14 @@ class FacturaService:
         factura = self._obtener_editable(empresa_id, factura_id)
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa aun no esta registrada en Alegra.")
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
 
         resolucion_service = ResolucionDianService(self.db, self._alegra_client)
         resolucion = resolucion_service.obtener_o_404(empresa_id)
         if resolucion.fecha_fin < date_cls.today():
             raise HTTPException(status.HTTP_409_CONFLICT, "La Resolucion DIAN configurada ya esta vencida.")
 
-        suscripcion = self.db.execute(
-            select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
-        ).scalar_one_or_none()
-        if suscripcion is None:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa no tiene una suscripcion activa.")
-        if contar_documentos_usados(self.db, suscripcion) >= suscripcion.max_documentos:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
+        verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una factura rechazada: reutiliza el numero ya asignado (ver
         # actualizar_borrador) en vez de pedir uno nuevo.
@@ -367,7 +361,7 @@ class FacturaService:
         except AlegraTransientError as exc:
             raise HTTPException(
                 status.HTTP_502_BAD_GATEWAY,
-                "Alegra no esta respondiendo en este momento. Intenta de nuevo en unos minutos.",
+                "El servicio de facturación electrónica no está respondiendo en este momento. Intenta de nuevo en unos minutos.",
             ) from exc
 
         self._aplicar_respuesta_envio(factura, resolucion, consecutivo, forma_pago, metodo_pago, fecha_vencimiento, respuesta)

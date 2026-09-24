@@ -1,18 +1,24 @@
 import { useEffect } from "react";
 
+// Los errores suelen ser mas largos y hay que poder leerlos con calma
+// (WCAG 2.2.1): duran el doble que un aviso de exito.
+const DEFAULT_DURATION = { success: 4000, warning: 6000, error: 8000 };
+
 export default function ToastAlert({
   type = "success",
   message,
   onClose,
-  duration = 4000,
+  duration,
 }) {
+  const effectiveDuration = duration ?? DEFAULT_DURATION[type] ?? 4000;
+
   useEffect(() => {
     if (!message) return;
     const timer = setTimeout(() => {
       onClose();
-    }, duration);
+    }, effectiveDuration);
     return () => clearTimeout(timer);
-  }, [message, duration, onClose]);
+  }, [message, effectiveDuration, onClose]);
 
   if (!message) return null;
 
@@ -25,6 +31,7 @@ export default function ToastAlert({
   return (
     <div className="fixed bottom-6 right-6 z-50 animate-bounce-in motion-reduce:animate-none">
       <div
+        role={type === "error" ? "alert" : "status"}
         className={`flex items-center justify-between px-4 py-3 rounded-brand-lg border shadow-lg max-w-md ${styles[type] || styles.success}`}
       >
         <div className="flex items-center space-x-3">
