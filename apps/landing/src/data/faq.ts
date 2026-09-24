@@ -9,12 +9,24 @@ export const PRICING_FAQ: FaqEntry[] = [
     answer: "Escríbenos por WhatsApp con el paquete que necesitas y te ayudamos a activarlo en tu empresa.",
   },
   {
+    question: "¿Qué cuenta como un documento?",
+    answer:
+      "Cada factura, nota crédito, nota débito, documento soporte o comprobante de nómina aceptado por la DIAN descuenta uno de tu paquete. Los documentos rechazados y los eventos sobre facturas recibidas (acuse, aceptación o reclamo) no se descuentan.",
+  },
+  {
+    question: "¿Los documentos vencen?",
+    answer:
+      "Sí. Cada paquete se puede usar durante 12 meses desde su activación; los documentos que no uses en ese plazo vencen y no son reembolsables.",
+  },
+  {
     question: "¿Qué pasa cuando se me acaban los documentos?",
-    answer: "Te avisamos antes de que se agote tu paquete. Puedes comprar uno nuevo en cualquier momento para seguir facturando sin interrupciones.",
+    answer:
+      "Te enviamos un aviso por correo al llegar al 90 % de tu paquete. Al agotarse, no podrás emitir documentos nuevos hasta comprar otro paquete; las notas crédito y débito sobre documentos ya emitidos siguen disponibles.",
   },
   {
     question: "¿Necesito una resolución DIAN propia?",
-    answer: "Sí, la resolución de facturación la tramitas directamente ante la DIAN; IngeFact te ayuda a configurarla y a controlar el consecutivo automáticamente.",
+    answer:
+      "Para facturas y documento soporte, sí: la resolución la tramitas tú ante la DIAN y la registras en IngeFact, que controla el consecutivo. La nómina electrónica no requiere resolución de numeración.",
   },
   {
     question: "¿Y si necesito una cantidad distinta a las del listado?",
@@ -25,11 +37,13 @@ export const PRICING_FAQ: FaqEntry[] = [
 export const CONTACT_FAQ: FaqEntry[] = [
   {
     question: "¿IngeFact reemplaza a mi contador?",
-    answer: "No. IngeFact se encarga de la emisión y el cumplimiento técnico de tus facturas electrónicas; tu contador sigue siendo quien lleva tu contabilidad.",
+    answer:
+      "No. IngeFact es la herramienta para emitir y transmitir tus documentos electrónicos. La información que registras y el cumplimiento de tus obligaciones tributarias y laborales siguen siendo responsabilidad de tu empresa y de tu contador.",
   },
   {
-    question: "¿Mis datos están seguros?",
-    answer: "Sí. Tu información y la de tus clientes se mantiene aislada por empresa y solo tu equipo puede acceder a ella.",
+    question: "¿Cómo protegen mis datos?",
+    answer:
+      "La información de cada empresa está aislada de las demás y solo se accede con tu usuario y contraseña, por conexiones cifradas. Consulta la política de tratamiento de datos personales para conocer el detalle y tus derechos.",
   },
   {
     question: "¿Cómo empiezo a usar IngeFact?",

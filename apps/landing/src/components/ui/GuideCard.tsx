@@ -12,7 +12,7 @@ export function GuideCard({ slug, icon: Icon, title, description }: Guide) {
       </div>
       <h3 className="text-[15px] font-bold text-neutralCustom-800">{title}</h3>
       <p className="text-[13px] leading-relaxed text-neutralCustom-500">{description}</p>
-      <span className="text-[13px] font-semibold text-brand-600">Leer guía →</span>
+      <span className="text-[13px] font-semibold text-brand-600">Leer guía <span aria-hidden="true">→</span></span>
     </Link>
   );
 }

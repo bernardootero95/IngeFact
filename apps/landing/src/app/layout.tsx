@@ -14,11 +14,11 @@ const siteUrl = "https://ingefact.com";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "IngeFact — Facturación electrónica DIAN Colombia",
+    default: "IngeFact — Facturación, nómina electrónica y documento soporte DIAN",
     template: "%s | IngeFact",
   },
   description:
-    "IngeFact conecta tu empresa con la DIAN: crea, envía y controla tus facturas, notas crédito y débito electrónicas desde un solo lugar.",
+    "Emite facturas, notas, nómina electrónica y documento soporte, y acepta las facturas que recibes (RADIAN), desde un solo lugar.",
   openGraph: {
     type: "website",
     locale: "es_CO",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={inter.variable}>
+    <html lang="es-CO" className={inter.variable}>
       <body className="font-sans text-neutralCustom-800 antialiased">
         {children}
         <FloatingWhatsAppButton />

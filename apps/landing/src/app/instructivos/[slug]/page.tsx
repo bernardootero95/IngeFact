@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { SiteLayout } from "@/components/layout/SiteLayout";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { ALL_GUIDES, findGuideBySlug } from "@/data/guides";
 
@@ -35,16 +34,14 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
   const Icon = guide.icon;
 
   return (
-    <>
-      <Header active="instructivos" />
-
+    <SiteLayout active="instructivos">
       <section className="bg-neutralCustom-50 px-6 py-14 md:px-16">
         <div className="mx-auto max-w-[720px]">
-          <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-[13px] text-neutralCustom-500">
+          <nav aria-label="Ruta de navegación" className="mb-6 flex flex-wrap items-center gap-1.5 text-[13px] text-neutralCustom-500">
             <Link href="/instructivos" className="hover:text-brand-600">
               Instructivos
             </Link>
-            <span>/</span>
+            <span aria-hidden="true">/</span>
             <span>{groupTitle}</span>
           </nav>
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-brand-md bg-brand-50">
@@ -83,12 +80,10 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
           </div>
 
           <Link href="/instructivos" className="mt-8 inline-block text-[14px] font-semibold text-brand-600 hover:text-brand-700">
-            ← Volver a todas las guías
+            <span aria-hidden="true">←</span> Volver a todas las guías
           </Link>
         </div>
       </section>
-
-      <Footer />
-    </>
+    </SiteLayout>
   );
 }
