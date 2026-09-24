@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { NAV_ITEMS } from "@/data/nav";
+import { LEGAL_NAV_ITEMS, NAV_ITEMS } from "@/data/nav";
 import { ALL_GUIDES } from "@/data/guides";
 
 const siteUrl = "https://ingefact.com";
@@ -19,5 +19,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
-  return [...pages, ...guidePages];
+  const legalPages: MetadataRoute.Sitemap = LEGAL_NAV_ITEMS.map((item) => ({
+    url: `${siteUrl}${item.href}`,
+    lastModified: new Date(),
+    changeFrequency: "yearly",
+    priority: 0.3,
+  }));
+
+  return [...pages, ...guidePages, ...legalPages];
 }

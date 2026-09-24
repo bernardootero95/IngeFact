@@ -14,6 +14,8 @@ const config: Config = {
         neutralCustom: {
           50: "#F7F8F9",
           100: "#EEEEF0",
+          // Solo para texto sobre fondos oscuros (neutralCustom-800): 7:1.
+          300: "#A3A6B1",
           500: "#6B6E7A",
           800: "#1A1C23",
         },
