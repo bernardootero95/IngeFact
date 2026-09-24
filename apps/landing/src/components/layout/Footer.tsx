@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { WHATSAPP_DISPLAY, buildWhatsAppLink } from "@/lib/whatsapp";
-import { BUSINESS } from "@/data/business";
+import { BUSINESS, RESPONSABLE } from "@/data/business";
 import { LEGAL_NAV_ITEMS } from "@/data/nav";
 import { NewTabHint } from "@/components/ui/NewTabHint";
 
@@ -22,7 +22,7 @@ export function Footer() {
             Software de facturación electrónica, nómina electrónica y documento soporte para empresas en Colombia.
           </p>
           <address className={`not-italic text-[13px] leading-relaxed ${mutedText}`}>
-            {BUSINESS.razonSocial} · NIT {BUSINESS.nit}
+            {RESPONSABLE} · NIT {BUSINESS.nit}
             <br />
             {BUSINESS.direccion}, {BUSINESS.ciudad}
             <br />
@@ -62,7 +62,7 @@ export function Footer() {
         className={`mx-auto mt-10 flex max-w-[1312px] flex-col gap-2 border-t border-white/10 pt-6 text-[13px] sm:flex-row sm:items-center sm:justify-between ${mutedText}`}
       >
         <span>
-          © {new Date().getFullYear()} {BUSINESS.razonSocial}. Todos los derechos reservados.
+          © {new Date().getFullYear()} {BUSINESS.titular}. Todos los derechos reservados.
         </span>
         <span>{BUSINESS.ciudad}</span>
       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
-import { BUSINESS, PACKAGE_TERMS } from "@/data/business";
+import { BUSINESS, PACKAGE_TERMS, RESPONSABLE } from "@/data/business";
 import { DOCUMENTOS_QUE_CONSUMEN } from "@/data/pricing";
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export default function TerminosPage() {
     >
       <LegalSection id="identificacion" title="1. Quiénes somos">
         <p>
-          IngeFact es un servicio de {BUSINESS.razonSocial}, identificado con NIT {BUSINESS.nit}, con domicilio en{" "}
+          IngeFact es un servicio de {BUSINESS.titular}, {BUSINESS.tipoPersona} que opera con el nombre comercial{" "}{BUSINESS.nombreComercial}, identificado con NIT {BUSINESS.nit}, con domicilio en{" "}
           {BUSINESS.direccion}, {BUSINESS.ciudad}. Correo: <a href={`mailto:${BUSINESS.correo}`}>{BUSINESS.correo}</a>.
           Teléfono y WhatsApp: {BUSINESS.telefono}.
         </p>
@@ -120,7 +120,7 @@ export default function TerminosPage() {
 
       <LegalSection id="propiedad" title="8. Propiedad intelectual y tus datos">
         <p>
-          El software, la marca IngeFact, los diseños y los contenidos de este sitio pertenecen a {BUSINESS.razonSocial}{" "}
+          El software, la marca IngeFact, los diseños y los contenidos de este sitio pertenecen a {RESPONSABLE}{" "}
           o a sus licenciantes. Te otorgamos un derecho de uso personal, no exclusivo e intransferible mientras tengas un
           paquete vigente.
         </p>

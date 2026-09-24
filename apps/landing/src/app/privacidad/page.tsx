@@ -24,7 +24,8 @@ export default function PrivacidadPage() {
     >
       <LegalSection id="responsable" title="1. Responsable del tratamiento">
         <ul>
-          <li>Razón social: {BUSINESS.razonSocial}</li>
+          <li>Responsable: {BUSINESS.titular} ({BUSINESS.tipoPersona})</li>
+          <li>Nombre comercial: {BUSINESS.nombreComercial}</li>
           <li>NIT: {BUSINESS.nit}</li>
           <li>Domicilio y dirección: {BUSINESS.direccion}, {BUSINESS.ciudad}</li>
           <li>

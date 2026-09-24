@@ -6,13 +6,19 @@ import { WHATSAPP_DISPLAY } from "@/lib/whatsapp";
  * reembolsos). El Estatuto del Consumidor (Ley 1480 de 2011, art. 50) y
  * la Ley 1581 de 2012 exigen publicar la identidad del responsable.
  *
- * TODO: los valores entre corchetes NO están confirmados. Reemplazarlos por
- * los datos reales (RUT/Cámara de Comercio) antes de publicar.
+ * Titular, nombre comercial y NIT confirmados por el usuario (2026-09-24).
+ * TODO: los valores entre corchetes (dirección, correos, horario) aún NO
+ * están confirmados; reemplazarlos antes de publicar.
  */
 export const BUSINESS = {
-  nombreComercial: "IngeFact",
-  razonSocial: "[RAZÓN SOCIAL O NOMBRE DEL TITULAR]",
-  nit: "[NIT]",
+  marca: "IngeFact",
+  // Persona natural comerciante: el titular responde legalmente; el nombre
+  // comercial se escribe tal como figura en el RUT / Cámara de Comercio.
+  titular: "Bernardo Andrés Otero Jiménez",
+  nombreComercial: "TecnoIngenieria B.O.",
+  tipoPersona: "persona natural",
+  // DV calculado con calculateNitDV / nit_check_digit (ambos dan 7).
+  nit: "1083000777-7",
   direccion: "[DIRECCIÓN]",
   ciudad: "Bogotá D.C., Colombia",
   correo: "[contacto@ingefact.com]",
@@ -23,6 +29,9 @@ export const BUSINESS = {
   app: "https://app.ingefact.com",
   regimenIva: "No responsable de IVA",
 } as const;
+
+/** "Bernardo Andrés Otero Jiménez (TecnoIngenieria B.O.)": identifica al responsable en pies y textos legales. */
+export const RESPONSABLE = `${BUSINESS.titular} (${BUSINESS.nombreComercial})`;
 
 /** Fecha desde la que rigen las versiones actuales de las políticas. */
 export const LEGAL_LAST_UPDATED = "24 de septiembre de 2026";
