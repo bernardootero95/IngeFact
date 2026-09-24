@@ -24,6 +24,7 @@ export default function ReferenceDetail() {
 
   const isMunicipio = tableName === "municipios";
   const isNotaCredito = tableName === "conceptos_nota_credito";
+  const isHoraExtra = tableName === "tipos_hora_extra";
   const title = tableTitles[tableName] || "Tabla de Referencia";
 
   const fetchRecords = async () => {
@@ -183,6 +184,11 @@ export default function ReferenceDetail() {
                           Valor NADE
                         </th>
                       )}
+                      {isHoraExtra && (
+                        <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800">
+                          % DIAN
+                        </th>
+                      )}
                       <th scope="col" className="p-4 text-sm font-semibold text-neutralCustom-800 w-32">
                         Estado
                       </th>
@@ -195,7 +201,7 @@ export default function ReferenceDetail() {
                     {currentRecords.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={isMunicipio ? 6 : isNotaCredito ? 5 : 4}
+                          colSpan={isMunicipio ? 6 : isNotaCredito || isHoraExtra ? 5 : 4}
                           className="p-8 text-sm text-neutralCustom-500 text-center"
                         >
                           No se encontraron registros.
@@ -226,6 +232,11 @@ export default function ReferenceDetail() {
                           {isNotaCredito && (
                             <td className="p-4 text-sm text-neutralCustom-500">
                               {rec.value_nade}
+                            </td>
+                          )}
+                          {isHoraExtra && (
+                            <td className="p-4 text-sm font-mono text-neutralCustom-500">
+                              {rec.percentage ? `${rec.percentage}%` : "-"}
                             </td>
                           )}
                           <td className="p-4 text-sm">

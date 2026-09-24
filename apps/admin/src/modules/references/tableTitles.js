@@ -12,4 +12,10 @@ export const tableTitles = {
   tipos_unidad: "Tipos de Unidad",
   conceptos_nota_credito: "Conceptos de Nota Crédito",
   conceptos_nota_debito: "Conceptos de Nota Débito",
+  tipos_trabajador: "Tipos de Trabajador",
+  subtipos_trabajador: "Subtipos de Trabajador",
+  tipos_contrato_nomina: "Tipos de Contrato (Nómina)",
+  periodos_nomina: "Periodos de Nómina",
+  tipos_hora_extra: "Tipos de Hora Extra",
+  tipos_incapacidad: "Tipos de Incapacidad",
 };

@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 from src.application.dashboard_service import DashboardService
+from src.core.tiempo import hoy_colombia
 from src.infrastructure.db.models import (
     Cliente,
     DocumentoSoporte,
@@ -198,7 +199,7 @@ def test_documentos_emitidos_mes_cuenta_los_4_tipos_enviados_este_mes(db_session
 
 
 def test_clientes_proximos_a_vencer_solo_incluye_dentro_del_umbral_de_30_dias(db_session):
-    hoy = date.today()
+    hoy = hoy_colombia()
     empresa_urgente = _crear_empresa(db_session, razon_social="Vence pronto", nit="900000010")
     _crear_suscripcion(db_session, empresa_urgente.id, fecha_fin=hoy + timedelta(days=5))
 
@@ -212,7 +213,7 @@ def test_clientes_proximos_a_vencer_solo_incluye_dentro_del_umbral_de_30_dias(db
 
 
 def test_clientes_proximos_a_vencer_incluye_ya_vencidos_y_ordena_por_urgencia(db_session):
-    hoy = date.today()
+    hoy = hoy_colombia()
     empresa_vencida = _crear_empresa(db_session, razon_social="Ya vencida", nit="900000020")
     _crear_suscripcion(db_session, empresa_vencida.id, fecha_fin=hoy - timedelta(days=3))
 
@@ -227,7 +228,7 @@ def test_clientes_proximos_a_vencer_incluye_ya_vencidos_y_ordena_por_urgencia(db
 
 
 def test_clientes_proximos_a_agotar_cupo_usa_el_mismo_umbral_90_por_ciento(db_session):
-    hoy = date.today()
+    hoy = hoy_colombia()
     empresa = _crear_empresa(db_session, razon_social="Casi sin cupo", nit="900000030")
     cliente = _crear_cliente(db_session, empresa.id)
     _crear_suscripcion(db_session, empresa.id, max_documentos=10, fecha_fin=hoy + timedelta(days=365))
@@ -247,7 +248,7 @@ def test_clientes_proximos_a_agotar_cupo_usa_el_mismo_umbral_90_por_ciento(db_se
 
 
 def test_alertas_ignoran_suscripciones_no_activas(db_session):
-    hoy = date.today()
+    hoy = hoy_colombia()
     empresa = _crear_empresa(db_session, razon_social="Plan cancelado", nit="900000040")
     _crear_suscripcion(db_session, empresa.id, fecha_fin=hoy + timedelta(days=1), estado="cancelada")
 

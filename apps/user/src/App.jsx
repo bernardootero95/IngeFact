@@ -24,6 +24,8 @@ import CustomersPage from "./modules/customers/pages/CustomersPage";
 import CustomerFormPage from "./modules/customers/pages/CustomerFormPage";
 import SuppliersPage from "./modules/suppliers/pages/SuppliersPage";
 import SupplierFormPage from "./modules/suppliers/pages/SupplierFormPage";
+import EmployeesPage from "./modules/employees/pages/EmployeesPage";
+import EmployeeFormPage from "./modules/employees/pages/EmployeeFormPage";
 import ReceivedInvoicesListPage from "./modules/receivedInvoices/pages/ReceivedInvoicesListPage";
 import ReceivedInvoiceFormPage from "./modules/receivedInvoices/pages/ReceivedInvoiceFormPage";
 import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/ReceivedInvoiceDetailPage";
@@ -31,6 +33,9 @@ import SupportDocumentsListPage from "./modules/supportDocuments/pages/SupportDo
 import SupportDocumentFormPage from "./modules/supportDocuments/pages/SupportDocumentFormPage";
 import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportDocumentDetailPage";
 import SupportDocumentRepresentationPage from "./modules/supportDocuments/pages/SupportDocumentRepresentationPage";
+import PayrollsListPage from "./modules/payroll/pages/PayrollsListPage";
+import PayrollFormPage from "./modules/payroll/pages/PayrollFormPage";
+import PayrollDetailPage from "./modules/payroll/pages/PayrollDetailPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
@@ -294,6 +299,33 @@ export default function App() {
         />
 
         <Route
+          path="/employees"
+          element={
+            <ProtectedRoute>
+              <EmployeesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/employees/new"
+          element={
+            <ProtectedRoute>
+              <EmployeeFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/employees/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EmployeeFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/received-invoices"
           element={
             <ProtectedRoute>
@@ -361,6 +393,42 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SupportDocumentDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll"
+          element={
+            <ProtectedRoute>
+              <PayrollsListPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll/new"
+          element={
+            <ProtectedRoute>
+              <PayrollFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll/:id/edit"
+          element={
+            <ProtectedRoute>
+              <PayrollFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payroll/:id"
+          element={
+            <ProtectedRoute>
+              <PayrollDetailPage />
             </ProtectedRoute>
           }
         />

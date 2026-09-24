@@ -57,6 +57,18 @@ export default function References() {
         },
       ],
     },
+    {
+      title: "Nómina Electrónica",
+      description: "Catálogos DIAN para comprobantes de nómina",
+      items: [
+        { name: "Tipos de Trabajador", slug: "tipos_trabajador" },
+        { name: "Subtipos de Trabajador", slug: "subtipos_trabajador" },
+        { name: "Tipos de Contrato", slug: "tipos_contrato_nomina" },
+        { name: "Periodos de Nómina", slug: "periodos_nomina" },
+        { name: "Tipos de Hora Extra", slug: "tipos_hora_extra" },
+        { name: "Tipos de Incapacidad", slug: "tipos_incapacidad" },
+      ],
+    },
   ];
 
   return (

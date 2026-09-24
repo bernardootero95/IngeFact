@@ -527,6 +527,102 @@ fuera de él la DIAN rechaza con FAD05b).
 | — | instance.items[].taxes[].taxPercentage is not one of enum values | `taxPercentage` debe ser string y solo puede ser 0/5/16/19 |
 | — | instance.payments[] requires property "paymentForm"/"paymentMethod" | Nombres de campo correctos para forma/método de pago |
 
+## Nómina Electrónica — investigación Fase 5 (2026-09-23)
+
+Confirmado en vivo contra el sandbox real (empresa asociada NIT 900559088,
+`COMPANY_ID = 01M1ESGJ04WNQT8MAW9NVV6Z67`) más el schema OpenAPI crudo leído
+por `curl` directo a `https://e-provider-docs.alegra.com/reference/*.md`
+(la página renderizada/resumida por un summarizer omite datos reales —
+mismo hallazgo que ya forzó leer el OpenAPI crudo para Documento Soporte).
+
+**Endpoints reales** (ninguno documentado con su path exacto en la doc
+renderizada, solo en el OpenAPI embebido):
+- `POST /payrolls` — emitir. `POST /payrolls/{id}/replace` — ajustar/reemplazar
+  (requiere `prefix`+`number`+`governmentData` completos, más
+  `governmentData.Novedad.CUNENov` con el CUNE del documento original).
+  `POST /payrolls/{id}/cancel` — anular (body `{"prefix", "number"}` **de la
+  anulación misma, numeración propia independiente del payroll anulado** —
+  confirmado: `number` debe ser `number` JSON, NO string, pese a que el
+  schema OpenAPI dice `"type": "string"`). `GET /payrolls/{id}` — consultar.
+- **No usa resolución DIAN con rango** (a diferencia de Factura/Documento
+  Soporte) — solo exige el test-set `type="payrolls"` (mismo mecanismo ya
+  usado para facturas). Para la empresa de pruebas ya estaba `ACCEPTED` de
+  antes.
+
+**Respuesta real de `POST /payrolls` (201)** — igual que Factura/Documento
+Soporte, viene envuelta y trae legalStatus inline (la propiedad del schema
+OpenAPI se llama `emission` pero el body real usa la clave `payroll`, mismo
+patrón de discrepancia doc-vs-realidad ya visto con `company`/`testSet`):
+```json
+{
+  "payroll": {
+    "id": "...", "type": "PAYROLL", "cune": "...", "prefix": "NE", "number": 85373,
+    "fullNumber": "NE85373", "status": "SENT",
+    "xmlFileName": "...", "zipFileName": "...",
+    "qrCodeContent": "NumNIE: ...\nCUNE: ...\nQRCode: https://catalogo-vpfe-hab.dian.gov.co/...",
+    "signatureValue": "...",
+    "governmentResponse": {"code": "00", "message": "Procesado Correctamente.", "errorMessages": []},
+    "legalStatus": "ACCEPTED"
+  },
+  "files": {"xml": "<url S3 firmada, expira 1h>"}
+}
+```
+- `files.xml` **sí viene** con URL firmada (a diferencia de lo que sugería el
+  schema estático, que solo listaba `xmlFileName`/`zipFileName` como nombres)
+  — mismo patrón que `get_invoice`/`get_support_document`, no persistir la
+  URL. `GET /payrolls/{id}` devuelve exactamente el mismo shape con una URL
+  firmada nueva.
+- `qrCodeContent` y `signatureValue` (firma digital) **vienen ya listos en la
+  respuesta JSON** — no hace falta extraerlos del XML como sí se hace con
+  Factura (`extraer_firma_digital`).
+- `status` (interno Alegra, no DIAN): `REGISTERED/WAITING_RESPONSE/FAILED/
+  SENT/CANCELED/REPLACED`. `legalStatus` (DIAN): `ACCEPTED/
+  ACCEPTED_WITH_OBSERVATIONS/REJECTED` — mismo enum y mismo criterio de
+  mapeo que ya usa `map_government_response`.
+- Anular un payroll `ACCEPTED` cambia su `status` a `CANCELED` (confirmado:
+  se anuló el payroll `NE85373` de prueba, quedó `CANCELED`) y crea un
+  documento `"cancellation"` aparte con su propio `id`/`cune`/`legalStatus`/
+  `idReference` (apunta al `id` del payroll original).
+
+**Campos requeridos reales que la doc estática no marcaba bien** (encontrados
+por 400 reales, no por lectura de schema):
+- `Trabajador.LugarTrabajoPais` es obligatorio en la práctica (el schema no
+  lo listaba en `required`).
+- `DevengadosTotal`/`DeduccionesTotal`/`ComprobanteTotal` van **directo bajo
+  `governmentData`**, NO anidados dentro de `Devengados`/`Deducciones` (fácil
+  de errar copiando la agrupación visual de la doc).
+
+**Catálogos de nómina — valores reales sincronizados del sandbox**
+(`GET /dian/<catalogo>`, mismo shape `{"table-name": [{"code","value"}]}` que
+los 13 catálogos ya existentes; los 2 que solo estaban insinuados en el
+índice `llms.txt` sí existen):
+- `employee-types` (16 valores: 01 Dependiente, 02 Servicio doméstico, 04
+  Madre comunitaria, 12/19 Aprendices SENA, 18 Funcionarios públicos, 21
+  Estudiantes postgrado salud, 22 Profesor particular, 23 Estudiantes riesgos
+  laborales, 30 Dependiente entidad pública régimen especial, 31 Cooperados,
+  47 Dependiente SGP, 51 Tiempo parcial, 54/56 Pre-pensionados, 58
+  Estudiantes prácticas públicas).
+- `employee-sub-types` (solo 2: `00` No aplica, `01` Dependiente pensionado
+  por vejez activo).
+- `contract-types` (5: Término Fijo, Término Indefinido, Obra o Labor,
+  Aprendizaje, Prácticas o Pasantías).
+- `payroll-periods` (6: Semanal, Decenal, Catorcenal, Quincenal, Mensual,
+  Otro).
+- `extra-hour-types` (7, **con un campo `percentage` embebido en cada
+  entrada** — confirma que el campo `Porcentaje` de cada bloque
+  HED/HEN/HRN/etc del payload NO es una elección libre: cada bloque tiene un
+  `enum` fijo de un solo valor en el schema (`HED`→`"1"`, `HEN`→`"2"`, etc.)
+  que coincide con el `code` de esta tabla. El frontend no necesita selector
+  de tipo de hora extra por fila, solo activar la sección correspondiente).
+- `inability-types` (3: Común, Profesional, Laboral).
+- **Pendiente de confirmar**: si `Pago.Forma`/`Pago.Metodo` de nómina
+  reusan `formas_pago`/`metodos_pago` ya sincronizados (se usó `"1"`/`"10"`,
+  los mismos códigos que Factura, y la DIAN aceptó sin objeción — indicio
+  fuerte de que sí son el mismo catálogo, pero no se probó un código que
+  solo exista en uno de los dos para confirmarlo al 100%).
+
+Reproducible con `apps/api/scripts/explore_alegra_nomina.py`.
+
 ## Reproducibilidad
 
 `apps/api/scripts/explore_alegra.py` reproduce todo lo anterior contra el sandbox

@@ -144,6 +144,34 @@ def plantilla_documento_soporte_proveedor(
     return subject, html
 
 
+def plantilla_nomina_empleado(
+    *,
+    razon_social_empleador: str,
+    nombre_empleado: str,
+    numero_completo: str,
+    fecha: str,
+    total_formateado: str,
+    cune: str,
+) -> tuple[str, str]:
+    subject = f"Comprobante de nómina {numero_completo} de {razon_social_empleador}"
+    html = f"""
+    <div style="font-family:sans-serif;color:#1e293b;max-width:480px;margin:0 auto;">
+      <h2>Hola, {nombre_empleado}</h2>
+      <p>{razon_social_empleador} te envió tu comprobante de nómina electrónica <strong>{numero_completo}</strong>, con fecha {fecha}.</p>
+      <div style="text-align:center;margin:20px 0;">
+        <img src="cid:{QR_CONTENT_ID}" alt="Codigo QR del comprobante de nomina" style="width:160px;height:160px;" />
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+        <tr><td style="padding:4px 0;color:#64748b;">Neto a pagar</td><td style="padding:4px 0;font-weight:bold;">{total_formateado}</td></tr>
+        <tr><td style="padding:4px 0;color:#64748b;">CUNE</td><td style="padding:4px 0;font-family:monospace;font-size:11px;word-break:break-all;">{cune}</td></tr>
+      </table>
+      <p>Adjunto va la representacion grafica en PDF y el archivo XML del comprobante, el soporte legal ante la DIAN.</p>
+      {_FOOTER}
+    </div>
+    """
+    return subject, html
+
+
 def plantilla_alerta_cuota(razon_social: str, documentos_usados: int, max_documentos: int) -> tuple[str, str]:
     subject = "Tu cuota de documentos esta por agotarse"
     html = f"""

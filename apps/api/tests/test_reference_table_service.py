@@ -119,6 +119,28 @@ def test_sincronizar_municipios_incluye_department_code(db_session):
     assert registro.department_value == "Bogotá"
 
 
+def test_crear_tipo_hora_extra_incluye_percentage(db_session):
+    service = ReferenceTableService(db_session)
+    registro = service.crear(
+        "tipos_hora_extra", ReferenceRecordRequest(code="1", value="Hora Extra Diurna", percentage="25.00")
+    )
+
+    assert registro.percentage == "25.00"
+
+
+def test_sincronizar_tipos_hora_extra_incluye_percentage(db_session):
+    fake_client = FakeAlegraClient(
+        {"/dian/extra-hour-types": [{"code": "1", "value": "Hora Extra Diurna", "percentage": "25.00"}]}
+    )
+    service = SincronizarReferenceTableService(db_session, alegra_client=fake_client)
+
+    service.sincronizar("tipos_hora_extra")
+
+    model = REFERENCE_TABLE_MODELS["tipos_hora_extra"]
+    registro = db_session.query(model).filter(model.code == "1").one()
+    assert registro.percentage == "25.00"
+
+
 def test_sincronizar_tabla_desconocida_404(db_session):
     with pytest.raises(HTTPException) as exc_info:
         SincronizarReferenceTableService(db_session, alegra_client=FakeAlegraClient({})).sincronizar(

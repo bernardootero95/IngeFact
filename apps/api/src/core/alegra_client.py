@@ -169,6 +169,31 @@ class AlegraClient:
         files.applicationResponse, sin PDF."""
         return self._request("GET", f"/support-documents/{support_document_id}")
 
+    def create_payroll(self, payload: dict) -> dict:
+        """POST /payrolls. Verificado en vivo (Fase 5, ver
+        docs/alegra-investigacion.md): a diferencia de Factura/Documento
+        Soporte, NO exige un bloque "resolution" -- solo el test-set de
+        habilitacion type="payrolls". La respuesta 201 viene envuelta en
+        "payroll" (la propiedad del schema OpenAPI se llama "emission",
+        pero la clave real de la respuesta es "payroll") con legalStatus
+        inline igual que create_invoice, mas "files.xml" con URL firmada y
+        "qrCodeContent"/"signatureValue" ya resueltos (no hace falta
+        extraerlos del XML)."""
+        return self._request("POST", "/payrolls", json=payload)
+
+    def get_payroll(self, payroll_id: str) -> dict:
+        """GET /payrolls/{id} -- mismo shape que create_payroll, con
+        "files.xml" firmado de nuevo (expira 1h, no se persiste)."""
+        return self._request("GET", f"/payrolls/{payroll_id}")
+
+    def cancel_payroll(self, payroll_id: str, prefix: str, number: int) -> dict:
+        """POST /payrolls/{id}/cancel. Verificado en vivo: `number` debe
+        viajar como JSON number (no string, pese a que el schema OpenAPI
+        dice "type": "string") y es el numero de la anulacion MISMA, con su
+        propia numeracion independiente del payroll que se anula -- no el
+        numero del payroll original."""
+        return self._request("POST", f"/payrolls/{payroll_id}/cancel", json={"prefix": prefix, "number": number})
+
     def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
         body = self._request(
             "POST",

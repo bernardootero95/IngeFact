@@ -18,10 +18,12 @@ from src.presentation.routes import (
     tenant_clientes,
     tenant_dashboard,
     tenant_documentos_soporte,
+    tenant_empleados,
     tenant_empresa,
     tenant_facturas,
     tenant_facturas_recibidas,
     tenant_impuestos,
+    tenant_nomina,
     tenant_notas_credito,
     tenant_notas_debito,
     tenant_productos,
@@ -64,6 +66,7 @@ app.include_router(tenant_resolucion.router)
 app.include_router(tenant_resolucion_documento_soporte.router)
 app.include_router(tenant_clientes.router)
 app.include_router(tenant_proveedores.router)
+app.include_router(tenant_empleados.router)
 app.include_router(tenant_documentos_soporte.router)
 app.include_router(tenant_productos.router)
 app.include_router(tenant_impuestos.router)
@@ -71,6 +74,7 @@ app.include_router(tenant_facturas.router)
 app.include_router(tenant_facturas_recibidas.router)
 app.include_router(tenant_notas_credito.router)
 app.include_router(tenant_notas_debito.router)
+app.include_router(tenant_nomina.router)
 app.include_router(external_clientes.router)
 app.include_router(external_productos.router)
 app.include_router(external_facturas.router)

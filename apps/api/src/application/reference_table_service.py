@@ -28,6 +28,14 @@ ALEGRA_CATALOG_CONFIG = {
     "tipos_unidad": ("/dian/unit-codes", "unit-codes"),
     "conceptos_nota_credito": ("/dian/correction-concept-codes-nc", "correction-concept-codes-nc"),
     "conceptos_nota_debito": ("/dian/correction-concept-codes-nd", "correction-concept-codes-nd"),
+    # Catalogos de Nomina Electronica (Fase 5) -- confirmados en vivo contra
+    # el sandbox, ver docs/alegra-investigacion.md seccion "Nomina Electronica".
+    "tipos_trabajador": ("/dian/employee-types", "employee-types"),
+    "subtipos_trabajador": ("/dian/employee-sub-types", "employee-sub-types"),
+    "tipos_contrato_nomina": ("/dian/contract-types", "contract-types"),
+    "periodos_nomina": ("/dian/payroll-periods", "payroll-periods"),
+    "tipos_hora_extra": ("/dian/extra-hour-types", "extra-hour-types"),
+    "tipos_incapacidad": ("/dian/inability-types", "inability-types"),
 }
 
 BATCH_SIZE = 250
@@ -62,6 +70,8 @@ class ReferenceTableService:
             kwargs["department_value"] = data.department_value
         if tabla in ("conceptos_nota_credito", "conceptos_nota_debito"):
             kwargs["value_nade"] = data.value_nade
+        if tabla == "tipos_hora_extra":
+            kwargs["percentage"] = data.percentage
 
         registro = model(**kwargs)
         self.db.add(registro)
@@ -84,6 +94,8 @@ class ReferenceTableService:
             registro.department_value = data.department_value
         if tabla in ("conceptos_nota_credito", "conceptos_nota_debito"):
             registro.value_nade = data.value_nade
+        if tabla == "tipos_hora_extra":
+            registro.percentage = data.percentage
 
         self.db.add(registro)
         self.db.commit()
@@ -143,4 +155,6 @@ class SincronizarReferenceTableService:
             # de SQLAlchemy exige el mismo set de columnas en todas las filas
             # del batch, a diferencia del upsert por fila de PostgREST.
             registro["value_nade"] = item.get("valueNADE") or None
+        if tabla == "tipos_hora_extra":
+            registro["percentage"] = item.get("percentage")
         return registro
