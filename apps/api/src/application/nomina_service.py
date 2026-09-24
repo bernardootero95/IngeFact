@@ -226,6 +226,8 @@ class NominaService:
         nomina = self.obtener(empresa_id, nomina_id)
         if nomina.estado != "aceptada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede anular una nomina aceptada por la DIAN.")
+        # La nota de eliminacion tambien se transmite a la DIAN.
+        verificar_cupo_disponible(self.db, empresa_id)
 
         consecutivo_anulacion = self._incrementar_consecutivo(empresa_id, "anulacion")
         try:

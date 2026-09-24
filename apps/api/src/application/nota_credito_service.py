@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, selectinload
 import logging
 
 from src.application.factura_service import _construir_customer_alegra, _construir_pago
-from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
 from src.application.correo_documento import (
     ejecutar_envio_reportando_errores,
     enviar_nota_por_correo,
@@ -347,6 +347,7 @@ class NotaCreditoService:
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una nota rechazada: reutiliza el numero ya asignado (ver
         # actualizar_borrador) en vez de pedir uno nuevo.
@@ -385,8 +386,14 @@ class NotaCreditoService:
     def anular_factura(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> NotaCredito:
         """Atajo: crea y envia de una sola vez una Nota Credito por el 100%
         de las lineas disponibles de la factura, con el motivo fijo
-        "Anulacion del documento equivalente electronico"."""
+        "Anulacion del documento equivalente electronico".
+
+        El cupo se verifica antes de crear el borrador: si esta agotado no
+        debe quedar una nota a medias (enviar() lo volveria a rechazar)."""
+        # Primero la pertenencia (404 si la factura no es de esta empresa) y
+        # luego el cupo, para no revelar informacion a otra empresa.
         factura = self._obtener_factura_aceptada(empresa_id, factura_id)
+        verificar_cupo_disponible(self.db, empresa_id)
         disponibilidad = self.disponibilidad_lineas(factura)
         lineas_data = [
             LineaNotaCreditoRequest(factura_linea_id=linea_id, cantidad=cantidad)

@@ -389,3 +389,17 @@ def test_listar_no_mezcla_nominas_de_otro_tenant(db_session):
 
     assert len(service.listar(empresa_a.id)) == 1
     assert len(service.listar(empresa_b.id)) == 0
+
+
+def test_anular_nomina_con_paquete_agotado_falla_409(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=1)
+    empleado = _crear_empleado(db_session, empresa.id)
+    service = NominaService(db_session, alegra_client=_FakeAlegraClient())
+    nomina = service.crear_borrador(empresa.id, _payload(empleado.id))
+    service.enviar(empresa.id, nomina.id)  # usa el unico documento del paquete
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.anular(empresa.id, nomina.id)
+
+    assert exc_info.value.status_code == 409
+    assert db_session.query(ConsecutivoNomina).filter_by(tipo="anulacion").count() == 0

@@ -832,3 +832,47 @@ def test_reenvio_de_rechazada_que_vuelve_a_fallar_no_toca_el_contador(db_session
     )
     db_session.refresh(contador)
     assert contador.consecutivo_actual == 1
+
+
+def _agotar_paquete(db_session, empresa_id) -> None:
+    """Deja el paquete activo con tantos documentos como ya se usaron."""
+    from src.application.suscripcion_service import contar_documentos_usados
+    from src.infrastructure.db.models import Suscripcion
+
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa_id, estado="activa").one()
+    suscripcion.max_documentos = contar_documentos_usados(db_session, suscripcion)
+    db_session.commit()
+
+
+def test_enviar_nota_credito_con_paquete_agotado_falla_409(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    service = NotaCreditoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id, cantidad=1))
+    _agotar_paquete(db_session, empresa.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, nota.id)
+
+    assert exc_info.value.status_code == 409
+    assert "cupo" in exc_info.value.detail
+
+
+def test_anular_factura_con_paquete_agotado_falla_409_sin_dejar_borrador(db_session):
+    from src.infrastructure.db.models import NotaCredito
+
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    _agotar_paquete(db_session, empresa.id)
+
+    with pytest.raises(HTTPException) as exc_info:
+        NotaCreditoService(db_session, alegra_client=fake).anular_factura(empresa.id, factura.id)
+
+    assert exc_info.value.status_code == 409
+    assert db_session.query(NotaCredito).filter_by(factura_id=factura.id).count() == 0

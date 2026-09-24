@@ -644,3 +644,25 @@ def test_reenvio_de_rechazada_que_vuelve_a_fallar_no_toca_el_contador(db_session
     )
     db_session.refresh(contador)
     assert contador.consecutivo_actual == 1
+
+
+def test_enviar_nota_debito_con_paquete_agotado_falla_409(db_session):
+    from src.application.suscripcion_service import contar_documentos_usados
+    from src.infrastructure.db.models import Suscripcion
+
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    factura = _crear_factura_aceptada(db_session, fake, empresa, cliente, producto, cantidad=2)
+    service = NotaDebitoService(db_session, alegra_client=fake)
+    nota = service.crear_borrador(empresa.id, factura.id, _nota_payload(factura.lineas[0].id, cantidad=1))
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id, estado="activa").one()
+    suscripcion.max_documentos = contar_documentos_usados(db_session, suscripcion)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, nota.id)
+
+    assert exc_info.value.status_code == 409
+    assert "cupo" in exc_info.value.detail
