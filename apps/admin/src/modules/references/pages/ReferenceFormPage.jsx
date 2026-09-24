@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearReferenceRecord, actualizarReferenceRecord } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { tableTitles } from "../tableTitles";
-import { Button } from "@ingefact/ui";
+import { Button, FieldError, fieldA11y } from "@ingefact/ui";
 
 function validateCode(value) {
   return !value.trim() ? "El código es obligatorio." : "";
@@ -142,7 +142,7 @@ export default function ReferenceFormPage() {
               className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-5"
             >
               {saveError && (
-                <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                   {saveError}
                 </div>
               )}
@@ -163,9 +163,10 @@ export default function ReferenceFormPage() {
                         : ""
                     }`}
                     placeholder="Ej: 01"
+                    {...fieldA11y("ref-code", fieldErrors.code)}
                   />
                   {fieldErrors.code && (
-                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.code}</p>
+                    <FieldError fieldId={"ref-code"}>{fieldErrors.code}</FieldError>
                   )}
                 </div>
                 <div className="col-span-2">
@@ -183,9 +184,10 @@ export default function ReferenceFormPage() {
                         : ""
                     }`}
                     placeholder="Descripción oficial"
+                    {...fieldA11y("ref-value", fieldErrors.value)}
                   />
                   {fieldErrors.value && (
-                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.value}</p>
+                    <FieldError fieldId={"ref-value"}>{fieldErrors.value}</FieldError>
                   )}
                 </div>
               </div>
@@ -207,9 +209,10 @@ export default function ReferenceFormPage() {
                           : ""
                       }`}
                       placeholder="Ej: 08"
+                      {...fieldA11y("ref-deptcode", fieldErrors.deptCode)}
                     />
                     {fieldErrors.deptCode && (
-                      <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.deptCode}</p>
+                      <FieldError fieldId={"ref-deptcode"}>{fieldErrors.deptCode}</FieldError>
                     )}
                   </div>
                   <div className="col-span-2">
@@ -227,9 +230,10 @@ export default function ReferenceFormPage() {
                           : ""
                       }`}
                       placeholder="Atlántico"
+                      {...fieldA11y("ref-deptvalue", fieldErrors.deptValue)}
                     />
                     {fieldErrors.deptValue && (
-                      <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.deptValue}</p>
+                      <FieldError fieldId={"ref-deptvalue"}>{fieldErrors.deptValue}</FieldError>
                     )}
                   </div>
                 </div>
@@ -251,9 +255,10 @@ export default function ReferenceFormPage() {
                         : ""
                     }`}
                     placeholder="Valor estandarizado NADE"
+                    {...fieldA11y("ref-valuenade", fieldErrors.valueNade)}
                   />
                   {fieldErrors.valueNade && (
-                    <p className="mt-1 text-sm text-fiscal-danger leading-tight">{fieldErrors.valueNade}</p>
+                    <FieldError fieldId={"ref-valuenade"}>{fieldErrors.valueNade}</FieldError>
                   )}
                 </div>
               )}

@@ -133,7 +133,7 @@ export default function CreditNoteDetailPage() {
           {loading ? (
             <FormSkeleton label="Cargando..." />
           ) : loadError ? (
-            <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md max-w-3xl mx-auto">
+            <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md max-w-3xl mx-auto">
               {loadError}
             </div>
           ) : (
@@ -181,7 +181,7 @@ export default function CreditNoteDetailPage() {
                 )}
 
                 {nota.estado === "rechazada" && nota.razon_rechazo && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
                     <p className="font-medium">{nota.razon_rechazo}</p>
                   </div>
                 )}

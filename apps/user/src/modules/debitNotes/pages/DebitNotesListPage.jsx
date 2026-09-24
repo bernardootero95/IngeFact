@@ -84,6 +84,7 @@ export default function DebitNotesListPage() {
             <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-end items-center gap-3">
               <select
                 value={estado}
+                aria-label="Filtrar por estado"
                 onChange={(e) => setEstado(e.target.value)}
                 className="field"
               >
@@ -99,7 +100,7 @@ export default function DebitNotesListPage() {
               <TableSkeleton columns={7} label="Cargando notas débito..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
                 <Button
                   onClick={() => fetchNotas(estado)}
                   variant="danger"

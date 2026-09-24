@@ -1,4 +1,4 @@
-import { SearchableSelect, Button, PlusIcon } from "@ingefact/ui";
+import { SearchableSelect, Button, PlusIcon, FieldError } from "@ingefact/ui";
 
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
@@ -101,7 +101,7 @@ export default function SeccionCliente({
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label htmlFor="cliente-select" className="block text-sm font-medium text-neutralCustom-800">
-              Cliente <span className="text-fiscal-danger">*</span>
+              Cliente <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
             </label>
             <Button
               onClick={onCrearCliente}
@@ -118,10 +118,10 @@ export default function SeccionCliente({
             value={cliente?.id || ""}
             onChange={handleChange}
             placeholder="Selecciona un cliente..."
-            error={!!error}
+            error={error}
             formatOption={(opt) => opt.value}
           />
-          {error && <p className="mt-1 text-sm text-fiscal-danger">{error}</p>}
+          <FieldError fieldId="cliente-select">{error}</FieldError>
         </div>
 
         <div>

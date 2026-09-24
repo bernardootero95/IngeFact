@@ -124,10 +124,12 @@ export default function SeccionLineasDocumentoSoporte({
                         min="0"
                         step="1"
                         value={linea.cantidad}
+                        aria-label={`Cantidad de ${linea.producto?.nombre ?? "la línea"}`}
                         onChange={(e) => onLineaCantidadChange(index, e.target.value)}
                         className={`field field-sm w-full text-right ${
                           cantidadInvalida ? "border-fiscal-danger field-invalid" : ""
                         }`}
+                        aria-invalid={cantidadInvalida || undefined}
                       />
                     </td>
                     <td className="py-2 pr-2 align-top">
@@ -136,10 +138,12 @@ export default function SeccionLineasDocumentoSoporte({
                         min="0"
                         step="0.01"
                         value={linea.precio_unitario}
+                        aria-label={`Precio unitario de ${linea.producto?.nombre ?? "la línea"}`}
                         onChange={(e) => onLineaPrecioChange(index, e.target.value)}
                         className={`field field-sm w-full text-right ${
                           precioInvalido ? "border-fiscal-danger field-invalid" : ""
                         }`}
+                        aria-invalid={precioInvalido || undefined}
                       />
                     </td>
                     <td className="py-2 pr-2 text-right font-medium align-top">{formatCOP(subtotalLinea)}</td>

@@ -30,6 +30,7 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
                     <input
                       type="checkbox"
                       checked={linea.incluida}
+                      aria-label={`Incluir ${linea.facturaLinea.descripcion}`}
                       onChange={(e) => onToggleLinea(linea.facturaLinea.id, e.target.checked)}
                       className="w-4 h-4 accent-brand-600"
                     />
@@ -48,6 +49,7 @@ export default function SeccionLineasDebito({ seleccion, error, onToggleLinea, o
                       step="1"
                       value={linea.cantidad}
                       disabled={!linea.incluida}
+                      aria-label={`Cantidad de ${linea.facturaLinea.descripcion}`}
                       onChange={(e) => onCantidadChange(linea.facturaLinea.id, e.target.value)}
                       className={`field field-sm w-full text-right disabled:bg-neutralCustom-50 disabled:text-neutralCustom-400 ${
                         cantidadInvalida ? "border-fiscal-danger field-invalid" : ""

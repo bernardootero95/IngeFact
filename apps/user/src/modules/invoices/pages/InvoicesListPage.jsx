@@ -116,6 +116,7 @@ export default function InvoicesListPage() {
                   type="text"
                   value={search}
                   onChange={handleSearchChange}
+                  aria-label="Buscar facturas por cliente"
                   placeholder="Buscar por cliente..."
                   className="field w-full pl-9 pr-4"
                 />
@@ -135,6 +136,7 @@ export default function InvoicesListPage() {
               </div>
               <select
                 value={estado}
+                aria-label="Filtrar por estado"
                 onChange={(e) => setEstado(e.target.value)}
                 className="field"
               >
@@ -150,7 +152,7 @@ export default function InvoicesListPage() {
               <TableSkeleton columns={6} label="Cargando facturas..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las facturas: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las facturas: {loadError}</p>
                 <Button
                   onClick={() => fetchFacturas(estado)}
                   variant="danger"

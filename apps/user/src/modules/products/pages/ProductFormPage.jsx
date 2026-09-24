@@ -7,7 +7,7 @@ import {
   listImpuestosEmpresa,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { SearchableSelect, Button, FormSkeleton } from "@ingefact/ui";
+import { SearchableSelect, Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./ProductFormPage.validation";
 
@@ -191,7 +191,7 @@ export default function ProductFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
@@ -200,7 +200,7 @@ export default function ProductFormPage() {
                 className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-6"
               >
                 {saveError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     {saveError}
                   </div>
                 )}
@@ -208,7 +208,7 @@ export default function ProductFormPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="tipo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Tipo <span className="text-fiscal-danger">*</span>
+                      Tipo <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <select
                       id="tipo"
@@ -227,7 +227,7 @@ export default function ProductFormPage() {
 
                   <div className="md:col-span-2">
                     <label htmlFor="codigo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Código Interno (SKU) <span className="text-fiscal-danger">*</span>
+                      Código Interno (SKU) <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <input
                       type="text"
@@ -239,14 +239,15 @@ export default function ProductFormPage() {
                         errors.codigo ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. PROD-001"
+                      {...fieldA11y("codigo", errors.codigo)}
                     />
-                    {errors.codigo && <p className="mt-1 text-sm text-fiscal-danger">{errors.codigo}</p>}
+                    {errors.codigo && <FieldError fieldId={"codigo"}>{errors.codigo}</FieldError>}
                   </div>
                 </div>
 
                 <div>
                   <label htmlFor="nombre" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                    Nombre <span className="text-fiscal-danger">*</span>
+                    Nombre <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                   </label>
                   <input
                     type="text"
@@ -258,8 +259,9 @@ export default function ProductFormPage() {
                       errors.nombre ? "border-fiscal-danger field-invalid" : ""
                     }`}
                     placeholder="Ej. Asesoría contable mensual"
+                    {...fieldA11y("nombre", errors.nombre)}
                   />
-                  {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
+                  {errors.nombre && <FieldError fieldId={"nombre"}>{errors.nombre}</FieldError>}
                 </div>
 
                 <div>
@@ -278,7 +280,7 @@ export default function ProductFormPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label htmlFor="precio" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Precio <span className="text-fiscal-danger">*</span>
+                      Precio <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <input
                       type="number"
@@ -292,13 +294,14 @@ export default function ProductFormPage() {
                         errors.precio ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="0.00"
+                      {...fieldA11y("precio", errors.precio)}
                     />
-                    {errors.precio && <p className="mt-1 text-sm text-fiscal-danger">{errors.precio}</p>}
+                    {errors.precio && <FieldError fieldId={"precio"}>{errors.precio}</FieldError>}
                   </div>
 
                   <div>
                     <label htmlFor="unidad_medida" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Unidad de Medida <span className="text-fiscal-danger">*</span>
+                      Unidad de Medida <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <SearchableSelect
                       id="unidad_medida"
@@ -306,11 +309,9 @@ export default function ProductFormPage() {
                       value={formData.unidad_medida}
                       onChange={handleUnidadMedidaChange}
                       placeholder="Buscar unidad de medida..."
-                      error={!!errors.unidad_medida}
+                      error={errors.unidad_medida}
                     />
-                    {errors.unidad_medida && (
-                      <p className="mt-1 text-sm text-fiscal-danger">{errors.unidad_medida}</p>
-                    )}
+                    <FieldError fieldId="unidad_medida">{errors.unidad_medida}</FieldError>
                   </div>
                 </div>
 
@@ -358,9 +359,10 @@ export default function ProductFormPage() {
                             : ""
                         }`}
                         placeholder="0.00"
+                        {...fieldA11y("valor_impuesto_excluido", errors.valor_impuesto_excluido)}
                       />
                       {errors.valor_impuesto_excluido ? (
-                        <p className="mt-1 text-sm text-fiscal-danger">{errors.valor_impuesto_excluido}</p>
+                        <FieldError fieldId={"valor_impuesto_excluido"}>{errors.valor_impuesto_excluido}</FieldError>
                       ) : (
                         <p className="mt-1 text-xs text-neutralCustom-400">
                           Solo si el precio ya incluye un impuesto monofásico pagado al productor (ICL, IBUA). Ese

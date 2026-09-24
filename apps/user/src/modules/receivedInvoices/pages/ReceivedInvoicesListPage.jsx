@@ -81,7 +81,7 @@ export default function ReceivedInvoicesListPage() {
               <TableSkeleton columns={5} label="Cargando facturas recibidas..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
                 <Button
                   onClick={fetchFacturas}
                   variant="danger"

@@ -95,6 +95,7 @@ export default function CustomersPage() {
                   type="text"
                   value={search}
                   onChange={handleSearchChange}
+                  aria-label="Buscar clientes por NIT o nombre"
                   placeholder="Buscar por NIT o nombre..."
                   className="field w-full pl-9 pr-4"
                 />
@@ -118,7 +119,7 @@ export default function CustomersPage() {
               <TableSkeleton columns={5} label="Cargando clientes..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los clientes: {loadError}
                 </p>
                 <Button

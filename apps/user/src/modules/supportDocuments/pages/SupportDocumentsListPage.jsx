@@ -85,7 +85,7 @@ export default function SupportDocumentsListPage() {
               <TableSkeleton columns={6} label="Cargando..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
                 <Button
                   onClick={fetchDocumentos}
                   variant="danger"

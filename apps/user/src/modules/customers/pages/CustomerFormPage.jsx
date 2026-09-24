@@ -10,7 +10,7 @@ import {
 import { calculateNitDV } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
 import { validateField, NIT_IDENTIFICATION_TYPE } from "./CustomerFormPage.validation";
-import { Button, FormSkeleton } from "@ingefact/ui";
+import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
   tipo_identificacion: "",
@@ -237,7 +237,7 @@ export default function CustomerFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
@@ -246,7 +246,7 @@ export default function CustomerFormPage() {
                 className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-6"
               >
                 {saveError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     {saveError}
                   </div>
                 )}
@@ -262,7 +262,7 @@ export default function CustomerFormPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="tipo_identificacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Tipo de Documento <span className="text-fiscal-danger">*</span>
+                        Tipo de Documento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="tipo_identificacion"
@@ -281,7 +281,7 @@ export default function CustomerFormPage() {
 
                     <div>
                       <label htmlFor="numero_identificacion" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                        Número de Identificación <span className="text-fiscal-danger">*</span>
+                        Número de Identificación <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <div className="flex space-x-2">
                         <div className="flex-1">
@@ -297,6 +297,7 @@ export default function CustomerFormPage() {
                                 : ""
                             }`}
                             placeholder="Ej. 900123456"
+                            {...fieldA11y("numero_identificacion", errors.numero_identificacion)}
                           />
                         </div>
                         {formData.tipo_identificacion === NIT_IDENTIFICATION_TYPE && (
@@ -307,10 +308,12 @@ export default function CustomerFormPage() {
                               name="digito_verificacion"
                               readOnly
                               value={formData.digito_verificacion}
+                              aria-label="Dígito de verificación"
                               title="Dígito de verificación (calculado automáticamente)"
                               className={`field w-full bg-neutralCustom-100 text-center font-bold text-neutralCustom-600 cursor-not-allowed ${
                                 errors.digito_verificacion ? "border-fiscal-danger field-invalid" : ""
                               }`}
+                              {...fieldA11y("digito_verificacion", errors.digito_verificacion)}
                             />
                           </div>
                         )}
@@ -324,10 +327,10 @@ export default function CustomerFormPage() {
                         </Button>
                       </div>
                       {errors.numero_identificacion && (
-                        <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_identificacion}</p>
+                        <FieldError fieldId={"numero_identificacion"}>{errors.numero_identificacion}</FieldError>
                       )}
                       {errors.digito_verificacion && (
-                        <p className="mt-1 text-sm text-fiscal-danger">{errors.digito_verificacion}</p>
+                        <FieldError fieldId={"digito_verificacion"}>{errors.digito_verificacion}</FieldError>
                       )}
                     </div>
                   </div>
@@ -348,7 +351,7 @@ export default function CustomerFormPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="md:col-span-2">
                     <label htmlFor="nombre" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Razón Social / Nombre Completo <span className="text-fiscal-danger">*</span>
+                      Razón Social / Nombre Completo <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <input
                       type="text"
@@ -360,13 +363,14 @@ export default function CustomerFormPage() {
                         errors.nombre ? "border-fiscal-danger field-invalid" : ""
                       }`}
                       placeholder="Ej. IngeFact S.A.S."
+                      {...fieldA11y("nombre", errors.nombre)}
                     />
-                    {errors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{errors.nombre}</p>}
+                    {errors.nombre && <FieldError fieldId={"nombre"}>{errors.nombre}</FieldError>}
                   </div>
 
                   <div>
                     <label htmlFor="correo_electronico" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Correo Electrónico <span className="text-fiscal-danger">*</span>
+                      Correo Electrónico <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <input
                       type="email"
@@ -380,9 +384,10 @@ export default function CustomerFormPage() {
                           : ""
                       }`}
                       placeholder="facturacion@cliente.com"
+                      {...fieldA11y("correo_electronico", errors.correo_electronico)}
                     />
                     {errors.correo_electronico && (
-                      <p className="mt-1 text-sm text-fiscal-danger">{errors.correo_electronico}</p>
+                      <FieldError fieldId={"correo_electronico"}>{errors.correo_electronico}</FieldError>
                     )}
                   </div>
 
@@ -403,7 +408,7 @@ export default function CustomerFormPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border-t border-neutralCustom-100 pt-5">
                   <div>
                     <label htmlFor="regimen_fiscal" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                      Régimen Fiscal <span className="text-fiscal-danger">*</span>
+                      Régimen Fiscal <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <select
                       id="regimen_fiscal"
@@ -413,12 +418,13 @@ export default function CustomerFormPage() {
                       className={`field w-full ${
                         errors.regimen_fiscal ? "border-fiscal-danger field-invalid" : ""
                       }`}
+                      {...fieldA11y("regimen_fiscal", errors.regimen_fiscal)}
                     >
                       <option value="">Seleccione...</option>
                       <option value="48">48 - Responsable de IVA</option>
                       <option value="49">49 - No responsable de IVA</option>
                     </select>
-                    {errors.regimen_fiscal && <p className="mt-1 text-sm text-fiscal-danger">{errors.regimen_fiscal}</p>}
+                    {errors.regimen_fiscal && <FieldError fieldId={"regimen_fiscal"}>{errors.regimen_fiscal}</FieldError>}
                   </div>
 
                   <div>

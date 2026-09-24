@@ -8,7 +8,7 @@ import {
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
 import { validateField } from "./TaxPresetFormPage.validation";
-import { Button, FormSkeleton } from "@ingefact/ui";
+import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const REQUIRED_FIELDS = ["tributo", "tarifa"];
 
@@ -116,7 +116,7 @@ export default function TaxPresetFormPage() {
             {loading ? (
               <FormSkeleton label="Cargando..." />
             ) : loadError ? (
-              <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {loadError}
               </div>
             ) : (
@@ -125,14 +125,14 @@ export default function TaxPresetFormPage() {
                 className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-5"
               >
                 {saveError && (
-                  <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                     {saveError}
                   </div>
                 )}
 
                 <div>
                   <label htmlFor="tributo" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                    Tributo <span className="text-fiscal-danger">*</span>
+                    Tributo <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                   </label>
                   <select
                     id="tributo"
@@ -151,7 +151,7 @@ export default function TaxPresetFormPage() {
 
                 <div>
                   <label htmlFor="tarifa" className="block text-sm font-medium text-neutralCustom-600 mb-1">
-                    Tarifa (%) <span className="text-fiscal-danger">*</span>
+                    Tarifa (%) <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                   </label>
                   <input
                     type="number"
@@ -166,8 +166,9 @@ export default function TaxPresetFormPage() {
                       errors.tarifa ? "border-fiscal-danger field-invalid" : ""
                     }`}
                     placeholder="Ej. 19"
+                    {...fieldA11y("tarifa", errors.tarifa)}
                   />
-                  {errors.tarifa && <p className="mt-1 text-sm text-fiscal-danger">{errors.tarifa}</p>}
+                  {errors.tarifa && <FieldError fieldId={"tarifa"}>{errors.tarifa}</FieldError>}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">

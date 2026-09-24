@@ -239,7 +239,7 @@ export default function PayrollDetailPage() {
       <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
         <Sidebar />
         <main className="flex-1 p-8">
-          <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+          <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
             {loadError || "Comprobante de Nómina no encontrado."}
           </div>
         </main>
@@ -349,7 +349,7 @@ export default function PayrollDetailPage() {
               )}
 
               {nomina.estado === "rechazada" && nomina.razon_rechazo && (
-                <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
+                <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md mb-2">
                   <p className="font-medium">{nomina.razon_rechazo}</p>
                 </div>
               )}

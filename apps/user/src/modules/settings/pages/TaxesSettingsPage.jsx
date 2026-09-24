@@ -92,7 +92,7 @@ export default function TaxesSettingsPage() {
               <TableSkeleton columns={3} label="Cargando impuestos..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">
                   No se pudieron cargar los impuestos: {loadError}
                 </p>
                 <Button

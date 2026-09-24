@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getResolucionDocumentoSoporte, guardarResolucionDocumentoSoporte } from "@ingefact/core-api";
 import { validateField } from "./SupportDocumentResolutionPanel.validation";
-import { Button, FormSkeleton } from "@ingefact/ui";
+import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
   numero_resolucion: "",
@@ -113,7 +113,7 @@ export default function SupportDocumentResolutionPanel() {
       ) : (
         <>
           {loadError && (
-            <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+            <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
               {loadError}
             </div>
           )}
@@ -162,7 +162,7 @@ export default function SupportDocumentResolutionPanel() {
             </p>
 
             {saveError && (
-              <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+              <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                 {saveError}
               </div>
             )}
@@ -170,12 +170,12 @@ export default function SupportDocumentResolutionPanel() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="numero_resolucion" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                  <label htmlFor="ds_numero_resolucion" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Número de Resolución
                   </label>
                   <input
                     type="text"
-                    id="numero_resolucion"
+                    id="ds_numero_resolucion"
                     name="numero_resolucion"
                     value={formData.numero_resolucion}
                     onChange={handleChange}
@@ -184,18 +184,19 @@ export default function SupportDocumentResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("ds_numero_resolucion", errors.numero_resolucion)}
                   />
                   {errors.numero_resolucion && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.numero_resolucion}</p>
+                    <FieldError fieldId={"ds_numero_resolucion"}>{errors.numero_resolucion}</FieldError>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="prefijo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                  <label htmlFor="ds_prefijo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Prefijo
                   </label>
                   <input
                     type="text"
-                    id="prefijo"
+                    id="ds_prefijo"
                     name="prefijo"
                     value={formData.prefijo}
                     onChange={handleChange}
@@ -204,20 +205,21 @@ export default function SupportDocumentResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("ds_prefijo", errors.prefijo)}
                   />
-                  {errors.prefijo && <p className="mt-1 text-sm text-fiscal-danger">{errors.prefijo}</p>}
+                  {errors.prefijo && <FieldError fieldId={"ds_prefijo"}>{errors.prefijo}</FieldError>}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="rango_minimo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                  <label htmlFor="ds_rango_minimo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Rango Mínimo
                   </label>
                   <input
                     type="number"
                     min="1"
-                    id="rango_minimo"
+                    id="ds_rango_minimo"
                     name="rango_minimo"
                     value={formData.rango_minimo}
                     onChange={handleChange}
@@ -226,19 +228,20 @@ export default function SupportDocumentResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("ds_rango_minimo", errors.rango_minimo)}
                   />
                   {errors.rango_minimo && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_minimo}</p>
+                    <FieldError fieldId={"ds_rango_minimo"}>{errors.rango_minimo}</FieldError>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="rango_maximo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                  <label htmlFor="ds_rango_maximo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Rango Máximo
                   </label>
                   <input
                     type="number"
                     min="1"
-                    id="rango_maximo"
+                    id="ds_rango_maximo"
                     name="rango_maximo"
                     value={formData.rango_maximo}
                     onChange={handleChange}
@@ -247,21 +250,22 @@ export default function SupportDocumentResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("ds_rango_maximo", errors.rango_maximo)}
                   />
                   {errors.rango_maximo && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.rango_maximo}</p>
+                    <FieldError fieldId={"ds_rango_maximo"}>{errors.rango_maximo}</FieldError>
                   )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="fecha_inicio" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                  <label htmlFor="ds_fecha_inicio" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Fecha Inicio
                   </label>
                   <input
                     type="date"
-                    id="fecha_inicio"
+                    id="ds_fecha_inicio"
                     name="fecha_inicio"
                     value={formData.fecha_inicio}
                     onChange={handleChange}
@@ -270,18 +274,19 @@ export default function SupportDocumentResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("ds_fecha_inicio", errors.fecha_inicio)}
                   />
                   {errors.fecha_inicio && (
-                    <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_inicio}</p>
+                    <FieldError fieldId={"ds_fecha_inicio"}>{errors.fecha_inicio}</FieldError>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="fecha_fin" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                  <label htmlFor="ds_fecha_fin" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                     Fecha Fin
                   </label>
                   <input
                     type="date"
-                    id="fecha_fin"
+                    id="ds_fecha_fin"
                     name="fecha_fin"
                     value={formData.fecha_fin}
                     onChange={handleChange}
@@ -290,19 +295,20 @@ export default function SupportDocumentResolutionPanel() {
                         ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                         : "focus:ring-2 focus:ring-brand-50"
                     }`}
+                    {...fieldA11y("ds_fecha_fin", errors.fecha_fin)}
                   />
-                  {errors.fecha_fin && <p className="mt-1 text-sm text-fiscal-danger">{errors.fecha_fin}</p>}
+                  {errors.fecha_fin && <FieldError fieldId={"ds_fecha_fin"}>{errors.fecha_fin}</FieldError>}
                 </div>
               </div>
 
               <div>
-                <label htmlFor="consecutivo_actual" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
+                <label htmlFor="ds_consecutivo_actual" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
                   Consecutivo Actual
                 </label>
                 <input
                   type="number"
                   min="1"
-                  id="consecutivo_actual"
+                  id="ds_consecutivo_actual"
                   name="consecutivo_actual"
                   value={formData.consecutivo_actual}
                   onChange={handleChange}
@@ -312,9 +318,10 @@ export default function SupportDocumentResolutionPanel() {
                       ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
                       : "focus:ring-2 focus:ring-brand-50"
                   }`}
+                  {...fieldA11y("ds_consecutivo_actual", errors.consecutivo_actual)}
                 />
                 {errors.consecutivo_actual ? (
-                  <p className="mt-1 text-sm text-fiscal-danger">{errors.consecutivo_actual}</p>
+                  <FieldError fieldId={"ds_consecutivo_actual"}>{errors.consecutivo_actual}</FieldError>
                 ) : (
                   <p className="mt-1 text-sm text-neutralCustom-500">
                     Déjalo vacío para iniciar en el rango mínimo.

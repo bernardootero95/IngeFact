@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getFacturaRecibida, registrarEventoReceptor, listPublicReferenceTable } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import { Button } from "@ingefact/ui";
+import { Button, FieldError, fieldA11y } from "@ingefact/ui";
 import {
   TIPOS_EVENTO,
   TIPOS_QUE_REQUIEREN_GENERADOR,
@@ -136,7 +136,7 @@ export default function ReceivedInvoiceDetailPage() {
       <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
         <Sidebar />
         <main className="flex-1 p-8">
-          <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+          <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
             {loadError || "Factura recibida no encontrada."}
           </div>
         </main>
@@ -239,14 +239,14 @@ export default function ReceivedInvoiceDetailPage() {
               <h3 className="text-base font-semibold text-neutralCustom-800">Registrar nuevo evento</h3>
 
               {registerError && (
-                <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                   {registerError}
                 </div>
               )}
 
               <div>
                 <label htmlFor="tipo" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                  Tipo de evento <span className="text-fiscal-danger">*</span>
+                  Tipo de evento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                 </label>
                 <select
                   id="tipo"
@@ -258,6 +258,7 @@ export default function ReceivedInvoiceDetailPage() {
                   className={`field w-full ${
                     errors.tipo ? "border-fiscal-danger field-invalid" : ""
                   }`}
+                  {...fieldA11y("tipo", errors.tipo)}
                 >
                   <option value="">Selecciona...</option>
                   {TIPOS_EVENTO.map((opt) => (
@@ -266,7 +267,7 @@ export default function ReceivedInvoiceDetailPage() {
                     </option>
                   ))}
                 </select>
-                {errors.tipo && <p className="mt-1 text-sm text-fiscal-danger">{errors.tipo}</p>}
+                {errors.tipo && <FieldError fieldId={"tipo"}>{errors.tipo}</FieldError>}
               </div>
 
               {TIPOS_QUE_REQUIEREN_GENERADOR.includes(tipo) && (
@@ -275,7 +276,7 @@ export default function ReceivedInvoiceDetailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <label htmlFor="generador-tipo" className="block text-xs font-medium text-neutralCustom-600 mb-1">
-                        Tipo de Documento <span className="text-fiscal-danger">*</span>
+                        Tipo de Documento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <select
                         id="generador-tipo"
@@ -298,7 +299,7 @@ export default function ReceivedInvoiceDetailPage() {
                     </div>
                     <div>
                       <label htmlFor="generador-numero" className="block text-xs font-medium text-neutralCustom-600 mb-1">
-                        Número de Documento <span className="text-fiscal-danger">*</span>
+                        Número de Documento <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -315,7 +316,7 @@ export default function ReceivedInvoiceDetailPage() {
                     </div>
                     <div>
                       <label htmlFor="generador-nombres" className="block text-xs font-medium text-neutralCustom-600 mb-1">
-                        Nombres <span className="text-fiscal-danger">*</span>
+                        Nombres <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -330,7 +331,7 @@ export default function ReceivedInvoiceDetailPage() {
                     </div>
                     <div>
                       <label htmlFor="generador-apellidos" className="block text-xs font-medium text-neutralCustom-600 mb-1">
-                        Apellidos <span className="text-fiscal-danger">*</span>
+                        Apellidos <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                       </label>
                       <input
                         type="text"
@@ -365,7 +366,7 @@ export default function ReceivedInvoiceDetailPage() {
                 <div className="bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md p-4 space-y-3">
                   <div>
                     <label htmlFor="claim_code" className="block text-xs font-medium text-neutralCustom-600 mb-1">
-                      Motivo del reclamo <span className="text-fiscal-danger">*</span>
+                      Motivo del reclamo <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
                     </label>
                     <select
                       id="claim_code"
@@ -377,6 +378,7 @@ export default function ReceivedInvoiceDetailPage() {
                       className={`field w-full ${
                         errors.claim_code ? "border-fiscal-danger field-invalid" : ""
                       }`}
+                      {...fieldA11y("claim_code", errors.claim_code)}
                     >
                       <option value="">Selecciona...</option>
                       {CLAIM_CODES.map((opt) => (
@@ -385,7 +387,7 @@ export default function ReceivedInvoiceDetailPage() {
                         </option>
                       ))}
                     </select>
-                    {errors.claim_code && <p className="mt-1 text-sm text-fiscal-danger">{errors.claim_code}</p>}
+                    {errors.claim_code && <FieldError fieldId={"claim_code"}>{errors.claim_code}</FieldError>}
                   </div>
                   <div>
                     <label htmlFor="notas" className="block text-xs font-medium text-neutralCustom-600 mb-1">

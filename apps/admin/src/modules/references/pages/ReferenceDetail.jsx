@@ -146,6 +146,7 @@ export default function ReferenceDetail() {
           <div className="max-w-md shrink-0">
             <input
               type="text"
+              aria-label="Buscar por código o descripción"
               placeholder="Buscar por código o descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}

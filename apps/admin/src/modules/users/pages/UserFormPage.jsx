@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearUsuarioAdmin, actualizarUsuarioAdmin } from "@ingefact/core-api";
 import { isValidEmail } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
-import { Button } from "@ingefact/ui";
+import { Button, FieldError, fieldA11y } from "@ingefact/ui";
 
 function validateName(value) {
   if (!value.trim()) return "El nombre es obligatorio.";
@@ -105,7 +105,7 @@ export default function UserFormPage() {
               className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-5"
             >
               {saveError && (
-                <div className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                   {saveError}
                 </div>
               )}
@@ -125,8 +125,9 @@ export default function UserFormPage() {
                       : ""
                   }`}
                   placeholder="Nombre completo"
+                  {...fieldA11y("user-nombre", fieldErrors.nombre)}
                 />
-                {fieldErrors.nombre && <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.nombre}</p>}
+                {fieldErrors.nombre && <FieldError fieldId={"user-nombre"}>{fieldErrors.nombre}</FieldError>}
               </div>
 
               <div>
@@ -146,9 +147,10 @@ export default function UserFormPage() {
                       : ""
                   }`}
                   placeholder="correo@ingefact.com"
+                  {...fieldA11y("user-email", fieldErrors.email)}
                 />
                 {fieldErrors.email && !isEditing && (
-                  <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.email}</p>
+                  <FieldError fieldId={"user-email"}>{fieldErrors.email}</FieldError>
                 )}
               </div>
 

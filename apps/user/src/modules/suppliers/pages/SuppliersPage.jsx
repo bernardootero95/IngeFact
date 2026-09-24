@@ -81,7 +81,7 @@ export default function SuppliersPage() {
                   type="text"
                   value={search}
                   onChange={handleSearchChange}
-                  placeholder="Buscar por NIT o nombre..."
+                  aria-label="Buscar proveedores por NIT o nombre" placeholder="Buscar por NIT o nombre..."
                   className="field w-full pl-9 pr-4"
                 />
                 <svg
@@ -104,7 +104,7 @@ export default function SuppliersPage() {
               <TableSkeleton columns={5} label="Cargando proveedores..." />
             ) : loadError ? (
               <div className="p-12 text-center">
-                <p className="text-sm text-fiscal-danger mb-3">No se pudieron cargar los proveedores: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar los proveedores: {loadError}</p>
                 <Button
                   onClick={() => fetchSuppliers(search)}
                   variant="danger"

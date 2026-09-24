@@ -108,7 +108,7 @@ export default function CompanyDataSettingsPage() {
                   </p>
 
                   {saveError && (
-                    <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                    <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
                       {saveError}
                     </div>
                   )}
