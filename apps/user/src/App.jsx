@@ -7,6 +7,7 @@ import Login from "./modules/auth/pages/Login";
 import ForgotPassword from "./modules/auth/pages/ForgotPassword";
 import ResetPassword from "./modules/auth/pages/ResetPassword";
 import ChangePasswordPage from "./modules/auth/pages/ChangePasswordPage";
+import AcceptTermsPage from "./modules/auth/pages/AcceptTermsPage";
 import Dashboard from "./modules/dashboard/pages/Dashboard";
 import InvoicesListPage from "./modules/invoices/pages/InvoicesListPage";
 import InvoiceFormPage from "./modules/invoices/pages/InvoiceFormPage";
@@ -63,18 +64,17 @@ const RequireSession = ({ children }) => {
   return children;
 };
 
+// Orden de los pasos obligatorios del primer ingreso: primero cambiar la
+// clave temporal, despues aceptar terminos y politica de datos (tambien se
+// vuelve a pedir cuando se publica una version nueva de los textos).
 const ProtectedRoute = ({ children }) => {
-  const { debeCambiarPassword } = useAuthStore();
+  const { debeCambiarPassword, profile } = useAuthStore();
 
-  return (
-    <RequireSession>
-      {debeCambiarPassword ? (
-        <Navigate to="/change-password" replace />
-      ) : (
-        <EmpresaProvider>{children}</EmpresaProvider>
-      )}
-    </RequireSession>
-  );
+  let content = <EmpresaProvider>{children}</EmpresaProvider>;
+  if (debeCambiarPassword) content = <Navigate to="/change-password" replace />;
+  else if (profile?.terminos_pendientes) content = <Navigate to="/accept-terms" replace />;
+
+  return <RequireSession>{content}</RequireSession>;
 };
 
 export default function App() {
@@ -96,6 +96,15 @@ export default function App() {
           element={
             <RequireSession>
               <ChangePasswordPage />
+            </RequireSession>
+          }
+        />
+
+        <Route
+          path="/accept-terms"
+          element={
+            <RequireSession>
+              <AcceptTermsPage />
             </RequireSession>
           }
         />

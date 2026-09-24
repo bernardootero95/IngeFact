@@ -35,6 +35,10 @@ export function createAuthStore({ apiUrl, login: loginFn, refreshTokenKey }) {
 
     markPasswordChanged: () => set({ debeCambiarPassword: false }),
 
+    // Tras aceptar terminos y politica de datos (ver /api/v1/auth/aceptar-terminos).
+    markTermsAccepted: () =>
+      set((state) => ({ profile: state.profile ? { ...state.profile, terminos_pendientes: false } : state.profile })),
+
     // El refresh token es de un solo uso (se rota en cada llamada), asi que dos
     // invocaciones concurrentes (ej. el doble efecto de React StrictMode en dev)
     // no pueden ejecutar el flujo por separado -- la segunda debe esperar a la

@@ -4,7 +4,7 @@ import { changePassword } from "@ingefact/core-api";
 import { isStrongPassword } from "@ingefact/utils";
 import { useAuthStore } from "../store/authStore";
 import logo from "../../../assets/logo.png";
-import { Button } from "@ingefact/ui";
+import { AuthLayout, Button, FieldError, FormAlert, PasswordInput } from "@ingefact/ui";
 
 function validateNewPassword(value) {
   if (!value) return "La contraseña es obligatoria.";
@@ -85,102 +85,64 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutralCustom-50 font-sans p-4">
-      <div className="w-full max-w-md bg-white border border-neutralCustom-100 rounded-brand-lg p-8 shadow-sm">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="Logo IngeFact" className="h-24 w-auto object-contain" />
-          </div>
-          <h1 className="text-3xl font-bold text-brand-600 tracking-tight">IngeFact</h1>
-          <p className="text-sm text-neutralCustom-500 mt-2 font-normal">
-            Por seguridad, cambia tu contraseña temporal antes de continuar.
-          </p>
+    <AuthLayout logo={logo} subtitle="Por seguridad, cambia tu contraseña temporal antes de continuar.">
+      <FormAlert className="mb-4">{error}</FormAlert>
+
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <div>
+          <label htmlFor="change-current-password" className="block text-sm font-medium text-neutralCustom-500 mb-2">
+            Contraseña temporal
+          </label>
+          <PasswordInput
+            id="change-current-password"
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={handleCurrentChange}
+            error={fieldErrors.currentPassword}
+          />
+          <FieldError fieldId="change-current-password">{fieldErrors.currentPassword}</FieldError>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md font-normal">
-            {error}
-          </div>
-        )}
+        <div>
+          <label htmlFor="change-new-password" className="block text-sm font-medium text-neutralCustom-500 mb-2">
+            Nueva contraseña
+          </label>
+          <PasswordInput
+            id="change-new-password"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={handleNewChange}
+            error={fieldErrors.newPassword}
+          />
+          <FieldError fieldId="change-new-password">{fieldErrors.newPassword}</FieldError>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label htmlFor="change-current-password" className="block text-sm font-medium text-neutralCustom-500 mb-2">
-              Contraseña temporal
-            </label>
-            <input
-              type="password"
-              id="change-current-password"
-              required
-              value={currentPassword}
-              onChange={handleCurrentChange}
-              className={`field field-lg w-full ${
-                fieldErrors.currentPassword
-                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
-                  : ""
-              }`}
-              placeholder="••••••••"
-            />
-            {fieldErrors.currentPassword && (
-              <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.currentPassword}</p>
-            )}
-          </div>
+        <div>
+          <label htmlFor="change-confirm-password" className="block text-sm font-medium text-neutralCustom-500 mb-2">
+            Confirmar nueva contraseña
+          </label>
+          <PasswordInput
+            id="change-confirm-password"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={handleConfirmChange}
+            error={fieldErrors.confirmPassword}
+          />
+          <FieldError fieldId="change-confirm-password">{fieldErrors.confirmPassword}</FieldError>
+        </div>
 
-          <div>
-            <label htmlFor="change-new-password" className="block text-sm font-medium text-neutralCustom-500 mb-2">
-              Nueva contraseña
-            </label>
-            <input
-              type="password"
-              id="change-new-password"
-              required
-              value={newPassword}
-              onChange={handleNewChange}
-              className={`field field-lg w-full ${
-                fieldErrors.newPassword
-                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
-                  : ""
-              }`}
-              placeholder="••••••••"
-            />
-            {fieldErrors.newPassword && <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.newPassword}</p>}
-          </div>
-
-          <div>
-            <label htmlFor="change-confirm-password" className="block text-sm font-medium text-neutralCustom-500 mb-2">
-              Confirmar nueva contraseña
-            </label>
-            <input
-              type="password"
-              id="change-confirm-password"
-              required
-              value={confirmPassword}
-              onChange={handleConfirmChange}
-              className={`field field-lg w-full ${
-                fieldErrors.confirmPassword
-                  ? "border-fiscal-danger field-invalid focus:border-fiscal-danger"
-                  : ""
-              }`}
-              placeholder="••••••••"
-            />
-            {fieldErrors.confirmPassword && (
-              <p className="mt-1 text-sm text-fiscal-danger">{fieldErrors.confirmPassword}</p>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            disabled={loading || hasErrors}
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={loading}
-            className="mt-2"
-          >
-            Cambiar contraseña
-          </Button>
-        </form>
-      </div>
-    </div>
+        <Button
+          type="submit"
+          disabled={loading || hasErrors}
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={loading}
+          className="mt-2"
+        >
+          Cambiar contraseña
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

@@ -10,6 +10,7 @@ export {
   forgotPasswordTenant,
   resetPassword,
   changePassword,
+  aceptarTerminos,
 } from "./services/auth.js";
 export { getMiEmpresa, actualizarDatosEmpresa } from "./services/tenantEmpresa.js";
 export {

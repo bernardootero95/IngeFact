@@ -59,3 +59,10 @@ export async function changePassword(currentPassword, newPassword) {
     body: { current_password: currentPassword, new_password: newPassword },
   });
 }
+
+export async function aceptarTerminos(version) {
+  return apiRequest("/api/v1/auth/aceptar-terminos", {
+    method: "POST",
+    body: { version },
+  });
+}
