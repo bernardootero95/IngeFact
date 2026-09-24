@@ -7,6 +7,7 @@ recorren genericamente y se muestra el monto de cada bloque presente."""
 from sqlalchemy.orm import Session
 
 from src.application.reference_table_service import ReferenceTableService
+from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
     CSS,
@@ -127,8 +128,6 @@ def _render_trabajador_html(empleado, catalogos: dict) -> str:
 
 
 def generar_representacion_pdf_nomina(db: Session, nomina: Nomina) -> bytes:
-    from weasyprint import HTML  # import perezoso, ver factura_pdf.py
-
     empresa = db.get(Empresa, nomina.empresa_id)
     empleado = nomina.empleado
 
@@ -138,6 +137,10 @@ def generar_representacion_pdf_nomina(db: Session, nomina: Nomina) -> bytes:
     forma_pago = nombre_catalogo(tabla_ref.listar("formas_pago"), nomina.forma_pago)
     metodo_pago = nombre_catalogo(tabla_ref.listar("metodos_pago"), nomina.metodo_pago)
     qr_base64 = generar_qr_png_base64(nomina.qr_code_content or "")
+
+    # Todo texto interpolado de aqui en adelante sale escapado (pdf_render.py),
+    # incluidas las claves de devengados/deducciones (JSONB enviado por el cliente).
+    nomina, empresa, empleado = map(escapado, (nomina, empresa, empleado))
 
     firma_html = ""
     if nomina.firma_digital:
@@ -224,4 +227,4 @@ def generar_representacion_pdf_nomina(db: Session, nomina: Nomina) -> bytes:
     </html>
     """
 
-    return HTML(string=html).write_pdf()
+    return render_pdf(html)

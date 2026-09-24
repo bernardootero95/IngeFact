@@ -4,6 +4,7 @@ patron que nota_credito_pdf.py."""
 from sqlalchemy.orm import Session
 
 from src.application.reference_table_service import ReferenceTableService
+from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
     CSS,
@@ -23,8 +24,6 @@ MONEDA = "COP"
 
 
 def generar_representacion_pdf_nota_debito(db: Session, nota: NotaDebito, firma_digital: str | None) -> bytes:
-    from weasyprint import HTML  # import perezoso, ver factura_pdf.py
-
     empresa = db.get(Empresa, nota.empresa_id)
     cliente = nota.cliente
     factura = nota.factura
@@ -34,6 +33,10 @@ def generar_representacion_pdf_nota_debito(db: Session, nota: NotaDebito, firma_
     motivo_nombre = nombre_catalogo(motivos, nota.motivo_codigo)
     impuestos = agrupar_impuestos(nota.lineas, catalogos["tributos"])
     qr_base64 = generar_qr_png_base64(nota.qr_code_content or "")
+
+    # Todo texto interpolado de aqui en adelante sale escapado (pdf_render.py).
+    nota, empresa, cliente, factura = map(escapado, (nota, empresa, cliente, factura))
+    firma_digital = escapado(firma_digital)
 
     documento_afectado_html = f"""
     <div class="afectado">
@@ -125,4 +128,4 @@ def generar_representacion_pdf_nota_debito(db: Session, nota: NotaDebito, firma_
     </html>
     """
 
-    return HTML(string=html).write_pdf()
+    return render_pdf(html)

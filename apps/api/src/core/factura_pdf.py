@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.application.reference_table_service import ReferenceTableService
 from src.application.resolucion_dian_service import ResolucionDianService
+from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
     CSS,
@@ -27,13 +28,6 @@ MONEDA = "COP"
 
 
 def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str | None) -> bytes:
-    # Import perezoso: weasyprint intenta cargar libgobject/libpango del
-    # sistema apenas se importa el modulo (no solo al usarlo) -- si se
-    # importara arriba, con esas librerias ausentes (Windows sin GTK3
-    # instalado) se rompería CUALQUIER import de factura_service. En
-    # Docker (Dockerfile ya las instala) esto importa sin problema.
-    from weasyprint import HTML
-
     empresa = db.get(Empresa, factura.empresa_id)
     cliente = factura.cliente
     resolucion = ResolucionDianService(db).obtener(factura.empresa_id)
@@ -48,6 +42,11 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
     impuestos = agrupar_impuestos(factura.lineas, catalogos["tributos"])
 
     qr_base64 = generar_qr_png_base64(factura.qr_code_content or "")
+
+    # De aqui en adelante todo texto que se interpola sale escapado (ver
+    # pdf_render.py). El QR ya se genero con el contenido crudo.
+    factura, empresa, cliente, resolucion = map(escapado, (factura, empresa, cliente, resolucion))
+    firma_digital = escapado(firma_digital)
 
     resolucion_html = ""
     if resolucion:
@@ -144,4 +143,4 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
     </html>
     """
 
-    return HTML(string=html).write_pdf()
+    return render_pdf(html)
