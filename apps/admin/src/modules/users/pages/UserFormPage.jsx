@@ -133,7 +133,7 @@ export default function UserFormPage() {
               <div>
                 <label htmlFor="user-email" className="block text-sm font-medium text-neutralCustom-500 mb-1">
                   Correo electrónico{" "}
-                  {isEditing && <span className="text-xs text-neutralCustom-400">(No modificable)</span>}
+                  {isEditing && <span className="text-xs text-neutralCustom-500">(No modificable)</span>}
                 </label>
                 <input
                   id="user-email"

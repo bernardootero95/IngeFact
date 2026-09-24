@@ -15,7 +15,7 @@ const ESTADO_BADGE = {
 
 function EventoBadge({ tipoLabel, legalStatus }) {
   if (!tipoLabel) {
-    return <span className="text-xs text-neutralCustom-400">Sin eventos registrados</span>;
+    return <span className="text-xs text-neutralCustom-500">Sin eventos registrados</span>;
   }
   return (
     <span

@@ -332,7 +332,7 @@ export default function ProductFormPage() {
                     ))}
                   </select>
                   {impuestoOptions.length === 0 && (
-                    <p className="mt-1 text-xs text-neutralCustom-400">
+                    <p className="mt-1 text-xs text-neutralCustom-500">
                       Aún no tienes impuestos configurados. Ve a Configuración → Impuestos para crearlos.
                     </p>
                   )}
@@ -364,7 +364,7 @@ export default function ProductFormPage() {
                       {errors.valor_impuesto_excluido ? (
                         <FieldError fieldId={"valor_impuesto_excluido"}>{errors.valor_impuesto_excluido}</FieldError>
                       ) : (
-                        <p className="mt-1 text-xs text-neutralCustom-400">
+                        <p className="mt-1 text-xs text-neutralCustom-500">
                           Solo si el precio ya incluye un impuesto monofásico pagado al productor (ICL, IBUA). Ese
                           valor no se factura como impuesto: se resta de la base del IVA.
                         </p>

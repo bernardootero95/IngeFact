@@ -224,7 +224,7 @@ export default function ReceivedInvoiceDetailPage() {
                       )}
                       {evento.notas && <p className="text-xs text-neutralCustom-600 mt-2">{evento.notas}</p>}
                       {evento.cude && (
-                        <p className="text-xs text-neutralCustom-400 mt-1 font-mono break-all">CUDE: {evento.cude}</p>
+                        <p className="text-xs text-neutralCustom-500 mt-1 font-mono break-all">CUDE: {evento.cude}</p>
                       )}
                     </div>
                   ))}
