@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturasRecibidas } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
-import { Button, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
+import { Button, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
@@ -103,12 +103,10 @@ export default function ReceivedInvoicesListPage() {
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
                   {view.rows.map((f) => (
-                    <tr
-                      key={f.id}
-                      onClick={() => navigate(`/received-invoices/${f.id}`)}
-                      className="hover:bg-neutralCustom-50 transition-colors cursor-pointer"
-                    >
-                      <td className="px-6 py-4 font-medium text-neutralCustom-800">{f.proveedor_nombre}</td>
+                    <ClickableRow key={f.id} to={`/received-invoices/${f.id}`}>
+                      <td className="px-6 py-4 font-medium text-neutralCustom-800">
+                        <ClickableRow.Link to={`/received-invoices/${f.id}`}>{f.proveedor_nombre}</ClickableRow.Link>
+                      </td>
                       <td className="px-6 py-4 font-mono text-xs text-neutralCustom-500">
                         {f.cufe.slice(0, 16)}…
                       </td>
@@ -122,7 +120,7 @@ export default function ReceivedInvoicesListPage() {
                       <td className="px-6 py-4 text-right font-medium text-neutralCustom-800">
                         {f.monto_total != null ? formatCOP(f.monto_total) : "-"}
                       </td>
-                    </tr>
+                    </ClickableRow>
                   ))}
                 </tbody>
               </table>

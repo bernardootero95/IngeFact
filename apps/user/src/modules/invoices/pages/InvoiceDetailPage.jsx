@@ -12,7 +12,7 @@ import {
   anularFactura,
   listPublicReferenceTable,
 } from "@ingefact/core-api";
-import { ToastAlert, Button, FormSkeleton, ConfirmPopover } from "@ingefact/ui";
+import { ToastAlert, Button, FormSkeleton, ConfirmPopover, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { InfoEmisor, InfoReceptor } from "../../../components/InfoEmisorReceptor";
@@ -446,13 +446,9 @@ export default function InvoiceDetailPage() {
                     </thead>
                     <tbody className="divide-y divide-neutralCustom-100">
                       {notasCredito.map((n) => (
-                        <tr
-                          key={n.id}
-                          onClick={() => navigate(`/credit-notes/${n.id}`)}
-                          className="cursor-pointer hover:bg-neutralCustom-50"
-                        >
+                        <ClickableRow key={n.id} to={`/credit-notes/${n.id}`}>
                           <td className="py-2.5 font-medium text-neutralCustom-800">
-                            {n.numero_completo || "Sin enviar"}
+                            <ClickableRow.Link to={`/credit-notes/${n.id}`}>{n.numero_completo || "Sin enviar"}</ClickableRow.Link>
                           </td>
                           <td className="py-2.5">{n.fecha}</td>
                           <td className="py-2.5">
@@ -467,7 +463,7 @@ export default function InvoiceDetailPage() {
                           <td className="py-2.5 text-right font-medium text-neutralCustom-800">
                             {formatCOP(n.total)}
                           </td>
-                        </tr>
+                        </ClickableRow>
                       ))}
                     </tbody>
                   </table>
@@ -494,13 +490,9 @@ export default function InvoiceDetailPage() {
                     </thead>
                     <tbody className="divide-y divide-neutralCustom-100">
                       {notasDebito.map((n) => (
-                        <tr
-                          key={n.id}
-                          onClick={() => navigate(`/debit-notes/${n.id}`)}
-                          className="cursor-pointer hover:bg-neutralCustom-50"
-                        >
+                        <ClickableRow key={n.id} to={`/debit-notes/${n.id}`}>
                           <td className="py-2.5 font-medium text-neutralCustom-800">
-                            {n.numero_completo || "Sin enviar"}
+                            <ClickableRow.Link to={`/debit-notes/${n.id}`}>{n.numero_completo || "Sin enviar"}</ClickableRow.Link>
                           </td>
                           <td className="py-2.5">{n.fecha}</td>
                           <td className="py-2.5">
@@ -515,7 +507,7 @@ export default function InvoiceDetailPage() {
                           <td className="py-2.5 text-right font-medium text-neutralCustom-800">
                             {formatCOP(n.total)}
                           </td>
-                        </tr>
+                        </ClickableRow>
                       ))}
                     </tbody>
                   </table>

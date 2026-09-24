@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { listFacturas, obtenerRepresentacionPdfFactura, enviarFacturaPorCorreo } from "@ingefact/core-api";
-import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination } from "@ingefact/ui";
+import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
@@ -173,13 +173,9 @@ export default function InvoicesListPage() {
                 </thead>
                 <tbody className="divide-y divide-neutralCustom-100">
                   {view.rows.map((f) => (
-                    <tr
-                      key={f.id}
-                      onClick={() => navigate(`/invoices/${f.id}`)}
-                      className="hover:bg-neutralCustom-50 transition-colors cursor-pointer"
-                    >
+                    <ClickableRow key={f.id} to={`/invoices/${f.id}`}>
                       <td className="px-6 py-4 font-medium text-neutralCustom-800">
-                        {f.numero_completo || "Sin enviar"}
+                        <ClickableRow.Link to={`/invoices/${f.id}`}>{f.numero_completo || "Sin enviar"}</ClickableRow.Link>
                       </td>
                       <td className="px-6 py-4">{f.cliente_nombre}</td>
                       <td className="px-6 py-4">{f.fecha}</td>
@@ -196,7 +192,7 @@ export default function InvoicesListPage() {
                         {formatCOP(f.total)}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
                           <IconButton
                             title={f.cufe ? "Ver representación gráfica" : "Vista previa (borrador)"}
                             onClick={() => handleVerRepresentacion(f)}
@@ -251,7 +247,7 @@ export default function InvoicesListPage() {
                           </IconButton>
                         </div>
                       </td>
-                    </tr>
+                    </ClickableRow>
                   ))}
                 </tbody>
               </table>
