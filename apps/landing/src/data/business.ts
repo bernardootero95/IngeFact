@@ -6,9 +6,10 @@ import { WHATSAPP_DISPLAY } from "@/lib/whatsapp";
  * reembolsos). El Estatuto del Consumidor (Ley 1480 de 2011, art. 50) y
  * la Ley 1581 de 2012 exigen publicar la identidad del responsable.
  *
- * Titular, nombre comercial y NIT confirmados por el usuario (2026-09-24).
- * TODO: los valores entre corchetes (dirección, correos, horario) aún NO
- * están confirmados; reemplazarlos antes de publicar.
+ * Titular, nombre comercial, NIT, dirección y correo confirmados por el
+ * usuario (2026-09-24).
+ * TODO: el horario (entre corchetes) aún NO está confirmado; reemplazarlo
+ * antes de publicar.
  */
 export const BUSINESS = {
   marca: "IngeFact",
@@ -19,10 +20,11 @@ export const BUSINESS = {
   tipoPersona: "persona natural",
   // DV calculado con calculateNitDV / nit_check_digit (ambos dan 7).
   nit: "1083000777-7",
-  direccion: "[DIRECCIÓN]",
-  ciudad: "Bogotá D.C., Colombia",
-  correo: "[contacto@ingefact.com]",
-  correoDatosPersonales: "[datospersonales@ingefact.com]",
+  direccion: "Carrera 15 # 2-23",
+  ciudad: "Ciénaga, Magdalena, Colombia",
+  correo: "contacto@tecnoingenieriabo.com",
+  // Mismo buzón para PQR y para solicitudes de datos personales (Ley 1581).
+  correoDatosPersonales: "contacto@tecnoingenieriabo.com",
   telefono: WHATSAPP_DISPLAY,
   horario: "[lunes a viernes, 8:00 a.m. – 6:00 p.m.]",
   sitio: "https://ingefact.com",
