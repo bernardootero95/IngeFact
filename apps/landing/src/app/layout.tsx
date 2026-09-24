@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { FloatingWhatsAppButton } from "@/components/ui/FloatingWhatsAppButton";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { SITE_URL, siteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,10 +11,8 @@ const inter = Inter({
   display: "swap",
 });
 
-const siteUrl = "https://ingefact.com";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "IngeFact — Facturación, nómina electrónica y documento soporte DIAN",
     template: "%s | IngeFact",
@@ -30,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-CO" className={inter.variable}>
       <body className="font-sans text-neutralCustom-800 antialiased">
+        <JsonLd data={siteJsonLd()} />
         {children}
         <FloatingWhatsAppButton />
       </body>
