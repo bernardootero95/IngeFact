@@ -59,5 +59,5 @@ def test_correos_a_terceros_indican_que_el_emisor_es_el_responsable():
 def test_alerta_de_cupo_describe_lo_que_se_bloquea_hoy():
     _subject, html = plantilla_alerta_cuota("Empresa", 9, 10)
 
-    assert "documentos soporte ni comprobantes de nómina" in html
-    assert "notas crédito y débito" in html
+    assert "no podrás enviar ningún documento a la DIAN" in html
+    assert "eventos sobre facturas recibidas" in html

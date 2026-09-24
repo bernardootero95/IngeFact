@@ -41,4 +41,5 @@ export const DOCUMENTOS_QUE_CONSUMEN = [
   "Nota débito",
   "Documento soporte",
   "Comprobante de nómina electrónica",
+  "Evento sobre factura recibida (acuse de recibo, recibo del bien o servicio, aceptación o reclamo)",
 ];

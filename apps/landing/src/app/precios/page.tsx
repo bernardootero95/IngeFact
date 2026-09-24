@@ -10,7 +10,7 @@ import { PRICING_FAQ } from "@/data/faq";
 export const metadata: Metadata = {
   title: "Precios",
   description:
-    "Paquetes prepagados de documentos electrónicos, desde 10 hasta 5.000 documentos, válidos por 12 meses. Facturas, notas, nómina y documento soporte.",
+    "Paquetes prepagados de documentos electrónicos, desde 10 hasta 5.000 documentos, válidos por 12 meses. Facturas, notas, nómina, documento soporte y eventos RADIAN.",
   alternates: { canonical: "/precios" },
 };
 
@@ -22,7 +22,7 @@ export default function PreciosPage() {
           Elige cuántos documentos necesitas
         </h1>
         <p className="mx-auto max-w-[560px] text-base text-neutralCustom-500">
-          Paquetes prepagados, sin mensualidades. Un mismo paquete sirve para facturas, notas, nómina y documento soporte.
+          Paquetes prepagados, sin mensualidades. Un mismo paquete sirve para facturas, notas, nómina, documento soporte y eventos RADIAN.
         </p>
       </section>
 

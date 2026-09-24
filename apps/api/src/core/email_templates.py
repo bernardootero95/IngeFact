@@ -206,8 +206,8 @@ def plantilla_alerta_cuota(razon_social: str, documentos_usados: int, max_docume
     contenido = f"""
       <h2>Hola, {_e(razon_social)}</h2>
       <p>Ya usaste <strong>{_e(documentos_usados)} de {_e(max_documentos)}</strong> documentos de tu paquete actual.</p>
-      <p>Cuando se agote no podrás emitir facturas, documentos soporte ni comprobantes de nómina nuevos hasta comprar
-      otro paquete. Las notas crédito y débito sobre documentos ya emitidos seguirán disponibles.</p>
+      <p>Cuando se agote no podrás enviar ningún documento a la DIAN (facturas, notas crédito y débito, documentos
+      soporte, nómina ni eventos sobre facturas recibidas) hasta comprar otro paquete.</p>
       <p>Escríbenos para comprar un nuevo paquete a tiempo.</p>
     """
     motivo = "Recibes este correo porque tu empresa tiene un paquete de documentos activo en IngeFact."

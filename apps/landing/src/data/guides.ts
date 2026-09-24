@@ -190,7 +190,7 @@ export const GUIDE_GROUPS: GuideGroup[] = [
           "Si eliges reclamo, indica el motivo.",
           "Presiona \"Registrar\": la DIAN valida que tu empresa sea la receptora real de la factura.",
         ],
-        note: "Registrar eventos sobre facturas recibidas no descuenta documentos de tu paquete.",
+        note: "Cada evento aceptado por la DIAN descuenta un documento de tu paquete.",
       },
     ],
   },
