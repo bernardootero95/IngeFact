@@ -39,7 +39,7 @@ export default function ReembolsosPage() {
           <li>Los documentos que vencieron por no usarse dentro de los {PACKAGE_TERMS.vigenciaMeses} meses de vigencia del paquete.</li>
           <li>Los paquetes en los que ya se emitió algún documento, pasado el plazo de retracto.</li>
         </ul>
-        <p>Los documentos rechazados por la DIAN nunca se descuentan de tu paquete, así que no requieren reembolso.</p>
+        <p>Los documentos y eventos rechazados por la DIAN nunca se descuentan de tu paquete, así que no requieren reembolso.</p>
       </LegalSection>
 
       <LegalSection id="garantia" title="3. Fallas del servicio">
