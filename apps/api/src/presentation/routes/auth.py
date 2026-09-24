@@ -4,10 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
+from src.application.aceptacion_legal_service import AceptacionLegalService
 from src.application.auth_service import AuthService
 from src.core.dependencies import CurrentTenant, bearer_scheme, decode_or_401, get_current_tenant
+from src.core.legal import VERSION_TERMINOS_VIGENTE
 from src.core.rate_limit import limiter
 from src.domain.auth import (
+    AceptarTerminosRequest,
     ChangePasswordRequest,
     ForgotPasswordRequest,
     LoginRequest,
@@ -77,7 +80,8 @@ def me(
     db: Session = Depends(get_db),
 ):
     payload = decode_or_401(credentials)
-    model = UsuarioAdmin if payload.get("user_type") == "admin" else UsuarioEmpresa
+    es_admin = payload.get("user_type") == "admin"
+    model = UsuarioAdmin if es_admin else UsuarioEmpresa
     user = db.get(model, uuid.UUID(payload["sub"]))
     if user is None or user.estado != "activo":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado.")
@@ -87,4 +91,23 @@ def me(
         email=user.email,
         rol=payload.get("rol", "tenant"),
         empresa_id=payload.get("empresa_id"),
+        # El staff interno (admin) no acepta terminos de cliente.
+        terminos_pendientes=False if es_admin else AceptacionLegalService(db).tiene_pendiente(user.id),
+        version_terminos=None if es_admin else VERSION_TERMINOS_VIGENTE,
+    )
+
+
+@router.post("/aceptar-terminos", status_code=204)
+def aceptar_terminos(
+    request: Request,
+    body: AceptarTerminosRequest,
+    tenant: CurrentTenant = Depends(get_current_tenant),
+    db: Session = Depends(get_db),
+):
+    AceptacionLegalService(db).aceptar(
+        usuario_id=tenant.id,
+        empresa_id=tenant.empresa_id,
+        version=body.version,
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
     )

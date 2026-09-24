@@ -69,3 +69,11 @@ class MeResponse(BaseModel):
     email: str
     rol: str
     empresa_id: str | None = None
+    # Solo aplica a usuarios tenant: True si no han aceptado la version
+    # vigente de terminos y politica de datos (core/legal.py).
+    terminos_pendientes: bool = False
+    version_terminos: str | None = None
+
+
+class AceptarTerminosRequest(BaseModel):
+    version: str
