@@ -67,17 +67,17 @@ export default function TerminosPage() {
           <li>La compra se coordina por WhatsApp o correo. El paquete se activa una vez confirmamos el pago.</li>
           <li>
             Descuenta un documento del paquete cada uno de los siguientes documentos aceptado por la DIAN:{" "}
-            {DOCUMENTOS_QUE_CONSUMEN.join(", ").toLowerCase()}. Los documentos rechazados por la DIAN no se descuentan.
-            Registrar eventos sobre facturas recibidas no descuenta documentos.
+            {DOCUMENTOS_QUE_CONSUMEN.join(", ").toLowerCase()}. Los documentos y eventos rechazados por la DIAN no se
+            descuentan.
           </li>
           <li>
             Los documentos de un paquete se pueden usar durante {PACKAGE_TERMS.vigenciaMeses} meses contados desde su
             activación. Los que no se usen en ese plazo vencen y no son reembolsables.
           </li>
           <li>
-            Al agotarse el paquete no podrás emitir facturas, documentos soporte ni comprobantes de nómina nuevos hasta
-            comprar otro; sí podrás emitir notas crédito y débito sobre documentos ya emitidos. Te enviamos un aviso por
-            correo cuando uses el 90 % del paquete.
+            Al agotarse el paquete no podrás enviar ningún documento a la DIAN (facturas, notas crédito y débito,
+            anulaciones, documentos soporte, nómina ni eventos sobre facturas recibidas) hasta comprar otro. Te enviamos
+            un aviso por correo cuando uses el 90 % del paquete.
           </li>
           <li>
             Las devoluciones y el derecho de retracto se rigen por la{" "}

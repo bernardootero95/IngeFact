@@ -389,3 +389,40 @@ def test_listar_no_mezcla_nominas_de_otro_tenant(db_session):
 
     assert len(service.listar(empresa_a.id)) == 1
     assert len(service.listar(empresa_b.id)) == 0
+
+
+def test_anular_nomina_con_paquete_agotado_falla_409(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=1)
+    empleado = _crear_empleado(db_session, empresa.id)
+    service = NominaService(db_session, alegra_client=_FakeAlegraClient())
+    nomina = service.crear_borrador(empresa.id, _payload(empleado.id))
+    service.enviar(empresa.id, nomina.id)  # usa el unico documento del paquete
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.anular(empresa.id, nomina.id)
+
+    assert exc_info.value.status_code == 409
+    assert db_session.query(ConsecutivoNomina).filter_by(tipo="anulacion").count() == 0
+
+
+def test_anular_nomina_descuenta_un_documento_aparte_del_comprobante(db_session):
+    from src.application.suscripcion_service import contar_documentos_usados
+    from src.infrastructure.db.models import Suscripcion
+
+    empresa = _crear_empresa(db_session)
+    empleado = _crear_empleado(db_session, empresa.id)
+    fake = _FakeAlegraClient()
+    fake.cancel_response = {
+        "payroll": {**fake.payroll_response["payroll"], "status": "CANCELED"},
+        "cancellation": {"id": "cancel-1", "cune": "cune-anulacion-1", "fullNumber": "NEA1", "legalStatus": "ACCEPTED"},
+    }
+    service = NominaService(db_session, alegra_client=fake)
+    nomina = service.crear_borrador(empresa.id, _payload(empleado.id))
+    service.enviar(empresa.id, nomina.id)
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+    assert contar_documentos_usados(db_session, suscripcion) == 1
+
+    anulada = service.anular(empresa.id, nomina.id)
+
+    assert anulada.fecha_anulacion is not None
+    assert contar_documentos_usados(db_session, suscripcion) == 2  # comprobante + nota de eliminacion

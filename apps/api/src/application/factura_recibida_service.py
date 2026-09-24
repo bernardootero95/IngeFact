@@ -5,6 +5,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.suscripcion_service import (
+    ESTADOS_EVENTO_ACEPTADO,
+    revisar_alerta_cuota_sin_romper,
+    verificar_cupo_disponible,
+)
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.domain.factura_recibida import (
@@ -144,6 +149,9 @@ class FacturaRecibidaService:
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        # Cada evento aceptado descuenta un documento del paquete (decision de
+        # negocio 2026-09-24, ver contar_documentos_usados).
+        verificar_cupo_disponible(self.db, empresa_id)
 
         numero = self._generar_numero_evento()
         payload = self._construir_payload_evento(empresa, factura_recibida, numero, data)
@@ -185,5 +193,7 @@ class FacturaRecibidaService:
         )
         self.db.add(evento)
         self.db.commit()
+        if legal_status in ESTADOS_EVENTO_ACEPTADO:
+            revisar_alerta_cuota_sin_romper(self.db, empresa_id)
 
         return self.obtener(empresa_id, factura_recibida.id)

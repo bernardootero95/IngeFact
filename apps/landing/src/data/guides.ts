@@ -158,7 +158,7 @@ export const GUIDE_GROUPS: GuideGroup[] = [
           "Usa \"Guardar borrador\" para seguir después o \"Enviar a DIAN\" para transmitirlo.",
           "Ya aceptado, descarga el PDF o el XML, o envíalo por correo al empleado. Si hace falta, usa \"Anular\".",
         ],
-        note: "Cada comprobante de nómina aceptado descuenta un documento de tu paquete.",
+        note: "Cada comprobante de nómina aceptado descuenta un documento de tu paquete, y anularlo descuenta otro.",
       },
       {
         slug: "documento-soporte",
@@ -190,7 +190,7 @@ export const GUIDE_GROUPS: GuideGroup[] = [
           "Si eliges reclamo, indica el motivo.",
           "Presiona \"Registrar\": la DIAN valida que tu empresa sea la receptora real de la factura.",
         ],
-        note: "Registrar eventos sobre facturas recibidas no descuenta documentos de tu paquete.",
+        note: "Cada evento aceptado por la DIAN descuenta un documento de tu paquete.",
       },
     ],
   },

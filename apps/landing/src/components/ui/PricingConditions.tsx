@@ -23,7 +23,8 @@ export function PricingConditions({ className = "" }: { className?: string }) {
           paquete. Los no usados en ese plazo vencen.
         </li>
         <li>
-          Registrar eventos sobre facturas recibidas (acuse, recibo, aceptación o reclamo) no consume documentos.
+          Con el paquete agotado no se puede enviar ningún documento a la DIAN, incluidas notas crédito y débito,
+          anulaciones y eventos sobre facturas recibidas, hasta comprar un paquete nuevo.
         </li>
         <li>
           Tienes derecho de retracto dentro de los {PACKAGE_TERMS.diasRetracto} días hábiles siguientes a la compra si no

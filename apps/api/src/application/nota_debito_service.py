@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.factura_service import _construir_customer_alegra, _construir_pago
-from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
+from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
 from src.application.correo_documento import (
     ejecutar_envio_reportando_errores,
     enviar_nota_por_correo,
@@ -299,6 +299,7 @@ class NotaDebitoService:
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una nota rechazada: reutiliza el numero ya asignado (ver
         # actualizar_borrador) en vez de pedir uno nuevo.

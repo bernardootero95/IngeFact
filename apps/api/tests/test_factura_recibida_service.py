@@ -6,10 +6,13 @@ from fastapi import HTTPException
 from src.application.factura_recibida_service import FacturaRecibidaService
 from src.core.alegra_client import AlegraApiError
 from src.domain.factura_recibida import CrearEventoReceptorRequest, CrearFacturaRecibidaRequest, GeneradorEventoRequest
-from src.infrastructure.db.models import Empresa, Proveedor
+from src.application.suscripcion_service import contar_documentos_usados
+from src.infrastructure.db.models import Empresa, Proveedor, Suscripcion
 
 
-def _crear_empresa(db_session, **overrides) -> Empresa:
+def _crear_empresa(db_session, *, max_documentos=100, **overrides) -> Empresa:
+    """Con suscripcion activa por defecto: registrar un evento exige cupo
+    disponible (verificar_cupo_disponible). max_documentos=0 = cupo agotado."""
     data = {
         "razon_social": "Empresa Demo SAS",
         "numero_identificacion": "900618467",
@@ -23,6 +26,16 @@ def _crear_empresa(db_session, **overrides) -> Empresa:
     db_session.add(empresa)
     db_session.commit()
     db_session.refresh(empresa)
+    db_session.add(
+        Suscripcion(
+            empresa_id=empresa.id,
+            max_documentos=max_documentos,
+            fecha_inicio=date(2000, 1, 1),
+            fecha_fin=date(2100, 12, 31),
+            estado="activa",
+        )
+    )
+    db_session.commit()
     return empresa
 
 
@@ -191,6 +204,45 @@ def test_registrar_evento_aceptado_guarda_legal_status_y_cude(db_session):
     assert fake.last_payload["uuid"] == "cufe-de-prueba-1234567890"
     assert fake.last_payload["companyId"] == "alegra-empresa-1"
     assert fake.last_payload["issuerParty"]["identificationNumber"] == "1000000000"
+
+
+def test_registrar_evento_aceptado_descuenta_un_documento_del_paquete(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    service = FacturaRecibidaService(db_session, alegra_client=_FakeAlegraClient(response=_respuesta_aceptado()))
+    factura = service.crear(empresa.id, _payload_factura(proveedor.id))
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+
+    service.registrar_evento(empresa.id, factura.id, CrearEventoReceptorRequest(tipo="030", generador=_generador()))
+
+    assert contar_documentos_usados(db_session, suscripcion) == 1
+
+
+def test_registrar_evento_rechazado_no_descuenta(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    service = FacturaRecibidaService(db_session, alegra_client=_FakeAlegraClient(response=_respuesta_rechazado()))
+    factura = service.crear(empresa.id, _payload_factura(proveedor.id))
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+
+    service.registrar_evento(empresa.id, factura.id, CrearEventoReceptorRequest(tipo="030", generador=_generador()))
+
+    assert contar_documentos_usados(db_session, suscripcion) == 0
+
+
+def test_registrar_evento_con_cupo_agotado_falla_409_sin_llamar_a_la_dian(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=0)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    fake = _FakeAlegraClient(response=_respuesta_aceptado())
+    service = FacturaRecibidaService(db_session, alegra_client=fake)
+    factura = service.crear(empresa.id, _payload_factura(proveedor.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.registrar_evento(empresa.id, factura.id, CrearEventoReceptorRequest(tipo="030", generador=_generador()))
+
+    assert exc_info.value.status_code == 409
+    assert "cupo" in exc_info.value.detail
+    assert getattr(fake, "last_payload", None) is None
 
 
 def test_registrar_evento_rechazado_guarda_razon_rechazo(db_session):

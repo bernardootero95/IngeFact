@@ -3,7 +3,9 @@
 version: todos los usuarios tenant tendran que volver a aceptarlos en su
 siguiente ingreso (ver AceptacionLegalService)."""
 
-VERSION_TERMINOS_VIGENTE = "2026-09-24"
+# 2026-09-24.2: los eventos del receptor consumen cupo y con el paquete
+# agotado no se envia nada a la DIAN (tambien notas y anulaciones).
+VERSION_TERMINOS_VIGENTE = "2026-09-24.2"
 
 # Resolucion DIAN 000165 de 2023, art. 11, numeral 18: la representacion
 # grafica debe identificar al fabricante del software (nombre y NIT), el nombre
