@@ -83,6 +83,10 @@ class Nomina(Base):
     consecutivo_anulacion: Mapped[int | None] = mapped_column(Integer)
     numero_completo_anulacion: Mapped[str | None] = mapped_column(String(30))
     cune_anulacion: Mapped[str | None] = mapped_column(String(200))
+    # La nota de eliminacion es un documento aparte ante la DIAN y descuenta
+    # su propio documento del paquete: esta fecha ubica ese descuento en el
+    # periodo de la suscripcion (ver contar_documentos_usados).
+    fecha_anulacion: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     actualizado: Mapped[datetime] = mapped_column(

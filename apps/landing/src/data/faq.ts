@@ -11,7 +11,7 @@ export const PRICING_FAQ: FaqEntry[] = [
   {
     question: "¿Qué cuenta como un documento?",
     answer:
-      "Cada factura, nota crédito, nota débito, documento soporte, comprobante de nómina o evento sobre una factura recibida (acuse de recibo, recibo del bien o servicio, aceptación o reclamo) aceptado por la DIAN descuenta uno de tu paquete. Lo que la DIAN rechaza no se descuenta.",
+      "Cada factura, nota crédito, nota débito, documento soporte, comprobante de nómina, anulación de nómina o evento sobre una factura recibida (acuse de recibo, recibo del bien o servicio, aceptación o reclamo) aceptado por la DIAN descuenta uno de tu paquete. Lo que la DIAN rechaza no se descuenta.",
   },
   {
     question: "¿Los documentos vencen?",

@@ -81,6 +81,19 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
             )
         ).scalar_one()
 
+    # La anulacion de una nomina (nota de eliminacion) es un documento aparte
+    # ante la DIAN y descuenta el suyo, ademas del comprobante original.
+    total += db.execute(
+        select(func.count())
+        .select_from(Nomina)
+        .where(
+            Nomina.empresa_id == suscripcion.empresa_id,
+            Nomina.estado == "anulada",
+            Nomina.fecha_anulacion >= inicio,
+            Nomina.fecha_anulacion <= fin,
+        )
+    ).scalar_one()
+
     # Los eventos no tienen empresa_id ni fecha_envio propios: cuelgan de la
     # FacturaRecibida y se registran (y responde la DIAN) al crearse.
     total += db.execute(

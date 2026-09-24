@@ -248,10 +248,12 @@ class NominaService:
         nomina.consecutivo_anulacion = consecutivo_anulacion
         nomina.numero_completo_anulacion = cancelacion.get("fullNumber") or f"{PREFIJO_ANULACION_NOMINA}{consecutivo_anulacion}"
         nomina.cune_anulacion = cancelacion.get("cune")
+        nomina.fecha_anulacion = datetime.now(timezone.utc)
 
         self.db.add(nomina)
         self.db.commit()
         self.db.refresh(nomina)
+        revisar_alerta_cuota_sin_romper(self.db, empresa_id)
         return self.obtener(empresa_id, nomina.id)
 
     def obtener_url_xml(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> str:
