@@ -22,6 +22,7 @@ from src.presentation.routes import (
     tenant_empresa,
     tenant_facturas,
     tenant_facturas_recibidas,
+    tenant_habilitacion,
     tenant_impuestos,
     tenant_nomina,
     tenant_notas_credito,
@@ -62,6 +63,7 @@ app.include_router(reference_tables.public_router)
 app.include_router(reference_tables.admin_router)
 app.include_router(tenant_empresa.router)
 app.include_router(tenant_dashboard.router)
+app.include_router(tenant_habilitacion.router)
 app.include_router(tenant_resolucion.router)
 app.include_router(tenant_resolucion_documento_soporte.router)
 app.include_router(tenant_clientes.router)

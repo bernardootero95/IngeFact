@@ -194,14 +194,32 @@ class AlegraClient:
         numero del payroll original."""
         return self._request("POST", f"/payrolls/{payroll_id}/cancel", json={"prefix": prefix, "number": number})
 
-    def create_test_set(self, company_id: str, document_type: str = "invoices") -> dict:
+    def get_company(self, company_id: str) -> dict:
+        """GET /companies/{id}. Verificado en vivo: trae
+        `governmentStatus` = {"invoices"|"payrolls": AUTHORIZED|UNAUTHORIZED|IN_PROCESS};
+        si falta la clave de un tipo, la empresa nunca se habilito para ese tipo."""
+        body = self._request("GET", f"/companies/{company_id}")
+        return body["company"]
+
+    def create_test_set(
+        self, company_id: str, document_type: str = "invoices", government_id: str | None = None
+    ) -> dict:
+        """POST /test-sets. Verificado en vivo: un governmentId con formato
+        valido pero desconocido NO da 4xx -- responde 201 con status FAILED y
+        el motivo en `errors`. Si la empresa ya tenia el set aprobado
+        responde 400 AEP4007 (con `approvedTestSet`)."""
         body = self._request(
             "POST",
             "/test-sets",
             json={
                 "type": document_type,
-                "governmentId": self.SANDBOX_GOVERNMENT_ID,
+                "governmentId": government_id or self.SANDBOX_GOVERNMENT_ID,
                 "company": {"id": company_id},
             },
         )
+        return body["testSet"]
+
+    def get_test_set(self, test_set_id: str) -> dict:
+        """GET /test-sets/{id} -- id interno de Alegra (no el governmentId)."""
+        body = self._request("GET", f"/test-sets/{test_set_id}")
         return body["testSet"]

@@ -70,6 +70,32 @@ en plural): viene **singular, `testSet`**:
 { "testSet": { "id": "...", "governmentId": "...", "type": "invoices", "status": "ACCEPTED", "errors": [] } }
 ```
 
+## Habilitación DIAN (factura y nómina) ✅ verificado en vivo (2026-09-28)
+
+Fuente: guías "Proceso de Habilitación en la DIAN" (FE y Nómina) +
+`/reference/createtestset.md`, `gettestset.md`, `getcompany.md`, y pruebas
+contra el sandbox.
+
+- El dato que entrega la DIAN al asociar a Alegra como proveedor tecnológico
+  es el **TestSetId** (se envía como `governmentId`). **No es la clave
+  técnica**, que pertenece a cada resolución de facturación. Factura y nómina
+  tienen TestSetIds distintos. Documento soporte **no** tiene set de pruebas por API.
+- **Fuente de verdad del estado**: `GET /companies/{id}` y `GET /companies`
+  traen `governmentStatus: {"invoices"|"payrolls": AUTHORIZED|UNAUTHORIZED|IN_PROCESS}`.
+  Si **falta la clave** de un tipo, la empresa nunca se habilitó para ese tipo.
+- `POST /test-sets` con formato válido pero TestSetId desconocido → **201**
+  con `status: FAILED` y el motivo en `errors` (no un 4xx). Formato inválido →
+  400 con el patrón `^([A-Za-z0-9]{8})-([A-Za-z0-9]{4})-([A-Za-z0-9]{4})-([A-Za-z0-9]{4})-([A-Za-z0-9]{12})$`
+  (alfanumérico, no UUID hexadecimal estricto).
+- Reenviar a una empresa ya aprobada → **400 `AEP4007`** con `approvedTestSet`.
+- Tras `REJECTED`/`FAILED` → `governmentStatus` = `UNAUTHORIZED` y se puede
+  reintentar. `WAITING_RESPONSE` → `IN_PROCESS`.
+- `errors` puede venir con duplicados y cadenas vacías.
+- Sandbox: TestSetIds de prueba por estado: `a70562e0-631e-4ceb-aa65-36887b57dc17`
+  (ACCEPTED), `r70562e0-…` (REJECTED), `p70562e0-…` (PROCESSING), `f70562e0-…` (FAILED).
+- Consulta: `GET /test-sets/{id}` (id interno) o
+  `GET /test-sets?type=&governmentId=&idCompany=` (responde `testSets` en plural).
+
 ## `GET /resolutions/{nit}` — ⚠️ NO funciona en sandbox
 
 Probado con 3 NITs distintos (uno recién creado, uno inventado, y el NIT real de la

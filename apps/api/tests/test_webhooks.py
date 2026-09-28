@@ -8,6 +8,7 @@ from src.infrastructure.db.models import (
     Empresa,
     Factura,
     FacturaLinea,
+    HabilitacionDian,
     NotaCredito,
     NotaCreditoLinea,
     NotaDebito,
@@ -30,9 +31,15 @@ class _NoOpAlegraClient:
         raise RuntimeError("AlegraClient real no debe llamarse en tests")
 
 
+class _HabilitacionAlegraClient:
+    def get_company(self, company_id):
+        return {"id": company_id, "governmentStatus": {"invoices": "AUTHORIZED"}}
+
+
 @pytest.fixture(autouse=True)
 def _no_real_alegra(monkeypatch):
     monkeypatch.setattr("src.application.factura_service.AlegraClient", _NoOpAlegraClient)
+    monkeypatch.setattr("src.application.habilitacion_dian_service.AlegraClient", _HabilitacionAlegraClient)
 
 
 def _crear_empresa(db_session, *, id_alegra):
@@ -62,6 +69,11 @@ def test_webhook_general_actualiza_estado_de_empresa_conocida(api_client, db_ses
     registros = db_session.query(CompanyStatus).filter(CompanyStatus.empresa_id == empresa.id).all()
     assert len(registros) == 1
     assert registros[0].estado == "government_status_changed"
+    habilitaciones = {
+        h.tipo: h.estado
+        for h in db_session.query(HabilitacionDian).filter(HabilitacionDian.empresa_id == empresa.id)
+    }
+    assert habilitaciones == {"facturacion": "habilitada", "nomina": "no_habilitada"}
 
 
 def test_webhook_general_ignora_empresa_desconocida_sin_error(api_client, db_session):

@@ -7,6 +7,7 @@ from src.application.nomina_service import NominaService
 from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.nomina import GuardarNominaRequest
 from src.infrastructure.db.models import ConsecutivoNomina, Empleado, Empresa, Suscripcion
+from tests.conftest import HabilitadaEnDianMixin
 
 
 def _crear_empresa(db_session, *, max_documentos=100, **overrides) -> Empresa:
@@ -64,7 +65,7 @@ def _crear_empleado(db_session, empresa_id, **overrides) -> Empleado:
     return empleado
 
 
-class _FakeAlegraClient:
+class _FakeAlegraClient(HabilitadaEnDianMixin):
     def __init__(self):
         self.payroll_response: dict | None = {
             "payroll": {
@@ -225,6 +226,22 @@ def test_enviar_con_cupo_agotado_falla_409_sin_gastar_numeracion(db_session):
 
     assert exc_info.value.status_code == 409
     assert "cupo" in exc_info.value.detail
+    assert db_session.query(ConsecutivoNomina).count() == 0
+
+
+def test_enviar_sin_habilitacion_de_nomina_falla_409_sin_gastar_numeracion(db_session):
+    empresa = _crear_empresa(db_session)
+    empleado = _crear_empleado(db_session, empresa.id)
+    alegra = _FakeAlegraClient()
+    alegra.get_company = lambda company_id: {"id": company_id, "governmentStatus": {"invoices": "AUTHORIZED"}}
+    service = NominaService(db_session, alegra_client=alegra)
+    nomina = service.crear_borrador(empresa.id, _payload(empleado.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.enviar(empresa.id, nomina.id)
+
+    assert exc_info.value.status_code == 409
+    assert "Habilitación DIAN" in exc_info.value.detail
     assert db_session.query(ConsecutivoNomina).count() == 0
 
 
