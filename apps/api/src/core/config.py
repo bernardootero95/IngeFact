@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     user_app_url: str = "http://localhost:3001"
     admin_app_url: str = "http://localhost:5173"
 
+    # Webhooks de Alegra (ver core/alegra_webhooks.py). URL publica de este
+    # API (ej. https://api.ingefact.com) y secreto que Alegra reenvia en el
+    # header X-IngeFact-Webhook-Token. Sin ambos no se registran webhooks al
+    # crear empresas; en production sin secreto los webhooks se rechazan.
+    api_public_url: str = ""
+    alegra_webhook_secret: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

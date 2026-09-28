@@ -1,21 +1,39 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from sqlalchemy.orm import Session
 
-from src.application.factura_service import aplicar_estado_legal_factura, notificar_factura_aceptada
 from src.application.habilitacion_dian_service import HabilitacionDianService
-from src.application.nota_credito_service import NotaCreditoService, aplicar_estado_legal_nota_credito
-from src.application.nota_debito_service import aplicar_estado_legal_nota_debito
-from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
-from src.core.alegra_client import AlegraApiError, AlegraTransientError
-from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito, NotaDebito
+from src.application.reconciliacion_documentos import (
+    buscar_por_id_alegra,
+    extraer_documento,
+    reconciliar_documento,
+    tipo_por_nombre,
+)
+from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper
+from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
+from src.core.alegra_webhooks import HEADER_TOKEN, token_valido
+from src.infrastructure.db.models import CompanyStatus, Empresa
 from src.infrastructure.db.session import get_db
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/webhooks/alegra", tags=["webhooks"])
+
+def verificar_token_webhook(request: Request) -> None:
+    """Alegra no firma los webhooks: la autenticacion es el header secreto
+    que registramos junto con cada webhook (ver core/alegra_webhooks.py)."""
+    if not token_valido(request.headers.get(HEADER_TOKEN)):
+        logger.warning("Webhook Alegra rechazado: %s ausente o invalido.", HEADER_TOKEN)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Webhook no autorizado.")
+
+
+def get_alegra_client() -> AlegraClient:
+    return AlegraClient()
+
+
+router = APIRouter(
+    prefix="/api/v1/webhooks/alegra", tags=["webhooks"], dependencies=[Depends(verificar_token_webhook)]
+)
 
 
 @router.post("/general", status_code=204)
@@ -24,10 +42,10 @@ async def webhook_general(request: Request, db: Session = Depends(get_db)):
     Webhook general.governmentStatusChanged.
 
     Alegra no documenta un ejemplo de payload para este evento especifico (ver
-    apps/api/docs/alegra-investigacion.md) ni firma/HMAC para verificarlo, asi que
-    el parseo es best-effort: se guarda el payload crudo completo siempre (nada se
-    pierde aunque el parseo de mas abajo no aplique), y solo se actualiza el estado
-    de la empresa si se puede identificar con certeza via su id_alegra.
+    apps/api/docs/alegra-investigacion.md), asi que el parseo es best-effort: se
+    guarda el payload crudo completo siempre (nada se pierde aunque el parseo de
+    mas abajo no aplique), y solo se actualiza el estado de la empresa si se
+    puede identificar con certeza via su id_alegra.
     """
     payload = await request.json()
     logger.info("Webhook Alegra general recibido: %s", payload)
@@ -56,149 +74,71 @@ async def webhook_general(request: Request, db: Session = Depends(get_db)):
         logger.warning("No se pudo refrescar la habilitacion DIAN de %s tras el webhook: %s", empresa.id, exc)
 
 
+def _procesar_emission_finished(db: Session, alegra_client: AlegraClient, nombre_tipo: str, payload: dict) -> None:
+    """emissionFinished de cualquier tipo de documento. Del payload solo se
+    toma el id: el estado real se re-consulta a Alegra
+    (reconciliar_documento), asi que un POST falso no puede cambiar nada.
+    Nunca responde error por el documento en si -- un 4xx/5xx haria que
+    Alegra reintente (si es que reintenta, no esta documentado) algo que ya
+    cubre la reconciliacion periodica del cron."""
+    tipo = tipo_por_nombre(nombre_tipo)
+    logger.info("Webhook Alegra %s.emissionFinished recibido: %s", nombre_tipo, payload)
+
+    id_alegra = extraer_documento(tipo, payload).get("id") or payload.get("id")
+    if not id_alegra:
+        logger.warning("Webhook %s sin id de documento identificable, se descarta.", nombre_tipo)
+        return
+
+    documento = buscar_por_id_alegra(db, tipo, id_alegra)
+    if documento is None:
+        logger.warning("Webhook %s para id=%s no corresponde a ningun documento conocido.", nombre_tipo, id_alegra)
+        return
+    if documento.estado != tipo.estado_pendiente:
+        logger.info("%s %s ya esta en estado %s, webhook ignorado.", nombre_tipo, documento.id, documento.estado)
+        return
+
+    try:
+        desenlace = reconciliar_documento(db, alegra_client, tipo, documento, notificar_clientes=True)
+    except (AlegraApiError, AlegraTransientError) as exc:
+        db.rollback()
+        logger.error("Webhook %s: no se pudo consultar %s en Alegra: %s", nombre_tipo, documento.id, exc)
+        return
+
+    logger.info("Webhook %s: documento %s -> %s.", nombre_tipo, documento.id, desenlace)
+    if desenlace == "aceptado":
+        revisar_alerta_cuota_sin_romper(db, documento.empresa_id)
+
+
 @router.post("/invoices", status_code=204)
-async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
-    """
-    Webhook invoices.emissionFinished.
-
-    Alegra no documenta firma/HMAC para verificar la autenticidad de la
-    llamada (ver docs/alegra-investigacion.md) -- no se confia en el
-    contenido sin validar contra el estado que ya tenemos guardado:
-    (1) el invoice.id debe corresponder a una factura conocida via
-    alegra_invoice_id, y (2) si esa factura ya quedo en un estado final
-    (aceptada/rechazada, normalmente resuelto ya en la respuesta sincrona de
-    `FacturaService.enviar`), este webhook no la sobreescribe -- solo sirve
-    de reconciliacion para el caso en que Alegra tarde en resolver.
-    """
-    payload = await request.json()
-    logger.info("Webhook Alegra invoices.emissionFinished recibido: %s", payload)
-
-    invoice = payload.get("invoice") or {}
-    invoice_id = invoice.get("id")
-    if not invoice_id:
-        logger.warning("Webhook invoices sin invoice.id identificable, se descarta.")
-        return
-
-    factura = db.execute(select(Factura).where(Factura.alegra_invoice_id == invoice_id)).scalar_one_or_none()
-    if factura is None:
-        logger.warning("Webhook invoices para invoice.id=%s no corresponde a ninguna factura conocida.", invoice_id)
-        return
-
-    if factura.estado in ("aceptada", "rechazada"):
-        logger.info("Factura %s ya esta en estado final (%s), webhook ignorado.", factura.id, factura.estado)
-        return
-
-    if not aplicar_estado_legal_factura(factura, invoice):
-        logger.info(
-            "Webhook invoices con legalStatus=%s, sin cambio de estado para factura %s.",
-            invoice.get("legalStatus"),
-            factura.id,
-        )
-        return
-
-    db.add(factura)
-    db.commit()
-    notificar_factura_aceptada(db, factura)
+async def webhook_invoices(
+    request: Request, db: Session = Depends(get_db), alegra_client: AlegraClient = Depends(get_alegra_client)
+):
+    _procesar_emission_finished(db, alegra_client, "facturas", await request.json())
 
 
 @router.post("/credit-notes", status_code=204)
-async def webhook_credit_notes(request: Request, db: Session = Depends(get_db)):
-    """
-    Webhook creditNotes.emissionFinished -- mismo criterio que
-    webhook_invoices (Sprint 8): la respuesta sincrona de
-    `NotaCreditoService.enviar` ya resuelve el estado en la mayoria de los
-    casos, este webhook solo reconcilia si Alegra tarda en resolver. No
-    sobreescribe una nota ya en estado final (aceptada/rechazada).
-    """
-    payload = await request.json()
-    logger.info("Webhook Alegra creditNotes.emissionFinished recibido: %s", payload)
-
-    credit_note = payload.get("creditNote") or {}
-    credit_note_id = credit_note.get("id")
-    if not credit_note_id:
-        logger.warning("Webhook credit-notes sin creditNote.id identificable, se descarta.")
-        return
-
-    nota = db.execute(
-        select(NotaCredito)
-        .where(NotaCredito.alegra_credit_note_id == credit_note_id)
-        .options(selectinload(NotaCredito.factura).selectinload(Factura.lineas))
-    ).scalar_one_or_none()
-    if nota is None:
-        logger.warning(
-            "Webhook credit-notes para creditNote.id=%s no corresponde a ninguna nota conocida.", credit_note_id
-        )
-        return
-
-    if nota.estado in ("aceptada", "rechazada"):
-        logger.info("Nota credito %s ya esta en estado final (%s), webhook ignorado.", nota.id, nota.estado)
-        return
-
-    if not aplicar_estado_legal_nota_credito(nota, credit_note):
-        logger.info(
-            "Webhook credit-notes con legalStatus=%s, sin cambio de estado para nota %s.",
-            credit_note.get("legalStatus"),
-            nota.id,
-        )
-        return
-
-    db.add(nota)
-    if nota.estado == "aceptada":
-        # flush (sin commit) para que revisar_anulacion -- que consulta
-        # NotaCredito.estado por SQL -- vea el "aceptada" recien asignado a
-        # esta misma nota (mismo hallazgo ya resuelto en NotaCreditoService.enviar).
-        db.flush()
-        NotaCreditoService(db).revisar_anulacion(nota.factura)
-        db.add(nota.factura)
-    db.commit()
-    if nota.estado == "aceptada":
-        try:
-            revisar_alerta_cuota_por_empresa(db, nota.empresa_id)
-        except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el webhook.
-            logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", nota.empresa_id, exc)
+async def webhook_credit_notes(
+    request: Request, db: Session = Depends(get_db), alegra_client: AlegraClient = Depends(get_alegra_client)
+):
+    _procesar_emission_finished(db, alegra_client, "notas_credito", await request.json())
 
 
 @router.post("/debit-notes", status_code=204)
-async def webhook_debit_notes(request: Request, db: Session = Depends(get_db)):
-    """
-    Webhook debitNotes.emissionFinished -- mismo criterio que
-    webhook_credit_notes, sin la reconciliacion de anulacion de factura (una
-    nota debito no reduce nada de la factura original).
-    """
-    payload = await request.json()
-    logger.info("Webhook Alegra debitNotes.emissionFinished recibido: %s", payload)
+async def webhook_debit_notes(
+    request: Request, db: Session = Depends(get_db), alegra_client: AlegraClient = Depends(get_alegra_client)
+):
+    _procesar_emission_finished(db, alegra_client, "notas_debito", await request.json())
 
-    debit_note = payload.get("debitNote") or {}
-    debit_note_id = debit_note.get("id")
-    if not debit_note_id:
-        logger.warning("Webhook debit-notes sin debitNote.id identificable, se descarta.")
-        return
 
-    nota = db.execute(
-        select(NotaDebito).where(NotaDebito.alegra_debit_note_id == debit_note_id)
-    ).scalar_one_or_none()
-    if nota is None:
-        logger.warning(
-            "Webhook debit-notes para debitNote.id=%s no corresponde a ninguna nota conocida.", debit_note_id
-        )
-        return
+@router.post("/payrolls", status_code=204)
+async def webhook_payrolls(
+    request: Request, db: Session = Depends(get_db), alegra_client: AlegraClient = Depends(get_alegra_client)
+):
+    _procesar_emission_finished(db, alegra_client, "nominas", await request.json())
 
-    if nota.estado in ("aceptada", "rechazada"):
-        logger.info("Nota debito %s ya esta en estado final (%s), webhook ignorado.", nota.id, nota.estado)
-        return
 
-    if not aplicar_estado_legal_nota_debito(nota, debit_note):
-        logger.info(
-            "Webhook debit-notes con legalStatus=%s, sin cambio de estado para nota %s.",
-            debit_note.get("legalStatus"),
-            nota.id,
-        )
-        return
-
-    db.add(nota)
-    db.commit()
-    if nota.estado == "aceptada":
-        try:
-            revisar_alerta_cuota_por_empresa(db, nota.empresa_id)
-        except Exception as exc:  # noqa: BLE001 -- best-effort, no debe romper el webhook.
-            logger.error("No se pudo revisar la cuota de documentos de la empresa %s: %s", nota.empresa_id, exc)
+@router.post("/support-documents", status_code=204)
+async def webhook_support_documents(
+    request: Request, db: Session = Depends(get_db), alegra_client: AlegraClient = Depends(get_alegra_client)
+):
+    _procesar_emission_finished(db, alegra_client, "documentos_soporte", await request.json())

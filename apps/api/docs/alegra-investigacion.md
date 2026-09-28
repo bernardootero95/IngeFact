@@ -317,6 +317,15 @@ se deja como posible tarea futura si el usuario lo pide).
 
 ## Webhooks 📄 solo doc
 
+> **Verificado en sandbox (2026-09-28):** `PATCH /companies/{id}` con el bloque
+> `webhooks` completo (`general.governmentStatusChanged` + `emissionFinished` en
+> `invoices`, `creditNotes`, `debitNotes`, `payrolls`, `supportDocuments`, cada uno
+> `{url, headers, status: "active"}`) responde 200 y `GET /companies/{id}` lo
+> devuelve igual, headers incluidos. Hallazgo de producción: IngeFact nunca los
+> registraba y por eso jamás llegó un webhook (ver `src/core/alegra_webhooks.py`).
+> La doc no especifica reintentos, timeouts ni el payload de `payrolls`/
+> `supportDocuments`: el receptor solo toma el `id` y re-consulta el documento.
+
 Se configuran por empresa dentro del payload de `POST /companies` /
 `PATCH /companies/{id}` (bloque `webhooks.{general|invoices|creditNotes|...}.
 emissionFinished = {url, headers, status}`). No hay firma/HMAC documentada para
