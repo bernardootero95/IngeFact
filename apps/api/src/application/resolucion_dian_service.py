@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -5,7 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from src.core.alegra_client import AlegraApiError, AlegraClient
+from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.application.consecutivo import revertir_consecutivo
 from src.core.alegra_errors import map_alegra_error
 from src.domain.resolucion_dian import (
@@ -14,6 +15,30 @@ from src.domain.resolucion_dian import (
     ListaResolucionesAlegraResponse,
 )
 from src.infrastructure.db.models import Empresa, ResolucionDian
+
+logger = logging.getLogger(__name__)
+
+
+def _mapear_resolucion_alegra(r: dict) -> CargarResolucionAlegraResponse | None:
+    """`prefix` es opcional segun la doc de Alegra (antes `r["prefix"]`
+    lanzaba KeyError -> 500), y en produccion el NIT puede traer rangos sin
+    `technicalKey` (ej. documento soporte), que no sirven para facturar -- se
+    descartan en vez de tumbar toda la importacion."""
+    if not r.get("technicalKey"):
+        return None
+    try:
+        return CargarResolucionAlegraResponse(
+            numero_resolucion=str(r["resolutionNumber"]),
+            prefijo=r.get("prefix") or "",
+            rango_minimo=r["minNumber"],
+            rango_maximo=r["maxNumber"],
+            fecha_inicio=r["startDate"],
+            fecha_fin=r["endDate"],
+            technical_key=r["technicalKey"],
+        )
+    except (KeyError, ValueError) as exc:
+        logger.warning("Resolucion de Alegra con formato inesperado, se omite: %s (%s)", r, exc)
+        return None
 
 
 class ResolucionDianService:
@@ -123,28 +148,23 @@ class ResolucionDianService:
             data = self._alegra_client.get_resolution(empresa.numero_identificacion)
         except AlegraApiError as exc:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
+        except AlegraTransientError as exc:
+            # Sin este except el error llegaba como 500 sin cabeceras CORS y
+            # el navegador lo reportaba como bloqueo de CORS (bug 2026-09-28).
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY,
+                "Alegra no respondio a tiempo. Intenta de nuevo en unos minutos.",
+            ) from exc
 
-        resoluciones = data.get("resolutions") or []
+        resoluciones = [r for r in (_mapear_resolucion_alegra(r) for r in data.get("resolutions") or []) if r]
         if not resoluciones:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,
-                "No encontramos resoluciones DIAN registradas para tu empresa. Revisa que la hayas tramitado ante la DIAN.",
+                "No encontramos resoluciones de facturacion DIAN registradas para tu empresa. "
+                "Revisa que la hayas tramitado ante la DIAN.",
             )
 
-        return ListaResolucionesAlegraResponse(
-            resoluciones=[
-                CargarResolucionAlegraResponse(
-                    numero_resolucion=r["resolutionNumber"],
-                    prefijo=r["prefix"],
-                    rango_minimo=r["minNumber"],
-                    rango_maximo=r["maxNumber"],
-                    fecha_inicio=r["startDate"],
-                    fecha_fin=r["endDate"],
-                    technical_key=r["technicalKey"],
-                )
-                for r in resoluciones
-            ]
-        )
+        return ListaResolucionesAlegraResponse(resoluciones=resoluciones)
 
     def validar_ante_alegra(self, empresa_id: uuid.UUID) -> ResolucionDian:
         resolucion = self.obtener_o_404(empresa_id)
@@ -155,6 +175,9 @@ class ResolucionDianService:
         except AlegraApiError as exc:
             resolucion.estado_validacion = "error"
             resolucion.mensaje_validacion = map_alegra_error(exc.status_code, exc.body)
+        except AlegraTransientError:
+            resolucion.estado_validacion = "error"
+            resolucion.mensaje_validacion = "Alegra no respondio a tiempo. Intenta de nuevo en unos minutos."
         else:
             resolucion.estado_validacion = "validada"
             resolucion.mensaje_validacion = None

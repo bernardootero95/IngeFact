@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.application.resolucion_dian_service import ResolucionDianService
-from src.core.alegra_client import AlegraApiError
+from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.resolucion_dian import GuardarResolucionDianRequest
 from src.infrastructure.db.models import Empresa, ResolucionDian
 from tests.conftest import TEST_DATABASE_URL
@@ -224,6 +224,46 @@ def test_cargar_desde_alegra_error_alegra_da_400(db_session):
     with pytest.raises(HTTPException) as exc_info:
         service.cargar_desde_alegra(empresa.id)
     assert exc_info.value.status_code == 400
+
+
+def test_cargar_desde_alegra_resolucion_sin_prefijo(db_session):
+    """`prefix` es opcional en la doc de Alegra -- antes daba KeyError -> 500."""
+    empresa = _crear_empresa(db_session)
+    sin_prefijo = _resolucion_alegra()
+    del sin_prefijo["prefix"]
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [sin_prefijo]})
+    )
+
+    resultado = service.cargar_desde_alegra(empresa.id)
+
+    assert resultado.resoluciones[0].prefijo == ""
+
+
+def test_cargar_desde_alegra_omite_resoluciones_sin_technical_key(db_session):
+    """Rangos sin technicalKey (ej. documento soporte) no sirven para facturar
+    -- se omiten en vez de romper toda la importacion."""
+    empresa = _crear_empresa(db_session)
+    soporte = _resolucion_alegra(resolutionNumber="18760000050", technicalKey=None)
+    factura = _resolucion_alegra()
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [soporte, factura]})
+    )
+
+    resultado = service.cargar_desde_alegra(empresa.id)
+
+    assert [r.numero_resolucion for r in resultado.resoluciones] == ["18760000001"]
+
+
+def test_cargar_desde_alegra_error_transitorio_da_502(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(error=AlegraTransientError("timeout"))
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.cargar_desde_alegra(empresa.id)
+    assert exc_info.value.status_code == 502
 
 
 def test_obtener_o_404_sin_resolucion(db_session):
