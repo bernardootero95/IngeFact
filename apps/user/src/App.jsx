@@ -40,6 +40,7 @@ import PayrollDetailPage from "./modules/payroll/pages/PayrollDetailPage";
 import ProductsPage from "./modules/products/pages/ProductsPage";
 import ProductFormPage from "./modules/products/pages/ProductFormPage";
 import CompanyDataSettingsPage from "./modules/settings/pages/CompanyDataSettingsPage";
+import HabilitacionDianSettingsPage from "./modules/settings/pages/HabilitacionDianSettingsPage";
 import ResolutionsSettingsPage from "./modules/settings/pages/ResolutionsSettingsPage";
 import TaxesSettingsPage from "./modules/settings/pages/TaxesSettingsPage";
 import TaxPresetFormPage from "./modules/settings/pages/TaxPresetFormPage";
@@ -474,6 +475,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CompanyDataSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings/habilitacion"
+          element={
+            <ProtectedRoute>
+              <HabilitacionDianSettingsPage />
             </ProtectedRoute>
           }
         />
