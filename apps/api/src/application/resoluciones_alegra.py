@@ -31,6 +31,16 @@ def consultar_resoluciones_alegra(alegra_client: AlegraClient, nit: str) -> list
     return data.get("resolutions") or []
 
 
+def _como_entero(valor) -> int | None:
+    """En produccion Alegra devuelve minNumber/maxNumber como string ("601"),
+    aunque su doc los declara number -- comparar sin convertir daba "el rango
+    no coincide" con valores identicos (bug real 2026-09-28)."""
+    try:
+        return int(str(valor).strip())
+    except (TypeError, ValueError):
+        return None
+
+
 def verificar_contra_alegra(
     crudas: list[dict],
     *,
@@ -53,7 +63,11 @@ def verificar_contra_alegra(
     if not mismo_numero:
         return f"La resolucion {numero_resolucion} no esta registrada ante la DIAN para tu NIT."
 
-    mismo_rango = [r for r in mismo_numero if r.get("minNumber") == rango_minimo and r.get("maxNumber") == rango_maximo]
+    mismo_rango = [
+        r
+        for r in mismo_numero
+        if _como_entero(r.get("minNumber")) == rango_minimo and _como_entero(r.get("maxNumber")) == rango_maximo
+    ]
     if not mismo_rango:
         registrados = ", ".join(f"{r.get('minNumber')}-{r.get('maxNumber')}" for r in mismo_numero)
         return (

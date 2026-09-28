@@ -323,6 +323,18 @@ def test_validar_ante_alegra_coincide_sin_technical_key(db_session):
     assert resolucion.fecha_ultima_validacion is not None
 
 
+def test_validar_ante_alegra_rango_como_texto(db_session):
+    """Alegra en produccion devuelve minNumber/maxNumber como string."""
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber="1", maxNumber="1000")
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    assert service.validar_ante_alegra(empresa.id).estado_validacion == "validada"
+
+
 def test_validar_ante_alegra_rango_distinto_marca_error(db_session):
     empresa = _crear_empresa(db_session)
     registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=9999)
