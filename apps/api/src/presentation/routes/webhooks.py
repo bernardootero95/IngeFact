@@ -6,8 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.factura_service import notificar_factura_aceptada
+from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.nota_credito_service import NotaCreditoService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
+from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.core.alegra_errors import map_government_response
 from src.infrastructure.db.models import CompanyStatus, Empresa, Factura, NotaCredito, NotaDebito
 from src.infrastructure.db.session import get_db
@@ -45,6 +47,14 @@ async def webhook_general(request: Request, db: Session = Depends(get_db)):
 
     db.add(CompanyStatus(empresa_id=empresa.id, estado="government_status_changed", detalle=payload))
     db.commit()
+
+    # El payload no esta documentado: en vez de parsearlo, se relee el
+    # governmentStatus real de la empresa para refrescar la cache.
+    try:
+        HabilitacionDianService(db).sincronizar(empresa.id)
+    except (AlegraApiError, AlegraTransientError) as exc:
+        db.rollback()
+        logger.warning("No se pudo refrescar la habilitacion DIAN de %s tras el webhook: %s", empresa.id, exc)
 
 
 @router.post("/invoices", status_code=204)

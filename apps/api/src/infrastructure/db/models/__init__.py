@@ -6,6 +6,7 @@ from src.infrastructure.db.models.empleado import Empleado
 from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
 from src.infrastructure.db.models.factura import Factura, FacturaLinea
 from src.infrastructure.db.models.factura_recibida import EventoReceptor, FacturaRecibida
+from src.infrastructure.db.models.habilitacion_dian import HabilitacionDian
 from src.infrastructure.db.models.impuesto_empresa import ImpuestoEmpresa
 from src.infrastructure.db.models.nomina import ConsecutivoNomina, Nomina
 from src.infrastructure.db.models.nota_credito import ConsecutivoNota, NotaCredito, NotaCreditoLinea
@@ -46,6 +47,7 @@ __all__ = [
     "ConsecutivoNota",
     "Nomina",
     "ConsecutivoNomina",
+    "HabilitacionDian",
     "ImpuestoEmpresa",
     "Suscripcion",
     "ResolucionDian",

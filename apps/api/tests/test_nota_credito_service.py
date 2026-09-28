@@ -9,6 +9,7 @@ from src.core.alegra_client import AlegraApiError
 from src.domain.factura import CrearFacturaRequest, LineaFacturaRequest
 from src.domain.nota_credito import ActualizarNotaCreditoRequest, CrearNotaCreditoRequest, LineaNotaCreditoRequest
 from src.infrastructure.db.models import Cliente, Empresa, Producto
+from tests.conftest import HabilitadaEnDianMixin
 
 
 def _crear_empresa(db_session, **overrides) -> Empresa:
@@ -62,7 +63,7 @@ def _crear_producto(db_session, empresa_id, **overrides) -> Producto:
     return producto
 
 
-class _FakeAlegraClient:
+class _FakeAlegraClient(HabilitadaEnDianMixin):
     """Fake combinado -- crea facturas (para dejar el escenario en estado
     'aceptada') y notas credito, cada una con su propia respuesta/error
     configurable por separado."""

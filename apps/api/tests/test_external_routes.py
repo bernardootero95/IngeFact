@@ -10,9 +10,10 @@ import pytest
 from src.application.api_key_service import ApiKeyService
 from src.core.security import hash_password
 from src.infrastructure.db.models import Cliente, Empresa, Producto, ResolucionDian, Suscripcion, UsuarioAdmin
+from tests.conftest import HabilitadaEnDianMixin
 
 
-class _FakeAlegraClient:
+class _FakeAlegraClient(HabilitadaEnDianMixin):
     """Igual patron que test_webhooks.py -- reemplaza AlegraClient en
     factura_service para no golpear el sandbox real. create_invoice siempre
     responde ACCEPTED, suficiente para estos tests (no verifican el detalle

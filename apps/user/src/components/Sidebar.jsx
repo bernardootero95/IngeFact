@@ -79,6 +79,7 @@ const navItems = [
     ),
     children: [
       { name: "Datos de la Empresa", path: "/settings/company" },
+      { name: "Habilitación DIAN", path: "/settings/habilitacion" },
       { name: "Resoluciones DIAN", path: "/settings/resolution" },
       { name: "Impuestos", path: "/settings/taxes" },
     ],

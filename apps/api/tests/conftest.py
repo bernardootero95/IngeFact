@@ -30,6 +30,15 @@ _MODULOS_CON_EMAIL_CLIENT = (
 )
 
 
+class HabilitadaEnDianMixin:
+    """Para los fakes de AlegraClient de los flujos de envio: la empresa
+    aparece habilitada ante la DIAN (factura y nomina), asi
+    HabilitacionDianService.verificar_habilitada no bloquea el envio."""
+
+    def get_company(self, company_id):
+        return {"id": company_id, "governmentStatus": {"invoices": "AUTHORIZED", "payrolls": "AUTHORIZED"}}
+
+
 class FakeEmailClient:
     """Nunca golpea la red -- registra los correos "enviados" para poder
     inspeccionarlos en el test, mismo patron que FakeAlegraClient."""
