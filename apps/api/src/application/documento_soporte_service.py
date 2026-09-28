@@ -8,10 +8,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.estado_legal import aplicar_estado_legal
 from src.application.resolucion_documento_soporte_service import ResolucionDocumentoSoporteService
 from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
-from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.alegra_errors import map_alegra_error
 from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
 from src.core.tiempo import fecha_documento_colombia
 from src.application.correo_documento import (
@@ -40,6 +41,19 @@ logger = logging.getLogger(__name__)
 # un proveedor identificado con uno de estos tipos (en la practica, NIT "31"
 # incluso para persona natural, via NIT personal ante la DIAN).
 SUPPLIER_IDENTIFICATION_TYPES_VALIDOS = ("21", "22", "31", "41", "42", "47", "50")
+
+
+def aplicar_estado_legal_documento_soporte(documento: DocumentoSoporte, support_document: dict) -> bool:
+    """`supportDocument` de Alegra (POST/GET /support-documents). Ver
+    estado_legal.py. Documento Soporte usa los estados en masculino."""
+    return aplicar_estado_legal(
+        documento,
+        support_document,
+        campo_codigo="cuds",
+        mensaje_rechazo="La DIAN rechazo el documento soporte.",
+        estado_aceptado="aceptado",
+        estado_rechazado="rechazado",
+    )
 
 
 def validar_proveedor_para_documento_soporte(proveedor: Proveedor) -> None:
@@ -405,24 +419,12 @@ class DocumentoSoporteService:
         documento.qr_code_content = support_document.get("qrCodeContent")
         documento.fecha_envio = datetime.now(timezone.utc)
 
-        government_response = support_document.get("governmentResponse") or {}
-        documento.notificaciones_dian = government_response.get("errorMessages") or None
-
-        legal_status = support_document.get("legalStatus")
-        if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
-            documento.estado = "aceptado"
-            documento.razon_rechazo = None
-            documento.fecha_respuesta = datetime.now(timezone.utc)
-        elif legal_status == "REJECTED":
-            documento.estado = "rechazado"
-            documento.razon_rechazo = map_government_response(
-                government_response.get("code", ""),
-                government_response.get("message") or "La DIAN rechazo el documento soporte.",
-            )
-            documento.fecha_respuesta = datetime.now(timezone.utc)
-        else:
+        if not aplicar_estado_legal_documento_soporte(documento, support_document):
             documento.estado = "enviado"
             documento.razon_rechazo = None
+            documento.notificaciones_dian = (
+                (support_document.get("governmentResponse") or {}).get("errorMessages") or None
+            )
 
     @staticmethod
     def _construir_payload_alegra(
