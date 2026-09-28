@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error
+from src.core.alegra_webhooks import construir_config_webhooks, webhooks_configurados
 from src.core.config import get_settings
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_invitacion_tenant
@@ -33,7 +34,7 @@ class CreateEmpresaAlegraService:
 
     @staticmethod
     def _build_alegra_payload(data: CrearEmpresaRequest) -> dict:
-        return {
+        payload = {
             "name": data.razon_social,
             "tradeName": data.nombre_comercial or data.razon_social,
             "identification": data.numero_identificacion,
@@ -60,6 +61,11 @@ class CreateEmpresaAlegraService:
             # para las ya provisionadas.
             "notificationByEmail": {"enabled": False},
         }
+        # Los webhooks se registran por empresa (ver core/alegra_webhooks.py);
+        # las ya provisionadas se actualizan con scripts/registrar_webhooks_alegra.py.
+        if webhooks_configurados():
+            payload["webhooks"] = construir_config_webhooks()
+        return payload
 
     def crear(self, data: CrearEmpresaRequest) -> Empresa:
         existente = (

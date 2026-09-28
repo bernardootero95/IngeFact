@@ -64,7 +64,8 @@ class TipoDocumento:
     modelo: type
     campo_alegra_id: str
     estado_pendiente: str
-    # Claves bajo las que Alegra envuelve el documento en la respuesta del GET.
+    # Claves bajo las que Alegra envuelve el documento en la respuesta del
+    # GET y en el payload del webhook emissionFinished.
     claves_respuesta: tuple[str, ...]
     consultar: Callable[[AlegraClient, str], dict]
     aplicar: Callable[[Any, dict], bool]
@@ -160,11 +161,51 @@ def listar_pendientes(
     return list(db.execute(query).scalars().all())
 
 
-def _extraer_documento(tipo: TipoDocumento, respuesta: dict) -> dict:
+def extraer_documento(tipo: TipoDocumento, respuesta: dict) -> dict:
+    """El objeto del documento dentro de una respuesta de Alegra o del
+    payload de un webhook (mismo envoltorio: `{"invoice": {...}}`)."""
     for clave in tipo.claves_respuesta:
         if respuesta.get(clave):
             return respuesta[clave]
     return {}
+
+
+def tipo_por_nombre(nombre: str) -> TipoDocumento:
+    return next(tipo for tipo in TIPOS_DOCUMENTO if tipo.nombre == nombre)
+
+
+def buscar_por_id_alegra(db: Session, tipo: TipoDocumento, id_alegra: str):
+    modelo = tipo.modelo
+    return db.execute(
+        select(modelo).where(getattr(modelo, tipo.campo_alegra_id) == id_alegra)
+    ).scalar_one_or_none()
+
+
+def reconciliar_documento(
+    db: Session, alegra_client: AlegraClient, tipo: TipoDocumento, documento, *, notificar_clientes: bool
+) -> str:
+    """Re-consulta un documento pendiente a Alegra y le aplica su estado
+    real. Devuelve "aceptado", "rechazado" o "sin_resolver". Deja propagar
+    AlegraApiError/AlegraTransientError para que el llamador decida.
+
+    La unica fuente de verdad es el GET a Alegra, nunca el payload de un
+    webhook: los webhooks de Alegra no traen firma, asi que un POST falso a
+    nuestra URL no puede marcar un documento como aceptado."""
+    respuesta = tipo.consultar(alegra_client, getattr(documento, tipo.campo_alegra_id))
+    if not tipo.aplicar(documento, extraer_documento(tipo, respuesta)):
+        return "sin_resolver"
+
+    aceptado = documento.estado in ESTADOS_ACEPTADO
+    db.add(documento)
+    if aceptado and tipo.al_aceptar:
+        tipo.al_aceptar(db, documento)
+    db.commit()
+
+    if not aceptado:
+        return "rechazado"
+    if notificar_clientes and tipo.notificar:
+        tipo.notificar(db, documento, alegra_client)
+    return "aceptado"
 
 
 def reconciliar_tipo(
@@ -181,30 +222,22 @@ def reconciliar_tipo(
     for documento in listar_pendientes(db, tipo, empresa_id, antiguedad):
         resultado.revisados += 1
         try:
-            respuesta = tipo.consultar(alegra_client, getattr(documento, tipo.campo_alegra_id))
+            desenlace = reconciliar_documento(
+                db, alegra_client, tipo, documento, notificar_clientes=notificar_clientes
+            )
         except (AlegraApiError, AlegraTransientError) as exc:
             resultado.errores.append((documento.id, str(exc)))
             logger.error("No se pudo consultar en Alegra %s %s: %s", tipo.nombre, documento.id, exc)
             continue
 
-        if not tipo.aplicar(documento, _extraer_documento(tipo, respuesta)):
+        if desenlace == "sin_resolver":
             resultado.sin_resolver += 1
-            continue
-
-        aceptado = documento.estado in ESTADOS_ACEPTADO
-        db.add(documento)
-        if aceptado and tipo.al_aceptar:
-            tipo.al_aceptar(db, documento)
-        db.commit()
-
-        if not aceptado:
+        elif desenlace == "rechazado":
             resultado.rechazados += 1
-            continue
-        resultado.aceptados += 1
-        if empresas_con_aceptados is not None:
-            empresas_con_aceptados.add(documento.empresa_id)
-        if notificar_clientes and tipo.notificar:
-            tipo.notificar(db, documento, alegra_client)
+        else:
+            resultado.aceptados += 1
+            if empresas_con_aceptados is not None:
+                empresas_con_aceptados.add(documento.empresa_id)
     return resultado
 
 
