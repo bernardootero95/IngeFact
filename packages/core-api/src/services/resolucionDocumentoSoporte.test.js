@@ -7,6 +7,7 @@ import {
   getResolucionDocumentoSoporte,
   guardarResolucionDocumentoSoporte,
   cargarResolucionDocumentoSoporteDesdeAlegra,
+  validarResolucionDocumentoSoporte,
 } from "./resolucionDocumentoSoporte.js";
 
 describe("resolucionDocumentoSoporte", () => {
@@ -33,5 +34,13 @@ describe("resolucionDocumentoSoporte", () => {
     apiRequest.mockResolvedValue({ resoluciones: [] });
     await cargarResolucionDocumentoSoporteDesdeAlegra();
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/resolucion-documento-soporte/cargar-alegra");
+  });
+
+  it("validarResolucionDocumentoSoporte hace POST a validar", async () => {
+    apiRequest.mockResolvedValue({ id: "1" });
+    await validarResolucionDocumentoSoporte();
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/resolucion-documento-soporte/validar", {
+      method: "POST",
+    });
   });
 });

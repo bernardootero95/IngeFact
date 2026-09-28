@@ -1,15 +1,13 @@
 import logging
 import uuid
-from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
+from src.core.alegra_client import AlegraClient
 from src.application.consecutivo import revertir_consecutivo
-from src.application.resoluciones_alegra import consultar_resoluciones_alegra
-from src.core.alegra_errors import map_alegra_error
+from src.application.resoluciones_alegra import consultar_resoluciones_alegra, validar_resolucion_ante_alegra
 from src.domain.resolucion_dian import (
     CargarResolucionAlegraResponse,
     GuardarResolucionDianRequest,
@@ -160,19 +158,9 @@ class ResolucionDianService:
         resolucion = self.obtener_o_404(empresa_id)
         empresa = self.db.get(Empresa, empresa_id)
 
-        try:
-            self._alegra_client.get_resolution(empresa.numero_identificacion)
-        except AlegraApiError as exc:
-            resolucion.estado_validacion = "error"
-            resolucion.mensaje_validacion = map_alegra_error(exc.status_code, exc.body)
-        except AlegraTransientError:
-            resolucion.estado_validacion = "error"
-            resolucion.mensaje_validacion = "Alegra no respondio a tiempo. Intenta de nuevo en unos minutos."
-        else:
-            resolucion.estado_validacion = "validada"
-            resolucion.mensaje_validacion = None
-
-        resolucion.fecha_ultima_validacion = datetime.now(timezone.utc)
+        validar_resolucion_ante_alegra(
+            resolucion, self._alegra_client, empresa.numero_identificacion, con_technical_key=True
+        )
         self.db.add(resolucion)
         self.db.commit()
         self.db.refresh(resolucion)

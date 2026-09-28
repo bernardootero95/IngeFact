@@ -7,6 +7,8 @@ import {
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
 import AlegraResolutionPicker from "./AlegraResolutionPicker";
+import ResolutionValidationMessage from "./ResolutionValidationMessage";
+import { estadoBadge } from "./estadoBadge";
 import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
@@ -41,16 +43,6 @@ function diasParaVencer(fechaFin) {
   hoy.setHours(0, 0, 0, 0);
   const fin = new Date(`${fechaFin}T00:00:00`);
   return Math.round((fin - hoy) / (1000 * 60 * 60 * 24));
-}
-
-function estadoBadge(estadoValidacion) {
-  if (estadoValidacion === "validada") {
-    return { label: "✓ Validada ante la DIAN", className: "bg-white/20" };
-  }
-  if (estadoValidacion === "error") {
-    return { label: "⚠ Error de validación", className: "bg-fiscal-danger/30" };
-  }
-  return { label: "Pendiente de validar", className: "bg-white/20" };
 }
 
 export default function ResolutionPanel() {
@@ -287,16 +279,7 @@ export default function ResolutionPanel() {
               />
             )}
 
-            {resolucion?.estado_validacion === "error" && resolucion.mensaje_validacion && (
-              <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
-                {resolucion.mensaje_validacion}
-              </div>
-            )}
-            {resolucion?.estado_validacion === "validada" && (
-              <div className="mb-4 p-3 bg-brand-50 border border-brand-400 text-brand-700 text-sm rounded-brand-md">
-                Resolución validada correctamente.
-              </div>
-            )}
+            <ResolutionValidationMessage resolucion={resolucion} />
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

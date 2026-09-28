@@ -147,7 +147,10 @@ def test_consecutivo_actual_fuera_de_rango_es_invalido():
 
 def test_validar_ante_alegra_exito_marca_validada(db_session):
     empresa = _crear_empresa(db_session)
-    service = ResolucionDianService(db_session, alegra_client=_FakeAlegraClient(response={"resolution": {}}))
+    otra = _resolucion_alegra(resolutionNumber="18760000099", technicalKey=None)
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [otra, _resolucion_alegra()]})
+    )
     service.guardar(empresa.id, _payload())
 
     resolucion = service.validar_ante_alegra(empresa.id)
@@ -155,6 +158,59 @@ def test_validar_ante_alegra_exito_marca_validada(db_session):
     assert resolucion.estado_validacion == "validada"
     assert resolucion.mensaje_validacion is None
     assert resolucion.fecha_ultima_validacion is not None
+
+
+@pytest.mark.parametrize(
+    "registrada, fragmento",
+    [
+        ({"resolutionNumber": "99999999999"}, "no esta registrada"),
+        ({"maxNumber": 5000}, "rango guardado (1-1000)"),
+        ({"prefix": "FE"}, "prefijo guardado (SETP)"),
+        ({"technicalKey": "otra-clave"}, "clave tecnica"),
+    ],
+)
+def test_validar_ante_alegra_datos_distintos_marca_error(db_session, registrada, fragmento):
+    """Antes "Validar" solo comprobaba que Alegra respondiera: una resolucion
+    mal digitada quedaba "validada"."""
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [_resolucion_alegra(**registrada)]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    resolucion = service.validar_ante_alegra(empresa.id)
+
+    assert resolucion.estado_validacion == "error"
+    assert fragmento in resolucion.mensaje_validacion
+
+
+def test_validar_ante_alegra_sin_prefijo_en_alegra_no_compara_prefijo(db_session):
+    empresa = _crear_empresa(db_session)
+    sin_prefijo = _resolucion_alegra()
+    del sin_prefijo["prefix"]
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [sin_prefijo]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    assert service.validar_ante_alegra(empresa.id).estado_validacion == "validada"
+
+
+def test_validar_ante_alegra_error_transitorio_no_toca_el_estado(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDianService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [_resolucion_alegra()]})
+    )
+    service.guardar(empresa.id, _payload())
+    service.validar_ante_alegra(empresa.id)
+
+    service._alegra_client = _FakeAlegraClient(error=AlegraTransientError("timeout"))
+    with pytest.raises(HTTPException) as exc_info:
+        service.validar_ante_alegra(empresa.id)
+
+    assert exc_info.value.status_code == 502
+    db_session.expire_all()
+    assert service.obtener(empresa.id).estado_validacion == "validada"
 
 
 def test_validar_ante_alegra_error_guarda_mensaje_mapeado(db_session):
