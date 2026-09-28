@@ -6,6 +6,7 @@ import {
   cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
+import AlegraResolutionPicker from "./AlegraResolutionPicker";
 import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
@@ -279,40 +280,11 @@ export default function ResolutionPanel() {
             )}
 
             {opcionesAlegra && (
-              <div className="mb-4 border border-neutralCustom-200 rounded-brand-md p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <p className="text-sm font-medium text-neutralCustom-800">
-                    Encontramos {opcionesAlegra.length} resoluciones
-                    registradas para tu NIT. Elige cuál importar:
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setOpcionesAlegra(null)}
-                    className="text-xs text-neutralCustom-500 hover:text-neutralCustom-700 shrink-0 ml-3"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-                {opcionesAlegra.map((opcion) => (
-                  <div
-                    key={`${opcion.numero_resolucion}-${opcion.rango_minimo}`}
-                    className="flex justify-between items-center gap-3 bg-neutralCustom-100/60 rounded-brand-md p-3"
-                  >
-                    <div className="text-sm text-neutralCustom-700">
-                      <p className="font-semibold">
-                        {opcion.prefijo} · Resolución {opcion.numero_resolucion}
-                      </p>
-                      <p className="text-xs text-neutralCustom-500">
-                        Rango {opcion.rango_minimo}–{opcion.rango_maximo} ·
-                        Vigencia {opcion.fecha_inicio} a {opcion.fecha_fin}
-                      </p>
-                    </div>
-                    <Button type="button" onClick={() => aplicarDatosAlegra(opcion)}>
-                      Usar esta
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              <AlegraResolutionPicker
+                opciones={opcionesAlegra}
+                onSelect={aplicarDatosAlegra}
+                onCancel={() => setOpcionesAlegra(null)}
+              />
             )}
 
             {resolucion?.estado_validacion === "error" && resolucion.mensaje_validacion && (

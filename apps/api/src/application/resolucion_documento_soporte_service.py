@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from fastapi import HTTPException, status
@@ -5,18 +6,60 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from src.application.consecutivo import revertir_consecutivo
-from src.domain.resolucion_documento_soporte import GuardarResolucionDocumentoSoporteRequest
-from src.infrastructure.db.models import ResolucionDocumentoSoporte
+from src.application.resoluciones_alegra import SIN_RESOLUCIONES, consultar_resoluciones_alegra
+from src.core.alegra_client import AlegraClient
+from src.domain.resolucion_documento_soporte import (
+    GuardarResolucionDocumentoSoporteRequest,
+    ListaResolucionesDocumentoSoporteAlegraResponse,
+    ResolucionDocumentoSoporteAlegra,
+)
+from src.infrastructure.db.models import Empresa, ResolucionDocumentoSoporte
+
+logger = logging.getLogger(__name__)
+
+
+def _mapear_resolucion_alegra(r: dict) -> ResolucionDocumentoSoporteAlegra | None:
+    try:
+        return ResolucionDocumentoSoporteAlegra(
+            numero_resolucion=str(r["resolutionNumber"]),
+            prefijo=r.get("prefix") or "",
+            rango_minimo=r["minNumber"],
+            rango_maximo=r["maxNumber"],
+            fecha_inicio=r["startDate"],
+            fecha_fin=r["endDate"],
+        )
+    except (KeyError, ValueError) as exc:
+        logger.warning("Resolucion de Alegra con formato inesperado, se omite: %s (%s)", r, exc)
+        return None
 
 
 class ResolucionDocumentoSoporteService:
     """Resolucion de numeracion DIAN de Documento Soporte del tenant -- una
-    sola por empresa, mismo patron que ResolucionDianService pero sin
-    cargar_desde_alegra/validar_ante_alegra (sin endpoint confirmado para
-    eso todavia, ver docs/alegra-investigacion.md): se carga a mano."""
+    sola por empresa, mismo patron que ResolucionDianService. Sin
+    validar_ante_alegra: Alegra no expone una validacion propia para este
+    tipo de rango."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, alegra_client: AlegraClient | None = None):
         self.db = db
+        self._alegra_client = alegra_client
+
+    def cargar_desde_alegra(self, empresa_id: uuid.UUID) -> ListaResolucionesDocumentoSoporteAlegraResponse:
+        """Mismo GET /resolutions/{nit} que ResolucionDianService. La
+        respuesta mezcla rangos de facturacion y de documento soporte sin
+        un campo de tipo, asi que el unico indicio es `technicalKey` (los de
+        documento soporte no lo traen): se listan primero los que no lo
+        tienen, pero se devuelven todos para que el tenant elija -- no se
+        descarta ninguno por una suposicion no verificada en produccion."""
+        empresa = self.db.get(Empresa, empresa_id)
+        crudas = consultar_resoluciones_alegra(
+            self._alegra_client or AlegraClient(), empresa.numero_identificacion
+        )
+        crudas = sorted(crudas, key=lambda r: bool(r.get("technicalKey")))
+
+        resoluciones = [r for r in (_mapear_resolucion_alegra(r) for r in crudas) if r]
+        if not resoluciones:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, SIN_RESOLUCIONES)
+        return ListaResolucionesDocumentoSoporteAlegraResponse(resoluciones=resoluciones)
 
     def obtener(self, empresa_id: uuid.UUID) -> ResolucionDocumentoSoporte | None:
         return self.db.execute(

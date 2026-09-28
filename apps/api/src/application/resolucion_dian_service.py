@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.application.consecutivo import revertir_consecutivo
+from src.application.resoluciones_alegra import consultar_resoluciones_alegra
 from src.core.alegra_errors import map_alegra_error
 from src.domain.resolucion_dian import (
     CargarResolucionAlegraResponse,
@@ -143,20 +144,9 @@ class ResolucionDianService:
         No persiste nada; el tenant confirma con "Guardar Cambios" (mismo
         patron que "Consultar DIAN" en Clientes)."""
         empresa = self.db.get(Empresa, empresa_id)
+        crudas = consultar_resoluciones_alegra(self._alegra_client, empresa.numero_identificacion)
 
-        try:
-            data = self._alegra_client.get_resolution(empresa.numero_identificacion)
-        except AlegraApiError as exc:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
-        except AlegraTransientError as exc:
-            # Sin este except el error llegaba como 500 sin cabeceras CORS y
-            # el navegador lo reportaba como bloqueo de CORS (bug 2026-09-28).
-            raise HTTPException(
-                status.HTTP_502_BAD_GATEWAY,
-                "Alegra no respondio a tiempo. Intenta de nuevo en unos minutos.",
-            ) from exc
-
-        resoluciones = [r for r in (_mapear_resolucion_alegra(r) for r in data.get("resolutions") or []) if r]
+        resoluciones = [r for r in (_mapear_resolucion_alegra(r) for r in crudas) if r]
         if not resoluciones:
             raise HTTPException(
                 status.HTTP_404_NOT_FOUND,

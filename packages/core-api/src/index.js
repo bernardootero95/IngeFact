@@ -87,6 +87,7 @@ export {
 export {
   getResolucionDocumentoSoporte,
   guardarResolucionDocumentoSoporte,
+  cargarResolucionDocumentoSoporteDesdeAlegra,
 } from "./services/resolucionDocumentoSoporte.js";
 export { getHabilitacionesDian, enviarSetPruebas } from "./services/habilitacionDian.js";
 export {
