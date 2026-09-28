@@ -30,6 +30,15 @@ def cargar_resolucion_desde_alegra(
     return ResolucionDocumentoSoporteService(db).cargar_desde_alegra(tenant.empresa_id)
 
 
+@router.post("/validar", response_model=ResolucionDocumentoSoporteResponse)
+def validar_resolucion(
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    resolucion = ResolucionDocumentoSoporteService(db).validar_ante_alegra(tenant.empresa_id)
+    return ResolucionDocumentoSoporteResponse.from_model(resolucion)
+
+
 @router.put("", response_model=ResolucionDocumentoSoporteResponse)
 def guardar_resolucion(
     body: GuardarResolucionDocumentoSoporteRequest,

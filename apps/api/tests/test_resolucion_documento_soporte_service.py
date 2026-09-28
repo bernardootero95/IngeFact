@@ -305,3 +305,45 @@ def test_cargar_desde_alegra_errores_de_alegra(db_session):
         with pytest.raises(HTTPException) as exc_info:
             service.cargar_desde_alegra(empresa.id)
         assert exc_info.value.status_code == esperado
+
+
+def test_validar_ante_alegra_coincide_sin_technical_key(db_session):
+    """Documento soporte no tiene technical_key: no se compara aunque el
+    rango de Alegra lo traiga."""
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=1000, technicalKey="x")
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    resolucion = service.validar_ante_alegra(empresa.id)
+
+    assert resolucion.estado_validacion == "validada"
+    assert resolucion.fecha_ultima_validacion is not None
+
+
+def test_validar_ante_alegra_rango_distinto_marca_error(db_session):
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=9999)
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    resolucion = service.validar_ante_alegra(empresa.id)
+
+    assert resolucion.estado_validacion == "error"
+    assert "rango guardado" in resolucion.mensaje_validacion
+
+
+def test_guardar_vuelve_a_pendiente(db_session):
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=1000)
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+    service.validar_ante_alegra(empresa.id)
+
+    assert service.guardar(empresa.id, _payload()).estado_validacion == "pendiente"

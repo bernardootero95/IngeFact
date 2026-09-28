@@ -6,7 +6,11 @@ from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from src.application.consecutivo import revertir_consecutivo
-from src.application.resoluciones_alegra import SIN_RESOLUCIONES, consultar_resoluciones_alegra
+from src.application.resoluciones_alegra import (
+    SIN_RESOLUCIONES,
+    consultar_resoluciones_alegra,
+    validar_resolucion_ante_alegra,
+)
 from src.core.alegra_client import AlegraClient
 from src.domain.resolucion_documento_soporte import (
     GuardarResolucionDocumentoSoporteRequest,
@@ -35,9 +39,7 @@ def _mapear_resolucion_alegra(r: dict) -> ResolucionDocumentoSoporteAlegra | Non
 
 class ResolucionDocumentoSoporteService:
     """Resolucion de numeracion DIAN de Documento Soporte del tenant -- una
-    sola por empresa, mismo patron que ResolucionDianService. Sin
-    validar_ante_alegra: Alegra no expone una validacion propia para este
-    tipo de rango."""
+    sola por empresa, mismo patron que ResolucionDianService."""
 
     def __init__(self, db: Session, alegra_client: AlegraClient | None = None):
         self.db = db
@@ -60,6 +62,20 @@ class ResolucionDocumentoSoporteService:
         if not resoluciones:
             raise HTTPException(status.HTTP_404_NOT_FOUND, SIN_RESOLUCIONES)
         return ListaResolucionesDocumentoSoporteAlegraResponse(resoluciones=resoluciones)
+
+    def validar_ante_alegra(self, empresa_id: uuid.UUID) -> ResolucionDocumentoSoporte:
+        """Mismo criterio que ResolucionDianService.validar_ante_alegra, sin
+        comparar technical_key (documento soporte no lo usa)."""
+        resolucion = self.obtener_o_404(empresa_id)
+        empresa = self.db.get(Empresa, empresa_id)
+
+        validar_resolucion_ante_alegra(
+            resolucion, self._alegra_client or AlegraClient(), empresa.numero_identificacion, con_technical_key=False
+        )
+        self.db.add(resolucion)
+        self.db.commit()
+        self.db.refresh(resolucion)
+        return resolucion
 
     def obtener(self, empresa_id: uuid.UUID) -> ResolucionDocumentoSoporte | None:
         return self.db.execute(
@@ -122,6 +138,8 @@ class ResolucionDocumentoSoporteService:
             resolucion.consecutivo_actual = data.consecutivo_actual
         elif not consecutivo_iniciado or cambia_rango:
             resolucion.consecutivo_actual = data.rango_minimo
+        resolucion.estado_validacion = "pendiente"
+        resolucion.mensaje_validacion = None
 
         self.db.add(resolucion)
         self.db.commit()

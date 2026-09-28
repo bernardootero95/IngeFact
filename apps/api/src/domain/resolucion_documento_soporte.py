@@ -74,6 +74,9 @@ class ResolucionDocumentoSoporteResponse(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     consecutivo_actual: int
+    estado_validacion: str
+    mensaje_validacion: str | None
+    fecha_ultima_validacion: datetime | None
     creado: datetime
 
     @staticmethod
@@ -87,5 +90,8 @@ class ResolucionDocumentoSoporteResponse(BaseModel):
             fecha_inicio=resolucion.fecha_inicio,
             fecha_fin=resolucion.fecha_fin,
             consecutivo_actual=resolucion.consecutivo_actual,
+            estado_validacion=resolucion.estado_validacion,
+            mensaje_validacion=resolucion.mensaje_validacion,
+            fecha_ultima_validacion=resolucion.fecha_ultima_validacion,
             creado=resolucion.creado,
         )
