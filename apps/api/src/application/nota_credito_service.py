@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, selectinload
 
 import logging
 
+from src.application.estado_legal import aplicar_estado_legal
 from src.application.factura_service import _construir_customer_alegra, _construir_pago
 from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
@@ -21,7 +22,7 @@ from src.application.correo_documento import (
 from src.application.consecutivo import revertir_consecutivo
 from src.core.alegra_client import AlegraApiError, AlegraClient
 from src.core.email_client import EmailClient
-from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.alegra_errors import map_alegra_error
 from src.core.calculo_linea import base_gravable_iva, calcular_linea, excluido_proporcional
 from src.core.nota_credito_pdf import generar_representacion_pdf_nota_credito
 from src.core.xml_utils import extraer_firma_digital
@@ -35,6 +36,11 @@ logger = logging.getLogger(__name__)
 MOTIVO_ANULACION = "2"
 
 PREFIJO_NOTA_CREDITO = "NC"
+
+
+def aplicar_estado_legal_nota_credito(nota: NotaCredito, credit_note: dict) -> bool:
+    """`creditNote` de Alegra (POST/GET /credit-notes o webhook). Ver estado_legal.py."""
+    return aplicar_estado_legal(nota, credit_note, campo_codigo="cude", mensaje_rechazo="La DIAN rechazo la nota.")
 
 
 class NotaCreditoService:
@@ -430,23 +436,10 @@ class NotaCreditoService:
         # corresponde a este documento (mismo criterio que Factura).
         nota.firma_digital = None
 
-        government_response = credit_note.get("governmentResponse") or {}
-        nota.notificaciones_dian = government_response.get("errorMessages") or None
-
-        legal_status = credit_note.get("legalStatus")
-        if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
-            nota.estado = "aceptada"
-            nota.razon_rechazo = None
-            nota.fecha_respuesta = datetime.now(timezone.utc)
-        elif legal_status == "REJECTED":
-            nota.estado = "rechazada"
-            nota.razon_rechazo = map_government_response(
-                government_response.get("code", ""), government_response.get("message") or "La DIAN rechazo la nota."
-            )
-            nota.fecha_respuesta = datetime.now(timezone.utc)
-        else:
+        if not aplicar_estado_legal_nota_credito(nota, credit_note):
             nota.estado = "enviada"
             nota.razon_rechazo = None
+            nota.notificaciones_dian = (credit_note.get("governmentResponse") or {}).get("errorMessages") or None
 
     @staticmethod
     def _construir_payload_alegra(empresa: Empresa, factura: Factura, nota: NotaCredito, consecutivo: int) -> dict:

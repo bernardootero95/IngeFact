@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.consecutivo import revertir_consecutivo
+from src.application.estado_legal import aplicar_estado_legal
 from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.application.correo_documento import (
@@ -15,7 +16,7 @@ from src.application.correo_documento import (
     resolver_destinatario,
 )
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
-from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.alegra_errors import map_alegra_error
 from src.core.email_client import EmailClient
 from src.core.email_templates import plantilla_nomina_empleado
 from src.core.nomina_pdf import generar_representacion_pdf_nomina
@@ -24,6 +25,15 @@ from src.core.tiempo import fecha_documento_colombia
 from src.domain.nomina import GuardarNominaRequest
 from src.infrastructure.db.models import ConsecutivoNomina, Empleado, Empresa, Nomina
 from src.infrastructure.db.models.nomina import PREFIJO_ANULACION_NOMINA, PREFIJO_NOMINA
+
+
+def aplicar_estado_legal_nomina(nomina: Nomina, payroll: dict) -> bool:
+    """`payroll` de Alegra (POST/GET /payrolls). Ver estado_legal.py. A
+    diferencia de Factura, la firma viene en el JSON (signatureValue)."""
+    if not aplicar_estado_legal(nomina, payroll, campo_codigo="cune", mensaje_rechazo="La DIAN rechazo la nomina."):
+        return False
+    nomina.firma_digital = payroll.get("signatureValue") or nomina.firma_digital
+    return True
 
 
 def _construir_trabajador_snapshot(empleado: Empleado) -> dict:
@@ -305,23 +315,10 @@ class NominaService:
         nomina.firma_digital = payroll.get("signatureValue")
         nomina.fecha_envio = datetime.now(timezone.utc)
 
-        government_response = payroll.get("governmentResponse") or {}
-        nomina.notificaciones_dian = government_response.get("errorMessages") or None
-
-        legal_status = payroll.get("legalStatus")
-        if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
-            nomina.estado = "aceptada"
-            nomina.razon_rechazo = None
-            nomina.fecha_respuesta = datetime.now(timezone.utc)
-        elif legal_status == "REJECTED":
-            nomina.estado = "rechazada"
-            nomina.razon_rechazo = map_government_response(
-                government_response.get("code", ""), government_response.get("message") or "La DIAN rechazo la nomina."
-            )
-            nomina.fecha_respuesta = datetime.now(timezone.utc)
-        else:
+        if not aplicar_estado_legal_nomina(nomina, payroll):
             nomina.estado = "enviada"
             nomina.razon_rechazo = None
+            nomina.notificaciones_dian = (payroll.get("governmentResponse") or {}).get("errorMessages") or None
 
     @staticmethod
     def _construir_payload_alegra(empresa: Empresa, nomina: Nomina, consecutivo: int) -> dict:

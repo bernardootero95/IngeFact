@@ -9,11 +9,12 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.estado_legal import aplicar_estado_legal
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
-from src.core.alegra_errors import map_alegra_error, map_government_response
+from src.core.alegra_errors import map_alegra_error
 from src.core.calculo_linea import base_gravable_iva, calcular_linea
 from src.core.tiempo import fecha_documento_colombia
 from src.application.correo_documento import (
@@ -402,10 +403,10 @@ class FacturaService:
         # ya no corresponde a este documento.
         factura.firma_digital = None
 
-        if not aplicar_estado_legal(factura, invoice):
+        if not aplicar_estado_legal_factura(factura, invoice):
             # Alegra todavia no tiene la respuesta de la DIAN -- queda en
             # 'enviada' hasta que la resuelva el webhook o la reconciliacion
-            # (ver reconciliacion_facturas.py).
+            # (ver reconciliacion_documentos.py).
             factura.estado = "enviada"
             factura.razon_rechazo = None
             factura.notificaciones_dian = (invoice.get("governmentResponse") or {}).get("errorMessages") or None
@@ -483,43 +484,12 @@ class FacturaService:
         }
 
 
-ESTADOS_LEGALES_ACEPTADO = ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS")
-
-
-def aplicar_estado_legal(factura: Factura, invoice: dict) -> bool:
-    """Traslada el legalStatus de un `invoice` de Alegra (respuesta de POST o
-    GET /invoices, o el payload del webhook emissionFinished -- mismo shape)
-    a la factura. Devuelve False sin tocar nada si la DIAN todavia no
-    resolvio (sin legalStatus final). Unico lugar que decide 'aceptada' vs
-    'rechazada', compartido por enviar(), el webhook y la reconciliacion.
-
-    ACCEPTED_WITH_OBSERVATIONS = la DIAN acepto el documento con
-    notificaciones no bloqueantes (ej. reglas FAZ09/FAJ43b) -- es una
-    aceptacion real, no un estado intermedio ni un rechazo."""
-    government_response = invoice.get("governmentResponse") or {}
-    legal_status = invoice.get("legalStatus")
-    if legal_status in ESTADOS_LEGALES_ACEPTADO:
-        factura.estado = "aceptada"
-        # Limpia el rechazo de un intento anterior si este reenvio si fue aceptado.
-        factura.razon_rechazo = None
-    elif legal_status == "REJECTED":
-        factura.estado = "rechazada"
-        factura.razon_rechazo = map_government_response(
-            government_response.get("code", ""),
-            government_response.get("message") or "La DIAN rechazo la factura.",
-        )
-    else:
-        return False
-
-    # Si la DIAN tardo en responder, el POST original pudo llegar sin CUFE/QR.
-    factura.cufe = invoice.get("cufe") or factura.cufe
-    factura.qr_code_content = invoice.get("qrCodeContent") or factura.qr_code_content
-    # errorMessages trae el detalle completo (notificaciones no bloqueantes en
-    # ACCEPTED_WITH_OBSERVATIONS, o las reglas violadas en REJECTED) -- se
-    # guarda crudo, no solo el mensaje unico ya mapeado.
-    factura.notificaciones_dian = government_response.get("errorMessages") or None
-    factura.fecha_respuesta = datetime.now(timezone.utc)
-    return True
+def aplicar_estado_legal_factura(factura: Factura, invoice: dict) -> bool:
+    """`invoice` de Alegra (respuesta de POST o GET /invoices, o el payload
+    del webhook emissionFinished -- mismo shape). Ver estado_legal.py."""
+    return aplicar_estado_legal(
+        factura, invoice, campo_codigo="cufe", mensaje_rechazo="La DIAN rechazo la factura."
+    )
 
 
 def _enviar_correo_factura(
