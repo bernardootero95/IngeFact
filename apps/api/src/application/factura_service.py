@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.resolucion_dian_service import ResolucionDianService
+from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa, verificar_cupo_disponible
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
@@ -330,6 +331,8 @@ class FacturaService:
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+
+        HabilitacionDianService(self.db, self._alegra_client).verificar_habilitada(empresa_id, "facturacion")
 
         resolucion_service = ResolucionDianService(self.db, self._alegra_client)
         resolucion = resolucion_service.obtener_o_404(empresa_id)

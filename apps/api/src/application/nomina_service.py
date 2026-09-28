@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.consecutivo import revertir_consecutivo
+from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
 from src.application.correo_documento import (
     construir_adjuntos,
@@ -190,6 +191,7 @@ class NominaService:
         empresa = self.db.get(Empresa, empresa_id)
         if not empresa or not empresa.id_alegra:
             raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        HabilitacionDianService(self.db, self._alegra_client).verificar_habilitada(empresa_id, "nomina")
         verificar_cupo_disponible(self.db, empresa_id)
 
         # Reenvio de una nomina rechazada: reutiliza el numero ya asignado
@@ -227,6 +229,7 @@ class NominaService:
         if nomina.estado != "aceptada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede anular una nomina aceptada por la DIAN.")
         # La nota de eliminacion tambien se transmite a la DIAN.
+        HabilitacionDianService(self.db, self._alegra_client).verificar_habilitada(empresa_id, "nomina")
         verificar_cupo_disponible(self.db, empresa_id)
 
         consecutivo_anulacion = self._incrementar_consecutivo(empresa_id, "anulacion")

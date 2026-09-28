@@ -9,6 +9,7 @@ from src.application.factura_service import FacturaService, notificar_factura_ac
 from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.factura import ActualizarFacturaRequest, CrearFacturaRequest, LineaFacturaRequest
 from src.infrastructure.db.models import Cliente, Empresa, Producto, ResolucionDian, Suscripcion
+from tests.conftest import HabilitadaEnDianMixin
 
 
 def _crear_empresa(db_session, **overrides) -> Empresa:
@@ -108,7 +109,7 @@ def _payload(cliente_id, producto_id, **overrides) -> CrearFacturaRequest:
     return CrearFacturaRequest(**data)
 
 
-class _FakeAlegraClient:
+class _FakeAlegraClient(HabilitadaEnDianMixin):
     def __init__(self, response: dict | None = None, error: AlegraApiError | None = None, raw_response: bytes = b""):
         self._response = response
         self._error = error

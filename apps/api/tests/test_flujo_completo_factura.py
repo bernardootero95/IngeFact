@@ -16,9 +16,10 @@ from datetime import date
 
 from src.core.security import hash_password
 from src.infrastructure.db.models import Empresa, ResolucionDian, Suscripcion, UsuarioEmpresa
+from tests.conftest import HabilitadaEnDianMixin
 
 
-class _FakeAlegraClientAceptada:
+class _FakeAlegraClientAceptada(HabilitadaEnDianMixin):
     """Zero-arg, como exige el monkeypatch de la clase AlegraClient dentro de
     factura_service (mismo patron que `_no_real_emails` en conftest.py) --
     siempre devuelve una respuesta ACCEPTED, no necesita configurarse por test."""
