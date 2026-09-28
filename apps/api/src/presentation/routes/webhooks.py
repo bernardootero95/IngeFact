@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from src.application.factura_service import notificar_factura_aceptada
+from src.application.factura_service import aplicar_estado_legal, notificar_factura_aceptada
 from src.application.habilitacion_dian_service import HabilitacionDianService
 from src.application.nota_credito_service import NotaCreditoService
 from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
@@ -89,23 +89,12 @@ async def webhook_invoices(request: Request, db: Session = Depends(get_db)):
         logger.info("Factura %s ya esta en estado final (%s), webhook ignorado.", factura.id, factura.estado)
         return
 
-    government_response = invoice.get("governmentResponse") or {}
-    legal_status = invoice.get("legalStatus")
-    if legal_status in ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS"):
-        factura.estado = "aceptada"
-        factura.cufe = invoice.get("cufe") or factura.cufe
-        factura.razon_rechazo = None
-        factura.notificaciones_dian = government_response.get("errorMessages") or None
-        factura.fecha_respuesta = datetime.now(timezone.utc)
-    elif legal_status == "REJECTED":
-        factura.estado = "rechazada"
-        factura.razon_rechazo = map_government_response(
-            government_response.get("code", ""), government_response.get("message") or "La DIAN rechazo la factura."
+    if not aplicar_estado_legal(factura, invoice):
+        logger.info(
+            "Webhook invoices con legalStatus=%s, sin cambio de estado para factura %s.",
+            invoice.get("legalStatus"),
+            factura.id,
         )
-        factura.notificaciones_dian = government_response.get("errorMessages") or None
-        factura.fecha_respuesta = datetime.now(timezone.utc)
-    else:
-        logger.info("Webhook invoices con legalStatus=%s, sin cambio de estado para factura %s.", legal_status, factura.id)
         return
 
     db.add(factura)
