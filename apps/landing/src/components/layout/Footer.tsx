@@ -40,6 +40,7 @@ export function Footer() {
             { label: "Características", href: "/caracteristicas" },
             { label: "Precios", href: "/precios" },
             { label: "Instructivos", href: "/instructivos" },
+            { label: "Artículos", href: "/articulos" },
           ]}
         />
         <FooterColumn title="Legal" links={LEGAL_NAV_ITEMS} />

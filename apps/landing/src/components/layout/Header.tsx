@@ -32,7 +32,7 @@ export function Header({ active }: { active?: NavKey }) {
           </span>
         </Link>
 
-        <nav aria-label="Principal" className="hidden items-center gap-9 md:flex">
+        <nav aria-label="Principal" className="hidden items-center gap-7 lg:flex xl:gap-9">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.key}
@@ -63,7 +63,7 @@ export function Header({ active }: { active?: NavKey }) {
             aria-expanded={open}
             aria-controls={MOBILE_MENU_ID}
             onClick={() => setOpen((value) => !value)}
-            className="flex h-11 w-11 items-center justify-center rounded-brand-md text-neutralCustom-800 md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-brand-md text-neutralCustom-800 lg:hidden"
           >
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true">
               {open ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -73,7 +73,7 @@ export function Header({ active }: { active?: NavKey }) {
       </div>
 
       {open && (
-        <nav id={MOBILE_MENU_ID} aria-label="Principal" className="flex flex-col gap-1 border-t border-neutralCustom-100 px-6 py-4 md:hidden">
+        <nav id={MOBILE_MENU_ID} aria-label="Principal" className="flex flex-col gap-1 border-t border-neutralCustom-100 px-6 py-4 lg:hidden">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.key}

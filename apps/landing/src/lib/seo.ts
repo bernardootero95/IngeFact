@@ -1,4 +1,5 @@
 import { BUSINESS, RESPONSABLE } from "@/data/business";
+import type { Article } from "@/data/articles";
 import type { FaqEntry } from "@/data/faq";
 import { PRICING_PACKAGE_VALUES } from "@/data/pricing";
 
@@ -93,5 +94,23 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
       name: item.name,
       item: `${SITE_URL}${item.path}`,
     })),
+  };
+}
+
+export function articleJsonLd(article: Article) {
+  const url = `${SITE_URL}/articulos/${article.slug}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.title,
+    description: article.description,
+    datePublished: article.published,
+    dateModified: article.updated,
+    inLanguage: "es-CO",
+    mainEntityOfPage: url,
+    url,
+    image: `${SITE_URL}/opengraph-image`,
+    author: { "@id": ORGANIZATION_ID },
+    publisher: { "@id": ORGANIZATION_ID },
   };
 }

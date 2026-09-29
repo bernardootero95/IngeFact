@@ -9,6 +9,7 @@ import { findGuideBySlug } from "@/data/guides";
 import { PACKAGE_TERMS } from "@/data/business";
 import { PRICING_PACKAGE_VALUES } from "@/data/pricing";
 import { ALL_SERVICES, type Service } from "@/data/services";
+import { ARTICLES } from "@/data/articles";
 import { breadcrumbJsonLd, faqJsonLd } from "@/lib/seo";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
@@ -34,6 +35,7 @@ export function ServicePage({ service }: { service: Service }) {
     return found ? [found.guide] : [];
   });
   const otherServices = ALL_SERVICES.filter((s) => s.slug !== service.slug);
+  const articles = ARTICLES.filter((a) => a.serviceSlug === service.slug);
 
   return (
     <SiteLayout>
@@ -137,6 +139,29 @@ export function ServicePage({ service }: { service: Service }) {
                   >
                     <span className="block text-[15px] font-bold text-neutralCustom-800">{guide.title}</span>
                     <span className="block text-[13px] text-neutralCustom-500">{guide.description}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {articles.length > 0 && (
+        <section aria-labelledby="para-leer" className="px-6 py-14 md:px-16">
+          <div className="mx-auto max-w-[760px]">
+            <h2 id="para-leer" className={sectionTitle}>
+              Para leer más
+            </h2>
+            <ul className="space-y-3">
+              {articles.map((article) => (
+                <li key={article.slug}>
+                  <Link
+                    href={`/articulos/${article.slug}`}
+                    className="block rounded-brand-md border border-neutralCustom-100 bg-white px-5 py-4 hover:border-brand-400"
+                  >
+                    <span className="block text-[15px] font-bold text-neutralCustom-800">{article.title}</span>
+                    <span className="block text-[13px] text-neutralCustom-500">{article.description}</span>
                   </Link>
                 </li>
               ))}
