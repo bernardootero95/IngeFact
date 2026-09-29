@@ -1,92 +1,55 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { listProveedores, getProveedor, crearFacturaRecibida } from "@ingefact/core-api";
-import { fechaHoyColombia } from "@ingefact/utils";
-import { SearchableSelect, Button, PlusIcon, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { consultarFacturaRecibida, crearFacturaRecibida } from "@ingefact/core-api";
+import { Button, FieldError, fieldA11y } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
-import { validateProveedor, validateCufe, validateFecha } from "./ReceivedInvoiceFormPage.validation";
-
-const today = fechaHoyColombia;
+import ResumenFacturaRecibida from "../components/ResumenFacturaRecibida";
+import { validateCufe } from "./ReceivedInvoiceFormPage.validation";
 
 export default function ReceivedInvoiceFormPage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const [proveedor, setProveedor] = useState(null);
   const [cufe, setCufe] = useState("");
-  const [numeroDocumentoProveedor, setNumeroDocumentoProveedor] = useState("");
-  const [fecha, setFecha] = useState(today());
-  const [montoTotal, setMontoTotal] = useState("");
-  const [observaciones, setObservaciones] = useState("");
-
-  const [proveedores, setProveedores] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const [cufeError, setCufeError] = useState("");
+  const [consulta, setConsulta] = useState(null);
+  const [isConsulting, setIsConsulting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
+  const [error, setError] = useState(null);
 
-  const cargarDatos = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const proveedoresData = await listProveedores();
-      setProveedores(proveedoresData);
-      const nuevoProveedorId = location.state?.newProveedorId;
-      if (nuevoProveedorId) {
-        setProveedor(await getProveedor(nuevoProveedorId));
-      }
-    } catch (error) {
-      setLoadError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [location.state]);
-
-  useEffect(() => {
-    cargarDatos();
-  }, [cargarDatos]);
-
-  const proveedorOptions = proveedores.map((p) => ({ code: p.id, value: `${p.nombre} (${p.numero_identificacion})` }));
-
-  const handleSelectProveedor = (proveedorId) => {
-    const seleccionado = proveedores.find((p) => p.id === proveedorId) || null;
-    setProveedor(seleccionado);
-    setErrors((prev) => ({ ...prev, proveedor: seleccionado ? "" : prev.proveedor }));
+  const handleCufeChange = (e) => {
+    setCufe(e.target.value);
+    setCufeError(validateCufe(e.target.value));
+    // Cambiar el CUFE invalida la vista previa anterior.
+    setConsulta(null);
+    setError(null);
   };
 
-  const irACrearProveedor = () => {
-    navigate("/suppliers/new", { state: { returnTo: location.pathname } });
-  };
-
-  const validarTodo = () => {
-    const nuevosErrores = {
-      proveedor: validateProveedor(proveedor?.id),
-      cufe: validateCufe(cufe),
-      fecha: validateFecha(fecha),
-    };
-    setErrors(nuevosErrores);
-    return !Object.values(nuevosErrores).some(Boolean);
-  };
-
-  const handleSubmit = async (e) => {
+  const handleConsultar = async (e) => {
     e.preventDefault();
-    if (!validarTodo()) return;
+    const mensaje = validateCufe(cufe);
+    setCufeError(mensaje);
+    if (mensaje) return;
 
-    setIsSaving(true);
-    setSaveError(null);
+    setIsConsulting(true);
+    setError(null);
+    setConsulta(null);
     try {
-      const creada = await crearFacturaRecibida({
-        proveedor_id: proveedor.id,
-        cufe: cufe.trim(),
-        numero_documento_proveedor: numeroDocumentoProveedor.trim() || null,
-        fecha,
-        monto_total: montoTotal ? Number(montoTotal) : null,
-        observaciones: observaciones.trim() || null,
-      });
-      navigate(`/received-invoices/${creada.id}`);
-    } catch (error) {
-      setSaveError(error.message);
+      setConsulta(await consultarFacturaRecibida(cufe.trim()));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsConsulting(false);
+    }
+  };
+
+  const handleAgregar = async () => {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await crearFacturaRecibida({ cufe: consulta.cufe });
+      navigate("/received-invoices");
+    } catch (err) {
+      setError(err.message);
     } finally {
       setIsSaving(false);
     }
@@ -100,172 +63,81 @@ export default function ReceivedInvoiceFormPage() {
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
-              <Button
-                onClick={() => navigate("/received-invoices")}
-                variant="link"
-              >
+              <Button onClick={() => navigate("/received-invoices")} variant="link">
                 Facturas recibidas
               </Button>
               <span>/</span>
-              <span>Nueva</span>
+              <span>Agregar</span>
             </div>
-            <h2 className="text-lg font-medium text-neutralCustom-800">Registrar Factura Recibida</h2>
-            <p className="hidden sm:block text-xs text-neutralCustom-500">
-              El CUFE te lo da tu proveedor (viene en el XML/PDF que te envía).
-            </p>
+            <h2 className="text-lg font-medium text-neutralCustom-800">Agregar factura recibida</h2>
           </div>
         </header>
 
         <div className="p-4 md:p-8 flex-1 overflow-y-auto">
-          <div className="max-w-2xl mx-auto">
-            {loading ? (
-              <FormSkeleton label="Cargando..." />
-            ) : loadError ? (
-              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
-                {loadError}
+          <div className="max-w-2xl mx-auto space-y-6">
+            <form
+              onSubmit={handleConsultar}
+              noValidate
+              className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-3"
+            >
+              <label htmlFor="cufe" className="block text-sm font-medium text-neutralCustom-800">
+                CUFE de la factura <span className="text-fiscal-danger" aria-hidden="true">*</span>
+                <span className="sr-only"> (obligatorio)</span>
+              </label>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  id="cufe"
+                  value={cufe}
+                  onChange={handleCufeChange}
+                  autoFocus
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="Pega aquí el CUFE que viene en el XML o PDF del proveedor"
+                  className={`field flex-1 font-mono text-xs ${cufeError ? "border-fiscal-danger field-invalid" : ""}`}
+                  {...fieldA11y("cufe", cufeError)}
+                />
+                <Button type="submit" variant="primary" loading={isConsulting} title="Consultar la factura en la DIAN">
+                  Consultar
+                </Button>
               </div>
-            ) : (
-              <form
-                onSubmit={handleSubmit}
+              {cufeError && <FieldError fieldId="cufe">{cufeError}</FieldError>}
+              <p className="text-xs text-neutralCustom-500">
+                Solo se cargan facturas a crédito: la DIAN no permite registrar eventos sobre facturas de contado.
+              </p>
+            </form>
+
+            {error && (
+              <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
+                {error}
+              </div>
+            )}
+
+            {consulta && (
+              <section
+                aria-label="Resumen de la factura"
                 className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6 space-y-5"
               >
-                {saveError && (
-                  <div role="alert" className="p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
-                    {saveError}
+                <h3 className="text-base font-semibold text-neutralCustom-800">Resumen de la factura</h3>
+                <ResumenFacturaRecibida factura={consulta} />
+
+                {consulta.puede_registrar ? null : (
+                  <div role="alert" className="p-3 bg-amber-50 border border-fiscal-warning text-amber-800 text-sm rounded-brand-md">
+                    {consulta.motivo_bloqueo}
                   </div>
                 )}
 
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label htmlFor="proveedor-select" className="block text-sm font-medium text-neutralCustom-800">
-                      Proveedor <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
-                    </label>
-                    <Button
-                      onClick={irACrearProveedor}
-                      variant="link"
-                      icon={PlusIcon}
-                      className="text-xs"
-                    >
-                      Nuevo proveedor
-                    </Button>
-                  </div>
-                  <SearchableSelect
-                    id="proveedor-select"
-                    options={proveedorOptions}
-                    value={proveedor?.id || ""}
-                    onChange={handleSelectProveedor}
-                    placeholder="Selecciona un proveedor..."
-                    error={errors.proveedor}
-                    formatOption={(opt) => opt.value}
-                  />
-                  <FieldError fieldId="proveedor-select">{errors.proveedor}</FieldError>
-                </div>
-
-                <div>
-                  <label htmlFor="cufe" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                    CUFE <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="cufe"
-                    value={cufe}
-                    onChange={(e) => {
-                      setCufe(e.target.value);
-                      setErrors((prev) => ({ ...prev, cufe: validateCufe(e.target.value) }));
-                    }}
-                    placeholder="Código único de facturación electrónica"
-                    className={`field w-full font-mono ${
-                      errors.cufe ? "border-fiscal-danger field-invalid" : ""
-                    }`}
-                    {...fieldA11y("cufe", errors.cufe)}
-                  />
-                  {errors.cufe && <FieldError fieldId={"cufe"}>{errors.cufe}</FieldError>}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="fecha" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                      Fecha <span className="text-fiscal-danger" aria-hidden="true">*</span><span className="sr-only"> (obligatorio)</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="fecha"
-                      value={fecha}
-                      onChange={(e) => {
-                        setFecha(e.target.value);
-                        setErrors((prev) => ({ ...prev, fecha: validateFecha(e.target.value) }));
-                      }}
-                      className={`field w-full ${
-                        errors.fecha ? "border-fiscal-danger field-invalid" : ""
-                      }`}
-                      {...fieldA11y("fecha", errors.fecha)}
-                    />
-                    {errors.fecha && <FieldError fieldId={"fecha"}>{errors.fecha}</FieldError>}
-                  </div>
-
-                  <div>
-                    <label htmlFor="numero_documento_proveedor" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                      Número de factura del proveedor
-                    </label>
-                    <input
-                      type="text"
-                      id="numero_documento_proveedor"
-                      value={numeroDocumentoProveedor}
-                      onChange={(e) => setNumeroDocumentoProveedor(e.target.value)}
-                      placeholder="Opcional"
-                      className="field w-full"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="monto_total" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                    Monto total
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    id="monto_total"
-                    value={montoTotal}
-                    onChange={(e) => setMontoTotal(e.target.value)}
-                    placeholder="Opcional, solo de referencia"
-                    className="field w-full"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="observaciones" className="block text-sm font-medium text-neutralCustom-800 mb-1.5">
-                    Observaciones
-                  </label>
-                  <input
-                    type="text"
-                    id="observaciones"
-                    value={observaciones}
-                    onChange={(e) => setObservaciones(e.target.value)}
-                    placeholder="Opcional"
-                    className="field w-full"
-                  />
-                </div>
-
                 <div className="flex justify-end gap-3 pt-4 border-t border-neutralCustom-100">
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate("/received-invoices")}
-                    disabled={isSaving}
-                  >
+                  <Button variant="ghost" onClick={() => navigate("/received-invoices")} disabled={isSaving}>
                     Cancelar
                   </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    title="Registrar factura recibida"
-                    loading={isSaving}
-                  >
-                    Registrar
-                  </Button>
+                  {consulta.puede_registrar && (
+                    <Button variant="primary" onClick={handleAgregar} loading={isSaving} title="Agregar a facturas recibidas">
+                      Agregar
+                    </Button>
+                  )}
                 </div>
-              </form>
+              </section>
             )}
           </div>
         </div>

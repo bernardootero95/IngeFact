@@ -1,11 +1,3 @@
-export const TIPOS_EVENTO = [
-  { code: "030", value: "Acuse de recibo" },
-  { code: "031", value: "Reclamo" },
-  { code: "032", value: "Recibo del bien o servicio" },
-  { code: "033", value: "Aceptación expresa" },
-  { code: "034", value: "Aceptación tácita" },
-];
-
 export const TIPOS_QUE_REQUIEREN_GENERADOR = ["030", "032"];
 export const TIPO_RECLAMO = "031";
 

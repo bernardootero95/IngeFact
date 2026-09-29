@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_alerta_cuota
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA
+from src.domain.factura_recibida import ESTADOS_EVENTO_ACEPTADO
 from src.infrastructure.db.models import (
     DocumentoSoporte,
     Empresa,
@@ -24,9 +25,6 @@ from src.infrastructure.db.models import (
 logger = logging.getLogger(__name__)
 
 UMBRAL_ALERTA_CUOTA = 0.9
-
-# legal_status que devuelve la DIAN (via Alegra) para un evento valido.
-ESTADOS_EVENTO_ACEPTADO = ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS")
 
 
 def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:

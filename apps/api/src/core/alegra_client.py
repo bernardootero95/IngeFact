@@ -151,6 +151,14 @@ class AlegraClient:
         proposito)."""
         return self._request("POST", "/events/from-cufe", json=payload)
 
+    def get_document_by_track_id(self, track_id: str) -> dict:
+        """GET /get-by-trackid -- consulta en la DIAN un documento por su
+        CUFE/CUDE, sin importar quien lo emitio. Verificado en sandbox: trae
+        `dianStatus` (AUTHORIZED, ...), un resumen en `document` y el XML UBL
+        completo en `xmlDocument.content` (base64), de donde se leen
+        proveedor, vencimiento y forma de pago. 404 = CUFE inexistente."""
+        return self._request("GET", "/get-by-trackid", params={"trackId": track_id})
+
     def create_support_document(self, payload: dict) -> dict:
         """POST /support-documents. Verificado en vivo (Fase 3, ver
         docs/alegra-investigacion.md): endpoint propio, distinto de

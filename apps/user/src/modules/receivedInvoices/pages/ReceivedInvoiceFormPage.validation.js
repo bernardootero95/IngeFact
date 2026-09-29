@@ -1,14 +1,9 @@
-export function validateProveedor(proveedorId) {
-  if (!proveedorId) return "Debes seleccionar un proveedor.";
-  return "";
-}
+export const CUFE_MAX_LENGTH = 200;
 
 export function validateCufe(cufe) {
-  if (!cufe || !cufe.trim()) return "El CUFE es obligatorio.";
-  return "";
-}
-
-export function validateFecha(fecha) {
-  if (!fecha) return "La fecha es obligatoria.";
+  const valor = cufe?.trim() || "";
+  if (!valor) return "El CUFE es obligatorio.";
+  if (valor.length > CUFE_MAX_LENGTH) return `El CUFE no puede tener más de ${CUFE_MAX_LENGTH} caracteres.`;
+  if (/\s/.test(valor)) return "El CUFE no debe tener espacios.";
   return "";
 }

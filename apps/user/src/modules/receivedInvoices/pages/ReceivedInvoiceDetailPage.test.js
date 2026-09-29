@@ -24,7 +24,7 @@ describe("ReceivedInvoiceDetailPage validaciones", () => {
     expect(validateClaimCode("01")).toBe("");
   });
 
-  it("solo 030 y 032 requieren generador", () => {
+  it("solo 030 y 032 requieren generador (acuse y recibo de mercancia)", () => {
     expect(TIPOS_QUE_REQUIEREN_GENERADOR).toEqual(["030", "032"]);
     expect(TIPO_RECLAMO).toBe("031");
   });
