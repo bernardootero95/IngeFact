@@ -3,6 +3,7 @@ import Image from "next/image";
 import { WHATSAPP_DISPLAY, buildWhatsAppLink } from "@/lib/whatsapp";
 import { BUSINESS, RESPONSABLE } from "@/data/business";
 import { LEGAL_NAV_ITEMS } from "@/data/nav";
+import { ALL_SERVICES } from "@/data/services";
 import { NewTabHint } from "@/components/ui/NewTabHint";
 
 // neutralCustom-300 sobre neutralCustom-800 = 7:1 (el -500 daba 3,4:1, no cumplía AA).
@@ -35,6 +36,7 @@ export function Footer() {
         <FooterColumn
           title="Producto"
           links={[
+            ...ALL_SERVICES.map((s) => ({ label: s.name, href: `/${s.slug}` })),
             { label: "Características", href: "/caracteristicas" },
             { label: "Precios", href: "/precios" },
             { label: "Instructivos", href: "/instructivos" },

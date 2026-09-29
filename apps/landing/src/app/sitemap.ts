@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { LEGAL_NAV_ITEMS, NAV_ITEMS } from "@/data/nav";
 import { ALL_GUIDES } from "@/data/guides";
 import { LEGAL_LAST_UPDATED_ISO } from "@/data/business";
+import { ALL_SERVICES } from "@/data/services";
 import { SITE_URL } from "@/lib/seo";
 
 // Sin lastModified en las páginas de contenido: una fecha que cambia en cada
@@ -11,6 +12,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE_URL}${item.href}`,
     changeFrequency: "monthly",
     priority: item.key === "inicio" ? 1 : 0.7,
+  }));
+
+  const servicePages: MetadataRoute.Sitemap = ALL_SERVICES.map((service) => ({
+    url: `${SITE_URL}/${service.slug}`,
+    changeFrequency: "monthly",
+    priority: 0.9,
   }));
 
   const guidePages: MetadataRoute.Sitemap = ALL_GUIDES.map((guide) => ({
@@ -26,5 +33,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.3,
   }));
 
-  return [...pages, ...guidePages, ...legalPages];
+  return [...pages, ...servicePages, ...guidePages, ...legalPages];
 }

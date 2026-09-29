@@ -12,6 +12,8 @@ export interface Feature {
   icon: ComponentType<{ className?: string }>;
   title: string;
   description: string;
+  /** Página del servicio, si tiene una propia. */
+  href?: string;
 }
 
 export const HOME_FEATURES: Feature[] = [
@@ -19,21 +21,25 @@ export const HOME_FEATURES: Feature[] = [
     icon: InvoiceIcon,
     title: "Facturación electrónica",
     description: "Emite facturas de venta, notas crédito y notas débito y envíalas a la DIAN desde el navegador.",
+    href: "/facturacion-electronica",
   },
   {
     icon: PayrollIcon,
     title: "Nómina electrónica",
     description: "Registra a tus empleados y transmite el comprobante de nómina de cada uno, con devengados y deducciones.",
+    href: "/nomina-electronica",
   },
   {
     icon: ReceiptIcon,
     title: "Documento soporte",
     description: "Soporta tus compras a proveedores no obligados a facturar con su propia numeración autorizada.",
+    href: "/documento-soporte",
   },
   {
     icon: InboxCheckIcon,
     title: "Aceptación de facturas (RADIAN)",
     description: "Registra acuse de recibo, recibo del bien o servicio, aceptación o reclamo de las facturas que te emiten.",
+    href: "/radian",
   },
   {
     icon: UsersIcon,
@@ -55,6 +61,7 @@ export interface FeatureItem {
 export interface FeatureCategory {
   icon: ComponentType<{ className?: string }>;
   title: string;
+  href?: string;
   intro: string;
   items: FeatureItem[];
 }
@@ -63,6 +70,7 @@ export const FEATURE_CATEGORIES: FeatureCategory[] = [
   {
     icon: InvoiceIcon,
     title: "Facturación electrónica",
+    href: "/facturacion-electronica",
     intro: "Los documentos de venta que tu operación necesita.",
     items: [
       { title: "Factura de venta electrónica", description: "Crea la factura, envíala a la DIAN y consulta su respuesta en la misma pantalla." },
@@ -74,6 +82,7 @@ export const FEATURE_CATEGORIES: FeatureCategory[] = [
   {
     icon: PayrollIcon,
     title: "Nómina electrónica",
+    href: "/nomina-electronica",
     intro: "Transmite a la DIAN el soporte de pago de tus empleados.",
     items: [
       { title: "Empleados", description: "Registra tipo de trabajador, contrato, salario y lugar de trabajo una sola vez." },
@@ -85,6 +94,7 @@ export const FEATURE_CATEGORIES: FeatureCategory[] = [
   {
     icon: ReceiptIcon,
     title: "Documento soporte",
+    href: "/documento-soporte",
     intro: "Para compras a personas o empresas no obligadas a facturar.",
     items: [
       { title: "Proveedores", description: "Registra tus proveedores con los datos que exige la DIAN para este documento." },
@@ -96,6 +106,7 @@ export const FEATURE_CATEGORIES: FeatureCategory[] = [
   {
     icon: InboxCheckIcon,
     title: "Aceptación de facturas (RADIAN)",
+    href: "/radian",
     intro: "Gestiona las facturas electrónicas que te emiten tus proveedores.",
     items: [
       { title: "Facturas recibidas", description: "Registra la factura que recibiste a partir de su CUFE." },

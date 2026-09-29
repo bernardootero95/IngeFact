@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   // la marca va escrita aquí.
   title: { absolute: "IngeFact: facturación electrónica, nómina y documento soporte DIAN" },
   description:
-    "Emite facturas, notas, nómina electrónica y documento soporte, y acepta las facturas que recibes (RADIAN), desde un solo lugar.",
+    "Software de facturación electrónica DIAN: emite facturas, notas, nómina electrónica y documento soporte, y acepta las facturas que recibes (RADIAN). Paquetes prepagados, sin mensualidades.",
   alternates: { canonical: "/" },
 };
 
@@ -33,7 +33,7 @@ export default function HomePage() {
             Facturación · Nómina · Documento soporte · RADIAN
           </span>
           <h1 className="mb-5 text-4xl font-extrabold leading-[1.12] text-neutralCustom-800 md:text-[48px]">
-            Tus documentos electrónicos ante la DIAN, en un solo lugar
+            Facturación electrónica, nómina y documento soporte DIAN, sin mensualidades
           </h1>
           <p className="mb-8 text-[17px] leading-relaxed text-neutralCustom-500">
             Emite facturas, notas crédito y débito, nómina electrónica y documento soporte, y registra la aceptación de
