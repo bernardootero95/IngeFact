@@ -1,7 +1,7 @@
 """facturas_recibidas: datos leidos del XML DIAN por CUFE
 
 Revision ID: b3e1a7c52d10
-Revises: 9c9b778bc4ba
+Revises: bdeb372c86c4
 Create Date: 2026-09-28 20:00:00
 
 Las facturas recibidas dejan de teclearse a mano: el proveedor, fechas, forma
@@ -15,7 +15,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = "b3e1a7c52d10"
-down_revision: Union[str, None] = "9c9b778bc4ba"
+down_revision: Union[str, None] = "bdeb372c86c4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
