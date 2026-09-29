@@ -1,4 +1,4 @@
-export type NavKey = "inicio" | "caracteristicas" | "precios" | "instructivos" | "contacto";
+export type NavKey = "inicio" | "caracteristicas" | "precios" | "instructivos" | "articulos" | "contacto";
 
 export interface NavItem {
   key: NavKey;
@@ -11,6 +11,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "caracteristicas", label: "Características", href: "/caracteristicas" },
   { key: "precios", label: "Precios", href: "/precios" },
   { key: "instructivos", label: "Instructivos", href: "/instructivos" },
+  { key: "articulos", label: "Artículos", href: "/articulos" },
   { key: "contacto", label: "Contacto", href: "/contacto" },
 ];
 
