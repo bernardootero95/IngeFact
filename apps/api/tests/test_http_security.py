@@ -168,6 +168,7 @@ def factura_recibida_de_empresa_a(db_session, empresa_a, proveedor_de_empresa_a)
     factura_recibida = FacturaRecibida(
         empresa_id=empresa.id,
         proveedor_id=proveedor.id,
+        proveedor_nombre=proveedor.nombre,
         cufe="cufe-de-empresa-a-1234567890",
         fecha=date.today(),
     )

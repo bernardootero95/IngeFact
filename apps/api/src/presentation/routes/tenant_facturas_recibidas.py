@@ -1,15 +1,17 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from src.application.factura_recibida_service import FacturaRecibidaService
 from src.core.dependencies import CurrentTenant, get_current_tenant
 from src.domain.factura_recibida import (
+    ConsultaFacturaRecibidaResponse,
     CrearEventoReceptorRequest,
     CrearFacturaRecibidaRequest,
     FacturaRecibidaListItemResponse,
     FacturaRecibidaResponse,
+    XmlFacturaRecibidaResponse,
 )
 from src.infrastructure.db.session import get_db
 
@@ -24,6 +26,25 @@ def listar_facturas_recibidas(
 ):
     facturas = FacturaRecibidaService(db).listar(tenant.empresa_id, proveedor_id=proveedor_id)
     return [FacturaRecibidaListItemResponse.from_model(f) for f in facturas]
+
+
+@router.get("/consulta", response_model=ConsultaFacturaRecibidaResponse)
+def consultar_factura_recibida(
+    cufe: str = Query(..., max_length=200),
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Vista previa por CUFE (datos leidos de la DIAN) antes de registrarla."""
+    return FacturaRecibidaService(db).consultar(tenant.empresa_id, cufe)
+
+
+@router.get("/{factura_recibida_id}/xml", response_model=XmlFacturaRecibidaResponse)
+def obtener_xml_factura_recibida(
+    factura_recibida_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    return FacturaRecibidaService(db).obtener_xml(tenant.empresa_id, factura_recibida_id)
 
 
 @router.get("/{factura_recibida_id}", response_model=FacturaRecibidaResponse)

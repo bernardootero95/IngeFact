@@ -44,10 +44,18 @@ class FacturaRecibida(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     empresa_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empresas.id", ondelete="CASCADE"), nullable=False)
-    proveedor_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("proveedores.id"), nullable=False)
+    # Enlace opcional al directorio de Proveedores (si ya existe uno con el
+    # mismo NIT). El nombre/NIT reales quedan copiados del XML DIAN abajo.
+    proveedor_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("proveedores.id"))
+    proveedor_nombre: Mapped[str] = mapped_column(String(255), nullable=False)
+    proveedor_nit: Mapped[str | None] = mapped_column(String(50))
     cufe: Mapped[str] = mapped_column(String(200), nullable=False)
     numero_documento_proveedor: Mapped[str | None] = mapped_column(String(50))
     fecha: Mapped[date] = mapped_column(Date, nullable=False)
+    fecha_vencimiento: Mapped[date | None] = mapped_column(Date)
+    # PaymentMeans/ID de la DIAN: "1" contado, "2" credito. Nulo en registros
+    # anteriores a la consulta por CUFE (se tecleaban a mano).
+    forma_pago: Mapped[str | None] = mapped_column(String(2))
     monto_total: Mapped[float | None] = mapped_column(Numeric(14, 2))
     observaciones: Mapped[str | None] = mapped_column(Text)
 
@@ -57,7 +65,7 @@ class FacturaRecibida(Base):
     )
     eliminado: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
-    proveedor: Mapped["Proveedor"] = relationship()  # noqa: F821
+    proveedor: Mapped["Proveedor | None"] = relationship()  # noqa: F821
     eventos: Mapped[list["EventoReceptor"]] = relationship(
         back_populates="factura_recibida", cascade="all, delete-orphan", order_by="EventoReceptor.creado"
     )
