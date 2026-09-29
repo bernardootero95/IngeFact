@@ -12,8 +12,9 @@ import { ALL_SERVICES, type Service } from "@/data/services";
 import { breadcrumbJsonLd, faqJsonLd } from "@/lib/seo";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
 
-const cop = new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 });
-const paqueteMinimo = PRICING_PACKAGE_VALUES[0];
+// Se anuncia el tamaño mínimo, no su precio: el paquete más pequeño es el
+// de mayor precio por documento y no representa bien la oferta.
+const documentosMinimos = PRICING_PACKAGE_VALUES[0].documentos;
 
 export function serviceMetadata(service: Service): Metadata {
   return {
@@ -110,9 +111,9 @@ export function ServicePage({ service }: { service: Service }) {
             ¿Cuánto cuesta?
           </h2>
           <p className={`mb-3 ${bodyText}`}>
-            Pagas por paquetes prepagados de documentos, sin mensualidades ni permanencia. El más pequeño trae{" "}
-            {paqueteMinimo.documentos} documentos por ${cop.format(paqueteMinimo.precio)} y cada paquete se puede usar
-            durante {PACKAGE_TERMS.vigenciaMeses} meses.
+            Pagas por paquetes prepagados desde {documentosMinimos} documentos, sin mensualidades ni permanencia. Los
+            paquetes más grandes tienen un menor precio por documento, y cada uno se puede usar durante{" "}
+            {PACKAGE_TERMS.vigenciaMeses} meses.
           </p>
           <p className={`mb-5 ${bodyText}`}>{service.consumption} El mismo paquete sirve para todos los servicios.</p>
           <Link href="/precios" className="text-[15px] font-semibold text-brand-600 underline-offset-4 hover:underline">
