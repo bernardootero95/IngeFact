@@ -92,6 +92,8 @@ export { getHabilitacionesDian, enviarSetPruebas } from "./services/habilitacion
 export {
   listFacturasRecibidas,
   getFacturaRecibida,
+  consultarFacturaRecibida,
+  obtenerXmlFacturaRecibida,
   crearFacturaRecibida,
   eliminarFacturaRecibida,
   registrarEventoReceptor,

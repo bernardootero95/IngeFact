@@ -6,6 +6,8 @@ vi.mock("../apiClient.js", () => ({ apiRequest: (...args) => apiRequest(...args)
 import {
   listFacturasRecibidas,
   getFacturaRecibida,
+  consultarFacturaRecibida,
+  obtenerXmlFacturaRecibida,
   crearFacturaRecibida,
   eliminarFacturaRecibida,
   registrarEventoReceptor,
@@ -32,6 +34,18 @@ describe("facturasRecibidas", () => {
     apiRequest.mockResolvedValue({ id: "1" });
     await getFacturaRecibida("1");
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/facturas-recibidas/1");
+  });
+
+  it("consultarFacturaRecibida codifica el CUFE en el query string", async () => {
+    apiRequest.mockResolvedValue({});
+    await consultarFacturaRecibida("abc 123");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/facturas-recibidas/consulta?cufe=abc%20123");
+  });
+
+  it("obtenerXmlFacturaRecibida hace GET a /xml", async () => {
+    apiRequest.mockResolvedValue({});
+    await obtenerXmlFacturaRecibida("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/facturas-recibidas/1/xml");
   });
 
   it("crearFacturaRecibida hace POST con el payload", async () => {

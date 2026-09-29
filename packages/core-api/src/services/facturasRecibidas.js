@@ -9,6 +9,15 @@ export async function getFacturaRecibida(id) {
   return apiRequest(`/api/v1/tenant/facturas-recibidas/${id}`);
 }
 
+// Resumen de la factura (leido de la DIAN) antes de registrarla.
+export async function consultarFacturaRecibida(cufe) {
+  return apiRequest(`/api/v1/tenant/facturas-recibidas/consulta?cufe=${encodeURIComponent(cufe)}`);
+}
+
+export async function obtenerXmlFacturaRecibida(id) {
+  return apiRequest(`/api/v1/tenant/facturas-recibidas/${id}/xml`);
+}
+
 export async function crearFacturaRecibida(payload) {
   return apiRequest("/api/v1/tenant/facturas-recibidas", { method: "POST", body: payload });
 }
