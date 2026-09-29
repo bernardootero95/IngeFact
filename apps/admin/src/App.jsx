@@ -13,6 +13,7 @@ import ReferenceDetail from "./modules/references/pages/ReferenceDetail";
 import ReferenceFormPage from "./modules/references/pages/ReferenceFormPage";
 import Companies from "./modules/companies/pages/Companies";
 import CompanyFormPage from "./modules/companies/pages/CompanyFormPage";
+import PricingCalculator from "./modules/pricing/pages/PricingCalculator";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore();
@@ -143,6 +144,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReferenceFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/pricing"
+          element={
+            <ProtectedRoute>
+              <PricingCalculator />
             </ProtectedRoute>
           }
         />

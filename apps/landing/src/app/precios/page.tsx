@@ -12,7 +12,7 @@ import { faqJsonLd, softwareJsonLd } from "@/lib/seo";
 export const metadata: Metadata = {
   title: `Precios: paquetes desde $${new Intl.NumberFormat("es-CO").format(PRICING_PACKAGE_VALUES[0].precio)}, sin mensualidades`,
   description:
-    "Paquetes prepagados de documentos electrónicos, desde 10 hasta 5.000 documentos, válidos por 12 meses. Facturas, notas, nómina, documento soporte y eventos RADIAN.",
+    "Paquetes prepagados de documentos electrónicos, desde 10 hasta 10.000 documentos, válidos por 12 meses. Facturas, notas, nómina, documento soporte y eventos RADIAN.",
   alternates: { canonical: "/precios" },
 };
 
