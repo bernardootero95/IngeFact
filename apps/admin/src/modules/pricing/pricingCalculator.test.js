@@ -11,6 +11,7 @@ describe("calcularPrecio", () => {
     [500, 317000],
     [1500, 650000],
     [5000, 1350000],
+    // El de 10.000 no está aquí: la fórmula da $2.017.000 y se publica redondeado a $2.000.000.
   ])("con los parámetros por defecto, %i documentos valen %i como en la landing", (documentos, precio) => {
     expect(calcularPrecio(documentos).precio).toBe(precio);
   });

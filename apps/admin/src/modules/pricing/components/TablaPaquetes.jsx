@@ -1,9 +1,11 @@
 import { calcularResultado } from "../pricingCalculator";
 import { formatoNumero, formatoPesos } from "../format";
 
-// Los 7 paquetes publicados en la landing y tamaños grandes para evaluar.
-const PUBLICADOS = [10, 25, 50, 150, 500, 1500, 5000];
-const GRANDES = [10000, 20000, 50000];
+// Paquetes publicados en la landing (apps/landing/src/data/pricing.ts) y
+// tamaños grandes para evaluar. El de 10.000 se publica redondeado.
+const PUBLICADOS = [10, 25, 50, 150, 500, 1500, 5000, 10000];
+const PRECIO_PUBLICADO_REDONDEADO = { 10000: 2000000 };
+const GRANDES = [20000, 50000];
 
 export default function TablaPaquetes({ params, costos, onSelect }) {
   const filas = [...PUBLICADOS, ...GRANDES].map((documentos) => ({
@@ -21,7 +23,8 @@ export default function TablaPaquetes({ params, costos, onSelect }) {
         Todos los paquetes con estos parámetros
       </h3>
       <p className="text-xs text-neutralCustom-500 mt-0.5 mb-4">
-        Los primeros siete son los publicados en la página; los demás sirven para evaluar paquetes grandes.
+        Los primeros ocho son los publicados en la página (el de 10.000 se publica redondeado a $2.000.000); los demás
+        sirven para evaluar paquetes grandes.
       </p>
       <div className="overflow-x-auto">
         <table className="w-full text-sm tabular-nums">
@@ -52,7 +55,14 @@ export default function TablaPaquetes({ params, costos, onSelect }) {
                     </span>
                   )}
                 </td>
-                <td className="py-2 pr-4 text-right">{formatoPesos(f.precio)}</td>
+                <td className="py-2 pr-4 text-right">
+                  {formatoPesos(f.precio)}
+                  {PRECIO_PUBLICADO_REDONDEADO[f.documentos] && (
+                    <small className="block text-[11px] text-neutralCustom-500">
+                      publicado {formatoPesos(PRECIO_PUBLICADO_REDONDEADO[f.documentos])}
+                    </small>
+                  )}
+                </td>
                 <td className="py-2 pr-4 text-right">{formatoPesos(f.precioPorDocumento)}</td>
                 <td className="py-2 pr-4 text-right">{formatoPesos(f.costo.costoAnual)}</td>
                 <td className="py-2 text-right">

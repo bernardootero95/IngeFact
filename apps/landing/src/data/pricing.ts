@@ -25,6 +25,8 @@ export const PRICING_PACKAGE_VALUES = [
   { documentos: 500, precio: 317_000 },
   { documentos: 1_500, precio: 650_000 },
   { documentos: 5_000, precio: 1_350_000 },
+  // La fórmula del admin da $2.017.000; se publica redondeado (decisión del 2026-09-28).
+  { documentos: 10_000, precio: 2_000_000 },
 ] as const;
 
 export const PRICING_PACKAGES: PricingPackage[] = PRICING_PACKAGE_VALUES.map((p) =>
