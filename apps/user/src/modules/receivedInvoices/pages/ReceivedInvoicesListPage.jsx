@@ -101,12 +101,9 @@ export default function ReceivedInvoicesListPage() {
                           />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <EventoActions
-                              facturaId={f.id}
-                              eventosPermitidos={f.eventos_permitidos}
-                              finalizada={f.estado === "aceptada" || f.estado === "rechazada"}
-                            />
+                          <div className="flex items-center justify-end gap-1">
+                            <EventoActions facturaId={f.id} eventosPermitidos={f.eventos_permitidos} />
+                            <span className="mx-1 h-5 w-px bg-neutralCustom-200" aria-hidden="true" />
                             <DescargarXmlButton
                               facturaId={f.id}
                               onError={(message) => setToast({ message, type: "error" })}

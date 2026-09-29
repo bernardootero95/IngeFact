@@ -108,6 +108,7 @@ export default function RegistrarEventoForm({ eventosPermitidos, tipoInicial, ti
               key={codigo}
               role="radio"
               aria-checked={seleccionado}
+              aria-label={opcion.label}
               variant={seleccionado ? (opcion.peligro ? "danger-solid" : "primary") : "secondary"}
               onClick={() => {
                 setTipo(codigo);

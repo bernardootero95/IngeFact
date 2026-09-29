@@ -4,7 +4,7 @@ export default function EstadoBadge({ estado, label, ultimoEventoRechazado = fal
   return (
     <span className="inline-flex flex-col items-start gap-0.5">
       <span
-        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+        className={`inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-full text-xs font-medium ${
           ESTADO_BADGE[estado] || ESTADO_BADGE.sin_evento
         }`}
       >
