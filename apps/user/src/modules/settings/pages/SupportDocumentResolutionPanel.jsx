@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { getResolucionDocumentoSoporte, guardarResolucionDocumentoSoporte } from "@ingefact/core-api";
+import {
+  getResolucionDocumentoSoporte,
+  guardarResolucionDocumentoSoporte,
+  cargarResolucionDocumentoSoporteDesdeAlegra,
+  validarResolucionDocumentoSoporte,
+} from "@ingefact/core-api";
 import { validateField } from "./SupportDocumentResolutionPanel.validation";
+import AlegraResolutionPicker from "./AlegraResolutionPicker";
+import ResolutionValidationMessage from "./ResolutionValidationMessage";
+import { estadoBadge } from "./estadoBadge";
 import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
@@ -36,6 +44,9 @@ export default function SupportDocumentResolutionPanel() {
   const [loadError, setLoadError] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [isLoadingAlegra, setIsLoadingAlegra] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [opcionesAlegra, setOpcionesAlegra] = useState(null);
 
   const fetchResolucion = useCallback(async () => {
     setLoading(true);
@@ -102,6 +113,54 @@ export default function SupportDocumentResolutionPanel() {
     }
   };
 
+  const aplicarDatosAlegra = (datos) => {
+    const nextFormData = {
+      ...formData,
+      numero_resolucion: datos.numero_resolucion,
+      prefijo: datos.prefijo,
+      rango_minimo: String(datos.rango_minimo),
+      rango_maximo: String(datos.rango_maximo),
+      fecha_inicio: datos.fecha_inicio,
+      fecha_fin: datos.fecha_fin,
+    };
+    setFormData(nextFormData);
+    // Alegra puede traer el rango sin prefijo -- se marca de una vez para
+    // que el tenant sepa que debe completarlo antes de guardar.
+    setErrors({ prefijo: validateField("prefijo", nextFormData.prefijo, nextFormData) });
+    setOpcionesAlegra(null);
+  };
+
+  const handleCargarAlegra = async () => {
+    setIsLoadingAlegra(true);
+    setSaveError(null);
+    setOpcionesAlegra(null);
+    try {
+      const { resoluciones } = await cargarResolucionDocumentoSoporteDesdeAlegra();
+      if (resoluciones.length === 1) {
+        aplicarDatosAlegra(resoluciones[0]);
+      } else {
+        setOpcionesAlegra(resoluciones);
+      }
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setIsLoadingAlegra(false);
+    }
+  };
+
+  const handleValidar = async () => {
+    setIsValidating(true);
+    setSaveError(null);
+    try {
+      setResolucion(await validarResolucionDocumentoSoporte());
+    } catch (error) {
+      setSaveError(error.message);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const badge = resolucion ? estadoBadge(resolucion.estado_validacion) : null;
   const totalRango = resolucion ? resolucion.rango_maximo - resolucion.rango_minimo + 1 : 0;
   const usados = resolucion ? resolucion.consecutivo_actual - resolucion.rango_minimo : 0;
   const porcentajeUsado = totalRango > 0 ? Math.min(100, Math.round((usados / totalRango) * 100)) : 0;
@@ -134,6 +193,9 @@ export default function SupportDocumentResolutionPanel() {
                   <p className="text-xs uppercase tracking-wide opacity-90 font-medium">Resolución Activa</p>
                   <p className="text-xl font-bold mt-1">{resolucion.numero_resolucion}</p>
                 </div>
+                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${badge.className}`}>
+                  {badge.label}
+                </span>
               </div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="opacity-90">
@@ -158,7 +220,7 @@ export default function SupportDocumentResolutionPanel() {
             <h3 className="text-base font-semibold text-neutralCustom-800 mb-1">Datos de la resolución</h3>
             <p className="text-xs text-neutralCustom-500 mb-6">
               Estos valores los emite la DIAN — es una autorización de numeración separada de tu Resolución
-              DIAN de facturación.
+              DIAN de facturación. Puedes importarlos automáticamente si ya están registrados ante la DIAN.
             </p>
 
             {saveError && (
@@ -166,6 +228,16 @@ export default function SupportDocumentResolutionPanel() {
                 {saveError}
               </div>
             )}
+
+            {opcionesAlegra && (
+              <AlegraResolutionPicker
+                opciones={opcionesAlegra}
+                onSelect={aplicarDatosAlegra}
+                onCancel={() => setOpcionesAlegra(null)}
+              />
+            )}
+
+            <ResolutionValidationMessage resolucion={resolucion} />
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -331,6 +403,22 @@ export default function SupportDocumentResolutionPanel() {
             </div>
 
             <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-neutralCustom-100">
+              <Button
+                onClick={handleCargarAlegra}
+                disabled={isLoadingAlegra || isValidating || isSaving}
+                title="Importar la resolución registrada ante la DIAN"
+                loading={isLoadingAlegra}
+              >
+                Importar
+              </Button>
+              <Button
+                onClick={handleValidar}
+                disabled={!resolucion || isValidating || isSaving}
+                title="Validar la resolución guardada contra la registrada ante la DIAN"
+                loading={isValidating}
+              >
+                Validar
+              </Button>
               <Button
                 type="submit"
                 disabled={isSaving || hasErrors}

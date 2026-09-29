@@ -5,6 +5,7 @@ from src.application.resolucion_documento_soporte_service import ResolucionDocum
 from src.core.dependencies import CurrentTenant, get_current_tenant
 from src.domain.resolucion_documento_soporte import (
     GuardarResolucionDocumentoSoporteRequest,
+    ListaResolucionesDocumentoSoporteAlegraResponse,
     ResolucionDocumentoSoporteResponse,
 )
 from src.infrastructure.db.session import get_db
@@ -18,6 +19,23 @@ def obtener_resolucion(
     tenant: CurrentTenant = Depends(get_current_tenant),
 ):
     resolucion = ResolucionDocumentoSoporteService(db).obtener_o_404(tenant.empresa_id)
+    return ResolucionDocumentoSoporteResponse.from_model(resolucion)
+
+
+@router.get("/cargar-alegra", response_model=ListaResolucionesDocumentoSoporteAlegraResponse)
+def cargar_resolucion_desde_alegra(
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    return ResolucionDocumentoSoporteService(db).cargar_desde_alegra(tenant.empresa_id)
+
+
+@router.post("/validar", response_model=ResolucionDocumentoSoporteResponse)
+def validar_resolucion(
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    resolucion = ResolucionDocumentoSoporteService(db).validar_ante_alegra(tenant.empresa_id)
     return ResolucionDocumentoSoporteResponse.from_model(resolucion)
 
 

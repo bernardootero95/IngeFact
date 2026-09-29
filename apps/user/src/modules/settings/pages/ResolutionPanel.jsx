@@ -6,6 +6,9 @@ import {
   cargarResolucionDesdeAlegra,
 } from "@ingefact/core-api";
 import { validateField } from "./ResolutionPanel.validation";
+import AlegraResolutionPicker from "./AlegraResolutionPicker";
+import ResolutionValidationMessage from "./ResolutionValidationMessage";
+import { estadoBadge } from "./estadoBadge";
 import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
 const emptyForm = {
@@ -40,16 +43,6 @@ function diasParaVencer(fechaFin) {
   hoy.setHours(0, 0, 0, 0);
   const fin = new Date(`${fechaFin}T00:00:00`);
   return Math.round((fin - hoy) / (1000 * 60 * 60 * 24));
-}
-
-function estadoBadge(estadoValidacion) {
-  if (estadoValidacion === "validada") {
-    return { label: "✓ Validada ante la DIAN", className: "bg-white/20" };
-  }
-  if (estadoValidacion === "error") {
-    return { label: "⚠ Error de validación", className: "bg-fiscal-danger/30" };
-  }
-  return { label: "Pendiente de validar", className: "bg-white/20" };
 }
 
 export default function ResolutionPanel() {
@@ -279,52 +272,14 @@ export default function ResolutionPanel() {
             )}
 
             {opcionesAlegra && (
-              <div className="mb-4 border border-neutralCustom-200 rounded-brand-md p-4 space-y-3">
-                <div className="flex justify-between items-start">
-                  <p className="text-sm font-medium text-neutralCustom-800">
-                    Encontramos {opcionesAlegra.length} resoluciones
-                    registradas para tu NIT. Elige cuál importar:
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setOpcionesAlegra(null)}
-                    className="text-xs text-neutralCustom-500 hover:text-neutralCustom-700 shrink-0 ml-3"
-                  >
-                    Cancelar
-                  </button>
-                </div>
-                {opcionesAlegra.map((opcion) => (
-                  <div
-                    key={`${opcion.numero_resolucion}-${opcion.rango_minimo}`}
-                    className="flex justify-between items-center gap-3 bg-neutralCustom-100/60 rounded-brand-md p-3"
-                  >
-                    <div className="text-sm text-neutralCustom-700">
-                      <p className="font-semibold">
-                        {opcion.prefijo} · Resolución {opcion.numero_resolucion}
-                      </p>
-                      <p className="text-xs text-neutralCustom-500">
-                        Rango {opcion.rango_minimo}–{opcion.rango_maximo} ·
-                        Vigencia {opcion.fecha_inicio} a {opcion.fecha_fin}
-                      </p>
-                    </div>
-                    <Button type="button" onClick={() => aplicarDatosAlegra(opcion)}>
-                      Usar esta
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              <AlegraResolutionPicker
+                opciones={opcionesAlegra}
+                onSelect={aplicarDatosAlegra}
+                onCancel={() => setOpcionesAlegra(null)}
+              />
             )}
 
-            {resolucion?.estado_validacion === "error" && resolucion.mensaje_validacion && (
-              <div role="alert" className="mb-4 p-3 bg-red-50 border border-fiscal-danger text-fiscal-danger text-sm rounded-brand-md">
-                {resolucion.mensaje_validacion}
-              </div>
-            )}
-            {resolucion?.estado_validacion === "validada" && (
-              <div className="mb-4 p-3 bg-brand-50 border border-brand-400 text-brand-700 text-sm rounded-brand-md">
-                Resolución validada correctamente.
-              </div>
-            )}
+            <ResolutionValidationMessage resolucion={resolucion} />
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

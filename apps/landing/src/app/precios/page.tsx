@@ -4,13 +4,13 @@ import { PriceCard } from "@/components/ui/PriceCard";
 import { CustomAmountBanner } from "@/components/ui/CustomAmountBanner";
 import { FaqList } from "@/components/ui/FaqList";
 import { PricingConditions } from "@/components/ui/PricingConditions";
-import { PRICING_PACKAGES } from "@/data/pricing";
+import { PRICING_PACKAGES, PRICING_PACKAGE_VALUES } from "@/data/pricing";
 import { PRICING_FAQ } from "@/data/faq";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { faqJsonLd, softwareJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "Precios",
+  title: `Precios: paquetes desde $${new Intl.NumberFormat("es-CO").format(PRICING_PACKAGE_VALUES[0].precio)}, sin mensualidades`,
   description:
     "Paquetes prepagados de documentos electrónicos, desde 10 hasta 5.000 documentos, válidos por 12 meses. Facturas, notas, nómina, documento soporte y eventos RADIAN.",
   alternates: { canonical: "/precios" },

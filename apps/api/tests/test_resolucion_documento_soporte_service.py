@@ -7,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from src.application.resolucion_documento_soporte_service import ResolucionDocumentoSoporteService
+from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.resolucion_documento_soporte import GuardarResolucionDocumentoSoporteRequest
 from src.infrastructure.db.models import Empresa, ResolucionDocumentoSoporte
 from tests.conftest import TEST_DATABASE_URL
@@ -229,3 +230,132 @@ def test_revertir_consecutivo_no_aplica_si_otro_envio_ya_avanzo_el_contador(db_s
     )
     db_session.refresh(resolucion)
     assert resolucion.consecutivo_actual == 102
+
+
+class _FakeAlegraClient:
+    def __init__(self, response=None, error=None):
+        self._response = response
+        self._error = error
+
+    def get_resolution(self, nit: str) -> dict:
+        if self._error:
+            raise self._error
+        return self._response or {}
+
+
+def _rango_alegra(**overrides) -> dict:
+    data = {
+        "resolutionNumber": "18764000001",
+        "prefix": "DS",
+        "minNumber": 1,
+        "maxNumber": 500,
+        "startDate": "2026-01-01",
+        "endDate": "2028-01-01",
+    }
+    data.update(overrides)
+    return data
+
+
+def test_cargar_desde_alegra_lista_primero_los_rangos_sin_technical_key(db_session):
+    """Alegra mezcla rangos de facturacion y documento soporte sin campo de
+    tipo -- los de documento soporte no traen technicalKey, van primero."""
+    empresa = _crear_empresa(db_session)
+    factura = _rango_alegra(resolutionNumber="18760000001", prefix="FE", technicalKey="abc123")
+    soporte = _rango_alegra()
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [factura, soporte]})
+    )
+
+    resultado = service.cargar_desde_alegra(empresa.id)
+
+    assert [r.numero_resolucion for r in resultado.resoluciones] == ["18764000001", "18760000001"]
+    assert resultado.resoluciones[0].prefijo == "DS"
+
+
+def test_cargar_desde_alegra_rango_sin_prefijo(db_session):
+    empresa = _crear_empresa(db_session)
+    sin_prefijo = _rango_alegra()
+    del sin_prefijo["prefix"]
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [sin_prefijo]})
+    )
+
+    assert service.cargar_desde_alegra(empresa.id).resoluciones[0].prefijo == ""
+
+
+def test_cargar_desde_alegra_sin_resoluciones_da_404(db_session):
+    empresa = _crear_empresa(db_session)
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": []})
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.cargar_desde_alegra(empresa.id)
+    assert exc_info.value.status_code == 404
+
+
+def test_cargar_desde_alegra_errores_de_alegra(db_session):
+    empresa = _crear_empresa(db_session)
+    casos = [
+        (AlegraApiError(404, {"errors": [{"code": "AEP9006", "message": "Production only"}]}), 400),
+        (AlegraTransientError("timeout"), 502),
+    ]
+    for error, esperado in casos:
+        service = ResolucionDocumentoSoporteService(db_session, alegra_client=_FakeAlegraClient(error=error))
+        with pytest.raises(HTTPException) as exc_info:
+            service.cargar_desde_alegra(empresa.id)
+        assert exc_info.value.status_code == esperado
+
+
+def test_validar_ante_alegra_coincide_sin_technical_key(db_session):
+    """Documento soporte no tiene technical_key: no se compara aunque el
+    rango de Alegra lo traiga."""
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=1000, technicalKey="x")
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    resolucion = service.validar_ante_alegra(empresa.id)
+
+    assert resolucion.estado_validacion == "validada"
+    assert resolucion.fecha_ultima_validacion is not None
+
+
+def test_validar_ante_alegra_rango_como_texto(db_session):
+    """Alegra en produccion devuelve minNumber/maxNumber como string."""
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber="1", maxNumber="1000")
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    assert service.validar_ante_alegra(empresa.id).estado_validacion == "validada"
+
+
+def test_validar_ante_alegra_rango_distinto_marca_error(db_session):
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=9999)
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+
+    resolucion = service.validar_ante_alegra(empresa.id)
+
+    assert resolucion.estado_validacion == "error"
+    assert "rango guardado" in resolucion.mensaje_validacion
+
+
+def test_guardar_vuelve_a_pendiente(db_session):
+    empresa = _crear_empresa(db_session)
+    registrada = _rango_alegra(resolutionNumber="18760000002", prefix="SEDS", minNumber=1, maxNumber=1000)
+    service = ResolucionDocumentoSoporteService(
+        db_session, alegra_client=_FakeAlegraClient(response={"resolutions": [registrada]})
+    )
+    service.guardar(empresa.id, _payload())
+    service.validar_ante_alegra(empresa.id)
+
+    assert service.guardar(empresa.id, _payload()).estado_validacion == "pendiente"

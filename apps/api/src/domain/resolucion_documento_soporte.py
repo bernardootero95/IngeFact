@@ -47,6 +47,24 @@ class GuardarResolucionDocumentoSoporteRequest(BaseModel):
         return self
 
 
+class ResolucionDocumentoSoporteAlegra(BaseModel):
+    """Un rango tal como lo devuelve GET /resolutions/{nit}. Sin
+    technical_key: Documento Soporte no lo usa (ver
+    docs/alegra-investigacion.md). No se persiste; el tenant confirma con
+    "Guardar"."""
+
+    numero_resolucion: str
+    prefijo: str
+    rango_minimo: int
+    rango_maximo: int
+    fecha_inicio: date
+    fecha_fin: date
+
+
+class ListaResolucionesDocumentoSoporteAlegraResponse(BaseModel):
+    resoluciones: list[ResolucionDocumentoSoporteAlegra]
+
+
 class ResolucionDocumentoSoporteResponse(BaseModel):
     id: str
     numero_resolucion: str
@@ -56,6 +74,9 @@ class ResolucionDocumentoSoporteResponse(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     consecutivo_actual: int
+    estado_validacion: str
+    mensaje_validacion: str | None
+    fecha_ultima_validacion: datetime | None
     creado: datetime
 
     @staticmethod
@@ -69,5 +90,8 @@ class ResolucionDocumentoSoporteResponse(BaseModel):
             fecha_inicio=resolucion.fecha_inicio,
             fecha_fin=resolucion.fecha_fin,
             consecutivo_actual=resolucion.consecutivo_actual,
+            estado_validacion=resolucion.estado_validacion,
+            mensaje_validacion=resolucion.mensaje_validacion,
+            fecha_ultima_validacion=resolucion.fecha_ultima_validacion,
             creado=resolucion.creado,
         )

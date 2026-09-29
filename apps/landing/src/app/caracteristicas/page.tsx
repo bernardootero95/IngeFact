@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteLayout } from "@/components/layout/SiteLayout";
+import Link from "next/link";
 import { PrimaryButton } from "@/components/ui/Button";
 import { FEATURE_CATEGORIES } from "@/data/features";
 
@@ -37,7 +38,17 @@ export default function CaracteristicasPage() {
               <h2 id={`categoria-${index}`} className="mb-1 text-[22px] font-extrabold text-neutralCustom-800">
                 {category.title}
               </h2>
-              <p className="text-sm text-neutralCustom-500">{category.intro}</p>
+              <p className="text-sm text-neutralCustom-500">
+                {category.intro}
+                {category.href && (
+                  <>
+                    {" "}
+                    <Link href={category.href} className="font-semibold text-brand-600 underline-offset-4 hover:underline">
+                      Ver más sobre {category.title.toLowerCase()}
+                    </Link>
+                  </>
+                )}
+              </p>
             </div>
           </div>
           <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
