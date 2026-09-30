@@ -213,6 +213,32 @@ def test_eliminar_borrador_es_soft_delete(db_session):
         service.obtener(empresa.id, documento.id)
 
 
+def test_duplicar_crea_borrador_nuevo_con_proveedor_y_lineas(db_session):
+    empresa = _crear_empresa(db_session)
+    proveedor = _crear_proveedor(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = DocumentoSoporteService(db_session)
+    original = service.crear_borrador(
+        empresa.id,
+        _payload(
+            proveedor.id,
+            producto.id,
+            fecha=date(2026, 1, 15),
+            lineas=[LineaDocumentoSoporteRequest(producto_id=producto.id, cantidad=4, precio_unitario=5000)],
+        ),
+    )
+
+    copia = service.duplicar(empresa.id, original.id)
+
+    assert copia.id != original.id
+    assert copia.estado == "borrador"
+    assert copia.proveedor_id == proveedor.id
+    assert copia.fecha != date(2026, 1, 15)
+    assert [(float(l.cantidad), float(l.precio_unitario)) for l in copia.lineas] == [(4, 5000)]
+    assert float(copia.total) == 20000
+    assert len(service.listar(empresa.id)) == 2
+
+
 def test_enviar_sin_resolucion_falla_404(db_session):
     empresa = _crear_empresa(db_session)
     proveedor = _crear_proveedor(db_session, empresa.id)

@@ -14,7 +14,7 @@ from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper,
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error
 from src.core.documento_soporte_pdf import generar_representacion_pdf_documento_soporte
-from src.core.tiempo import fecha_documento_colombia
+from src.core.tiempo import fecha_documento_colombia, hoy_colombia
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -277,6 +277,33 @@ class DocumentoSoporteService:
         self.db.commit()
         self.db.refresh(documento)
         return self.obtener(empresa_id, documento.id)
+
+    def duplicar(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> DocumentoSoporte:
+        """Borrador nuevo con el proveedor, las lineas y la forma/metodo de
+        pago de otro documento (en cualquier estado) -- mismo criterio que
+        FacturaService.duplicar: fecha de hoy y lineas desde el catalogo."""
+        original = self.obtener(empresa_id, documento_id)
+        copia = self.crear_borrador(
+            empresa_id,
+            CrearDocumentoSoporteRequest(
+                proveedor_id=original.proveedor_id,
+                fecha=hoy_colombia(),
+                lineas=[
+                    LineaDocumentoSoporteRequest(
+                        producto_id=linea.producto_id,
+                        cantidad=float(linea.cantidad),
+                        # Precio 0 (producto sin precio) no pasa el validador del request.
+                        precio_unitario=float(linea.precio_unitario) or None,
+                    )
+                    for linea in original.lineas
+                ],
+            ),
+        )
+        copia.forma_pago = original.forma_pago
+        copia.metodo_pago = original.metodo_pago
+        self.db.add(copia)
+        self.db.commit()
+        return self.obtener(empresa_id, copia.id)
 
     def eliminar_borrador(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> None:
         documento = self._obtener_editable(empresa_id, documento_id)

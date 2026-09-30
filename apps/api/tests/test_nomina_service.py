@@ -200,6 +200,28 @@ def test_eliminar_borrador_es_soft_delete(db_session):
         service.obtener(empresa.id, nomina.id)
 
 
+def test_duplicar_nomina_aceptada_crea_borrador_con_los_mismos_datos(db_session):
+    empresa = _crear_empresa(db_session)
+    empleado = _crear_empleado(db_session, empresa.id)
+    service = NominaService(db_session, alegra_client=_FakeAlegraClient())
+    original = service.crear_borrador(empresa.id, _payload(empleado.id, notas="Pago septiembre"))
+    service.enviar(empresa.id, original.id)
+
+    copia = service.duplicar(empresa.id, original.id)
+
+    assert copia.id != original.id
+    assert copia.estado == "borrador"
+    assert copia.consecutivo is None and copia.numero_completo is None and copia.cune is None
+    assert copia.empleado_id == empleado.id
+    assert copia.empleado_snapshot["PrimerNombre"] == "Juan"
+    assert copia.devengados == original.devengados
+    assert copia.deducciones == original.deducciones
+    assert copia.fecha_pago == original.fecha_pago
+    assert float(copia.comprobante_total) == 1840000
+    assert copia.notas == "Pago septiembre"
+    assert len(service.listar(empresa.id)) == 2
+
+
 def test_enviar_incrementa_consecutivo_y_marca_aceptada(db_session):
     empresa = _crear_empresa(db_session)
     empleado = _crear_empleado(db_session, empresa.id)
