@@ -1,9 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listNomina, obtenerRepresentacionPdfNomina, enviarNominaPorCorreo } from "@ingefact/core-api";
+import {
+  listNomina,
+  obtenerRepresentacionPdfNomina,
+  enviarNominaPorCorreo,
+  eliminarBorradorNomina,
+  duplicarNomina,
+} from "@ingefact/core-api";
 import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
+import FiltrosListado from "../../../components/documentos/FiltrosListado";
+import EliminarBorradorAccion from "../../../components/documentos/EliminarBorradorAccion";
+import DuplicarAccion from "../../../components/documentos/DuplicarAccion";
+import useListadoDocumentos from "../../../hooks/useListadoDocumentos";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
@@ -25,11 +35,13 @@ const ESTADO_LABEL = {
   anulada: "Anulada",
 };
 
+const ESTADOS = Object.entries(ESTADO_LABEL).map(([value, label]) => ({ value, label }));
+
 export default function PayrollsListPage() {
   const navigate = useNavigate();
-  const [nominas, setNominas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const listado = useListadoDocumentos(listNomina, {
+    searchKeys: ["numero_completo", "empleado_nombre", "fecha_liquidacion_fin"],
+  });
   const [toast, setToast] = useState({ message: null, type: "success" });
 
   const handleVerRepresentacion = (nomina) =>
@@ -41,23 +53,26 @@ export default function PayrollsListPage() {
       onError: (message) => setToast({ message, type: "error" }),
     });
 
-  const fetchNominas = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
+  const handleEliminar = async (nomina) => {
     try {
-      setNominas(await listNomina());
+      await eliminarBorradorNomina(nomina.id);
+      listado.quitar(nomina.id);
+      setToast({ message: "Borrador de nómina eliminado.", type: "success" });
     } catch (error) {
-      setLoadError(error.message);
-    } finally {
-      setLoading(false);
+      setToast({ message: error.message, type: "error" });
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchNominas();
-  }, [fetchNominas]);
+  const handleDuplicar = async (nomina) => {
+    try {
+      const copia = await duplicarNomina(nomina.id);
+      navigate(`/payroll/${copia.id}/edit`);
+    } catch (error) {
+      setToast({ message: error.message, type: "error" });
+    }
+  };
 
-  const view = useTableView(nominas);
+  const view = useTableView(listado.filtrados);
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -78,16 +93,25 @@ export default function PayrollsListPage() {
 
         <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
-            {loading ? (
+            <FiltrosListado
+              search={listado.search}
+              onSearch={listado.setSearch}
+              placeholder="Buscar por número, empleado o fecha..."
+              estado={listado.estado}
+              onEstado={listado.setEstado}
+              estados={ESTADOS}
+            />
+
+            {listado.loading ? (
               <TableSkeleton columns={6} label="Cargando..." />
-            ) : loadError ? (
+            ) : listado.loadError ? (
               <div className="p-12 text-center">
-                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
-                <Button onClick={fetchNominas} variant="danger">
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {listado.loadError}</p>
+                <Button onClick={listado.recargar} variant="danger">
                   Reintentar
                 </Button>
               </div>
-            ) : nominas.length > 0 ? (
+            ) : listado.filtrados.length > 0 ? (
               <>
                 <table className="w-full text-left text-sm text-neutralCustom-600">
                   <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
@@ -154,6 +178,10 @@ export default function PayrollsListPage() {
                                 </svg>
                               </IconButton>
                             )}
+                            <DuplicarAccion onDuplicar={() => handleDuplicar(n)} />
+                            {(n.estado === "borrador" || n.estado === "rechazada") && (
+                              <EliminarBorradorAccion mensaje="¿Eliminar este comprobante de nómina?" onEliminar={() => handleEliminar(n)} />
+                            )}
                             <IconButton title="Ver detalle" onClick={() => navigate(`/payroll/${n.id}`)}>
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path
@@ -190,13 +218,19 @@ export default function PayrollsListPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-base font-bold text-neutralCustom-800 mb-1">No tienes comprobantes de Nómina registrados</h3>
+                <h3 className="text-base font-bold text-neutralCustom-800 mb-1">
+                  {listado.hayFiltros ? "No se encontraron comprobantes" : "No tienes comprobantes de Nómina registrados"}
+                </h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
-                  Crea el primer comprobante de nómina electrónica para un empleado.
+                  {listado.hayFiltros
+                    ? "Prueba con otra búsqueda o filtro."
+                    : "Crea el primer comprobante de nómina electrónica para un empleado."}
                 </p>
-                <Button onClick={() => navigate("/payroll/new")} variant="primary">
-                  Nuevo comprobante
-                </Button>
+                {!listado.hayFiltros && (
+                  <Button onClick={() => navigate("/payroll/new")} variant="primary">
+                    Nuevo comprobante
+                  </Button>
+                )}
               </div>
             )}
           </div>

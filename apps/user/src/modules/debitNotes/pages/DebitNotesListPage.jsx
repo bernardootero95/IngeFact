@@ -1,16 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listNotasDebito, obtenerRepresentacionPdfNotaDebito, enviarNotaDebitoPorCorreo } from "@ingefact/core-api";
+import { listNotasDebito, obtenerRepresentacionPdfNotaDebito, enviarNotaDebitoPorCorreo, eliminarBorradorNotaDebito } from "@ingefact/core-api";
 import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
+import FiltrosListado from "../../../components/documentos/FiltrosListado";
+import EliminarBorradorAccion from "../../../components/documentos/EliminarBorradorAccion";
+import useListadoDocumentos from "../../../hooks/useListadoDocumentos";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);
 
 const ESTADOS = [
-  { value: "", label: "Todos los estados" },
   { value: "borrador", label: "Borrador" },
   { value: "enviada", label: "Enviada" },
   { value: "aceptada", label: "Aceptada" },
@@ -31,12 +33,13 @@ const ESTADO_LABEL = {
   rechazada: "Rechazada",
 };
 
+const cargarNotas = () => listNotasDebito();
+
 export default function DebitNotesListPage() {
   const navigate = useNavigate();
-  const [notas, setNotas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
-  const [estado, setEstado] = useState("");
+  const listado = useListadoDocumentos(cargarNotas, {
+    searchKeys: ["numero_completo", "factura_numero_completo", "cliente_nombre", "fecha"],
+  });
   const [toast, setToast] = useState({ message: null, type: "success" });
 
   const handleVerRepresentacion = (nota) =>
@@ -48,25 +51,17 @@ export default function DebitNotesListPage() {
       onError: (message) => setToast({ message, type: "error" }),
     });
 
-  const fetchNotas = useCallback(async (estadoFiltro) => {
-    setLoading(true);
-    setLoadError(null);
+  const handleEliminar = async (nota) => {
     try {
-      const data = await listNotasDebito({ estado: estadoFiltro || undefined });
-      setNotas(data);
+      await eliminarBorradorNotaDebito(nota.id);
+      listado.quitar(nota.id);
+      setToast({ message: "Borrador de nota débito eliminado.", type: "success" });
     } catch (error) {
-      setLoadError(error.message);
-    } finally {
-      setLoading(false);
+      setToast({ message: error.message, type: "error" });
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchNotas(estado);
-  }, [fetchNotas, estado]);
-
-
-  const view = useTableView(notas);
+  const view = useTableView(listado.filtrados);
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -81,34 +76,28 @@ export default function DebitNotesListPage() {
 
         <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
-            <div className="p-4 border-b border-neutralCustom-100 bg-neutralCustom-50/50 flex justify-end items-center gap-3">
-              <select
-                value={estado}
-                aria-label="Filtrar por estado"
-                onChange={(e) => setEstado(e.target.value)}
-                className="field"
-              >
-                {ESTADOS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <FiltrosListado
+              search={listado.search}
+              onSearch={listado.setSearch}
+              placeholder="Buscar por número, factura, cliente o fecha..."
+              estado={listado.estado}
+              onEstado={listado.setEstado}
+              estados={ESTADOS}
+            />
 
-            {loading ? (
+            {listado.loading ? (
               <TableSkeleton columns={7} label="Cargando notas débito..." />
-            ) : loadError ? (
+            ) : listado.loadError ? (
               <div className="p-12 text-center">
-                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar las notas: {listado.loadError}</p>
                 <Button
-                  onClick={() => fetchNotas(estado)}
+                  onClick={listado.recargar}
                   variant="danger"
                 >
                   Reintentar
                 </Button>
               </div>
-            ) : notas.length > 0 ? (
+            ) : listado.filtrados.length > 0 ? (
               <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
@@ -191,6 +180,12 @@ export default function DebitNotesListPage() {
                               </svg>
                             </IconButton>
                           )}
+                          {(n.estado === "borrador" || n.estado === "rechazada") && (
+                            <EliminarBorradorAccion
+                              mensaje="¿Eliminar este borrador de nota débito?"
+                              onEliminar={() => handleEliminar(n)}
+                            />
+                          )}
                           <IconButton title="Ver detalle" onClick={() => navigate(`/debit-notes/${n.id}`)}>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path
@@ -228,10 +223,10 @@ export default function DebitNotesListPage() {
                   </svg>
                 </div>
                 <h3 className="text-base font-bold text-neutralCustom-800 mb-1">
-                  {estado ? "No se encontraron notas débito" : "No tienes notas débito registradas"}
+                  {listado.hayFiltros ? "No se encontraron notas débito" : "No tienes notas débito registradas"}
                 </h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
-                  {estado
+                  {listado.hayFiltros
                     ? "Prueba con otro filtro."
                     : "Crea una nota débito desde el detalle de una factura aceptada."}
                 </p>
