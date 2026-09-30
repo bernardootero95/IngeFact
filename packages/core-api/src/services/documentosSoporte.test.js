@@ -13,6 +13,7 @@ import {
   crearBorradorDocumentoSoporte,
   actualizarBorradorDocumentoSoporte,
   eliminarBorradorDocumentoSoporte,
+  duplicarDocumentoSoporte,
   enviarDocumentoSoporte,
   obtenerFirmaDigitalDocumentoSoporte,
   obtenerRepresentacionPdfDocumentoSoporte,
@@ -67,6 +68,12 @@ describe("documentosSoporte", () => {
     apiRequest.mockResolvedValue(null);
     await eliminarBorradorDocumentoSoporte("1");
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1", { method: "DELETE" });
+  });
+
+  it("duplicarDocumentoSoporte hace POST a /duplicar", async () => {
+    apiRequest.mockResolvedValue({ id: "2" });
+    await duplicarDocumentoSoporte("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/documentos-soporte/1/duplicar", { method: "POST" });
   });
 
   it("enviarDocumentoSoporte hace POST con forma_pago/metodo_pago", async () => {

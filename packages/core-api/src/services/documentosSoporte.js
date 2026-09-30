@@ -24,6 +24,11 @@ export async function eliminarBorradorDocumentoSoporte(id) {
   return apiRequest(`/api/v1/tenant/documentos-soporte/${id}`, { method: "DELETE" });
 }
 
+/** Crea un borrador nuevo con los datos del documento `id` (en cualquier estado). */
+export async function duplicarDocumentoSoporte(id) {
+  return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/duplicar`, { method: "POST" });
+}
+
 export async function enviarDocumentoSoporte(id, payload) {
   return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/enviar`, { method: "POST", body: payload });
 }
