@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { compareValues, sortItems, getPageWindow } from "./tableView.js";
+import { compareValues, sortItems, getPageWindow, getPageItems, filterItems } from "./tableView.js";
 
 describe("compareValues", () => {
   it("ordena numeros por valor y no como texto", () => {
@@ -54,5 +54,51 @@ describe("getPageWindow", () => {
 
   it("lista vacia: una pagina y rango 0-0", () => {
     expect(getPageWindow(0, 1, 25)).toMatchObject({ page: 1, totalPages: 1, from: 0, to: 0 });
+  });
+});
+
+describe("getPageItems", () => {
+  it("pocas paginas: las muestra todas", () => {
+    expect(getPageItems(1, 1)).toEqual([1]);
+    expect(getPageItems(2, 4)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("en medio de muchas paginas: primera, vecinas de la actual y ultima", () => {
+    expect(getPageItems(10, 20)).toEqual([1, "…", 9, 10, 11, "…", 20]);
+  });
+
+  it("en los extremos no repite ni sale del rango", () => {
+    expect(getPageItems(1, 20)).toEqual([1, 2, "…", 20]);
+    expect(getPageItems(20, 20)).toEqual([1, "…", 19, 20]);
+  });
+
+  it("no pone un salto que esconda una sola pagina", () => {
+    expect(getPageItems(4, 20)).toEqual([1, 2, 3, 4, 5, "…", 20]);
+    expect(getPageItems(17, 20)).toEqual([1, "…", 16, 17, 18, 19, 20]);
+  });
+});
+
+describe("filterItems", () => {
+  const items = [
+    { id: 1, numero: "FE12", cliente: "José Pérez" },
+    { id: 2, numero: "FE120", cliente: "Ana Gómez" },
+    { id: 3, numero: null, cliente: "Pedro Ruiz" },
+  ];
+
+  it("sin busqueda devuelve la misma lista", () => {
+    expect(filterItems(items, ["numero", "cliente"], "  ")).toBe(items);
+  });
+
+  it("ignora mayusculas y acentos", () => {
+    expect(filterItems(items, ["numero", "cliente"], "PEREZ").map((i) => i.id)).toEqual([1]);
+  });
+
+  it("cada palabra debe aparecer en alguna columna", () => {
+    expect(filterItems(items, ["numero", "cliente"], "fe12 jose").map((i) => i.id)).toEqual([1]);
+    expect(filterItems(items, ["numero", "cliente"], "fe12").map((i) => i.id)).toEqual([1, 2]);
+  });
+
+  it("tolera columnas vacias", () => {
+    expect(filterItems(items, ["numero", "cliente"], "ruiz").map((i) => i.id)).toEqual([3]);
   });
 });

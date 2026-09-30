@@ -5,12 +5,13 @@ import { getPageWindow, sortItems } from "../utils/tableView.js";
  * Orden por columna + paginacion en el cliente para los listados (la API
  * devuelve la lista completa). Clic en una columna: ascendente -> descendente ->
  * orden original. Al cambiar el filtro (cambia la cantidad o el primer
- * registro) vuelve a la pagina 1.
+ * registro) o el tamano de pagina vuelve a la pagina 1.
  *
  * Devuelve `rows` (la pagina actual) y `pagination` listo para <Pagination />.
  */
-export default function useTableView(items, { pageSize = 25, initialSort = null } = {}) {
+export default function useTableView(items, { pageSize: initialPageSize = 25, initialSort = null } = {}) {
   const [sort, setSort] = useState(initialSort);
+  const [pageSize, setPageSizeState] = useState(initialPageSize);
   const signature = `${items.length}:${items[0]?.id ?? ""}`;
   const [pageState, setPageState] = useState({ page: 1, signature });
 
@@ -20,6 +21,11 @@ export default function useTableView(items, { pageSize = 25, initialSort = null 
   const rows = useMemo(() => sorted.slice(start, end), [sorted, start, end]);
 
   const setPage = (next) => setPageState({ page: getPageWindow(sorted.length, next, pageSize).page, signature });
+
+  const setPageSize = (next) => {
+    setPageSizeState(next);
+    setPageState({ page: 1, signature });
+  };
 
   const toggleSort = (key) => {
     setSort((prev) => {
@@ -33,6 +39,6 @@ export default function useTableView(items, { pageSize = 25, initialSort = null 
     rows,
     sort,
     toggleSort,
-    pagination: { page, totalPages, total: sorted.length, from, to, onPage: setPage },
+    pagination: { page, totalPages, total: sorted.length, from, to, pageSize, onPage: setPage, onPageSize: setPageSize },
   };
 }
