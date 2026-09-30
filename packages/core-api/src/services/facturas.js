@@ -24,6 +24,11 @@ export async function eliminarBorradorFactura(id) {
   return apiRequest(`/api/v1/tenant/facturas/${id}`, { method: "DELETE" });
 }
 
+/** Crea un borrador nuevo con los datos de la factura `id` (en cualquier estado). */
+export async function duplicarFactura(id) {
+  return apiRequest(`/api/v1/tenant/facturas/${id}/duplicar`, { method: "POST" });
+}
+
 export async function enviarFactura(id, payload) {
   return apiRequest(`/api/v1/tenant/facturas/${id}/enviar`, { method: "POST", body: payload });
 }

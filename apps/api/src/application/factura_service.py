@@ -16,7 +16,7 @@ from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error
 from src.core.calculo_linea import base_gravable_iva, calcular_linea
-from src.core.tiempo import fecha_documento_colombia
+from src.core.tiempo import fecha_documento_colombia, hoy_colombia
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
@@ -313,6 +313,35 @@ class FacturaService:
         self.db.commit()
         self.db.refresh(factura)
         return self.obtener(empresa_id, factura.id)
+
+    def duplicar(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> Factura:
+        """Crea un borrador nuevo con el cliente, las lineas y la forma/metodo
+        de pago de otra factura (en cualquier estado). La fecha pasa a hoy y
+        las lineas se reconstruyen desde el catalogo actual -- igual que al
+        guardar un borrador a mano -- asi un producto eliminado falla con 404
+        en vez de copiar un snapshot que ya no se podria editar."""
+        original = self.obtener(empresa_id, factura_id)
+        copia = self.crear_borrador(
+            empresa_id,
+            CrearFacturaRequest(
+                cliente_id=original.cliente_id,
+                fecha=hoy_colombia(),
+                lineas=[
+                    LineaFacturaRequest(
+                        producto_id=linea.producto_id,
+                        cantidad=float(linea.cantidad),
+                        # Precio 0 (producto sin precio) no pasa el validador del request.
+                        precio_unitario=float(linea.precio_unitario) or None,
+                    )
+                    for linea in original.lineas
+                ],
+            ),
+        )
+        copia.forma_pago = original.forma_pago
+        copia.metodo_pago = original.metodo_pago
+        self.db.add(copia)
+        self.db.commit()
+        return self.obtener(empresa_id, copia.id)
 
     def eliminar_borrador(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> None:
         factura = self._obtener_editable(empresa_id, factura_id)

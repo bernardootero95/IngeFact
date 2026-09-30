@@ -1,13 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   listDocumentosSoporte,
   obtenerRepresentacionPdfDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
+  eliminarBorradorDocumentoSoporte,
+  duplicarDocumentoSoporte,
 } from "@ingefact/core-api";
 import { ToastAlert, Button, IconButton, TableSkeleton, useTableView, SortableTh, Pagination, ClickableRow } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import EnviarCorreoPopover from "../../../components/EnviarCorreoPopover";
+import FiltrosListado from "../../../components/documentos/FiltrosListado";
+import EliminarBorradorAccion from "../../../components/documentos/EliminarBorradorAccion";
+import DuplicarAccion from "../../../components/documentos/DuplicarAccion";
+import useListadoDocumentos from "../../../hooks/useListadoDocumentos";
 import { abrirRepresentacion } from "../../../utils/representacionPdf";
 
 const formatCOP = (value) =>
@@ -22,11 +28,13 @@ const ESTADO_BADGE = {
 
 const ESTADO_LABEL = { borrador: "Borrador", enviado: "Enviado", aceptado: "Aceptado", rechazado: "Rechazado" };
 
+const ESTADOS = Object.entries(ESTADO_LABEL).map(([value, label]) => ({ value, label }));
+
 export default function SupportDocumentsListPage() {
   const navigate = useNavigate();
-  const [documentos, setDocumentos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const listado = useListadoDocumentos(listDocumentosSoporte, {
+    searchKeys: ["numero_completo", "proveedor_nombre", "fecha"],
+  });
   const [toast, setToast] = useState({ message: null, type: "success" });
 
   const handleVerRepresentacion = (documento) =>
@@ -38,24 +46,26 @@ export default function SupportDocumentsListPage() {
       onError: (message) => setToast({ message, type: "error" }),
     });
 
-  const fetchDocumentos = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
+  const handleEliminar = async (documento) => {
     try {
-      setDocumentos(await listDocumentosSoporte());
+      await eliminarBorradorDocumentoSoporte(documento.id);
+      listado.quitar(documento.id);
+      setToast({ message: "Borrador de documento soporte eliminado.", type: "success" });
     } catch (error) {
-      setLoadError(error.message);
-    } finally {
-      setLoading(false);
+      setToast({ message: error.message, type: "error" });
     }
-  }, []);
+  };
 
-  useEffect(() => {
-    fetchDocumentos();
-  }, [fetchDocumentos]);
+  const handleDuplicar = async (documento) => {
+    try {
+      const copia = await duplicarDocumentoSoporte(documento.id);
+      navigate(`/support-documents/${copia.id}/edit`);
+    } catch (error) {
+      setToast({ message: error.message, type: "error" });
+    }
+  };
 
-
-  const view = useTableView(documentos);
+  const view = useTableView(listado.filtrados);
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
@@ -81,19 +91,28 @@ export default function SupportDocumentsListPage() {
 
         <div className="p-4 md:p-8 flex-1 overflow-y-auto">
           <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm flex flex-col overflow-x-auto">
-            {loading ? (
+            <FiltrosListado
+              search={listado.search}
+              onSearch={listado.setSearch}
+              placeholder="Buscar por número, proveedor o fecha..."
+              estado={listado.estado}
+              onEstado={listado.setEstado}
+              estados={ESTADOS}
+            />
+
+            {listado.loading ? (
               <TableSkeleton columns={6} label="Cargando..." />
-            ) : loadError ? (
+            ) : listado.loadError ? (
               <div className="p-12 text-center">
-                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {loadError}</p>
+                <p role="alert" className="text-sm text-fiscal-danger mb-3">No se pudieron cargar: {listado.loadError}</p>
                 <Button
-                  onClick={fetchDocumentos}
+                  onClick={listado.recargar}
                   variant="danger"
                 >
                   Reintentar
                 </Button>
               </div>
-            ) : documentos.length > 0 ? (
+            ) : listado.filtrados.length > 0 ? (
               <>
               <table className="w-full text-left text-sm text-neutralCustom-600">
                 <thead className="bg-neutralCustom-50 text-neutralCustom-500 text-xs uppercase border-b border-neutralCustom-100">
@@ -164,6 +183,10 @@ export default function SupportDocumentsListPage() {
                               </svg>
                             </IconButton>
                           )}
+                          <DuplicarAccion onDuplicar={() => handleDuplicar(d)} />
+                          {(d.estado === "borrador" || d.estado === "rechazado") && (
+                            <EliminarBorradorAccion mensaje="¿Eliminar este documento soporte?" onEliminar={() => handleEliminar(d)} />
+                          )}
                           <IconButton title="Ver detalle" onClick={() => navigate(`/support-documents/${d.id}`)}>
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path
@@ -201,17 +224,18 @@ export default function SupportDocumentsListPage() {
                   </svg>
                 </div>
                 <h3 className="text-base font-bold text-neutralCustom-800 mb-1">
-                  No tienes Documentos Soporte registrados
+                  {listado.hayFiltros ? "No se encontraron documentos soporte" : "No tienes Documentos Soporte registrados"}
                 </h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
-                  Crea uno para soportar una compra a un proveedor no obligado a facturar electrónicamente.
+                  {listado.hayFiltros
+                    ? "Prueba con otra búsqueda o filtro."
+                    : "Crea uno para soportar una compra a un proveedor no obligado a facturar electrónicamente."}
                 </p>
-                <Button
-                  onClick={() => navigate("/support-documents/new")}
-                  variant="primary"
-                >
-                  Nuevo documento
-                </Button>
+                {!listado.hayFiltros && (
+                  <Button onClick={() => navigate("/support-documents/new")} variant="primary">
+                    Nuevo documento
+                  </Button>
+                )}
               </div>
             )}
           </div>

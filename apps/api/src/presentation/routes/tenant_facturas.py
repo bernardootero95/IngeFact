@@ -60,6 +60,16 @@ def actualizar_borrador(
     return FacturaResponse.from_model(factura)
 
 
+@router.post("/{factura_id}/duplicar", response_model=FacturaResponse, status_code=201)
+def duplicar_factura(
+    factura_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    factura = FacturaService(db).duplicar(tenant.empresa_id, factura_id)
+    return FacturaResponse.from_model(factura)
+
+
 @router.delete("/{factura_id}", status_code=204)
 def eliminar_borrador(
     factura_id: uuid.UUID,

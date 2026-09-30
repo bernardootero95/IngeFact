@@ -53,6 +53,16 @@ def actualizar_borrador(
     return NominaResponse.from_model(nomina)
 
 
+@router.post("/{nomina_id}/duplicar", response_model=NominaResponse, status_code=201)
+def duplicar_nomina(
+    nomina_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    nomina = NominaService(db).duplicar(tenant.empresa_id, nomina_id)
+    return NominaResponse.from_model(nomina)
+
+
 @router.delete("/{nomina_id}", status_code=204)
 def eliminar_borrador(
     nomina_id: uuid.UUID,

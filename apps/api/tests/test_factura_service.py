@@ -241,6 +241,53 @@ def test_eliminar_borrador_es_soft_delete(db_session):
         service.obtener(empresa.id, factura.id)
 
 
+def test_duplicar_factura_aceptada_crea_borrador_nuevo_con_las_mismas_lineas(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(
+        response={"invoice": {"id": "inv-1", "cufe": "cufe-1", "fullNumber": "SETP1", "legalStatus": "ACCEPTED"}}
+    )
+    service = FacturaService(db_session, alegra_client=fake)
+    original = service.crear_borrador(
+        empresa.id,
+        _payload(
+            cliente.id,
+            producto.id,
+            fecha=date(2026, 1, 15),
+            lineas=[LineaFacturaRequest(producto_id=producto.id, cantidad=3, precio_unitario=120000)],
+        ),
+    )
+    service.enviar(empresa.id, original.id, forma_pago="1", metodo_pago="10")
+
+    copia = service.duplicar(empresa.id, original.id)
+
+    assert copia.id != original.id
+    assert copia.estado == "borrador"
+    assert copia.consecutivo is None and copia.numero_completo is None and copia.cufe is None
+    assert copia.cliente_id == cliente.id
+    assert copia.fecha != date(2026, 1, 15)
+    assert copia.forma_pago == "1" and copia.metodo_pago == "10"
+    assert [(float(l.cantidad), float(l.precio_unitario)) for l in copia.lineas] == [(3, 120000)]
+    assert float(copia.total) == float(original.total)
+    assert len(service.listar(empresa.id)) == 2
+
+
+def test_duplicar_factura_de_otro_tenant_falla_404(db_session):
+    empresa_a = _crear_empresa(db_session)
+    empresa_b = _crear_empresa(db_session, numero_identificacion="900618468", id_alegra="alegra-empresa-2")
+    cliente_a = _crear_cliente(db_session, empresa_a.id)
+    producto_a = _crear_producto(db_session, empresa_a.id)
+    service = FacturaService(db_session)
+    factura = service.crear_borrador(empresa_a.id, _payload(cliente_a.id, producto_a.id))
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.duplicar(empresa_b.id, factura.id)
+    assert exc_info.value.status_code == 404
+
+
 def test_actualizar_o_eliminar_factura_no_borrador_falla_409(db_session):
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)

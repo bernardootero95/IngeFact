@@ -21,6 +21,11 @@ export async function eliminarBorradorNomina(id) {
   return apiRequest(`/api/v1/tenant/nomina/${id}`, { method: "DELETE" });
 }
 
+/** Crea un borrador nuevo con los datos de la nomina `id` (en cualquier estado). */
+export async function duplicarNomina(id) {
+  return apiRequest(`/api/v1/tenant/nomina/${id}/duplicar`, { method: "POST" });
+}
+
 export async function enviarNomina(id) {
   return apiRequest(`/api/v1/tenant/nomina/${id}/enviar`, { method: "POST" });
 }

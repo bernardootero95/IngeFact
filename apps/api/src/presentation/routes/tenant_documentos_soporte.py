@@ -60,6 +60,16 @@ def actualizar_borrador(
     return DocumentoSoporteResponse.from_model(documento)
 
 
+@router.post("/{documento_id}/duplicar", response_model=DocumentoSoporteResponse, status_code=201)
+def duplicar_documento_soporte(
+    documento_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    documento = DocumentoSoporteService(db).duplicar(tenant.empresa_id, documento_id)
+    return DocumentoSoporteResponse.from_model(documento)
+
+
 @router.delete("/{documento_id}", status_code=204)
 def eliminar_borrador(
     documento_id: uuid.UUID,

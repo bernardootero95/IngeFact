@@ -1,3 +1,4 @@
+import copy
 import uuid
 from datetime import datetime, timezone
 
@@ -59,6 +60,25 @@ def _construir_trabajador_snapshot(empleado: Empleado) -> dict:
         "Sueldo": float(empleado.sueldo),
         "CodigoTrabajador": empleado.codigo_trabajador,
     }
+
+
+_CAMPOS_EDITABLES = (
+    "periodo_nomina",
+    "fecha_liquidacion_inicio",
+    "fecha_liquidacion_fin",
+    "fecha_pago",
+    "forma_pago",
+    "metodo_pago",
+    "banco",
+    "tipo_cuenta",
+    "numero_cuenta",
+    "devengados",
+    "deducciones",
+    "devengados_total",
+    "deducciones_total",
+    "comprobante_total",
+    "notas",
+)
 
 
 class NominaService:
@@ -170,6 +190,27 @@ class NominaService:
             "comprobante_total": data.comprobante_total,
             "notas": data.notas,
         }
+
+    def duplicar(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> Nomina:
+        """Borrador nuevo con el empleado, periodo, pago, devengados y
+        deducciones de otra nomina (en cualquier estado). El periodo y las
+        fechas se copian tal cual -- el caso tipico es repetir la nomina del
+        mes anterior y ajustar fechas antes de enviar. El snapshot del
+        Trabajador se toma del Empleado actual, igual que al crear."""
+        original = self.obtener(empresa_id, nomina_id)
+        empleado = self._validar_empleado(empresa_id, original.empleado_id)
+        copia = Nomina(
+            empresa_id=empresa_id,
+            empleado_id=empleado.id,
+            estado="borrador",
+            empleado_snapshot=_construir_trabajador_snapshot(empleado),
+            # deepcopy: devengados/deducciones/fecha_pago son JSONB mutables.
+            **{campo: copy.deepcopy(getattr(original, campo)) for campo in _CAMPOS_EDITABLES},
+        )
+        self.db.add(copia)
+        self.db.commit()
+        self.db.refresh(copia)
+        return self.obtener(empresa_id, copia.id)
 
     def eliminar_borrador(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> None:
         nomina = self._obtener_editable(empresa_id, nomina_id)

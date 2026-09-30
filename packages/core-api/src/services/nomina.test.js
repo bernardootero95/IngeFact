@@ -13,6 +13,7 @@ import {
   crearBorradorNomina,
   actualizarBorradorNomina,
   eliminarBorradorNomina,
+  duplicarNomina,
   enviarNomina,
   anularNomina,
   enviarNominaPorCorreo,
@@ -66,6 +67,12 @@ describe("nomina", () => {
     apiRequest.mockResolvedValue(null);
     await eliminarBorradorNomina("1");
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/nomina/1", { method: "DELETE" });
+  });
+
+  it("duplicarNomina hace POST a /duplicar", async () => {
+    apiRequest.mockResolvedValue({ id: "2" });
+    await duplicarNomina("1");
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/nomina/1/duplicar", { method: "POST" });
   });
 
   it("enviarNomina hace POST a /enviar", async () => {
