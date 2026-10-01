@@ -47,3 +47,5 @@ Thumbs.db
 **/.next/
 **/next-env.d.ts
 *.tsbuildinfo
+# Material de marketing (local, no se versiona)
+marketing/
