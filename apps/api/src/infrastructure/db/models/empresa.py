@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, LargeBinary, String, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,6 +27,11 @@ class Empresa(Base):
     correo_electronico: Mapped[str | None] = mapped_column(String(200))
     id_alegra: Mapped[str | None] = mapped_column(String(50))
     notificacion_correo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    # Ver core/logo_empresa.py: PNG/JPEG de max 300 KB, se imprime en los
+    # documentos solo si mostrar_logo esta activo.
+    logo: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
+    logo_mime: Mapped[str | None] = mapped_column(String(20))
+    mostrar_logo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="activo")
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

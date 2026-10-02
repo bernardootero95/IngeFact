@@ -109,6 +109,8 @@ class EmpresaDetailResponse(BaseModel):
     telefono: str | None
     correo_electronico: str | None
     notificacion_correo: bool
+    tiene_logo: bool = False
+    mostrar_logo: bool = False
     id_alegra: str | None
     estado: str
     creado: datetime
@@ -145,6 +147,10 @@ class EmpresaDetailResponse(BaseModel):
             telefono=empresa.telefono,
             correo_electronico=empresa.correo_electronico,
             notificacion_correo=empresa.notificacion_correo,
+            # logo_mime y no logo: la columna de bytes es deferred y no se
+            # carga solo para saber si existe.
+            tiene_logo=empresa.logo_mime is not None,
+            mostrar_logo=bool(empresa.mostrar_logo),
             id_alegra=empresa.id_alegra,
             estado=empresa.estado,
             creado=empresa.creado,
@@ -194,6 +200,8 @@ class ActualizarDatosContactoRequest(BaseModel):
     nombre_comercial: str | None = None
     telefono: str | None = None
     direccion: str | None = None
+    # None = no tocar (clientes que no conocen el campo no lo apagan).
+    mostrar_logo: bool | None = None
 
     @field_validator("nombre_comercial", "telefono", "direccion")
     @classmethod
@@ -202,6 +210,17 @@ class ActualizarDatosContactoRequest(BaseModel):
             return None
         v = v.strip()
         return v or None
+
+
+class SubirLogoRequest(BaseModel):
+    """`imagen` es un data URL (`data:image/png;base64,...`), validado y
+    decodificado en core/logo_empresa.decodificar_logo."""
+
+    imagen: str
+
+
+class LogoEmpresaResponse(BaseModel):
+    data_url: str | None
 
 
 class CambiarPlanRequest(BaseModel):

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from src.application.reference_table_service import ReferenceTableService
 from src.core.legal import PIE_SOFTWARE_DOCUMENTO
+from src.core.logo_empresa import render_logo_html
 from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
@@ -141,6 +142,8 @@ def generar_representacion_pdf_nomina(db: Session, nomina: Nomina) -> bytes:
 
     # Todo texto interpolado de aqui en adelante sale escapado (pdf_render.py),
     # incluidas las claves de devengados/deducciones (JSONB enviado por el cliente).
+    # Antes de escapar: el logo son bytes del modelo real.
+    logo_html = render_logo_html(empresa)
     nomina, empresa, empleado = map(escapado, (nomina, empresa, empleado))
 
     firma_html = ""
@@ -176,7 +179,8 @@ def generar_representacion_pdf_nomina(db: Session, nomina: Nomina) -> bytes:
     </head>
     <body>
       <div class="encabezado">
-        <div>
+        <div class="encabezado-titulo">
+          {logo_html}
           <h1>Comprobante de Nómina Electrónica No. {nomina.numero_completo}</h1>
         </div>
         <div class="encabezado-datos">

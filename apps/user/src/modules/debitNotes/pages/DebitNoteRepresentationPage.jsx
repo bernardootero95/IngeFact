@@ -9,6 +9,7 @@ import {
   obtenerFirmaDigitalNotaDebito,
 } from "@ingefact/core-api";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
+import { LogoDocumento, NombreEmisor } from "../../../components/EncabezadoEmisor";
 import { Button, ArrowLeftIcon } from "@ingefact/ui";
 import { PIE_SOFTWARE_DOCUMENTO, PIE_BORRADOR } from "../../../utils/pieLegalDocumento";
 
@@ -169,12 +170,15 @@ export default function DebitNoteRepresentationPage() {
         )}
 
         <div className="flex justify-between items-start border-b border-neutralCustom-200 pb-3 mb-3">
-          <h1 className="text-base font-bold">
-            Nota Débito Electrónica {nota.numero_completo ? `No. ${nota.numero_completo}` : "(Borrador)"}
-            <span className="block text-xs font-normal text-neutralCustom-500 uppercase tracking-wide">
-              Representación Gráfica
-            </span>
-          </h1>
+          <div className="flex items-center gap-3">
+            <LogoDocumento empresa={empresa} />
+            <h1 className="text-base font-bold">
+              Nota Débito Electrónica {nota.numero_completo ? `No. ${nota.numero_completo}` : "(Borrador)"}
+              <span className="block text-xs font-normal text-neutralCustom-500 uppercase tracking-wide">
+                Representación Gráfica
+              </span>
+            </h1>
+          </div>
           <div className="text-right text-xs text-neutralCustom-600 space-y-0.5">
             <p>
               <span className="font-semibold">Motivo:</span> {motivoNombre || "-"}
@@ -206,7 +210,7 @@ export default function DebitNoteRepresentationPage() {
         <div className="flex gap-6 mb-4 pb-4 border-b border-neutralCustom-200">
           <div className="flex-1">
             <p className="text-xs font-semibold text-neutralCustom-500 uppercase mb-1">Emisor</p>
-            <p className="font-semibold">{empresa?.razon_social}</p>
+            <NombreEmisor empresa={empresa} />
             <p>
               NIT {empresa?.numero_identificacion}-{empresa?.digito_verificacion}
             </p>

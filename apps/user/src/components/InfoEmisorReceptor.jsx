@@ -1,3 +1,5 @@
+import { nombreComercialVisible } from "../utils/nombreEmisor";
+
 const nombreCatalogo = (catalogo, code) => catalogo.find((item) => item.code === code)?.value || code;
 
 // Codigo DIAN de "responsabilidad de IVA" -- no viene de un catalogo
@@ -29,6 +31,7 @@ export function InfoEmisor({ empresa, tiposOrganizacion = [], responsabilidadesF
     <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
       <h3 className="text-sm font-semibold text-neutralCustom-800 mb-3">Emisor</h3>
       <dl className="text-sm space-y-2">
+        <Fila label="Nombre Comercial" value={nombreComercialVisible(empresa)} />
         <Fila label="Razón Social" value={empresa.razon_social} />
         <Fila label="NIT" value={`${empresa.numero_identificacion}-${empresa.digito_verificacion}`} />
         <Fila label="Dirección" value={empresa.direccion} />

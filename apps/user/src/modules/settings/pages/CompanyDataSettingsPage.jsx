@@ -4,6 +4,7 @@ import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import Footer from "../../../components/Footer";
 import { validateField } from "./CompanyDataSettingsPage.validation";
+import LogoEmpresaCard from "../components/LogoEmpresaCard";
 import { Button, FormSkeleton } from "@ingefact/ui";
 
 const emptyForm = { nombre_comercial: "", telefono: "", direccion: "" };
@@ -137,8 +138,8 @@ export default function CompanyDataSettingsPage() {
                         }`}
                       />
                       <p className="text-xs text-neutralCustom-500 mt-1">
-                        Nombre bajo el cual te conocen tus clientes (puede
-                        diferir de la razón social).
+                        Nombre bajo el cual te conocen tus clientes. Si es distinto
+                        a la razón social, aparece arriba de ella en tus documentos.
                       </p>
                       {errors.nombre_comercial && (
                         <p className="mt-1 text-sm text-fiscal-danger">
@@ -213,6 +214,8 @@ export default function CompanyDataSettingsPage() {
                     </Button>
                   </div>
                 </form>
+
+                <LogoEmpresaCard empresa={empresa} onActualizada={refetch} />
 
                 <div className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
                   <div className="flex items-start gap-3 mb-6">

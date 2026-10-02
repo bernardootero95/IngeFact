@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from src.application.suscripcion_service import contar_documentos_usados
+from src.core.logo_empresa import decodificar_logo
 from src.domain.empresa import (
     ActualizarDatosContactoRequest,
     ActualizarEmpresaRequest,
@@ -87,6 +88,33 @@ class EmpresaAdminService:
         empresa.nombre_comercial = data.nombre_comercial
         empresa.telefono = data.telefono
         empresa.direccion = data.direccion
+        if data.mostrar_logo is not None:
+            if data.mostrar_logo and empresa.logo_mime is None:
+                raise HTTPException(status.HTTP_409_CONFLICT, "Primero sube el logo de tu empresa.")
+            empresa.mostrar_logo = data.mostrar_logo
+        self.db.add(empresa)
+        self.db.commit()
+        self.db.refresh(empresa)
+        return empresa
+
+    def guardar_logo(self, empresa_id: uuid.UUID, data_url: str) -> Empresa:
+        try:
+            datos, mime = decodificar_logo(data_url)
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+        empresa = self.obtener(empresa_id)
+        empresa.logo = datos
+        empresa.logo_mime = mime
+        self.db.add(empresa)
+        self.db.commit()
+        self.db.refresh(empresa)
+        return empresa
+
+    def eliminar_logo(self, empresa_id: uuid.UUID) -> Empresa:
+        empresa = self.obtener(empresa_id)
+        empresa.logo = None
+        empresa.logo_mime = None
+        empresa.mostrar_logo = False
         self.db.add(empresa)
         self.db.commit()
         self.db.refresh(empresa)

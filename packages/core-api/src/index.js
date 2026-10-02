@@ -12,7 +12,13 @@ export {
   changePassword,
   aceptarTerminos,
 } from "./services/auth.js";
-export { getMiEmpresa, actualizarDatosEmpresa } from "./services/tenantEmpresa.js";
+export {
+  getMiEmpresa,
+  actualizarDatosEmpresa,
+  getLogoEmpresa,
+  subirLogoEmpresa,
+  eliminarLogoEmpresa,
+} from "./services/tenantEmpresa.js";
 export {
   getResolucionDian,
   guardarResolucionDian,
