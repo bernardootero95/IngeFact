@@ -16,3 +16,17 @@ export async function getMiEmpresa() {
 export async function actualizarDatosEmpresa(payload) {
   return apiRequest("/api/v1/tenant/empresa", { method: "PATCH", body: payload });
 }
+
+/** { data_url } del logo (o data_url null si la empresa no tiene). */
+export async function getLogoEmpresa() {
+  return apiRequest("/api/v1/tenant/empresa/logo");
+}
+
+/** `imagen` es un data URL PNG/JPG (max 300 KB). Devuelve la empresa actualizada. */
+export async function subirLogoEmpresa(imagen) {
+  return apiRequest("/api/v1/tenant/empresa/logo", { method: "PUT", body: { imagen } });
+}
+
+export async function eliminarLogoEmpresa() {
+  return apiRequest("/api/v1/tenant/empresa/logo", { method: "DELETE" });
+}
