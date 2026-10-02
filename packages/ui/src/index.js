@@ -4,6 +4,7 @@ export { default as LoginForm } from "./components/LoginForm.jsx";
 export { default as ForgotPasswordForm } from "./components/ForgotPasswordForm.jsx";
 export { default as ResetPasswordForm } from "./components/ResetPasswordForm.jsx";
 export { default as SidebarShell } from "./components/SidebarShell.jsx";
+export { default as AppFooter } from "./components/AppFooter.jsx";
 export { default as SearchableSelect } from "./components/SearchableSelect.jsx";
 export { default as Button } from "./components/Button.jsx";
 export { default as IconButton } from "./components/IconButton.jsx";

@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getFacturaRecibida, registrarEventoReceptor, listPublicReferenceTable } from "@ingefact/core-api";
 import { Button, ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import ResumenFacturaRecibida from "../components/ResumenFacturaRecibida";
 import EstadoBadge from "../components/EstadoBadge";
 import DescargarXmlButton from "../components/DescargarXmlButton";
@@ -84,7 +85,7 @@ export default function ReceivedInvoiceDetailPage() {
 
   return (
     <Layout>
-      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+      <main className="relative flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
@@ -135,6 +136,7 @@ export default function ReceivedInvoiceDetailPage() {
             </section>
           </div>
         </div>
+        <Footer />
       </main>
     </Layout>
   );

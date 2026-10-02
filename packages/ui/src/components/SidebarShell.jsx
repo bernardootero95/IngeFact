@@ -84,7 +84,9 @@ export default function SidebarShell({
   };
 
   const asideClasses = [
-    "bg-neutralCustom-800 text-white flex flex-col justify-between shrink-0 overflow-y-auto",
+    // Solo la navegacion hace scroll (ver <nav>): el logo y el pie con la sesion
+    // quedan siempre visibles aunque haya submenus abiertos en pantallas bajas.
+    "bg-neutralCustom-800 text-white flex flex-col shrink-0 overflow-hidden",
     // Movil: panel fuera de pantalla que entra desde la izquierda.
     "fixed inset-y-0 left-0 z-40 w-64 max-w-[85vw] transition-[transform,visibility] duration-200",
     drawerOpen ? "translate-x-0 visible" : "-translate-x-full invisible",
@@ -120,7 +122,7 @@ export default function SidebarShell({
       )}
 
       <aside id={drawerId} aria-label="Menú principal" className={asideClasses}>
-        <div>
+        <div className="shrink-0">
           <div className={`flex ${compact ? "justify-center" : "justify-end"} mb-2`}>
             <button
               type="button"
@@ -151,11 +153,11 @@ export default function SidebarShell({
             </button>
           </div>
 
-          <div className="mb-8 flex flex-col items-center text-center w-full">
+          <div className="mb-6 flex flex-col items-center text-center w-full">
             <img
               src={logo}
               alt={`Logo ${brandName}`}
-              className="h-14 w-auto object-contain mb-3 mx-auto"
+              className="h-12 w-auto object-contain mb-2 mx-auto"
             />
             {!compact && (
               <>
@@ -166,8 +168,12 @@ export default function SidebarShell({
               </>
             )}
           </div>
+        </div>
 
-          <nav aria-label="Navegación principal" className="space-y-2">
+        <nav
+          aria-label="Navegación principal"
+          className="flex-1 min-h-0 overflow-y-auto space-y-2 -mx-2 px-2 [scrollbar-width:thin] [scrollbar-color:theme(colors.neutralCustom.600)_transparent]"
+        >
             {navItems.map((item) => {
               const hasChildren = Array.isArray(item.children) && item.children.length > 0;
 
@@ -260,10 +266,9 @@ export default function SidebarShell({
                 </div>
               );
             })}
-          </nav>
-        </div>
+        </nav>
 
-        <div className="border-t border-neutralCustom-500/20 pt-4 text-center mt-8">
+        <div className="shrink-0 border-t border-neutralCustom-500/20 pt-4 text-center mt-4">
           {!compact && (
             <div className="mb-4">
               <p className="text-xs text-neutralCustom-500 truncate w-full" title={footerLabel}>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { listProveedores, deleteProveedor } from "@ingefact/core-api";
 import { ToastAlert, Button, IconButton, PencilIcon, TrashIcon, TableSkeleton, ConfirmPopover, useTableView, SortableTh, Pagination } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 
 export default function SuppliersPage() {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function SuppliersPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+      <main className="relative flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">Directorio de Proveedores</h2>
@@ -194,6 +195,7 @@ export default function SuppliersPage() {
             )}
           </div>
         </div>
+        <Footer />
       </main>
 
       <ToastAlert message={toast.message} type={toast.type} onClose={() => setToast({ message: null, type: "success" })} />

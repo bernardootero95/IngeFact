@@ -12,8 +12,10 @@ import {
 } from "@ingefact/core-api";
 import { fechaHoyColombia } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import SeccionCliente from "../components/SeccionCliente";
 import SeccionLineas from "../components/SeccionLineas";
+import SeccionNotas from "../components/SeccionNotas";
 import SeccionResumen from "../components/SeccionResumen";
 import { Button, FormSkeleton } from "@ingefact/ui";
 import {
@@ -23,6 +25,7 @@ import {
   validateFormaPago,
   validateMetodoPago,
   validateFechaVencimiento,
+  validateNotas,
 } from "./InvoiceFormPage.validation";
 
 const FORMA_PAGO_CREDITO = "2";
@@ -77,6 +80,7 @@ export default function InvoiceFormPage() {
   const [formaPago, setFormaPago] = useState("");
   const [metodoPago, setMetodoPago] = useState("");
   const [fechaVencimiento, setFechaVencimiento] = useState("");
+  const [notas, setNotas] = useState("");
   const [facturaId, setFacturaId] = useState(id || null);
   const [productoPreseleccionado, setProductoPreseleccionado] = useState(null);
   const [razonRechazo, setRazonRechazo] = useState(null);
@@ -157,6 +161,7 @@ export default function InvoiceFormPage() {
         setFormaPago(borrador.formaPago || formasPagoData[0]?.code || "");
         setMetodoPago(borrador.metodoPago || metodosPagoValidos[0]?.code || "");
         setFechaVencimiento(borrador.fechaVencimiento || "");
+        setNotas(borrador.notas || "");
         setLineas(
           borrador.lineas.map((linea) => {
             const producto = productosData.find((p) => p.id === linea.producto_id) || null;
@@ -188,6 +193,7 @@ export default function InvoiceFormPage() {
           (factura.metodo_pago !== "1" ? factura.metodo_pago : null) || metodosPagoValidos[0]?.code || "",
         );
         setFechaVencimiento(factura.fecha_vencimiento || "");
+        setNotas(factura.notas || "");
         setLineas(
           factura.lineas.map((linea) => ({
             producto_id: linea.producto_id,
@@ -269,6 +275,11 @@ export default function InvoiceFormPage() {
     setErrors((prev) => ({ ...prev, fechaVencimiento: validateFechaVencimiento(formaPago, value, fecha) }));
   };
 
+  const handleNotasChange = (value) => {
+    setNotas(value);
+    setErrors((prev) => ({ ...prev, notas: validateNotas(value) }));
+  };
+
   const irACrear = (destino) => {
     guardarBorradorTemporal({
       clienteId: cliente?.id || null,
@@ -281,6 +292,7 @@ export default function InvoiceFormPage() {
       formaPago,
       metodoPago,
       fechaVencimiento,
+      notas,
     });
     navigate(destino, { state: { returnTo: location.pathname } });
   };
@@ -293,6 +305,7 @@ export default function InvoiceFormPage() {
       formaPago: validateFormaPago(formaPago),
       metodoPago: validateMetodoPago(metodoPago),
       fechaVencimiento: validateFechaVencimiento(formaPago, fechaVencimiento, fecha),
+      notas: validateNotas(notas),
     };
     setErrors(nuevosErrores);
     return !Object.values(nuevosErrores).some(Boolean);
@@ -306,6 +319,7 @@ export default function InvoiceFormPage() {
       cantidad: Number(linea.cantidad),
       precio_unitario: Number(linea.precio_unitario),
     })),
+    notas: notas.trim() || null,
   });
 
   const guardarBorrador = async () => {
@@ -355,7 +369,7 @@ export default function InvoiceFormPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+      <main className="relative flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <div className="flex items-center gap-2 text-xs text-neutralCustom-500 mb-0.5">
@@ -425,6 +439,8 @@ export default function InvoiceFormPage() {
                   onCrearProducto={() => irACrear("/products/new")}
                 />
 
+                <SeccionNotas notas={notas} error={errors.notas} onNotasChange={handleNotasChange} />
+
                 <SeccionResumen
                   lineas={lineas}
                   saveError={saveError}
@@ -438,6 +454,7 @@ export default function InvoiceFormPage() {
             )}
           </div>
         </div>
+        <Footer />
       </main>
     </div>
   );
