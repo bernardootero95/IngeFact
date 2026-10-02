@@ -38,6 +38,8 @@ CSS = f"""
   body {{ font-family: Helvetica, Arial, sans-serif; font-size: 10px; color: {COLOR_NEUTRAL_800}; }}
   h1 {{ font-size: 13px; margin: 0; }}
   .encabezado {{ display: flex; justify-content: space-between; border-bottom: 1px solid {COLOR_NEUTRAL_100}; padding-bottom: 8px; margin-bottom: 8px; }}
+  .encabezado-titulo {{ display: flex; align-items: center; gap: 12px; }}
+  .logo {{ max-height: 60px; max-width: 160px; }}
   .encabezado-datos {{ text-align: right; font-size: 9px; color: {COLOR_NEUTRAL_500}; }}
   .afectado {{ background: {COLOR_BRAND_50}; border: 1px solid {COLOR_BRAND_400}; border-radius: 4px; padding: 8px; margin-bottom: 10px; }}
   .afectado .label {{ font-size: 8px; font-weight: bold; color: {COLOR_BRAND_600}; text-transform: uppercase; margin-bottom: 3px; }}
@@ -149,6 +151,15 @@ def render_filas_lineas(lineas) -> str:
     )
 
 
+def _render_nombres_emisor(empresa) -> str:
+    """Nombre comercial (si existe y no es igual a la razon social) en negrita
+    y la razon social debajo; si no, solo la razon social."""
+    comercial = empresa.nombre_comercial
+    if comercial and comercial.strip().casefold() != empresa.razon_social.strip().casefold():
+        return f"<p><strong>{comercial}</strong></p><p>{empresa.razon_social}</p>"
+    return f"<p><strong>{empresa.razon_social}</strong></p>"
+
+
 def render_emisor_html(empresa, catalogos: dict, label: str = "Emisor") -> str:
     departamento_nombre = nombre_catalogo(catalogos["departamentos"], empresa.departamento)
     municipio_nombre = nombre_catalogo(catalogos["municipios"], empresa.municipio)
@@ -159,7 +170,7 @@ def render_emisor_html(empresa, catalogos: dict, label: str = "Emisor") -> str:
     return f"""
     <div class="parte">
       <p class="label">{label}</p>
-      <p><strong>{empresa.razon_social}</strong></p>
+      {_render_nombres_emisor(empresa)}
       <p>NIT {empresa.numero_identificacion}-{empresa.digito_verificacion}</p>
       {f"<p>{empresa.direccion}</p>" if empresa.direccion else ""}
       {f"<p>Tel: {empresa.telefono}</p>" if empresa.telefono else ""}

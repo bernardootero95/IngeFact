@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from src.application.reference_table_service import ReferenceTableService
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.core.legal import PIE_SOFTWARE_DOCUMENTO
+from src.core.logo_empresa import render_logo_html
 from src.core.pdf_render import escapado, render_pdf
 from src.core.qr_utils import generar_qr_png_base64
 from src.core.representacion_pdf_common import (
@@ -46,6 +47,8 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
 
     # De aqui en adelante todo texto que se interpola sale escapado (ver
     # pdf_render.py). El QR ya se genero con el contenido crudo.
+    # Antes de escapar: el logo son bytes del modelo real.
+    logo_html = render_logo_html(empresa)
     factura, empresa, cliente, resolucion = map(escapado, (factura, empresa, cliente, resolucion))
     firma_digital = escapado(firma_digital)
 
@@ -94,7 +97,8 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
     </head>
     <body>
       <div class="encabezado">
-        <div>
+        <div class="encabezado-titulo">
+          {logo_html}
           <h1>Factura Electronica de Venta No. {factura.numero_completo}</h1>
         </div>
         <div class="encabezado-datos">

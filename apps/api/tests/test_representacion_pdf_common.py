@@ -68,6 +68,7 @@ def test_nombre_regimen_fiscal_mapea_48_49():
 def test_render_emisor_html_no_muestra_etiquetas_ni_responsabilidad_no_aplica():
     empresa = SimpleNamespace(
         razon_social="Empresa Demo SAS",
+        nombre_comercial=None,
         numero_identificacion="900618467",
         digito_verificacion="4",
         direccion="Calle 1",
@@ -94,6 +95,7 @@ def test_render_emisor_html_no_muestra_etiquetas_ni_responsabilidad_no_aplica():
 def test_render_emisor_html_muestra_responsabilidad_fiscal_real_sin_etiqueta():
     empresa = SimpleNamespace(
         razon_social="Empresa Demo SAS",
+        nombre_comercial=None,
         numero_identificacion="900618467",
         digito_verificacion="4",
         direccion=None,
