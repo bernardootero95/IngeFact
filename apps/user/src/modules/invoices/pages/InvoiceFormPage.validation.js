@@ -53,6 +53,14 @@ export function validateFechaVencimiento(formaPago, fechaVencimiento, fecha) {
   return "";
 }
 
+// Mismo tope que valida el backend (MAX_LARGO_NOTAS en domain/factura.py).
+export const MAX_LARGO_NOTAS = 500;
+
+export function validateNotas(notas) {
+  if (notas.trim().length > MAX_LARGO_NOTAS) return `Las notas no pueden superar ${MAX_LARGO_NOTAS} caracteres.`;
+  return "";
+}
+
 export function calcularTotales(lineas) {
   let subtotal = 0;
   let totalImpuestos = 0;

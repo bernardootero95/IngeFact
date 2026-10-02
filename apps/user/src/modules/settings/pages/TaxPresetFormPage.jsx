@@ -7,6 +7,7 @@ import {
   listPublicReferenceTable,
 } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import { validateField } from "./TaxPresetFormPage.validation";
 import { Button, FormSkeleton, FieldError, fieldA11y } from "@ingefact/ui";
 
@@ -93,7 +94,7 @@ export default function TaxPresetFormPage() {
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+      <main className="relative flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
@@ -191,6 +192,7 @@ export default function TaxPresetFormPage() {
             )}
           </div>
         </div>
+        <Footer />
       </main>
     </div>
   );

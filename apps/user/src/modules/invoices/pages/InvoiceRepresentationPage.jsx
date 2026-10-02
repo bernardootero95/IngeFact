@@ -304,6 +304,13 @@ export default function InvoiceRepresentationPage() {
           </div>
         </div>
 
+        {factura.notas && (
+          <div className="text-xs text-neutralCustom-600 mb-4">
+            <p className="font-semibold">Notas:</p>
+            <p className="whitespace-pre-line break-words">{factura.notas}</p>
+          </div>
+        )}
+
         {factura.cufe && (
           <div className="text-xs text-neutralCustom-600 mb-4">
             <p className="font-semibold">CUFE:</p>

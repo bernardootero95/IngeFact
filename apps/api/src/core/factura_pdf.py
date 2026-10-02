@@ -77,6 +77,15 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
         f"<p><strong>Fecha de Vencimiento:</strong> {factura.fecha_vencimiento}</p>" if factura.fecha_vencimiento else ""
     )
 
+    notas_html = ""
+    if factura.notas:
+        notas_html = f"""
+        <div class="cufe">
+          <p class="label">Notas:</p>
+          <p style="white-space: pre-line;">{factura.notas}</p>
+        </div>
+        """
+
     html = f"""
     <html>
     <head>
@@ -128,6 +137,8 @@ def generar_representacion_pdf(db: Session, factura: Factura, firma_digital: str
           <div class="fila-total"><span>Total a Pagar</span><span>{formatear_cop(float(factura.total))} {MONEDA}</span></div>
         </div>
       </div>
+
+      {notas_html}
 
       <div class="cufe">
         <p class="label">CUFE:</p>

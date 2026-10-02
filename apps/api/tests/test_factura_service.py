@@ -1119,3 +1119,47 @@ def test_reenvio_de_rechazada_que_vuelve_a_fallar_no_toca_el_contador(db_session
     # tampoco debe decrementarlo -- si lo hiciera, bajaria a 1 aunque el
     # numero 2 sigue legitimamente asignado a esta factura.
     assert resolucion.consecutivo_actual == 2
+
+
+def test_notas_se_normalizan_y_vacias_quedan_en_none():
+    import uuid
+
+    base = {"cliente_id": uuid.uuid4(), "fecha": date.today(), "lineas": [LineaFacturaRequest(producto_id=uuid.uuid4(), cantidad=1)]}
+    assert CrearFacturaRequest(**base, notas="  Orden de compra 123  ").notas == "Orden de compra 123"
+    assert CrearFacturaRequest(**base, notas="   ").notas is None
+    with pytest.raises(ValueError):
+        CrearFacturaRequest(**base, notas="x" * 501)
+
+
+def test_notas_se_guardan_actualizan_y_se_copian_al_duplicar(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    service = FacturaService(db_session)
+
+    factura = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id, notas="Pago a 30 dias"))
+    assert factura.notas == "Pago a 30 dias"
+
+    actualizada = service.actualizar_borrador(
+        empresa.id, factura.id, ActualizarFacturaRequest(**_payload(cliente.id, producto.id, notas="OC 456").model_dump())
+    )
+    assert actualizada.notas == "OC 456"
+    assert service.duplicar(empresa.id, factura.id).notas == "OC 456"
+
+
+def test_enviar_incluye_note_solo_si_hay_notas(db_session):
+    empresa = _crear_empresa(db_session)
+    cliente = _crear_cliente(db_session, empresa.id)
+    producto = _crear_producto(db_session, empresa.id)
+    _crear_resolucion(db_session, empresa.id)
+    _crear_suscripcion(db_session, empresa.id)
+    fake = _FakeAlegraClient(response={"invoice": {"id": "inv-1", "fullNumber": "SETP1"}})
+    service = FacturaService(db_session, alegra_client=fake)
+
+    con_notas = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id, notas="Gracias por su compra"))
+    service.enviar(empresa.id, con_notas.id, forma_pago="1", metodo_pago="10")
+    assert fake.last_payload["note"] == ["Gracias por su compra"]
+
+    sin_notas = service.crear_borrador(empresa.id, _payload(cliente.id, producto.id))
+    service.enviar(empresa.id, sin_notas.id, forma_pago="1", metodo_pago="10")
+    assert "note" not in fake.last_payload
