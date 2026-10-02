@@ -6,6 +6,9 @@ from pydantic import BaseModel, field_validator, model_validator
 from src.core.calculo_linea import base_gravable_iva
 
 FORMA_PAGO_CREDITO = "2"
+# Mismo tope que Alegra muestra en el PDF de sus facturas; suficiente para
+# condiciones, referencias u ordenes de compra sin desbordar la representacion.
+MAX_LARGO_NOTAS = 500
 
 
 class LineaFacturaRequest(BaseModel):
@@ -32,6 +35,7 @@ class CrearFacturaRequest(BaseModel):
     cliente_id: uuid.UUID
     fecha: date
     lineas: list[LineaFacturaRequest]
+    notas: str | None = None
 
     @field_validator("lineas")
     @classmethod
@@ -39,6 +43,16 @@ class CrearFacturaRequest(BaseModel):
         if not v:
             raise ValueError("La factura debe tener al menos una linea.")
         return v
+
+    @field_validator("notas")
+    @classmethod
+    def normalizar_notas(cls, v: str | None) -> str | None:
+        if v is None:
+            return None
+        v = v.strip()
+        if len(v) > MAX_LARGO_NOTAS:
+            raise ValueError(f"Las notas no pueden superar {MAX_LARGO_NOTAS} caracteres.")
+        return v or None
 
 
 class ActualizarFacturaRequest(CrearFacturaRequest):
@@ -118,6 +132,7 @@ class FacturaResponse(BaseModel):
     forma_pago: str | None
     metodo_pago: str | None
     fecha_vencimiento: date | None
+    notas: str | None
     cufe: str | None
     qr_code_content: str | None
     razon_rechazo: str | None
@@ -143,6 +158,7 @@ class FacturaResponse(BaseModel):
             forma_pago=factura.forma_pago,
             metodo_pago=factura.metodo_pago,
             fecha_vencimiento=factura.fecha_vencimiento,
+            notas=factura.notas,
             cufe=factura.cufe,
             qr_code_content=factura.qr_code_content,
             razon_rechazo=factura.razon_rechazo,

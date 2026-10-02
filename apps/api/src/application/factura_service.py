@@ -264,6 +264,7 @@ class FacturaService:
             empresa_id=empresa_id,
             cliente_id=data.cliente_id,
             fecha=data.fecha,
+            notas=data.notas,
             estado="borrador",
             subtotal=subtotal,
             total_impuestos=total_impuestos,
@@ -304,6 +305,7 @@ class FacturaService:
 
         factura.cliente_id = data.cliente_id
         factura.fecha = data.fecha
+        factura.notas = data.notas
         factura.subtotal = subtotal
         factura.total_impuestos = total_impuestos
         factura.total = total
@@ -335,6 +337,7 @@ class FacturaService:
                     )
                     for linea in original.lineas
                 ],
+                notas=original.notas,
             ),
         )
         copia.forma_pago = original.forma_pago
@@ -483,7 +486,7 @@ class FacturaService:
                 taxable_total += base_iva
             items.append(item)
 
-        return {
+        payload = {
             "documentType": "01",
             "number": consecutivo,
             "prefix": resolucion.prefijo,
@@ -511,6 +514,11 @@ class FacturaService:
             },
             "payments": [_construir_pago(forma_pago, metodo_pago, float(factura.total), fecha_vencimiento)],
         }
+        # `note` (<Note> DIAN) es un arreglo con minItems 1 y textos no vacios:
+        # se omite si la factura no tiene notas en vez de mandar [] o [""].
+        if factura.notas:
+            payload["note"] = [factura.notas]
+        return payload
 
 
 def aplicar_estado_legal_factura(factura: Factura, invoice: dict) -> bool:
