@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     api_public_url: str = ""
     alegra_webhook_secret: str = ""
 
+    # Monitoreo de errores (ver core/monitoring.py). DSN de Sentry o GlitchTip;
+    # vacio = desactivado. El sample rate de trazas de rendimiento va de 0 a 1.
+    sentry_dsn: str = ""
+    sentry_traces_sample_rate: float = 0.0
+
 
 @lru_cache
 def get_settings() -> Settings:
