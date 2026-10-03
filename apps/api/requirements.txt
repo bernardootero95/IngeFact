@@ -18,3 +18,4 @@ qrcode[pil]==8.0
 weasyprint==70.0
 num2words==0.5.14
 tzdata==2026.3
+sentry-sdk[fastapi]==2.71.0

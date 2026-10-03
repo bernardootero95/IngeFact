@@ -5,6 +5,7 @@ from slowapi.errors import RateLimitExceeded
 
 from src.core.config import get_settings
 from src.core.logging import configure_logging
+from src.core.monitoring import configure_error_monitoring
 from src.core.rate_limit import limiter
 from src.presentation.routes import (
     admin_api_keys,
@@ -37,6 +38,7 @@ from src.presentation.routes import (
 
 settings = get_settings()
 configure_logging(settings.log_level)
+configure_error_monitoring(settings)
 
 app = FastAPI(title="IngeFact API", version="0.1.0")
 
