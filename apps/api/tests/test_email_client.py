@@ -93,11 +93,46 @@ def test_otro_error_no_reintenta(respuestas):
     assert esperas == []
 
 
-def test_error_de_red_se_traduce(monkeypatch):
-    def falla(url, **kwargs):
-        raise httpx.ConnectError("sin red")
+def _post_con_fallos(monkeypatch, fallos: list[Exception], final: httpx.Response | None = None):
+    llamadas: list[int] = []
 
-    monkeypatch.setattr(modulo.httpx, "post", falla)
+    def fake_post(url, **kwargs):
+        llamadas.append(1)
+        if fallos:
+            raise fallos.pop(0)
+        return final
+
+    monkeypatch.setattr(modulo.httpx, "post", fake_post)
+    return llamadas
+
+
+def test_error_de_conexion_reintenta_y_se_recupera(monkeypatch):
+    llamadas = _post_con_fallos(
+        monkeypatch, [httpx.ConnectError("[Errno -2] Name or service not known")], _respuesta(200)
+    )
+    esperas: list[float] = []
+
+    _cliente(esperas).send(to="a@b.co", subject="s", html="<p/>")
+
+    assert len(llamadas) == 2
+    assert esperas == [1.0]
+
+
+def test_error_de_conexion_persistente_falla_tras_agotar_intentos(monkeypatch):
+    llamadas = _post_con_fallos(monkeypatch, [httpx.ConnectError("sin red")] * modulo.MAX_INTENTOS)
+    esperas: list[float] = []
 
     with pytest.raises(EmailSendError, match="sin red"):
+        _cliente(esperas).send(to="a@b.co", subject="s", html="<p/>")
+
+    assert len(llamadas) == modulo.MAX_INTENTOS
+    assert len(esperas) == modulo.MAX_INTENTOS - 1
+
+
+def test_timeout_de_lectura_no_reintenta(monkeypatch):
+    llamadas = _post_con_fallos(monkeypatch, [httpx.ReadTimeout("lento")])
+
+    with pytest.raises(EmailSendError, match="lento"):
         _cliente([]).send(to="a@b.co", subject="s", html="<p/>")
+
+    assert len(llamadas) == 1
