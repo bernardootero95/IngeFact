@@ -9,6 +9,9 @@ RESEND_API_URL = "https://api.resend.com/emails"
 # Resend limita por cuenta (10 req/s) -- un cliente de la API externa que
 # emite facturas en paralelo lo supera facilmente. Un 429 es transitorio:
 # se reintenta respetando `retry-after` antes de darse por vencido.
+# Igual un fallo al *conectar* (DNS, red del contenedor): la peticion nunca
+# llego a Resend, asi que reintentar no puede duplicar el correo. Un timeout
+# de lectura NO se reintenta -- el correo pudo haberse enviado ya.
 MAX_INTENTOS = 3
 ESPERA_MAXIMA_SEGUNDOS = 5.0
 
@@ -17,6 +20,10 @@ class EmailSendError(Exception):
     """El proveedor de correo (Resend) no pudo enviar el mensaje. El llamador
     siempre debe atrapar esto -- un correo que falla no debe tumbar el flujo
     principal (login, creacion de empresa, envio de factura, etc.)."""
+
+
+class _ErrorConexion(Exception):
+    """Fallo al conectar con Resend; seguro de reintentar (uso interno)."""
 
 
 def _segundos_espera(resp: httpx.Response, intento: int) -> float:
@@ -49,7 +56,13 @@ class EmailClient:
             payload["attachments"] = attachments
 
         for intento in range(1, MAX_INTENTOS + 1):
-            resp = self._post(payload)
+            try:
+                resp = self._post(payload)
+            except _ErrorConexion as exc:
+                if intento == MAX_INTENTOS:
+                    raise EmailSendError(str(exc)) from exc
+                self._sleep(float(2 ** (intento - 1)))
+                continue
             if resp.status_code != 429 or intento == MAX_INTENTOS:
                 break
             self._sleep(_segundos_espera(resp, intento))
@@ -65,5 +78,7 @@ class EmailClient:
                 json=payload,
                 timeout=30,
             )
+        except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
+            raise _ErrorConexion(str(exc)) from exc
         except httpx.HTTPError as exc:
             raise EmailSendError(str(exc)) from exc
