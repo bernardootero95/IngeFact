@@ -13,6 +13,7 @@ import {
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
 import { ToastAlert, Button, FormSkeleton, ConfirmPopover, FieldError, fieldA11y } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import { calcularPrecio } from "../../pricing/pricingCalculator";
 
 const emptyForm = {
   razonSocial: "",
@@ -31,6 +32,7 @@ const emptyForm = {
   tipoOrganizacion: "",
   estadoEmpresa: "activo",
   maxDocumentos: "",
+  precioPaquete: "",
   fechaInicio: "",
   fechaFin: "",
 };
@@ -209,6 +211,9 @@ export default function CompanyFormPage() {
         if (!value) errorMsg = "Obligatorio.";
         else if (isNaN(value) || Number(value) <= 0) errorMsg = "Debe ser mayor a 0.";
         break;
+      case "precioPaquete":
+        if (value !== "" && (isNaN(value) || Number(value) < 0)) errorMsg = "Debe ser un valor positivo.";
+        break;
       case "fechaInicio":
         if (!value) errorMsg = "Obligatoria.";
         break;
@@ -258,6 +263,7 @@ export default function CompanyFormPage() {
       "regimen",
       "tipoOrganizacion",
       "maxDocumentos",
+      "precioPaquete",
       "fechaInicio",
       "fechaFin",
     ];
@@ -279,6 +285,9 @@ export default function CompanyFormPage() {
         max_documentos: Number(form.maxDocumentos),
         fecha_inicio: form.fechaInicio,
         fecha_fin: form.fechaFin,
+        // Vacío = el backend usa el precio de la calculadora. Solo se
+        // registra como venta si el paquete realmente cambia.
+        ...(form.precioPaquete !== "" && { precio: Number(form.precioPaquete) }),
       };
 
       let empresaId;
@@ -705,7 +714,29 @@ export default function CompanyFormPage() {
                           {errors.maxDocumentos && <FieldError fieldId={"cf-max-docs"}>{errors.maxDocumentos}</FieldError>}
                         </div>
 
-                        <div className="hidden md:block" />
+                        <div>
+                          <label htmlFor="cf-precio" className="block text-sm font-medium text-neutralCustom-700 mb-1">
+                            Precio del paquete (COP)
+                          </label>
+                          <input
+                            id="cf-precio"
+                            type="number"
+                            min="0"
+                            value={form.precioPaquete}
+                            onChange={handleChange("precioPaquete")}
+                            className={`field w-full ${errors.precioPaquete ? "border-fiscal-danger field-invalid" : ""}`}
+                            placeholder={
+                              Number(form.maxDocumentos) > 0
+                                ? `Sugerido: ${calcularPrecio(Number(form.maxDocumentos)).precio}`
+                                : "Se sugiere según la calculadora"
+                            }
+                            {...fieldA11y("cf-precio", errors.precioPaquete)}
+                          />
+                          <p className="text-xs text-neutralCustom-500 mt-1">
+                            Solo aplica si el paquete cambia (venta o renovación). Vacío usa el sugerido.
+                          </p>
+                          {errors.precioPaquete && <FieldError fieldId={"cf-precio"}>{errors.precioPaquete}</FieldError>}
+                        </div>
 
                         <div>
                           <label htmlFor="cf-fecha-inicio" className="block text-sm font-medium text-neutralCustom-700 mb-1">
