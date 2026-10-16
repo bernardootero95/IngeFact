@@ -35,6 +35,7 @@ export {
   sincronizarEmpresasAlegra,
 } from "./services/adminEmpresas.js";
 export { getDashboardKpis } from "./services/dashboard.js";
+export { getConfiguracionNegocio, guardarConfiguracionNegocio } from "./services/configuracion.js";
 export { listApiKeys, crearApiKey, revocarApiKey } from "./services/apiKeys.js";
 export { listUsuariosAdmin, crearUsuarioAdmin, actualizarUsuarioAdmin } from "./services/adminUsuarios.js";
 export {
