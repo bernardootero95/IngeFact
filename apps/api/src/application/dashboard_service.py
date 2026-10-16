@@ -3,8 +3,8 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from src.application.configuracion_service import ConfiguracionService
 from src.application.suscripcion_service import UMBRAL_ALERTA_CUOTA, contar_documentos_usados
-from src.core.config import get_settings
 from src.core.precio_paquete import costo_alegra_mes
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA, hoy_colombia
 from src.infrastructure.db.models import DocumentoSoporte, Empresa, Factura, NotaCredito, NotaDebito, Suscripcion, VentaPaquete
@@ -64,7 +64,7 @@ class DashboardService:
         - Costo de Alegra: mensualidad + tarifa por los documentos del mes
           que exceden los incluidos (ver core/precio_paquete.py).
         - Ganancia = paquetes vendidos - Alegra - servidor - comision."""
-        settings = get_settings()
+        config = ConfiguracionService(self.db).obtener()
         inicio_mes = self._inicio_mes()
 
         disponibles_inicio = 0
@@ -99,8 +99,8 @@ class DashboardService:
         ingresos = sum(v["precio"] for v in ventas)
 
         costo_alegra = costo_alegra_mes(documentos_emitidos)
-        costo_servidor = settings.costo_servidor_usd * settings.trm_usd_cop
-        comision = ingresos * settings.comision_paquetes_pct / 100
+        costo_servidor = config["costo_servidor_usd"] * config["trm_usd_cop"]
+        comision = ingresos * config["comision_paquetes_pct"] / 100
 
         return {
             "mes": f"{inicio_mes.year}-{inicio_mes.month:02d}",
@@ -111,10 +111,10 @@ class DashboardService:
             "ingresos_paquetes": ingresos,
             "costo_alegra": costo_alegra,
             "costo_servidor_cop": costo_servidor,
-            "costo_servidor_usd": settings.costo_servidor_usd,
-            "trm_usd_cop": settings.trm_usd_cop,
+            "costo_servidor_usd": config["costo_servidor_usd"],
+            "trm_usd_cop": config["trm_usd_cop"],
             "comision": comision,
-            "comision_pct": settings.comision_paquetes_pct,
+            "comision_pct": config["comision_paquetes_pct"],
             "ganancia": ingresos - costo_alegra - costo_servidor - comision,
             "ventas": ventas,
         }

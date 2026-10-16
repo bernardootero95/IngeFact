@@ -314,3 +314,18 @@ def test_finanzas_mes_sin_ventas_es_perdida_por_costos_fijos(db_session):
     assert finanzas["ingresos_paquetes"] == 0
     assert finanzas["ventas"] == []
     assert finanzas["ganancia"] < 0
+
+
+def test_finanzas_mes_usa_la_configuracion_guardada(db_session):
+    from src.application.configuracion_service import ConfiguracionService
+    from src.domain.configuracion import ConfiguracionNegocioRequest
+
+    ConfiguracionService(db_session).guardar(
+        ConfiguracionNegocioRequest(costo_servidor_usd=10, trm_usd_cop=3000, comision_paquetes_pct=20)
+    )
+
+    finanzas = DashboardService(db_session).obtener_kpis()["finanzas_mes"]
+
+    assert finanzas["costo_servidor_cop"] == 30000
+    assert finanzas["trm_usd_cop"] == 3000
+    assert finanzas["comision_pct"] == 20

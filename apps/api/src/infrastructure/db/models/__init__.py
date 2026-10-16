@@ -1,6 +1,7 @@
 from src.infrastructure.db.models.aceptacion_legal import AceptacionLegal
 from src.infrastructure.db.models.api_key import ApiKey
 from src.infrastructure.db.models.cliente import Cliente
+from src.infrastructure.db.models.configuracion_negocio import ConfiguracionNegocio
 from src.infrastructure.db.models.documento_soporte import DocumentoSoporte, DocumentoSoporteLinea
 from src.infrastructure.db.models.empleado import Empleado
 from src.infrastructure.db.models.empresa import CompanyStatus, Empresa
@@ -51,6 +52,7 @@ __all__ = [
     "HabilitacionDian",
     "ImpuestoEmpresa",
     "Suscripcion",
+    "ConfiguracionNegocio",
     "VentaPaquete",
     "ResolucionDian",
     "ResolucionDocumentoSoporte",
