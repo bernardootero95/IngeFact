@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getDashboardKpis } from "@ingefact/core-api";
 import { useAuthStore } from "../../auth/store/authStore";
 import Sidebar from "../../../components/Sidebar";
+import FinanzasMes from "../components/FinanzasMes";
 import { SpinnerLoading, Button } from "@ingefact/ui";
 
 function ClienteAlertaList({ titulo, descripcion, clientes, emptyLabel, renderMetrica, onVerCliente }) {
@@ -121,6 +122,8 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {!loading && kpis?.finanzas_mes && <FinanzasMes finanzas={kpis.finanzas_mes} />}
 
           {!loading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

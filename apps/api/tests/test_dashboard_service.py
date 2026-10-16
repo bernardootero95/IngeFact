@@ -255,3 +255,62 @@ def test_alertas_ignoran_suscripciones_no_activas(db_session):
     kpis = DashboardService(db_session).obtener_kpis()
 
     assert kpis["clientes_proximos_a_vencer"] == []
+
+
+def test_finanzas_mes_ganancia_y_documentos_maximos(db_session):
+    from datetime import timedelta
+
+    from src.core.config import get_settings
+    from src.infrastructure.db.models import VentaPaquete
+
+    ahora = datetime.now(timezone.utc)
+    empresa_vieja = _crear_empresa(db_session, razon_social="Vieja SAS", nit="900000001")
+    empresa_nueva = _crear_empresa(db_session, razon_social="Nueva SAS", nit="900000002")
+    # Arranco el mes con 100 documentos de cupo, 30 ya usados el mes pasado.
+    _crear_suscripcion(db_session, empresa_vieja.id, max_documentos=100, fecha_inicio=date(2026, 1, 1))
+    cliente = _crear_cliente(db_session, empresa_vieja.id)
+    _crear_factura(
+        db_session, empresa_vieja.id, cliente.id, estado="aceptada", fecha_envio=ahora - timedelta(days=60)
+    )
+    # Venta de este mes.
+    db_session.add(
+        VentaPaquete(
+            empresa_id=empresa_nueva.id,
+            max_documentos=500,
+            precio=300000,
+            fecha_inicio=hoy_colombia(),
+            fecha_fin=hoy_colombia() + timedelta(days=365),
+        )
+    )
+    db_session.add(
+        VentaPaquete(
+            empresa_id=empresa_nueva.id,
+            max_documentos=50,
+            precio=90000,
+            fecha_inicio=date(2025, 1, 1),
+            fecha_fin=date(2025, 12, 31),
+            creado=ahora - timedelta(days=90),
+        )
+    )
+    db_session.commit()
+
+    finanzas = DashboardService(db_session).obtener_kpis()["finanzas_mes"]
+    settings = get_settings()
+
+    assert finanzas["documentos_disponibles_inicio_mes"] == 99
+    assert finanzas["documentos_vendidos_mes"] == 500
+    assert finanzas["documentos_maximos_mes"] == 599
+    assert finanzas["ingresos_paquetes"] == 300000
+    assert [v["razon_social"] for v in finanzas["ventas"]] == ["Nueva SAS"]
+    assert finanzas["costo_alegra"] == 120000
+    assert finanzas["comision"] == 30000
+    esperado = 300000 - 120000 - settings.costo_servidor_usd * settings.trm_usd_cop - 30000
+    assert finanzas["ganancia"] == esperado
+
+
+def test_finanzas_mes_sin_ventas_es_perdida_por_costos_fijos(db_session):
+    finanzas = DashboardService(db_session).obtener_kpis()["finanzas_mes"]
+
+    assert finanzas["ingresos_paquetes"] == 0
+    assert finanzas["ventas"] == []
+    assert finanzas["ganancia"] < 0

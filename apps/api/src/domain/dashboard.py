@@ -26,6 +26,35 @@ class ClienteAlertaResponse(BaseModel):
     dias_para_vencer: int
 
 
+class VentaPaqueteResponse(BaseModel):
+    id: str
+    empresa_id: str
+    razon_social: str
+    max_documentos: int
+    precio: float
+    fecha_compra: datetime
+
+
+class FinanzasMesResponse(BaseModel):
+    """Numeros del mes calendario en curso (hora de Colombia), en COP."""
+
+    mes: str
+    documentos_emitidos: int
+    # Cupo con el que arranco el mes (sin usar) + paquetes vendidos en el mes.
+    documentos_disponibles_inicio_mes: int
+    documentos_vendidos_mes: int
+    documentos_maximos_mes: int
+    ingresos_paquetes: float
+    costo_alegra: float
+    costo_servidor_cop: float
+    costo_servidor_usd: float
+    trm_usd_cop: float
+    comision: float
+    comision_pct: float
+    ganancia: float
+    ventas: list[VentaPaqueteResponse]
+
+
 class DashboardKpisResponse(BaseModel):
     total_empresas: int
     empresas_activas: int
@@ -35,3 +64,4 @@ class DashboardKpisResponse(BaseModel):
     clientes_proximos_a_vencer: list[ClienteAlertaResponse]
     clientes_proximos_a_agotar_cupo: list[ClienteAlertaResponse]
     ultimas_empresas: list[EmpresaResumen]
+    finanzas_mes: FinanzasMesResponse

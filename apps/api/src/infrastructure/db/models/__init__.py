@@ -21,6 +21,7 @@ from src.infrastructure.db.models.suscripcion import Suscripcion
 from src.infrastructure.db.models.tokens import PasswordResetToken, RefreshToken
 from src.infrastructure.db.models.usuario_admin import UsuarioAdmin
 from src.infrastructure.db.models.usuario_empresa import UsuarioEmpresa
+from src.infrastructure.db.models.venta_paquete import VentaPaquete
 
 __all__ = [
     "AceptacionLegal",
@@ -50,6 +51,7 @@ __all__ = [
     "HabilitacionDian",
     "ImpuestoEmpresa",
     "Suscripcion",
+    "VentaPaquete",
     "ResolucionDian",
     "ResolucionDocumentoSoporte",
     "RefreshToken",
