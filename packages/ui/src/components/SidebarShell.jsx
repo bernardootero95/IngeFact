@@ -90,8 +90,8 @@ export default function SidebarShell({
     // Movil: panel fuera de pantalla que entra desde la izquierda.
     "fixed inset-y-0 left-0 z-40 w-64 max-w-[85vw] transition-[transform,visibility] duration-200",
     drawerOpen ? "translate-x-0 visible" : "-translate-x-full invisible",
-    // Escritorio: columna fija a la altura de la pantalla.
-    "md:static md:z-auto md:h-screen md:max-w-none md:translate-x-0 md:visible md:transition-all",
+    // Escritorio: columna a la altura de la pantalla, pegada arriba al hacer scroll de la pagina.
+    "md:sticky md:top-0 md:self-start md:z-auto md:h-screen md:max-w-none md:translate-x-0 md:visible md:transition-all",
     compact ? "md:w-20 px-2 py-6" : "md:w-64 p-6",
   ].join(" ");
 

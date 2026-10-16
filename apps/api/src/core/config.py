@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     # El servidor se paga en dolares: la TRM es un valor de referencia que
     # se ajusta por env var (no se consulta en linea).
     costo_servidor_usd: float = 8.0
-    trm_usd_cop: float = 4000.0
+    trm_usd_cop: float = 3200.0
     comision_paquetes_pct: float = 10.0
 
 
