@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session, joinedload
 
 from src.application.suscripcion_service import contar_documentos_usados
 from src.core.logo_empresa import decodificar_logo
+from src.core.precio_paquete import precio_paquete
 from src.domain.empresa import (
     ActualizarDatosContactoRequest,
     ActualizarEmpresaRequest,
     CambiarPlanRequest,
     EmpresaDetailResponse,
 )
-from src.infrastructure.db.models import Empresa, Suscripcion
+from src.infrastructure.db.models import Empresa, Suscripcion, VentaPaquete
 
 
 class EmpresaAdminService:
@@ -130,6 +131,14 @@ class EmpresaAdminService:
             select(Suscripcion).where(Suscripcion.empresa_id == empresa.id, Suscripcion.estado == "activa")
         ).scalar_one_or_none()
 
+        # Venta = paquete nuevo, mas/menos documentos o nuevo periodo. Solo
+        # extender fecha_fin o reguardar el mismo plan no es una venta.
+        es_venta = (
+            activa is None
+            or activa.max_documentos != data.max_documentos
+            or activa.fecha_inicio != data.fecha_inicio
+        )
+
         if activa is None:
             activa = Suscripcion(empresa_id=empresa.id, estado="activa")
 
@@ -142,6 +151,16 @@ class EmpresaAdminService:
         activa.alerta_cuota_enviada = False
 
         self.db.add(activa)
+        if es_venta:
+            self.db.add(
+                VentaPaquete(
+                    empresa_id=empresa.id,
+                    max_documentos=data.max_documentos,
+                    precio=data.precio if data.precio is not None else precio_paquete(data.max_documentos),
+                    fecha_inicio=data.fecha_inicio,
+                    fecha_fin=data.fecha_fin,
+                )
+            )
         self.db.commit()
         self.db.refresh(activa)
         return activa

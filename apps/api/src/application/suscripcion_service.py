@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 UMBRAL_ALERTA_CUOTA = 0.9
 
 
-def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
+def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datetime | None = None) -> int:
     """Cuenta Facturas + Notas Credito + Notas Debito + Documentos Soporte +
     comprobantes de Nomina + eventos del receptor (RADIAN) aceptados por la
     DIAN dentro del periodo de la suscripcion (todo lo que se transmite a la
@@ -47,6 +47,10 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion) -> int:
     fecha_envio (datetime aware en UTC) es correcta sin importar la zona."""
     inicio = datetime.combine(suscripcion.fecha_inicio, time.min, tzinfo=ZONA_HORARIA_COLOMBIA)
     fin = datetime.combine(suscripcion.fecha_fin, time.max, tzinfo=ZONA_HORARIA_COLOMBIA)
+    if hasta is not None:
+        # Corte opcional: documentos usados hasta un instante (ej. al 1ro de
+        # mes, para saber el cupo con el que arranco el mes).
+        fin = min(fin, hasta)
 
     total = db.execute(
         select(func.count())

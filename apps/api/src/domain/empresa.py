@@ -227,6 +227,16 @@ class CambiarPlanRequest(BaseModel):
     max_documentos: int
     fecha_inicio: date
     fecha_fin: date
+    # Precio de venta del paquete (COP). Si se omite, se usa el de la
+    # calculadora. Solo se registra cuando el paquete realmente cambia.
+    precio: float | None = None
+
+    @field_validator("precio")
+    @classmethod
+    def precio_no_negativo(cls, v: float | None) -> float | None:
+        if v is not None and v < 0:
+            raise ValueError("precio no puede ser negativo.")
+        return v
 
     @field_validator("max_documentos")
     @classmethod

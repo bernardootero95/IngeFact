@@ -180,3 +180,62 @@ def test_construir_respuesta_detalle_calcula_documentos_usados_en_vivo(db_sessio
     # Columna legacy sigue en 0 (nunca se incrementa) -- la respuesta debe
     # reflejar el conteo real, no la columna muerta.
     assert respuesta.suscripcion.documentos_usados == 1
+
+
+def test_cambiar_plan_registra_una_venta_con_precio_de_la_calculadora_por_defecto(db_session):
+    from src.infrastructure.db.models import VentaPaquete
+
+    empresa = _crear_empresa(db_session)
+    data = CambiarPlanRequest(max_documentos=500, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2026, 12, 31))
+    EmpresaAdminService(db_session).cambiar_plan(empresa.id, data)
+
+    venta = db_session.query(VentaPaquete).one()
+    assert venta.max_documentos == 500
+    assert float(venta.precio) == 317000
+
+
+def test_cambiar_plan_guarda_el_precio_pactado(db_session):
+    from src.infrastructure.db.models import VentaPaquete
+
+    empresa = _crear_empresa(db_session)
+    data = CambiarPlanRequest(
+        max_documentos=500, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2026, 12, 31), precio=250000
+    )
+    EmpresaAdminService(db_session).cambiar_plan(empresa.id, data)
+
+    assert float(db_session.query(VentaPaquete).one().precio) == 250000
+
+
+def test_reguardar_o_extender_el_mismo_paquete_no_es_otra_venta(db_session):
+    from src.infrastructure.db.models import VentaPaquete
+
+    empresa = _crear_empresa(db_session)
+    service = EmpresaAdminService(db_session)
+    service.cambiar_plan(
+        empresa.id, CambiarPlanRequest(max_documentos=500, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2026, 12, 31))
+    )
+    service.cambiar_plan(
+        empresa.id, CambiarPlanRequest(max_documentos=500, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2027, 3, 31))
+    )
+
+    assert db_session.query(VentaPaquete).count() == 1
+
+
+def test_renovar_o_ampliar_el_paquete_es_otra_venta(db_session):
+    from src.infrastructure.db.models import VentaPaquete
+
+    empresa = _crear_empresa(db_session)
+    service = EmpresaAdminService(db_session)
+    service.cambiar_plan(
+        empresa.id, CambiarPlanRequest(max_documentos=500, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2026, 12, 31))
+    )
+    service.cambiar_plan(
+        empresa.id, CambiarPlanRequest(max_documentos=1500, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2026, 12, 31))
+    )
+
+    assert db_session.query(VentaPaquete).count() == 2
+
+
+def test_cambiar_plan_rechaza_precio_negativo():
+    with pytest.raises(ValidationError):
+        CambiarPlanRequest(max_documentos=10, fecha_inicio=date(2026, 1, 1), fecha_fin=date(2026, 12, 31), precio=-1)
