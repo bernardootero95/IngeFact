@@ -183,6 +183,7 @@ export default function CompanyFormPage() {
       case "numeroIdentificacion":
         if (!value.trim()) errorMsg = "El NIT es obligatorio.";
         else if (!/^\d+$/.test(value)) errorMsg = "Debe contener solo números.";
+        else if (!/^\d{5,15}$/.test(value)) errorMsg = "Debe tener entre 5 y 15 dígitos.";
         break;
       case "digitoVerificacion":
         if (!String(value).trim()) errorMsg = "Requerido.";

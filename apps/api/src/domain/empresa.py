@@ -64,9 +64,11 @@ class CrearEmpresaRequest(BaseModel):
     @field_validator("numero_identificacion")
     @classmethod
     def nit_formato(cls, v: str) -> str:
+        # Persona natural: su NIT es la cedula, que puede tener 5 a 7 digitos.
+        # 15 es el tope que cubre el algoritmo del DV (core/nit.py).
         v = v.strip()
-        if not (8 <= len(v) <= 10) or not v.isdigit():
-            raise ValueError("El NIT debe tener entre 8 y 10 digitos numericos.")
+        if not (5 <= len(v) <= 15) or not v.isdigit():
+            raise ValueError("El NIT debe tener entre 5 y 15 digitos numericos.")
         return v
 
     @model_validator(mode="after")
