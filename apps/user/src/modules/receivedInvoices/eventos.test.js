@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACCIONES_EVENTO, accionPorTipo, tipoInicial } from "./eventos.js";
+import { ACCIONES_EVENTO, accionPorTipo, mensajeSincronizacion, tipoInicial } from "./eventos.js";
 
 describe("eventos de facturas recibidas", () => {
   it("sigue el orden acuse -> recibo -> aceptar/rechazar", () => {
@@ -16,5 +16,11 @@ describe("eventos de facturas recibidas", () => {
     expect(tipoInicial("033", ["030"])).toBe("030");
     expect(tipoInicial("", ["033", "031"])).toBe("");
     expect(tipoInicial(null, [])).toBe("");
+  });
+
+  it("mensajeSincronizacion dice cuántos eventos se trajeron de la DIAN", () => {
+    expect(mensajeSincronizacion(0)).toMatch(/al día/);
+    expect(mensajeSincronizacion(1)).toMatch(/1 evento que/);
+    expect(mensajeSincronizacion(3)).toMatch(/3 eventos/);
   });
 });

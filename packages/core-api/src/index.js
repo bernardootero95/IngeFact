@@ -108,6 +108,7 @@ export {
   crearFacturaRecibida,
   eliminarFacturaRecibida,
   registrarEventoReceptor,
+  sincronizarEventosFacturaRecibida,
   leerReporteDian,
   cargarLoteFacturasRecibidas,
 } from "./services/facturasRecibidas.js";

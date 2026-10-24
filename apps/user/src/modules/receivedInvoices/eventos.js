@@ -31,5 +31,12 @@ export function tipoInicial(tipoSolicitado, eventosPermitidos) {
   return eventosPermitidos.length === 1 ? eventosPermitidos[0] : "";
 }
 
+export function mensajeSincronizacion(nuevos) {
+  if (nuevos <= 0) return "La factura ya estaba al día con la DIAN.";
+  return nuevos === 1
+    ? "Se trajo 1 evento que la factura ya tenía en la DIAN."
+    : `Se trajeron ${nuevos} eventos que la factura ya tenía en la DIAN.`;
+}
+
 export const formatCOP = (value) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(value);

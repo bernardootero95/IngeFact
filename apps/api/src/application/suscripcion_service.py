@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_alerta_cuota
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA
-from src.domain.factura_recibida import ESTADOS_EVENTO_ACEPTADO
+from src.domain.factura_recibida import ESTADOS_EVENTO_ACEPTADO, ORIGEN_INGEFACT
 from src.infrastructure.db.models import (
     DocumentoSoporte,
     Empresa,
@@ -97,13 +97,15 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
     ).scalar_one()
 
     # Los eventos no tienen empresa_id ni fecha_envio propios: cuelgan de la
-    # FacturaRecibida y se registran (y responde la DIAN) al crearse.
+    # FacturaRecibida y se registran (y responde la DIAN) al crearse. Los
+    # leidos de la DIAN (origen "dian") no los transmitio IngeFact: no cuentan.
     total += db.execute(
         select(func.count())
         .select_from(EventoReceptor)
         .join(FacturaRecibida, EventoReceptor.factura_recibida_id == FacturaRecibida.id)
         .where(
             FacturaRecibida.empresa_id == suscripcion.empresa_id,
+            EventoReceptor.origen == ORIGEN_INGEFACT,
             EventoReceptor.legal_status.in_(ESTADOS_EVENTO_ACEPTADO),
             EventoReceptor.creado >= inicio,
             EventoReceptor.creado <= fin,
