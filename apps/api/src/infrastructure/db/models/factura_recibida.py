@@ -19,6 +19,10 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.infrastructure.db.session import Base
 
 TIPOS_EVENTO_RECEPTOR = ("030", "031", "032", "033", "034")
+# "ingefact": lo registro el tenant desde aqui (consume cupo). "dian": ya
+# existia ante la DIAN (otro software, el portal o el emisor, p. ej. la
+# aceptacion tacita) y solo se leyo para reflejar el estado real.
+ORIGENES_EVENTO = ("ingefact", "dian")
 
 
 class FacturaRecibida(Base):
@@ -82,6 +86,7 @@ class EventoReceptor(Base):
     __tablename__ = "eventos_receptor"
     __table_args__ = (
         CheckConstraint(f"tipo IN {TIPOS_EVENTO_RECEPTOR}", name="ck_eventos_receptor_tipo"),
+        CheckConstraint(f"origen IN {ORIGENES_EVENTO}", name="ck_eventos_receptor_origen"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -102,6 +107,7 @@ class EventoReceptor(Base):
     generador_cargo: Mapped[str | None] = mapped_column(String(150))
     razon_rechazo: Mapped[str | None] = mapped_column(Text)
     notificaciones_dian: Mapped[list | None] = mapped_column(JSONB)
+    origen: Mapped[str] = mapped_column(String(10), nullable=False, default="ingefact", server_default="ingefact")
 
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

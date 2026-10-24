@@ -102,6 +102,18 @@ def eliminar_factura_recibida(
     FacturaRecibidaService(db).eliminar(tenant.empresa_id, factura_recibida_id)
 
 
+@router.post("/{factura_recibida_id}/sincronizar-eventos", response_model=FacturaRecibidaResponse)
+def sincronizar_eventos_factura_recibida(
+    factura_recibida_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Trae de la DIAN los eventos que la factura ya tiene (registrados por
+    fuera de IngeFact) para mostrar su estado real. No consume cupo."""
+    factura = FacturaRecibidaService(db).sincronizar_eventos(tenant.empresa_id, factura_recibida_id)
+    return FacturaRecibidaResponse.from_model(factura)
+
+
 @router.post("/{factura_recibida_id}/eventos", response_model=FacturaRecibidaResponse)
 def registrar_evento_receptor(
     factura_recibida_id: uuid.UUID,

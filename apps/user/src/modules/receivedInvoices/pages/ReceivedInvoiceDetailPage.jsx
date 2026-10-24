@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getFacturaRecibida, registrarEventoReceptor, listPublicReferenceTable } from "@ingefact/core-api";
+import {
+  getFacturaRecibida,
+  registrarEventoReceptor,
+  sincronizarEventosFacturaRecibida,
+  listPublicReferenceTable,
+} from "@ingefact/core-api";
 import { Button, ToastAlert } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
 import Footer from "../../../components/Footer";
@@ -9,7 +14,7 @@ import EstadoBadge from "../components/EstadoBadge";
 import DescargarXmlButton from "../components/DescargarXmlButton";
 import HistorialEventos from "../components/HistorialEventos";
 import RegistrarEventoForm from "../components/RegistrarEventoForm";
-import { tipoInicial } from "../eventos";
+import { mensajeSincronizacion, tipoInicial } from "../eventos";
 
 function Layout({ children }) {
   return (
@@ -30,6 +35,7 @@ export default function ReceivedInvoiceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [toast, setToast] = useState(null);
+  const [sincronizando, setSincronizando] = useState(false);
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -61,6 +67,20 @@ export default function ReceivedInvoiceDetailPage() {
         ? { type: "error", message: `La DIAN rechazó el evento: ${ultimo?.razon_rechazo || "revisa el historial."}` }
         : { type: "success", message: `${ultimo?.tipo_label || "Evento"} registrado ante la DIAN.` }
     );
+  };
+
+  const handleSincronizar = async () => {
+    setSincronizando(true);
+    try {
+      const actualizada = await sincronizarEventosFacturaRecibida(id);
+      const nuevos = actualizada.eventos.length - factura.eventos.length;
+      setFactura(actualizada);
+      setToast({ type: "success", message: mensajeSincronizacion(nuevos) });
+    } catch (error) {
+      setToast({ type: "error", message: error.message });
+    } finally {
+      setSincronizando(false);
+    }
   };
 
   if (loading) {
@@ -131,7 +151,18 @@ export default function ReceivedInvoiceDetailPage() {
             )}
 
             <section className="bg-white border border-neutralCustom-100 rounded-brand-lg shadow-sm p-6">
-              <h3 className="text-base font-semibold text-neutralCustom-800 mb-4">Historial de eventos</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h3 className="text-base font-semibold text-neutralCustom-800">Historial de eventos</h3>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSincronizar}
+                  loading={sincronizando}
+                  title="Traer los eventos que la factura ya tiene en la DIAN (no descuenta documentos)"
+                >
+                  Actualizar desde la DIAN
+                </Button>
+              </div>
               <HistorialEventos eventos={factura.eventos} />
             </section>
           </div>

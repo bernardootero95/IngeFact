@@ -1,4 +1,5 @@
 import base64
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -19,6 +20,7 @@ from src.core.factura_ubl_parser import (
 from src.core.reporte_dian_parser import ReporteDianInvalido, parsear_reporte_dian
 from src.domain.factura_recibida import (
     ESTADOS_EVENTO_ACEPTADO,
+    ORIGEN_DIAN,
     RESULTADO_CARGADA,
     RESULTADO_ERROR,
     RESULTADO_OMITIDA,
@@ -37,9 +39,12 @@ from src.domain.factura_recibida import (
     ResultadoCargaFacturaResponse,
     XmlFacturaRecibidaResponse,
     clasificar_filas_reporte,
+    eventos_dian_nuevos,
     eventos_permitidos,
 )
 from src.infrastructure.db.models import Empresa, EventoReceptor, FacturaRecibida, Proveedor
+
+logger = logging.getLogger(__name__)
 
 MENSAJE_ALEGRA_NO_RESPONDE = (
     "El servicio de facturación electrónica no está respondiendo en este momento. Intenta de nuevo en unos minutos."
@@ -200,7 +205,48 @@ class FacturaRecibidaService:
         self.db.add(factura_recibida)
         self.db.commit()
         self.db.refresh(factura_recibida)
+
+        # Si la factura ya tenia eventos (otro software, el portal de la DIAN
+        # o el emisor), entra directo en su estado real. Best-effort: la
+        # factura ya quedo registrada y el usuario puede sincronizar despues.
+        try:
+            self._importar_eventos_dian(factura_recibida)
+        except (AlegraApiError, AlegraTransientError) as exc:
+            self.db.rollback()
+            logger.warning("No se pudieron leer los eventos DIAN de la factura recibida %s: %s", factura_recibida.id, exc)
         return self.obtener(empresa_id, factura_recibida.id)
+
+    def _importar_eventos_dian(self, factura_recibida: FacturaRecibida) -> int:
+        """Guarda los eventos 030-034 que la DIAN tiene y aqui no. Se marcan
+        con origen "dian" y no consumen cupo (no los transmitio IngeFact)."""
+        respuesta = self._alegra_client.get_invoice_events(factura_recibida.cufe)
+        cudes = {e.cude for e in factura_recibida.eventos if e.cude}
+        nuevos = eventos_dian_nuevos(respuesta, cudes)
+        for evento in nuevos:
+            self.db.add(
+                EventoReceptor(
+                    factura_recibida_id=factura_recibida.id,
+                    tipo=evento.tipo,
+                    numero=evento.numero,
+                    cude=evento.cude,
+                    legal_status="ACCEPTED",
+                    origen=ORIGEN_DIAN,
+                    **({"creado": evento.fecha} if evento.fecha else {}),
+                )
+            )
+        self.db.commit()
+        return len(nuevos)
+
+    def sincronizar_eventos(self, empresa_id: uuid.UUID, factura_recibida_id: uuid.UUID) -> FacturaRecibida:
+        """Boton "Actualizar estado desde la DIAN" del detalle."""
+        factura_recibida = self.obtener(empresa_id, factura_recibida_id)
+        try:
+            self._importar_eventos_dian(factura_recibida)
+        except AlegraApiError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, map_alegra_error(exc.status_code, exc.body)) from exc
+        except AlegraTransientError as exc:
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, MENSAJE_ALEGRA_NO_RESPONDE) from exc
+        return self.obtener(empresa_id, factura_recibida_id)
 
     def leer_reporte_dian(self, empresa_id: uuid.UUID, data: LeerReporteDianRequest) -> LecturaReporteDianResponse:
         """Primer paso de la carga masiva: lee el Excel y separa las facturas

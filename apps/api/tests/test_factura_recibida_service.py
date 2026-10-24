@@ -6,12 +6,13 @@ from fastapi import HTTPException
 
 from src.application.factura_recibida_service import FacturaRecibidaService
 from src.application.suscripcion_service import contar_documentos_usados
-from src.core.alegra_client import AlegraApiError
+from src.core.alegra_client import AlegraApiError, AlegraTransientError
 from src.domain.factura_recibida import (
     CrearEventoReceptorRequest,
     CrearFacturaRecibidaRequest,
     FacturaRecibidaListItemResponse,
     GeneradorEventoRequest,
+    eventos_dian_nuevos,
 )
 from src.infrastructure.db.models import Empresa, Proveedor, Suscripcion
 
@@ -99,6 +100,29 @@ def _respuesta_dian(xml: str | None = None, dian_status="AUTHORIZED") -> dict:
     }
 
 
+SIN_EVENTOS_DIAN = {
+    "isValid": False,
+    "statusCode": "67",
+    "statusDescription": "EL CUFE o Factura consultada no tiene a la fecha eventos asociados.",
+}
+
+
+def _evento_dian(tipo: str, cude: str, fecha="2026-09-28 22:59:30") -> dict:
+    """Misma forma que devolvio el sandbox en GET /events/invoice/{cufe}."""
+    return {
+        "responseCode": tipo,
+        "eventName": "Evento",
+        "effectiveTime": fecha,
+        "documentReference": {"number": f"N{tipo}", "uuid": cude},
+        "issuerParty": {"identificationNumber": NIT_EMPRESA, "name": "Empresa Demo SAS"},
+        "receiverParty": {"identificationNumber": NIT_PROVEEDOR, "name": "Distribuidora Andina SAS"},
+    }
+
+
+def _con_eventos_dian(*eventos) -> dict:
+    return {"isValid": True, "statusCode": "00", "statusDescription": "Procesado Correctamente.", "events": list(eventos)}
+
+
 def _generador(**overrides) -> GeneradorEventoRequest:
     data = {
         "tipo_identificacion": "13",
@@ -125,12 +149,21 @@ class _FakeAlegraClient:
         documento_error: AlegraApiError | None = None,
         evento: dict | None = None,
         evento_error: AlegraApiError | None = None,
+        eventos_dian: dict | None = None,
+        eventos_dian_error: Exception | None = None,
     ):
         self._documento = documento or _respuesta_dian()
         self._documento_error = documento_error
         self._evento = evento or _respuesta_evento()
         self._evento_error = evento_error
+        self.eventos_dian = eventos_dian or SIN_EVENTOS_DIAN
+        self._eventos_dian_error = eventos_dian_error
         self.last_payload = None
+
+    def get_invoice_events(self, cufe: str) -> dict:
+        if self._eventos_dian_error:
+            raise self._eventos_dian_error
+        return self.eventos_dian
 
     def get_document_by_track_id(self, track_id: str) -> dict:
         if self._documento_error:
@@ -464,3 +497,83 @@ def test_registrar_evento_empresa_sin_id_alegra_da_409(db_session):
     with pytest.raises(HTTPException) as exc_info:
         service.registrar_evento(empresa.id, factura.id, _evento("030"))
     assert exc_info.value.status_code == 409
+
+
+# --- Eventos que ya existen en la DIAN ---
+
+
+def test_eventos_dian_nuevos_filtra_tipos_y_repetidos_y_lee_la_fecha_en_hora_colombia():
+    respuesta = _con_eventos_dian(
+        _evento_dian("030", "cude-a"),
+        _evento_dian("037", "cude-endoso"),  # RADIAN: no cambia la aceptacion
+        _evento_dian("032", "cude-b"),
+        _evento_dian("032", "cude-b"),
+    )
+
+    nuevos = eventos_dian_nuevos(respuesta, cudes_registrados={"cude-a"})
+
+    assert [(e.tipo, e.cude, e.numero) for e in nuevos] == [("032", "cude-b", "N032")]
+    assert nuevos[0].fecha.isoformat() == "2026-09-28T22:59:30-05:00"
+
+
+def test_eventos_dian_nuevos_sin_eventos_o_codigo_desconocido_no_devuelve_nada():
+    assert eventos_dian_nuevos(SIN_EVENTOS_DIAN, set()) == []
+    assert eventos_dian_nuevos({"statusCode": "66", "events": [_evento_dian("030", "x")]}, set()) == []
+
+
+def test_crear_trae_los_eventos_que_ya_existen_en_la_dian_sin_consumir_cupo(db_session):
+    empresa = _crear_empresa(db_session)
+    service, _ = _servicio(
+        db_session,
+        eventos_dian=_con_eventos_dian(_evento_dian("030", "c1"), _evento_dian("032", "c2"), _evento_dian("033", "c3")),
+    )
+
+    factura = _crear(service, empresa)
+
+    item = FacturaRecibidaListItemResponse.from_model(factura)
+    assert item.estado == "aceptada"
+    assert item.eventos_permitidos == []
+    assert {e.origen for e in factura.eventos} == {"dian"}
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+    assert contar_documentos_usados(db_session, suscripcion) == 0
+
+
+def test_crear_registra_la_factura_aunque_falle_la_consulta_de_eventos(db_session):
+    empresa = _crear_empresa(db_session)
+    service, _ = _servicio(db_session, eventos_dian_error=AlegraTransientError("timeout"))
+
+    factura = _crear(service, empresa)
+
+    assert factura.eventos == []
+    assert FacturaRecibidaListItemResponse.from_model(factura).estado == "sin_evento"
+
+
+def test_sincronizar_agrega_solo_los_eventos_nuevos(db_session):
+    empresa = _crear_empresa(db_session)
+    service, fake = _servicio(db_session)
+    factura = _crear(service, empresa)
+    service.registrar_evento(empresa.id, factura.id, _evento("030"))  # queda con cude-1
+    # La DIAN lista el acuse hecho desde IngeFact y un recibo hecho por fuera
+    # (fecha anterior: queda primero en el historial, que se ordena por fecha).
+    fake.eventos_dian = _con_eventos_dian(_evento_dian("030", "cude-1"), _evento_dian("032", "externo"))
+
+    service.sincronizar_eventos(empresa.id, factura.id)
+    actualizada = service.sincronizar_eventos(empresa.id, factura.id)
+
+    assert [(e.tipo, e.origen) for e in actualizada.eventos] == [("032", "dian"), ("030", "ingefact")]
+    item = FacturaRecibidaListItemResponse.from_model(actualizada)
+    assert item.estado == "mercancia_recibida"
+    assert item.eventos_permitidos == ["033", "031"]
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+    assert contar_documentos_usados(db_session, suscripcion) == 1  # solo el acuse de IngeFact
+
+
+def test_sincronizar_con_alegra_caido_da_502(db_session):
+    empresa = _crear_empresa(db_session)
+    service, fake = _servicio(db_session)
+    factura = _crear(service, empresa)
+    fake._eventos_dian_error = AlegraTransientError("timeout")
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.sincronizar_eventos(empresa.id, factura.id)
+    assert exc_info.value.status_code == 502

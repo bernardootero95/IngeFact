@@ -20,7 +20,13 @@ from src.domain.factura_recibida import (
     CrearFacturaRecibidaRequest,
     LeerReporteDianRequest,
 )
-from tests.test_factura_recibida_service import NIT_EMPRESA, _crear_empresa, _respuesta_dian, _xml_factura
+from tests.test_factura_recibida_service import (
+    NIT_EMPRESA,
+    SIN_EVENTOS_DIAN,
+    _crear_empresa,
+    _respuesta_dian,
+    _xml_factura,
+)
 
 # Mismos encabezados (y en el mismo orden) que exporta el portal de la DIAN.
 ENCABEZADOS = (
@@ -57,6 +63,9 @@ class _FakeAlegraPorCufe:
     def __init__(self, documentos: dict):
         self._documentos = documentos
         self.consultados = []
+
+    def get_invoice_events(self, cufe):
+        return SIN_EVENTOS_DIAN
 
     def get_document_by_track_id(self, track_id):
         self.consultados.append(track_id)

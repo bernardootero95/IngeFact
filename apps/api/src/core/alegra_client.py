@@ -151,6 +151,14 @@ class AlegraClient:
         proposito)."""
         return self._request("POST", "/events/from-cufe", json=payload)
 
+    def get_invoice_events(self, cufe: str) -> dict:
+        """GET /events/invoice/{cufe} -- eventos que la DIAN tiene para una
+        factura, sin importar desde donde se registraron. Verificado en
+        sandbox: `statusCode` "00" + `events[]` ({responseCode, eventName,
+        effectiveTime "YYYY-MM-DD HH:MM:SS" hora Colombia,
+        documentReference.{number, uuid=CUDE}}); "67" = sin eventos."""
+        return self._request("GET", f"/events/invoice/{cufe}")
+
     def get_document_by_track_id(self, track_id: str) -> dict:
         """GET /get-by-trackid -- consulta en la DIAN un documento por su
         CUFE/CUDE, sin importar quien lo emitio. Verificado en sandbox: trae

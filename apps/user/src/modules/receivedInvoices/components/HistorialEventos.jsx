@@ -10,7 +10,7 @@ export default function HistorialEventos({ eventos }) {
   if (eventos.length === 0) {
     return (
       <p className="text-sm text-neutralCustom-500 text-center py-6 border-2 border-dashed border-neutralCustom-200 rounded-brand-md">
-        Aún no has registrado ningún evento sobre esta factura.
+        Esta factura aún no tiene eventos.
       </p>
     );
   }
@@ -23,13 +23,23 @@ export default function HistorialEventos({ eventos }) {
             <span className="text-sm font-medium text-neutralCustom-800">{evento.tipo_label}</span>
             <span className="text-xs text-neutralCustom-500">{new Date(evento.creado).toLocaleString("es-CO")}</span>
           </div>
-          <span
-            className={`mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-              LEGAL_STATUS_BADGE[evento.legal_status] || "bg-neutralCustom-100 text-neutralCustom-600"
-            }`}
-          >
-            {LEGAL_STATUS_LABEL[evento.legal_status] || evento.legal_status || "Sin respuesta de la DIAN"}
-          </span>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                LEGAL_STATUS_BADGE[evento.legal_status] || "bg-neutralCustom-100 text-neutralCustom-600"
+              }`}
+            >
+              {LEGAL_STATUS_LABEL[evento.legal_status] || evento.legal_status || "Sin respuesta de la DIAN"}
+            </span>
+            {evento.origen === "dian" && (
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border border-neutralCustom-200 text-neutralCustom-600"
+                title="Se registró en otro software, en el portal de la DIAN o lo hizo el emisor. No descontó documentos de tu paquete."
+              >
+                Registrado fuera de IngeFact
+              </span>
+            )}
+          </div>
           {evento.razon_rechazo && <p className="text-sm text-fiscal-danger mt-2">{evento.razon_rechazo}</p>}
           {evento.notas && <p className="text-xs text-neutralCustom-600 mt-2">{evento.notas}</p>}
           {evento.cude && <p className="text-xs text-neutralCustom-500 mt-1 font-mono break-all">CUDE: {evento.cude}</p>}

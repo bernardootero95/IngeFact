@@ -1,9 +1,11 @@
+from dataclasses import dataclass
 from datetime import date, datetime
 
 from pydantic import BaseModel, field_validator, model_validator
 
 from src.core.factura_ubl_parser import FORMA_PAGO_CREDITO, FORMA_PAGO_LABELS
 from src.core.reporte_dian_parser import normalizar_texto
+from src.core.tiempo import ZONA_HORARIA_COLOMBIA
 
 TIPOS_EVENTO_RECEPTOR = ("030", "031", "032", "033", "034")
 
@@ -26,6 +28,56 @@ TIPO_ACEPTACION_TACITA = "034"
 
 # legal_status que devuelve la DIAN (via Alegra) para un evento valido.
 ESTADOS_EVENTO_ACEPTADO = ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS")
+
+# Ver EventoReceptor.origen: solo los de IngeFact consumen cupo.
+ORIGEN_INGEFACT = "ingefact"
+ORIGEN_DIAN = "dian"
+
+# GET /events/invoice/{cufe}: "00" trae eventos, "67" = la factura no tiene.
+CODIGO_DIAN_CON_EVENTOS = "00"
+
+
+@dataclass(frozen=True)
+class EventoDian:
+    tipo: str
+    numero: str
+    cude: str
+    fecha: datetime | None
+
+
+def _fecha_evento_dian(valor: str | None) -> datetime | None:
+    """effectiveTime llega como "2026-09-28 22:59:30", hora Colombia."""
+    try:
+        return datetime.strptime((valor or "").strip(), "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZONA_HORARIA_COLOMBIA)
+    except ValueError:
+        return None
+
+
+def eventos_dian_nuevos(respuesta: dict, cudes_registrados: set[str]) -> list[EventoDian]:
+    """Eventos 030-034 que la DIAN tiene para la factura y que todavia no
+    estan guardados (se comparan por CUDE: los registrados desde IngeFact
+    tambien aparecen en la DIAN). Los demas eventos RADIAN (endosos, avales,
+    etc.) no cambian el estado de aceptacion y se ignoran."""
+    if respuesta.get("statusCode") != CODIGO_DIAN_CON_EVENTOS:
+        return []
+    nuevos: list[EventoDian] = []
+    vistos = set(cudes_registrados)
+    for evento in respuesta.get("events") or []:
+        tipo = str(evento.get("responseCode") or "").strip()
+        referencia = evento.get("documentReference") or {}
+        cude = str(referencia.get("uuid") or "").strip()
+        if tipo not in TIPOS_EVENTO_RECEPTOR or not cude or cude in vistos:
+            continue
+        vistos.add(cude)
+        nuevos.append(
+            EventoDian(
+                tipo=tipo,
+                numero=str(referencia.get("number") or "")[:30] or cude[:30],
+                cude=cude,
+                fecha=_fecha_evento_dian(evento.get("effectiveTime")),
+            )
+        )
+    return nuevos
 
 # Estado de la factura segun los eventos que la DIAN ya acepto. Orden RADIAN
 # (Res. 000085/2022): acuse (030) -> recibo del bien (032) -> aceptacion
@@ -169,6 +221,7 @@ class EventoReceptorResponse(BaseModel):
     generador_apellidos: str | None
     razon_rechazo: str | None
     notificaciones_dian: list | None
+    origen: str
     creado: datetime
 
     @staticmethod
@@ -186,6 +239,7 @@ class EventoReceptorResponse(BaseModel):
             generador_apellidos=evento.generador_apellidos,
             razon_rechazo=evento.razon_rechazo,
             notificaciones_dian=evento.notificaciones_dian,
+            origen=evento.origen or ORIGEN_INGEFACT,
             creado=evento.creado,
         )
 

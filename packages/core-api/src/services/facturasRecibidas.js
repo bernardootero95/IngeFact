@@ -38,6 +38,13 @@ export async function eliminarFacturaRecibida(id) {
   return apiRequest(`/api/v1/tenant/facturas-recibidas/${id}`, { method: "DELETE" });
 }
 
+// Trae de la DIAN los eventos que la factura ya tiene por fuera de IngeFact.
+export async function sincronizarEventosFacturaRecibida(facturaRecibidaId) {
+  return apiRequest(`/api/v1/tenant/facturas-recibidas/${facturaRecibidaId}/sincronizar-eventos`, {
+    method: "POST",
+  });
+}
+
 export async function registrarEventoReceptor(facturaRecibidaId, payload) {
   return apiRequest(`/api/v1/tenant/facturas-recibidas/${facturaRecibidaId}/eventos`, {
     method: "POST",
