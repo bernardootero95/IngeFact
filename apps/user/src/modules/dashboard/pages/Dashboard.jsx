@@ -8,7 +8,7 @@ import Footer from "../../../components/Footer";
 
 export default function Dashboard() {
   const { profile } = useAuthStore();
-  const { empresa, loading: loadingEmpresa } = useCurrentEmpresa();
+  const { empresa, loading: loadingEmpresa, refetch: refetchEmpresa } = useCurrentEmpresa();
   const [kpis, setKpis] = useState(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [kpisError, setKpisError] = useState(null);
@@ -25,6 +25,13 @@ export default function Dashboard() {
   useEffect(() => {
     fetchKpis();
   }, [fetchKpis]);
+
+  // La empresa del contexto se carga una sola vez por sesión; sin esto
+  // "Documentos disponibles" no reflejaba lo emitido después (facturas,
+  // notas, eventos...) hasta recargar la página.
+  useEffect(() => {
+    refetchEmpresa().catch(() => {});
+  }, [refetchEmpresa]);
 
   const loading = loadingEmpresa || loadingKpis;
   const suscripcion = empresa?.suscripcion ?? null;
