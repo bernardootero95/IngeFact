@@ -2,7 +2,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, field_validator, model_validator
 
-from src.core.factura_ubl_parser import FORMA_PAGO_LABELS
+from src.core.factura_ubl_parser import FORMA_PAGO_CREDITO, FORMA_PAGO_LABELS
+from src.core.reporte_dian_parser import normalizar_texto
 
 TIPOS_EVENTO_RECEPTOR = ("030", "031", "032", "033", "034")
 
@@ -251,3 +252,135 @@ class FacturaRecibidaResponse(FacturaRecibidaListItemResponse):
 class XmlFacturaRecibidaResponse(BaseModel):
     nombre_archivo: str
     contenido_base64: str
+
+
+# --- Carga masiva desde el reporte de documentos de la DIAN ---
+
+# El Excel llega en base64 dentro del JSON (mismo criterio que el logo de la
+# empresa) para no sumar multipart al API.
+MAX_BYTES_REPORTE_DIAN = 5 * 1024 * 1024
+MAX_CUFES_POR_LOTE = 20
+
+MOTIVO_NO_ES_FACTURA = "No son facturas (notas, nómina, documentos soporte y otros)"
+MOTIVO_EMITIDA_POR_EMPRESA = "Las emitió tu empresa"
+MOTIVO_OTRO_RECEPTOR = "Fueron emitidas a otro comprador"
+MOTIVO_NO_APROBADA = "La DIAN no las aprobó"
+MOTIVO_CONTADO = "Son de contado (la DIAN solo permite eventos sobre facturas a crédito)"
+MOTIVO_YA_REGISTRADA = "Ya estaban registradas"
+MOTIVO_REPETIDA = "Estaban repetidas en el archivo"
+
+RESULTADO_CARGADA = "cargada"
+RESULTADO_OMITIDA = "omitida"
+RESULTADO_ERROR = "error"
+
+
+def _solo_digitos(valor: str | None) -> str:
+    return "".join(c for c in (valor or "") if c.isdigit())
+
+
+def motivo_omision_fila(fila, nit_empresa: str) -> str | None:
+    """Filtro previo con los datos del reporte, sin llamar a la DIAN. Lo que
+    pasa este filtro igual se vuelve a validar con el XML real al cargarlo."""
+    if not normalizar_texto(fila.tipo_documento).startswith("factura electronica"):
+        return MOTIVO_NO_ES_FACTURA
+    if normalizar_texto(fila.grupo) != "recibido":
+        return MOTIVO_EMITIDA_POR_EMPRESA
+    if _solo_digitos(fila.nit_receptor) != _solo_digitos(nit_empresa):
+        return MOTIVO_OTRO_RECEPTOR
+    if fila.estado and not normalizar_texto(fila.estado).startswith("aprobado"):
+        return MOTIVO_NO_APROBADA
+    if fila.forma_pago != FORMA_PAGO_CREDITO:
+        return MOTIVO_CONTADO
+    return None
+
+
+def clasificar_filas_reporte(filas, nit_empresa: str, cufes_registrados: set[str]):
+    """Separa las facturas que se pueden cargar de las que no, en el orden
+    del archivo. Devuelve (candidatas, conteo de omitidas por motivo)."""
+    candidatas = []
+    omitidas: dict[str, int] = {}
+    vistos: set[str] = set()
+    for fila in filas:
+        motivo = motivo_omision_fila(fila, nit_empresa)
+        if motivo is None and not fila.cufe:
+            motivo = MOTIVO_NO_ES_FACTURA
+        if motivo is None and fila.cufe in cufes_registrados:
+            motivo = MOTIVO_YA_REGISTRADA
+        if motivo is None and fila.cufe in vistos:
+            motivo = MOTIVO_REPETIDA
+        if motivo:
+            omitidas[motivo] = omitidas.get(motivo, 0) + 1
+            continue
+        vistos.add(fila.cufe)
+        candidatas.append(fila)
+    return candidatas, omitidas
+
+
+class LeerReporteDianRequest(BaseModel):
+    nombre_archivo: str
+    contenido_base64: str
+
+    @field_validator("nombre_archivo")
+    @classmethod
+    def es_excel(cls, v: str) -> str:
+        if not v.lower().endswith(".xlsx"):
+            raise ValueError("Sube el reporte en Excel (.xlsx) tal como lo descargas de la DIAN.")
+        return v
+
+    @field_validator("contenido_base64")
+    @classmethod
+    def tamano_valido(cls, v: str) -> str:
+        if len(v) * 3 // 4 > MAX_BYTES_REPORTE_DIAN:
+            raise ValueError("El archivo pesa más de 5 MB. Descarga el reporte por un rango de fechas más corto.")
+        return v
+
+
+class FacturaCandidataResponse(BaseModel):
+    cufe: str
+    numero: str
+    proveedor_nombre: str
+    proveedor_nit: str
+    fecha: str
+    total: float | None
+
+    @staticmethod
+    def from_fila(fila) -> "FacturaCandidataResponse":
+        return FacturaCandidataResponse(
+            cufe=fila.cufe,
+            numero=f"{fila.prefijo}{fila.folio}",
+            proveedor_nombre=fila.nombre_emisor,
+            proveedor_nit=fila.nit_emisor,
+            fecha=fila.fecha_emision,
+            total=fila.total,
+        )
+
+
+class OmitidasPorMotivoResponse(BaseModel):
+    motivo: str
+    cantidad: int
+
+
+class LecturaReporteDianResponse(BaseModel):
+    total_filas: int
+    candidatas: list[FacturaCandidataResponse]
+    omitidas: list[OmitidasPorMotivoResponse]
+
+
+class CargarLoteFacturasRecibidasRequest(BaseModel):
+    cufes: list[str]
+
+    @field_validator("cufes")
+    @classmethod
+    def cufes_validos(cls, v: list[str]) -> list[str]:
+        if not v:
+            raise ValueError("Envía al menos un CUFE.")
+        if len(v) > MAX_CUFES_POR_LOTE:
+            raise ValueError(f"Envía como máximo {MAX_CUFES_POR_LOTE} CUFE por lote.")
+        return [_normalizar_cufe(c) for c in v]
+
+
+class ResultadoCargaFacturaResponse(BaseModel):
+    cufe: str
+    resultado: str
+    mensaje: str | None
+    factura: FacturaRecibidaListItemResponse | None
