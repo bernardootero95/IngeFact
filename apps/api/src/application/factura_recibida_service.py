@@ -16,8 +16,12 @@ from src.core.factura_ubl_parser import (
     ResumenFacturaUbl,
     parsear_factura_ubl,
 )
+from src.core.reporte_dian_parser import ReporteDianInvalido, parsear_reporte_dian
 from src.domain.factura_recibida import (
     ESTADOS_EVENTO_ACEPTADO,
+    RESULTADO_CARGADA,
+    RESULTADO_ERROR,
+    RESULTADO_OMITIDA,
     TIPO_ACEPTACION_EXPRESA,
     TIPO_RECIBO_BIEN,
     TIPO_RECLAMO,
@@ -25,7 +29,14 @@ from src.domain.factura_recibida import (
     ConsultaFacturaRecibidaResponse,
     CrearEventoReceptorRequest,
     CrearFacturaRecibidaRequest,
+    FacturaCandidataResponse,
+    FacturaRecibidaListItemResponse,
+    LecturaReporteDianResponse,
+    LeerReporteDianRequest,
+    OmitidasPorMotivoResponse,
+    ResultadoCargaFacturaResponse,
     XmlFacturaRecibidaResponse,
+    clasificar_filas_reporte,
     eventos_permitidos,
 )
 from src.infrastructure.db.models import Empresa, EventoReceptor, FacturaRecibida, Proveedor
@@ -190,6 +201,64 @@ class FacturaRecibidaService:
         self.db.commit()
         self.db.refresh(factura_recibida)
         return self.obtener(empresa_id, factura_recibida.id)
+
+    def leer_reporte_dian(self, empresa_id: uuid.UUID, data: LeerReporteDianRequest) -> LecturaReporteDianResponse:
+        """Primer paso de la carga masiva: lee el Excel y separa las facturas
+        recibidas a credito de lo demas. No llama a la DIAN; eso pasa al
+        cargar cada lote."""
+        try:
+            contenido = base64.b64decode(data.contenido_base64, validate=True)
+        except ValueError as exc:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "No se pudo leer el archivo. Vuelve a subirlo.") from exc
+        try:
+            filas = parsear_reporte_dian(contenido)
+        except ReporteDianInvalido as exc:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
+
+        empresa = self._empresa(empresa_id)
+        cufes_registrados = set(
+            self.db.execute(
+                select(FacturaRecibida.cufe).where(
+                    FacturaRecibida.empresa_id == empresa_id, FacturaRecibida.eliminado.is_(None)
+                )
+            ).scalars()
+        )
+        candidatas, omitidas = clasificar_filas_reporte(filas, empresa.numero_identificacion, cufes_registrados)
+        return LecturaReporteDianResponse(
+            total_filas=len(filas),
+            candidatas=[FacturaCandidataResponse.from_fila(f) for f in candidatas],
+            omitidas=[OmitidasPorMotivoResponse(motivo=m, cantidad=c) for m, c in omitidas.items()],
+        )
+
+    def cargar_lote(self, empresa_id: uuid.UUID, cufes: list[str]) -> list[ResultadoCargaFacturaResponse]:
+        """Registra cada CUFE con el mismo flujo de `crear` (consulta a la
+        DIAN, valida credito, comprador y duplicado). Un fallo no detiene el
+        lote: cada CUFE trae su propio resultado. Repetir el archivo es
+        seguro porque las ya registradas se omiten."""
+        resultados = []
+        for cufe in cufes:
+            try:
+                factura = self.crear(empresa_id, CrearFacturaRecibidaRequest(cufe=cufe))
+            except HTTPException as exc:
+                self.db.rollback()
+                resultados.append(
+                    ResultadoCargaFacturaResponse(
+                        cufe=cufe,
+                        resultado=RESULTADO_OMITIDA if exc.status_code == status.HTTP_409_CONFLICT else RESULTADO_ERROR,
+                        mensaje=exc.detail,
+                        factura=None,
+                    )
+                )
+                continue
+            resultados.append(
+                ResultadoCargaFacturaResponse(
+                    cufe=cufe,
+                    resultado=RESULTADO_CARGADA,
+                    mensaje=None,
+                    factura=FacturaRecibidaListItemResponse.from_model(factura),
+                )
+            )
+        return resultados
 
     def obtener_xml(self, empresa_id: uuid.UUID, factura_recibida_id: uuid.UUID) -> XmlFacturaRecibidaResponse:
         """El XML no se guarda: se vuelve a pedir a la DIAN (via Alegra) cada

@@ -45,12 +45,21 @@ export default function ReceivedInvoicesListPage() {
               Acusa recibo, confirma la mercancía y acepta o rechaza las facturas a crédito de tus proveedores (RADIAN).
             </p>
           </div>
-          <Button onClick={() => navigate("/received-invoices/new")} variant="primary">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Agregar
-          </Button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              onClick={() => navigate("/received-invoices/import")}
+              variant="secondary"
+              title="Cargar varias facturas desde el reporte de la DIAN"
+            >
+              Carga masiva
+            </Button>
+            <Button onClick={() => navigate("/received-invoices/new")} variant="primary">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Agregar
+            </Button>
+          </div>
         </header>
 
         {toast && <ToastAlert message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
@@ -131,11 +140,17 @@ export default function ReceivedInvoicesListPage() {
                 </div>
                 <h3 className="text-base font-bold text-neutralCustom-800 mb-1">No tienes facturas recibidas</h3>
                 <p className="text-sm text-neutralCustom-500 mb-6 max-w-sm mx-auto">
-                  Agrega una factura a crédito de tu proveedor escribiendo su CUFE; traemos sus datos de la DIAN.
+                  Agrega una factura a crédito de tu proveedor escribiendo su CUFE, o cárgalas todas desde el
+                  reporte de documentos de la DIAN; traemos sus datos de la DIAN.
                 </p>
-                <Button onClick={() => navigate("/received-invoices/new")} variant="primary">
-                  Agregar
-                </Button>
+                <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  <Button onClick={() => navigate("/received-invoices/import")} variant="secondary">
+                    Carga masiva
+                  </Button>
+                  <Button onClick={() => navigate("/received-invoices/new")} variant="primary">
+                    Agregar
+                  </Button>
+                </div>
               </div>
             )}
           </div>

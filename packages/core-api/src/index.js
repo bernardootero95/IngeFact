@@ -108,6 +108,8 @@ export {
   crearFacturaRecibida,
   eliminarFacturaRecibida,
   registrarEventoReceptor,
+  leerReporteDian,
+  cargarLoteFacturasRecibidas,
 } from "./services/facturasRecibidas.js";
 export {
   listProductos,

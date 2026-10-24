@@ -6,11 +6,15 @@ from sqlalchemy.orm import Session
 from src.application.factura_recibida_service import FacturaRecibidaService
 from src.core.dependencies import CurrentTenant, get_current_tenant
 from src.domain.factura_recibida import (
+    CargarLoteFacturasRecibidasRequest,
     ConsultaFacturaRecibidaResponse,
     CrearEventoReceptorRequest,
     CrearFacturaRecibidaRequest,
     FacturaRecibidaListItemResponse,
     FacturaRecibidaResponse,
+    LecturaReporteDianResponse,
+    LeerReporteDianRequest,
+    ResultadoCargaFacturaResponse,
     XmlFacturaRecibidaResponse,
 )
 from src.infrastructure.db.session import get_db
@@ -65,6 +69,28 @@ def crear_factura_recibida(
 ):
     factura = FacturaRecibidaService(db).crear(tenant.empresa_id, body)
     return FacturaRecibidaResponse.from_model(factura)
+
+
+@router.post("/reporte-dian", response_model=LecturaReporteDianResponse)
+def leer_reporte_dian(
+    body: LeerReporteDianRequest,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Carga masiva, paso 1: lee el Excel de la DIAN y devuelve las facturas
+    recibidas a credito que se pueden cargar."""
+    return FacturaRecibidaService(db).leer_reporte_dian(tenant.empresa_id, body)
+
+
+@router.post("/lote", response_model=list[ResultadoCargaFacturaResponse])
+def cargar_lote_facturas_recibidas(
+    body: CargarLoteFacturasRecibidasRequest,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Carga masiva, paso 2: registra hasta MAX_CUFES_POR_LOTE facturas; el
+    cliente parte la lista en lotes para mostrar el avance."""
+    return FacturaRecibidaService(db).cargar_lote(tenant.empresa_id, body.cufes)
 
 
 @router.delete("/{factura_recibida_id}", status_code=204)

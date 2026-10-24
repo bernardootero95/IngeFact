@@ -22,6 +22,18 @@ export async function crearFacturaRecibida(payload) {
   return apiRequest("/api/v1/tenant/facturas-recibidas", { method: "POST", body: payload });
 }
 
+// Carga masiva, paso 1: el Excel de la DIAN en base64; devuelve las facturas
+// a credito que se pueden cargar y cuantas filas se omitieron por motivo.
+export async function leerReporteDian(payload) {
+  return apiRequest("/api/v1/tenant/facturas-recibidas/reporte-dian", { method: "POST", body: payload });
+}
+
+// Carga masiva, paso 2: registra un lote de CUFE (maximo 20) y devuelve el
+// resultado de cada uno.
+export async function cargarLoteFacturasRecibidas(cufes) {
+  return apiRequest("/api/v1/tenant/facturas-recibidas/lote", { method: "POST", body: { cufes } });
+}
+
 export async function eliminarFacturaRecibida(id) {
   return apiRequest(`/api/v1/tenant/facturas-recibidas/${id}`, { method: "DELETE" });
 }

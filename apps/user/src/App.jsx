@@ -30,6 +30,7 @@ import EmployeeFormPage from "./modules/employees/pages/EmployeeFormPage";
 import ReceivedInvoicesListPage from "./modules/receivedInvoices/pages/ReceivedInvoicesListPage";
 import ReceivedInvoiceFormPage from "./modules/receivedInvoices/pages/ReceivedInvoiceFormPage";
 import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/ReceivedInvoiceDetailPage";
+import ReceivedInvoicesImportPage from "./modules/receivedInvoices/pages/ReceivedInvoicesImportPage";
 import SupportDocumentsListPage from "./modules/supportDocuments/pages/SupportDocumentsListPage";
 import SupportDocumentFormPage from "./modules/supportDocuments/pages/SupportDocumentFormPage";
 import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportDocumentDetailPage";
@@ -349,6 +350,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReceivedInvoiceFormPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/received-invoices/import"
+          element={
+            <ProtectedRoute>
+              <ReceivedInvoicesImportPage />
             </ProtectedRoute>
           }
         />
