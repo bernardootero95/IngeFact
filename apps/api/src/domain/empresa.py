@@ -170,6 +170,9 @@ class ActualizarEmpresaRequest(BaseModel):
     regimen_fiscal: str | None = None
     tipo_organizacion: str | None = None
     telefono: str | None = None
+    # None = no tocar (clientes que no conocen el campo no lo borran). Es a la
+    # vez el correo de la empresa y el login de su usuario -- cambia ambos.
+    correo_electronico: EmailStr | None = None
     notificacion_correo: bool = True
     estado: str = "activo"
 
@@ -186,6 +189,11 @@ class ActualizarEmpresaRequest(BaseModel):
             raise ValueError("La razon social es obligatoria.")
         return v
 
+    @field_validator("correo_electronico")
+    @classmethod
+    def correo_minusculas(cls, v: str | None) -> str | None:
+        return v.lower() if v is not None else None
+
     @field_validator("estado")
     @classmethod
     def estado_valido(cls, v: str) -> str:
@@ -197,7 +205,7 @@ class ActualizarEmpresaRequest(BaseModel):
 class ActualizarDatosContactoRequest(BaseModel):
     """Subconjunto de campos que el propio tenant puede editar -- el resto
     (razon social, NIT, correo) son de solo lectura para el tenant, los
-    administra staff desde apps/admin."""
+    administra staff desde apps/admin (el correo, con ActualizarEmpresaRequest)."""
 
     nombre_comercial: str | None = None
     telefono: str | None = None
