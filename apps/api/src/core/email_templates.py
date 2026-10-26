@@ -201,6 +201,33 @@ def plantilla_nomina_empleado(
     return subject, _layout(contenido, _motivo_documento(razon_social_empleador))
 
 
+def plantilla_correo_acceso_cambiado_anterior(nombre: str, correo_nuevo: str) -> tuple[str, str]:
+    """Va al correo anterior: si el cambio no lo pidio el dueño de la cuenta,
+    es su unica señal de que perdio el acceso."""
+    subject = "Cambió el correo de acceso a tu cuenta de IngeFact"
+    contenido = f"""
+      <h2>Hola, {_e(nombre)}</h2>
+      <p>El correo de acceso de tu cuenta de IngeFact cambió. Desde ahora inicias sesión con:</p>
+      {_tabla([("Correo nuevo", correo_nuevo, False)])}
+      <p>Este correo ya no sirve para ingresar. Si no solicitaste este cambio, escríbenos de inmediato.</p>
+    """
+    motivo = "Recibes este correo porque era el correo de acceso de una cuenta de IngeFact."
+    return subject, _layout(contenido, motivo)
+
+
+def plantilla_correo_acceso_cambiado_nuevo(nombre: str, correo_nuevo: str, login_url: str) -> tuple[str, str]:
+    subject = "Este es ahora tu correo de acceso a IngeFact"
+    contenido = f"""
+      <h2>Hola, {_e(nombre)}</h2>
+      <p>Actualizamos el correo de tu cuenta de IngeFact. Desde ahora inicias sesión con:</p>
+      {_tabla([("Correo", correo_nuevo, False)])}
+      <p>Tu contraseña sigue siendo la misma.</p>
+      {_boton(login_url, "Iniciar sesión")}
+    """
+    motivo = "Recibes este correo porque es el nuevo correo de acceso de una cuenta de IngeFact."
+    return subject, _layout(contenido, motivo)
+
+
 def plantilla_alerta_cuota(razon_social: str, documentos_usados: int, max_documentos: int) -> tuple[str, str]:
     subject = "Tu paquete de documentos está por agotarse"
     contenido = f"""
