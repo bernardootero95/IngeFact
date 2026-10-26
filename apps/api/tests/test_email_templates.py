@@ -1,5 +1,7 @@
 from src.core.email_templates import (
     plantilla_alerta_cuota,
+    plantilla_correo_acceso_cambiado_anterior,
+    plantilla_correo_acceso_cambiado_nuevo,
     plantilla_documento_soporte_proveedor,
     plantilla_factura_cliente,
     plantilla_invitacion_tenant,
@@ -33,6 +35,8 @@ def _todas_las_plantillas(valor: str) -> list[tuple[str, str]]:
             total_formateado="$1", cune="abc",
         ),
         plantilla_alerta_cuota(valor, 9, 10),
+        plantilla_correo_acceso_cambiado_anterior(valor, "nuevo@example.com"),
+        plantilla_correo_acceso_cambiado_nuevo(valor, "nuevo@example.com", "https://app.ingefact.com/login"),
     ]
 
 

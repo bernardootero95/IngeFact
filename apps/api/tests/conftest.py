@@ -22,6 +22,7 @@ TEST_DATABASE_URL = get_settings().database_url.rsplit("/", 1)[0] + "/ingefact_t
 _MODULOS_CON_EMAIL_CLIENT = (
     "src.application.auth_service",
     "src.application.documento_soporte_service",
+    "src.application.empresa_admin_service",
     "src.application.empresa_service",
     "src.application.factura_service",
     "src.application.nota_credito_service",
