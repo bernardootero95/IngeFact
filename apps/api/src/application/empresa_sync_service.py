@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
+from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -13,9 +14,12 @@ logger = logging.getLogger(__name__)
 class SincronizarEmpresasAlegraService:
     """Trae todas las empresas de Alegra y las upsertea localmente por NIT.
 
-    Porta 1:1 la logica de supabase/functions/sync-companies/index.ts: mismo
-    mapeo de campos (incluido el mapeo simplificado de regimen O-48/O-49) y
-    misma paginacion basada en metadata.to/results_count.
+    Porta la logica de supabase/functions/sync-companies/index.ts (mismo mapeo
+    de campos y misma paginacion basada en metadata.to/results_count), salvo el
+    regimen: el original lo reducia a "48"/"49", pero en IngeFact `regimen` es
+    la responsabilidad fiscal DIAN (R-99-PN, O-13...) y se guarda el
+    regimeCode de Alegra tal cual. `regimen_fiscal` (48/49) no existe en
+    Alegra, asi que el sync no lo toca.
     """
 
     PAGE_SIZE = 80
@@ -50,7 +54,8 @@ class SincronizarEmpresasAlegraService:
                 "direccion": stmt.excluded.direccion,
                 "departamento": stmt.excluded.departamento,
                 "municipio": stmt.excluded.municipio,
-                "regimen": stmt.excluded.regimen,
+                # Si Alegra no trae regimeCode se conserva el que ya habia.
+                "regimen": func.coalesce(stmt.excluded.regimen, Empresa.regimen),
                 "estado": stmt.excluded.estado,
                 "actualizado": stmt.excluded.actualizado,
             },
@@ -77,7 +82,6 @@ class SincronizarEmpresasAlegraService:
     @staticmethod
     def _transformar(c: dict) -> dict:
         address = c.get("address") or {}
-        regimen = "48" if c.get("regimeCode") == "O-48" else "49"
         return {
             "id_alegra": str(c.get("id")),
             "razon_social": c.get("name"),
@@ -90,7 +94,7 @@ class SincronizarEmpresasAlegraService:
             "direccion": address.get("address"),
             "departamento": address.get("department"),
             "municipio": address.get("city"),
-            "regimen": regimen,
+            "regimen": c.get("regimeCode") or None,
             "estado": "activo",
             "actualizado": datetime.now(timezone.utc),
         }

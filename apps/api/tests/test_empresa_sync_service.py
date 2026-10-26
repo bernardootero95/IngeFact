@@ -115,3 +115,62 @@ def test_sincronizar_pagina_hasta_agotar_resultados(db_session):
     assert procesadas == 2
     assert len(fake_client.calls) == 2
     assert fake_client.calls[1][0] == "a1"  # la segunda pagina pidio from=a1
+
+
+def test_sincronizar_guarda_responsabilidad_fiscal_tal_cual(db_session):
+    # `regimen` es la responsabilidad fiscal DIAN; antes se reducia a "48"/"49"
+    # y una empresa R-99-PN en Alegra quedaba con regimen "49".
+    fake_client = FakeAlegraClient(
+        [
+            {
+                "companies": [_company("a1", "900000001", regime="R-99-PN"), _company("a2", "900000002", regime="O-13")],
+                "metadata": {"results_count": 2},
+            }
+        ]
+    )
+    service = SincronizarEmpresasAlegraService(db_session, alegra_client=fake_client)
+
+    service.sincronizar()
+
+    regimenes = {e.numero_identificacion: e.regimen for e in db_session.query(Empresa).all()}
+    assert regimenes == {"900000001": "R-99-PN", "900000002": "O-13"}
+
+
+def test_sincronizar_corrige_regimen_viejo_y_no_toca_regimen_fiscal(db_session):
+    existente = Empresa(
+        razon_social="Empresa Demo",
+        numero_identificacion="900674209",
+        digito_verificacion="4",
+        regimen="49",
+        regimen_fiscal="48",
+    )
+    db_session.add(existente)
+    db_session.commit()
+
+    fake_client = FakeAlegraClient(
+        [{"companies": [_company("a1", "900674209", regime="R-99-PN")], "metadata": {"results_count": 1}}]
+    )
+    SincronizarEmpresasAlegraService(db_session, alegra_client=fake_client).sincronizar()
+
+    db_session.refresh(existente)
+    assert existente.regimen == "R-99-PN"
+    assert existente.regimen_fiscal == "48"
+
+
+def test_sincronizar_sin_regime_code_conserva_el_regimen_local(db_session):
+    existente = Empresa(
+        razon_social="Empresa Demo",
+        numero_identificacion="900618467",
+        digito_verificacion="4",
+        regimen="O-13",
+    )
+    db_session.add(existente)
+    db_session.commit()
+
+    fake_client = FakeAlegraClient(
+        [{"companies": [_company("a1", "900618467", regime=None)], "metadata": {"results_count": 1}}]
+    )
+    SincronizarEmpresasAlegraService(db_session, alegra_client=fake_client).sincronizar()
+
+    db_session.refresh(existente)
+    assert existente.regimen == "O-13"
