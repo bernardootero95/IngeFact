@@ -30,8 +30,9 @@ from src.infrastructure.db.models import Empresa, Suscripcion, UsuarioEmpresa, V
 logger = logging.getLogger(__name__)
 
 # Responsabilidad fiscal DIAN tal como la espera Alegra (R-99-PN, O-13...).
-# Las empresas traidas por sync-alegra guardan "48"/"49" en `regimen`, que
-# Alegra rechazaria -- a esas no se les manda regimeCode.
+# Versiones viejas de sync-alegra guardaban "48"/"49" en `regimen`, que Alegra
+# rechazaria; esas filas quedan asi hasta re-sincronizar (o si Alegra no trae
+# regimeCode) -- a esas no se les manda regimeCode.
 _CODIGO_RESPONSABILIDAD = re.compile(r"^[A-Z]-\d")
 
 
