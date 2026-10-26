@@ -45,6 +45,9 @@ export default function CompanyFormPage() {
   const [activeTab, setActiveTab] = useState("empresa");
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
+  // Correo con el que cargó la empresa: para avisar, al editarlo, que
+  // también cambia el acceso del usuario.
+  const [correoOriginal, setCorreoOriginal] = useState("");
 
   const [catalogs, setCatalogs] = useState({
     departments: [],
@@ -106,6 +109,7 @@ export default function CompanyFormPage() {
           fechaInicio: empresa.suscripcion?.fecha_inicio || "",
           fechaFin: empresa.suscripcion?.fecha_fin || "",
         });
+        setCorreoOriginal(empresa.correo_electronico || "");
       }
     } catch (error) {
       setLoadError(error.message);
@@ -303,6 +307,7 @@ export default function CompanyFormPage() {
           regimen_fiscal: form.regimenFiscal || null,
           tipo_organizacion: form.tipoOrganizacion || null,
           telefono: form.telefono || null,
+          correo_electronico: form.correoElectronico.trim(),
           notificacion_correo: form.notificacionCorreo,
           estado: form.estadoEmpresa,
         });
@@ -645,15 +650,22 @@ export default function CompanyFormPage() {
                           <input
                             id="cf-correo"
                             type="email"
-                            disabled={isEditing}
                             value={form.correoElectronico}
                             onChange={handleChange("correoElectronico")}
-                            className={`field w-full disabled:opacity-60 disabled:cursor-not-allowed ${errors.correoElectronico ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
+                            className={`field w-full ${errors.correoElectronico ? "border-fiscal-danger field-invalid" : "border-brand-200"}`}
                             {...fieldA11y("cf-correo", errors.correoElectronico)}
                           />
                           {errors.correoElectronico && (
                             <FieldError fieldId={"cf-correo"}>{errors.correoElectronico}</FieldError>
                           )}
+                          {isEditing &&
+                            !errors.correoElectronico &&
+                            form.correoElectronico.trim().toLowerCase() !== correoOriginal.toLowerCase() && (
+                              <p className="mt-1 text-xs text-brand-700" role="status">
+                                Al guardar, el usuario iniciará sesión con este correo (su contraseña no cambia) y
+                                también se actualizará en Alegra. Se avisará al correo anterior y al nuevo.
+                              </p>
+                            )}
                         </div>
 
                         <div className="mt-3">
