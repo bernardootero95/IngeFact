@@ -207,7 +207,7 @@ export const SERVICES = {
     },
     features: featuresOf("Aceptación de facturas (RADIAN)"),
     consumption: "Cada evento aceptado por la DIAN descuenta un documento de tu paquete; los que la DIAN rechaza no.",
-    guideSlugs: ["aceptar-facturas-recibidas"],
+    guideSlugs: ["aceptar-facturas-recibidas", "eventos-en-bloque"],
     faq: [
       {
         question: "¿Estoy obligado a aceptar las facturas que recibo?",

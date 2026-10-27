@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import {
   ChartIcon,
+  CheckIcon,
   ClockIcon,
   InboxCheckIcon,
   InvoiceIcon,
@@ -184,13 +185,31 @@ export const GUIDE_GROUPS: GuideGroup[] = [
         intro:
           "Cuando un proveedor te emite una factura electrónica, puedes informar a la DIAN que la recibiste, que recibiste lo facturado y si la aceptas o la reclamas.",
         steps: [
-          "Ve a Documentos → Facturas Recibidas → Registrar e ingresa el CUFE de la factura y el proveedor.",
-          "Abre la factura registrada y, en \"Registrar nuevo evento\", elige el tipo de evento.",
-          "Normalmente el orden es: acuse de recibo, recibo del bien o servicio y, al final, aceptación expresa o reclamo.",
-          "Si eliges reclamo, indica el motivo.",
-          "Presiona \"Registrar\": la DIAN valida que tu empresa sea la receptora real de la factura.",
+          "Ve a Documentos → Facturas Recibidas → Agregar y escribe el CUFE de la factura: traemos de la DIAN el proveedor, el número y el valor. Si son muchas, usa \"Carga masiva\" con el reporte de documentos de la DIAN.",
+          "Abre la factura y, en \"Registrar evento\", elige el evento que corresponda.",
+          "El orden es: acuse de recibo, recibo de la mercancía o servicio y, al final, aceptación o reclamo (rechazo). IngeFact solo te ofrece el siguiente evento posible.",
+          "Para el acuse y el recibo de la mercancía escribe los datos de quien lo registra; si es un reclamo, indica el motivo.",
+          "Presiona \"Enviar a la DIAN\": la DIAN valida que tu empresa sea la receptora real de la factura.",
         ],
         note: "Cada evento aceptado por la DIAN descuenta un documento de tu paquete.",
+      },
+      {
+        slug: "eventos-en-bloque",
+        icon: CheckIcon,
+        title: "Aplicar un evento a varias facturas",
+        description: "Acusa, confirma, acepta o reclama muchas facturas recibidas de una sola vez.",
+        intro:
+          "Si recibes muchas facturas, puedes aplicarles el mismo evento a todas las de un periodo, o solo a las de un proveedor, en un único envío.",
+        steps: [
+          "Ve a Documentos → Facturas Recibidas → Eventos en bloque.",
+          "Elige el rango de fechas de emisión de las facturas y, si quieres limitarlo a un proveedor, escribe su NIT. Vacío incluye a todos.",
+          "Elige el evento a aplicar: acuse de recibo, recibo de mercancía, aceptar factura o rechazar factura (en este caso, con el motivo del reclamo).",
+          "Escribe los datos de quien realiza el evento: tipo y número de documento, nombres, apellidos y cargo.",
+          "Presiona \"Validar\": verás cuántas facturas cumplen los criterios y cuántos documentos de tu paquete se usarán. Solo se cuentan las facturas a las que ese evento todavía se les puede aplicar según los eventos que ya tienen.",
+          "Presiona \"Emitir\", revisa el resumen, marca la casilla de confirmación y presiona \"Sí, enviar\". No cierres la página mientras avanza el envío.",
+          "Al terminar verás cuántos eventos se aplicaron y, para los que fallaron, el motivo de cada uno.",
+        ],
+        note: "Cada evento aceptado por la DIAN descuenta un documento de tu paquete. Si no te alcanzan para todas las facturas, IngeFact te dice cuántos necesitas y cuántos tienes, y no envía ninguno. Puedes aplicar hasta 200 facturas por envío.",
       },
     ],
   },
