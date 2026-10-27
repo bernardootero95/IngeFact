@@ -17,9 +17,11 @@ function Obligatorio() {
 }
 
 // Datos de la persona que firma el evento (issuerParty): la DIAN los exige
-// para el acuse de recibo (030) y el recibo de la mercancía (032).
-export default function GeneradorFields({ generador, errors, tiposIdentificacion, onChange }) {
+// para el acuse de recibo (030) y el recibo de la mercancía (032). En el
+// evento en bloque el cargo también es obligatorio (`cargoObligatorio`).
+export default function GeneradorFields({ generador, errors, tiposIdentificacion, onChange, cargoObligatorio = false }) {
   const idError = (name) => errors[`generador_${name}`];
+  const campos = CAMPOS_TEXTO.map((c) => (c.name === "cargo" && cargoObligatorio ? { ...c, obligatorio: true } : c));
 
   return (
     <fieldset className="bg-neutralCustom-50 border border-neutralCustom-100 rounded-brand-md p-4 space-y-3">
@@ -47,7 +49,7 @@ export default function GeneradorFields({ generador, errors, tiposIdentificacion
           </select>
           <FieldError fieldId="generador-tipo_identificacion">{idError("tipo_identificacion")}</FieldError>
         </div>
-        {CAMPOS_TEXTO.map((campo) => (
+        {campos.map((campo) => (
           <div key={campo.name}>
             <label htmlFor={`generador-${campo.name}`} className="block text-xs font-medium text-neutralCustom-600 mb-1">
               {campo.label}

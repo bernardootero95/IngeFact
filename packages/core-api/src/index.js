@@ -111,6 +111,8 @@ export {
   sincronizarEventosFacturaRecibida,
   leerReporteDian,
   cargarLoteFacturasRecibidas,
+  validarEventoMasivo,
+  emitirEventoMasivo,
 } from "./services/facturasRecibidas.js";
 export {
   listProductos,

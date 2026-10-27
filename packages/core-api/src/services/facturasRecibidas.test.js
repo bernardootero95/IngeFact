@@ -11,6 +11,8 @@ import {
   crearFacturaRecibida,
   eliminarFacturaRecibida,
   registrarEventoReceptor,
+  validarEventoMasivo,
+  emitirEventoMasivo,
 } from "./facturasRecibidas.js";
 
 describe("facturasRecibidas", () => {
@@ -69,6 +71,25 @@ describe("facturasRecibidas", () => {
     expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/facturas-recibidas/1/eventos", {
       method: "POST",
       body: { tipo: "034" },
+    });
+  });
+
+  it("validarEventoMasivo hace POST con los criterios", async () => {
+    apiRequest.mockResolvedValue({ cantidad: 0 });
+    const criterios = { fecha_desde: "2026-09-01", fecha_hasta: "2026-09-30", tipo: "030" };
+    await validarEventoMasivo(criterios);
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/facturas-recibidas/eventos-masivos/validar", {
+      method: "POST",
+      body: criterios,
+    });
+  });
+
+  it("emitirEventoMasivo hace POST con la tanda", async () => {
+    apiRequest.mockResolvedValue([]);
+    await emitirEventoMasivo({ factura_ids: ["1"] });
+    expect(apiRequest).toHaveBeenCalledWith("/api/v1/tenant/facturas-recibidas/eventos-masivos/emitir", {
+      method: "POST",
+      body: { factura_ids: ["1"] },
     });
   });
 });

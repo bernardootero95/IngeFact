@@ -47,6 +47,13 @@ export default function ReceivedInvoicesListPage() {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Button
+              onClick={() => navigate("/received-invoices/bulk-events")}
+              variant="secondary"
+              title="Aplicar un mismo evento DIAN a varias facturas"
+            >
+              Eventos en bloque
+            </Button>
+            <Button
               onClick={() => navigate("/received-invoices/import")}
               variant="secondary"
               title="Cargar varias facturas desde el reporte de la DIAN"

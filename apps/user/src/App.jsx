@@ -31,6 +31,7 @@ import ReceivedInvoicesListPage from "./modules/receivedInvoices/pages/ReceivedI
 import ReceivedInvoiceFormPage from "./modules/receivedInvoices/pages/ReceivedInvoiceFormPage";
 import ReceivedInvoiceDetailPage from "./modules/receivedInvoices/pages/ReceivedInvoiceDetailPage";
 import ReceivedInvoicesImportPage from "./modules/receivedInvoices/pages/ReceivedInvoicesImportPage";
+import ReceivedInvoicesBulkEventsPage from "./modules/receivedInvoices/pages/ReceivedInvoicesBulkEventsPage";
 import SupportDocumentsListPage from "./modules/supportDocuments/pages/SupportDocumentsListPage";
 import SupportDocumentFormPage from "./modules/supportDocuments/pages/SupportDocumentFormPage";
 import SupportDocumentDetailPage from "./modules/supportDocuments/pages/SupportDocumentDetailPage";
@@ -359,6 +360,15 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ReceivedInvoicesImportPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/received-invoices/bulk-events"
+          element={
+            <ProtectedRoute>
+              <ReceivedInvoicesBulkEventsPage />
             </ProtectedRoute>
           }
         />
