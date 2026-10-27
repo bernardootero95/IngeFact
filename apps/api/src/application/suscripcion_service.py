@@ -115,19 +115,51 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
     return total
 
 
+MENSAJE_SIN_SUSCRIPCION = "Esta empresa no tiene una suscripcion activa."
+
+
+def _suscripcion_activa(db: Session, empresa_id) -> Suscripcion | None:
+    return db.execute(
+        select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
+    ).scalar_one_or_none()
+
+
 def verificar_cupo_disponible(db: Session, empresa_id) -> None:
     """Bloquea CUALQUIER transmision a la DIAN (facturas, notas credito y
     debito, anulaciones, documentos soporte, nomina y su anulacion, eventos
     del receptor) si la empresa no tiene suscripcion activa o ya agoto su
     cupo. Decision de negocio del 2026-09-24: sin documentos disponibles no
     se envia nada a la DIAN."""
-    suscripcion = db.execute(
-        select(Suscripcion).where(Suscripcion.empresa_id == empresa_id, Suscripcion.estado == "activa")
-    ).scalar_one_or_none()
+    suscripcion = _suscripcion_activa(db, empresa_id)
     if suscripcion is None:
-        raise HTTPException(status.HTTP_409_CONFLICT, "Esta empresa no tiene una suscripcion activa.")
+        raise HTTPException(status.HTTP_409_CONFLICT, MENSAJE_SIN_SUSCRIPCION)
     if contar_documentos_usados(db, suscripcion) >= suscripcion.max_documentos:
         raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
+
+
+def documentos_disponibles(db: Session, empresa_id) -> int | None:
+    """Documentos que le quedan a la suscripcion activa; None si no hay una."""
+    suscripcion = _suscripcion_activa(db, empresa_id)
+    if suscripcion is None:
+        return None
+    return max(suscripcion.max_documentos - contar_documentos_usados(db, suscripcion), 0)
+
+
+def mensaje_cupo_insuficiente(disponibles: int | None, necesarios: int) -> str | None:
+    """None si el cupo alcanza para `necesarios` envios; si no, el motivo."""
+    if disponibles is None:
+        return MENSAJE_SIN_SUSCRIPCION
+    if necesarios > disponibles:
+        return f"No tienes documentos suficientes: necesitas {necesarios} y tienes {disponibles} disponibles."
+    return None
+
+
+def verificar_cupo_para(db: Session, empresa_id, cantidad: int) -> None:
+    """Como verificar_cupo_disponible, pero para un lote: exige cupo para
+    los `cantidad` envios antes de transmitir el primero."""
+    motivo = mensaje_cupo_insuficiente(documentos_disponibles(db, empresa_id), cantidad)
+    if motivo:
+        raise HTTPException(status.HTTP_409_CONFLICT, motivo)
 
 
 def revisar_alerta_cuota_por_empresa(

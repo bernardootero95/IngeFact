@@ -365,13 +365,25 @@ class FacturaRecibidaService:
         factura_recibida = self.obtener(empresa_id, factura_recibida_id)
         if data.tipo not in eventos_permitidos(factura_recibida.eventos):
             raise HTTPException(status.HTTP_409_CONFLICT, MENSAJES_ORDEN_EVENTO.get(data.tipo, MENSAJE_ORDEN_GENERICO))
-        empresa = self.db.get(Empresa, empresa_id)
-        if not empresa or not empresa.id_alegra:
-            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        empresa = self.empresa_habilitada(empresa_id)
         # Cada evento aceptado descuenta un documento del paquete (decision de
         # negocio 2026-09-24, ver contar_documentos_usados).
         verificar_cupo_disponible(self.db, empresa_id)
 
+        self.enviar_evento(empresa, factura_recibida, data)
+        return self.obtener(empresa_id, factura_recibida.id)
+
+    def empresa_habilitada(self, empresa_id: uuid.UUID) -> Empresa:
+        empresa = self.db.get(Empresa, empresa_id)
+        if not empresa or not empresa.id_alegra:
+            raise HTTPException(status.HTTP_409_CONFLICT, "Tu empresa todavía no está habilitada para emitir documentos electrónicos. Escríbenos para activarla.")
+        return empresa
+
+    def enviar_evento(
+        self, empresa: Empresa, factura_recibida: FacturaRecibida, data: CrearEventoReceptorRequest
+    ) -> EventoReceptor:
+        """Transmite el evento a la DIAN (via Alegra) y lo guarda. No valida
+        orden ni cupo: eso lo hace quien llama (individual o en bloque)."""
         numero = self._generar_numero_evento()
         payload = self._construir_payload_evento(empresa, factura_recibida, numero, data)
 
@@ -382,7 +394,7 @@ class FacturaRecibidaService:
         except AlegraTransientError as exc:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, MENSAJE_ALEGRA_NO_RESPONDE) from exc
 
-        event =respuesta.get("event") or {}
+        event = respuesta.get("event") or {}
         government_response = event.get("governmentResponse") or {}
         legal_status = event.get("legalStatus")
 
@@ -410,6 +422,5 @@ class FacturaRecibidaService:
         self.db.add(evento)
         self.db.commit()
         if legal_status in ESTADOS_EVENTO_ACEPTADO:
-            revisar_alerta_cuota_sin_romper(self.db, empresa_id)
-
-        return self.obtener(empresa_id, factura_recibida.id)
+            revisar_alerta_cuota_sin_romper(self.db, empresa.id)
+        return evento

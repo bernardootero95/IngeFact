@@ -3,8 +3,15 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
+from src.application.evento_masivo_service import EventoMasivoService
 from src.application.factura_recibida_service import FacturaRecibidaService
 from src.core.dependencies import CurrentTenant, get_current_tenant
+from src.domain.evento_masivo import (
+    CriteriosEventoMasivoRequest,
+    EmitirEventoMasivoRequest,
+    ResultadoEventoMasivoResponse,
+    ValidacionEventoMasivoResponse,
+)
 from src.domain.factura_recibida import (
     CargarLoteFacturasRecibidasRequest,
     ConsultaFacturaRecibidaResponse,
@@ -91,6 +98,28 @@ def cargar_lote_facturas_recibidas(
     """Carga masiva, paso 2: registra hasta MAX_CUFES_POR_LOTE facturas; el
     cliente parte la lista en lotes para mostrar el avance."""
     return FacturaRecibidaService(db).cargar_lote(tenant.empresa_id, body.cufes)
+
+
+@router.post("/eventos-masivos/validar", response_model=ValidacionEventoMasivoResponse)
+def validar_evento_masivo(
+    body: CriteriosEventoMasivoRequest,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Evento en bloque, paso 1: cuantas facturas cumplen los criterios y
+    admiten el evento, y si el cupo de documentos alcanza para todas."""
+    return EventoMasivoService(db).validar(tenant.empresa_id, body)
+
+
+@router.post("/eventos-masivos/emitir", response_model=list[ResultadoEventoMasivoResponse])
+def emitir_evento_masivo(
+    body: EmitirEventoMasivoRequest,
+    db: Session = Depends(get_db),
+    tenant: CurrentTenant = Depends(get_current_tenant),
+):
+    """Evento en bloque, paso 2: envia una tanda de hasta
+    MAX_FACTURAS_POR_ENVIO; el cliente parte la lista para mostrar el avance."""
+    return EventoMasivoService(db).emitir(tenant.empresa_id, body)
 
 
 @router.delete("/{factura_recibida_id}", status_code=204)

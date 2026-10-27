@@ -34,6 +34,18 @@ export async function cargarLoteFacturasRecibidas(cufes) {
   return apiRequest("/api/v1/tenant/facturas-recibidas/lote", { method: "POST", body: { cufes } });
 }
 
+// Evento en bloque, paso 1: cuantas facturas admiten el evento con esos
+// criterios y si el cupo de documentos alcanza.
+export async function validarEventoMasivo(criterios) {
+  return apiRequest("/api/v1/tenant/facturas-recibidas/eventos-masivos/validar", { method: "POST", body: criterios });
+}
+
+// Evento en bloque, paso 2: envia una tanda (maximo 20 facturas) y devuelve
+// el resultado de cada una.
+export async function emitirEventoMasivo(payload) {
+  return apiRequest("/api/v1/tenant/facturas-recibidas/eventos-masivos/emitir", { method: "POST", body: payload });
+}
+
 export async function eliminarFacturaRecibida(id) {
   return apiRequest(`/api/v1/tenant/facturas-recibidas/${id}`, { method: "DELETE" });
 }
