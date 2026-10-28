@@ -4,14 +4,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.application.configuracion_service import ConfiguracionService
-from src.application.suscripcion_service import UMBRAL_ALERTA_CUOTA, contar_documentos_usados
+from src.application.suscripcion_service import (
+    UMBRAL_ALERTA_CUOTA,
+    contar_documentos_aceptados,
+    contar_documentos_usados,
+)
 from src.core.precio_paquete import costo_alegra_mes
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA, hoy_colombia
-from src.infrastructure.db.models import DocumentoSoporte, Empresa, Factura, NotaCredito, NotaDebito, Suscripcion, VentaPaquete
+from src.infrastructure.db.models import Empresa, Suscripcion, VentaPaquete
 
 DIAS_ALERTA_VENCIMIENTO_PLAN = 30
-
-DOCUMENTOS_EMITIDOS = (Factura, NotaCredito, NotaDebito, DocumentoSoporte)
 
 
 class DashboardService:
@@ -120,28 +122,16 @@ class DashboardService:
         }
 
     def _contar_documentos_emitidos_mes(self) -> int:
-        """Cuenta los 4 tipos de documento (Factura/NotaCredito/NotaDebito/
-        DocumentoSoporte) que se enviaron a la DIAN este mes calendario --
-        `estado != 'borrador'` (se intento enviar, sin importar si la DIAN
-        lo acepto o rechazo) es la metrica de actividad de la plataforma,
-        no de facturacion (para eso esta contar_documentos_usados, que solo
-        cuenta aceptados y no incluye Documento Soporte).
+        """Documentos que la DIAN acepto este mes calendario en toda la
+        plataforma: facturas, notas credito y debito, documentos soporte,
+        nomina (y sus anulaciones) y eventos del receptor enviados por
+        IngeFact. Misma regla que el cobro al tenant (contar_documentos_aceptados);
+        es tambien la base del costo de Alegra.
 
         "Este mes" es el mes calendario en hora de Colombia, no la del
         servidor (en produccion el contenedor corre en UTC) -- el limite
-        del 1ro de mes se calcula en America/Bogota y luego se compara tal
-        cual contra `fecha_envio` (datetime aware, Python normaliza la
-        comparacion entre zonas correctamente)."""
-        inicio_mes = self._inicio_mes()
-
-        total = 0
-        for modelo in DOCUMENTOS_EMITIDOS:
-            total += self.db.execute(
-                select(func.count())
-                .select_from(modelo)
-                .where(modelo.estado != "borrador", modelo.fecha_envio >= inicio_mes)
-            ).scalar_one()
-        return total
+        del 1ro de mes se calcula en America/Bogota."""
+        return contar_documentos_aceptados(self.db, self._inicio_mes(), datetime.now(ZONA_HORARIA_COLOMBIA))
 
     def _alertas_clientes(self) -> tuple[list[dict], list[dict]]:
         """Estado de cada suscripcion activa frente a los dos umbrales que

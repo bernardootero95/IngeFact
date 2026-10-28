@@ -51,12 +51,23 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
         # Corte opcional: documentos usados hasta un instante (ej. al 1ro de
         # mes, para saber el cupo con el que arranco el mes).
         fin = min(fin, hasta)
+    return contar_documentos_aceptados(db, inicio, fin, empresa_id=suscripcion.empresa_id)
+
+
+def contar_documentos_aceptados(db: Session, inicio: datetime, fin: datetime, empresa_id=None) -> int:
+    """Documentos aceptados por la DIAN entre `inicio` y `fin` (ver
+    contar_documentos_usados para que cuenta y por que). Sin `empresa_id`
+    cuenta los de toda la plataforma (KPI del panel admin y costo de
+    Alegra): misma regla que el cobro al tenant, para que no se separen."""
+
+    def de_la_empresa(columna):
+        return (columna == empresa_id,) if empresa_id is not None else ()
 
     total = db.execute(
         select(func.count())
         .select_from(Factura)
         .where(
-            Factura.empresa_id == suscripcion.empresa_id,
+            *de_la_empresa(Factura.empresa_id),
             Factura.estado.in_(("aceptada", "anulada")),
             Factura.fecha_envio >= inicio,
             Factura.fecha_envio <= fin,
@@ -76,7 +87,7 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
             select(func.count())
             .select_from(modelo)
             .where(
-                modelo.empresa_id == suscripcion.empresa_id,
+                *de_la_empresa(modelo.empresa_id),
                 modelo.estado.in_(estados),
                 modelo.fecha_envio >= inicio,
                 modelo.fecha_envio <= fin,
@@ -89,7 +100,7 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
         select(func.count())
         .select_from(Nomina)
         .where(
-            Nomina.empresa_id == suscripcion.empresa_id,
+            *de_la_empresa(Nomina.empresa_id),
             Nomina.estado == "anulada",
             Nomina.fecha_anulacion >= inicio,
             Nomina.fecha_anulacion <= fin,
@@ -104,7 +115,7 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
         .select_from(EventoReceptor)
         .join(FacturaRecibida, EventoReceptor.factura_recibida_id == FacturaRecibida.id)
         .where(
-            FacturaRecibida.empresa_id == suscripcion.empresa_id,
+            *de_la_empresa(FacturaRecibida.empresa_id),
             EventoReceptor.origen == ORIGEN_INGEFACT,
             EventoReceptor.legal_status.in_(ESTADOS_EVENTO_ACEPTADO),
             EventoReceptor.creado >= inicio,
