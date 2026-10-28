@@ -5,8 +5,12 @@ from src.core.tiempo import hoy_colombia
 from src.infrastructure.db.models import (
     Cliente,
     DocumentoSoporte,
+    Empleado,
     Empresa,
+    EventoReceptor,
     Factura,
+    FacturaRecibida,
+    Nomina,
     NotaCredito,
     NotaDebito,
     Proveedor,
@@ -134,6 +138,68 @@ def _crear_documento_soporte(db_session, empresa_id, proveedor_id, *, estado, fe
     return documento
 
 
+def _crear_nomina(db_session, empresa_id, *, estado, fecha_envio, fecha_anulacion=None) -> Nomina:
+    empleado = Empleado(
+        empresa_id=empresa_id,
+        tipo_documento="13",
+        numero_documento=f"10{datetime.now().microsecond:06d}",
+        primer_apellido="Perez",
+        primer_nombre="Ana",
+        tipo_trabajador="01",
+        subtipo_trabajador="00",
+        tipo_contrato="1",
+        sueldo=1_500_000,
+        lugar_trabajo_municipio="11001",
+        lugar_trabajo_direccion="Calle 1",
+        fecha_ingreso=date(2026, 1, 1),
+    )
+    db_session.add(empleado)
+    db_session.commit()
+    nomina = Nomina(
+        empresa_id=empresa_id,
+        empleado_id=empleado.id,
+        periodo_nomina="5",
+        fecha_liquidacion_inicio=date(2026, 6, 1),
+        fecha_liquidacion_fin=date(2026, 6, 30),
+        fecha_pago=["2026-06-30"],
+        forma_pago="1",
+        metodo_pago="10",
+        devengados={},
+        deducciones={},
+        estado=estado,
+        fecha_envio=fecha_envio,
+        fecha_anulacion=fecha_anulacion,
+    )
+    db_session.add(nomina)
+    db_session.commit()
+    return nomina
+
+
+def _crear_factura_recibida(db_session, empresa_id, eventos) -> FacturaRecibida:
+    """eventos: (tipo, legal_status, origen, creado)."""
+    factura = FacturaRecibida(
+        empresa_id=empresa_id,
+        proveedor_nombre="Proveedor SAS",
+        cufe=f"cufe-{datetime.now().microsecond}",
+        fecha=date(2026, 6, 1),
+    )
+    db_session.add(factura)
+    db_session.commit()
+    for i, (tipo, legal_status, origen, creado) in enumerate(eventos):
+        db_session.add(
+            EventoReceptor(
+                factura_recibida_id=factura.id,
+                tipo=tipo,
+                numero=f"EV{i}",
+                legal_status=legal_status,
+                origen=origen,
+                creado=creado,
+            )
+        )
+    db_session.commit()
+    return factura
+
+
 _DENTRO_DEL_MES = datetime.now(timezone.utc)
 _FUERA_DEL_MES = datetime(2020, 1, 1, tzinfo=timezone.utc)
 
@@ -196,6 +262,52 @@ def test_documentos_emitidos_mes_cuenta_los_4_tipos_enviados_este_mes(db_session
 
     # 2 facturas + 1 NC + 1 ND + 1 doc soporte enviados este mes (borrador y fuera de mes no cuentan)
     assert kpis["documentos_emitidos_mes"] == 5
+
+
+def test_documentos_emitidos_mes_incluye_nomina_y_su_anulacion(db_session):
+    empresa = _crear_empresa(db_session)
+    _crear_nomina(db_session, empresa.id, estado="aceptada", fecha_envio=_DENTRO_DEL_MES)
+    _crear_nomina(db_session, empresa.id, estado="rechazada", fecha_envio=_DENTRO_DEL_MES)
+    _crear_nomina(db_session, empresa.id, estado="borrador", fecha_envio=None)
+    # Anulada este mes: el comprobante y la nota de eliminacion son dos envios.
+    _crear_nomina(
+        db_session, empresa.id, estado="anulada", fecha_envio=_DENTRO_DEL_MES, fecha_anulacion=_DENTRO_DEL_MES
+    )
+    # Emitida en otro mes y anulada en este: solo cuenta la anulacion.
+    _crear_nomina(
+        db_session, empresa.id, estado="anulada", fecha_envio=_FUERA_DEL_MES, fecha_anulacion=_DENTRO_DEL_MES
+    )
+
+    kpis = DashboardService(db_session).obtener_kpis()
+
+    # aceptada + rechazada + (envio + anulacion) + anulacion = 5
+    assert kpis["documentos_emitidos_mes"] == 5
+    assert kpis["finanzas_mes"]["documentos_emitidos"] == 5
+
+
+def test_documentos_emitidos_mes_cuenta_cada_evento_transmitido_por_ingefact(db_session):
+    empresa = _crear_empresa(db_session)
+    _crear_factura_recibida(
+        db_session,
+        empresa.id,
+        [
+            ("030", "ACCEPTED", "ingefact", _DENTRO_DEL_MES),
+            ("032", "ACCEPTED", "ingefact", _DENTRO_DEL_MES),
+            ("033", "REJECTED", "ingefact", _DENTRO_DEL_MES),  # rechazado: igual se transmitio
+        ],
+    )
+    _crear_factura_recibida(
+        db_session,
+        empresa.id,
+        [
+            ("030", "ACCEPTED", "dian", _DENTRO_DEL_MES),  # leido de la DIAN: no lo envio IngeFact
+            ("032", "ACCEPTED", "ingefact", _FUERA_DEL_MES),
+        ],
+    )
+
+    kpis = DashboardService(db_session).obtener_kpis()
+
+    assert kpis["documentos_emitidos_mes"] == 3
 
 
 def test_clientes_proximos_a_vencer_solo_incluye_dentro_del_umbral_de_30_dias(db_session):

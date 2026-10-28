@@ -7,11 +7,22 @@ from src.application.configuracion_service import ConfiguracionService
 from src.application.suscripcion_service import UMBRAL_ALERTA_CUOTA, contar_documentos_usados
 from src.core.precio_paquete import costo_alegra_mes
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA, hoy_colombia
-from src.infrastructure.db.models import DocumentoSoporte, Empresa, Factura, NotaCredito, NotaDebito, Suscripcion, VentaPaquete
+from src.domain.factura_recibida import ORIGEN_INGEFACT
+from src.infrastructure.db.models import (
+    DocumentoSoporte,
+    Empresa,
+    EventoReceptor,
+    Factura,
+    Nomina,
+    NotaCredito,
+    NotaDebito,
+    Suscripcion,
+    VentaPaquete,
+)
 
 DIAS_ALERTA_VENCIMIENTO_PLAN = 30
 
-DOCUMENTOS_EMITIDOS = (Factura, NotaCredito, NotaDebito, DocumentoSoporte)
+DOCUMENTOS_EMITIDOS = (Factura, NotaCredito, NotaDebito, DocumentoSoporte, Nomina)
 
 
 class DashboardService:
@@ -120,12 +131,15 @@ class DashboardService:
         }
 
     def _contar_documentos_emitidos_mes(self) -> int:
-        """Cuenta los 4 tipos de documento (Factura/NotaCredito/NotaDebito/
-        DocumentoSoporte) que se enviaron a la DIAN este mes calendario --
+        """Cuenta todo lo que se transmitio a la DIAN este mes calendario:
+        facturas, notas credito y debito, documentos soporte, nomina (y sus
+        anulaciones, que son un documento aparte) y eventos del receptor.
         `estado != 'borrador'` (se intento enviar, sin importar si la DIAN
-        lo acepto o rechazo) es la metrica de actividad de la plataforma,
-        no de facturacion (para eso esta contar_documentos_usados, que solo
-        cuenta aceptados y no incluye Documento Soporte).
+        lo acepto o rechazo) es la metrica de actividad de la plataforma y
+        la base del costo de Alegra, no de facturacion al tenant (para eso
+        esta contar_documentos_usados, que solo cuenta aceptados). Los
+        eventos leidos de la DIAN (origen "dian") no los transmitio
+        IngeFact: no cuentan.
 
         "Este mes" es el mes calendario en hora de Colombia, no la del
         servidor (en produccion el contenedor corre en UTC) -- el limite
@@ -141,6 +155,19 @@ class DashboardService:
                 .select_from(modelo)
                 .where(modelo.estado != "borrador", modelo.fecha_envio >= inicio_mes)
             ).scalar_one()
+
+        total += self.db.execute(
+            select(func.count())
+            .select_from(Nomina)
+            .where(Nomina.estado == "anulada", Nomina.fecha_anulacion >= inicio_mes)
+        ).scalar_one()
+
+        # Los eventos se transmiten (y responde la DIAN) al crearse.
+        total += self.db.execute(
+            select(func.count())
+            .select_from(EventoReceptor)
+            .where(EventoReceptor.origen == ORIGEN_INGEFACT, EventoReceptor.creado >= inicio_mes)
+        ).scalar_one()
         return total
 
     def _alertas_clientes(self) -> tuple[list[dict], list[dict]]:
