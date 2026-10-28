@@ -4,25 +4,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from src.application.configuracion_service import ConfiguracionService
-from src.application.suscripcion_service import UMBRAL_ALERTA_CUOTA, contar_documentos_usados
+from src.application.suscripcion_service import (
+    UMBRAL_ALERTA_CUOTA,
+    contar_documentos_aceptados,
+    contar_documentos_usados,
+)
 from src.core.precio_paquete import costo_alegra_mes
 from src.core.tiempo import ZONA_HORARIA_COLOMBIA, hoy_colombia
-from src.domain.factura_recibida import ORIGEN_INGEFACT
-from src.infrastructure.db.models import (
-    DocumentoSoporte,
-    Empresa,
-    EventoReceptor,
-    Factura,
-    Nomina,
-    NotaCredito,
-    NotaDebito,
-    Suscripcion,
-    VentaPaquete,
-)
+from src.infrastructure.db.models import Empresa, Suscripcion, VentaPaquete
 
 DIAS_ALERTA_VENCIMIENTO_PLAN = 30
-
-DOCUMENTOS_EMITIDOS = (Factura, NotaCredito, NotaDebito, DocumentoSoporte, Nomina)
 
 
 class DashboardService:
@@ -131,44 +122,16 @@ class DashboardService:
         }
 
     def _contar_documentos_emitidos_mes(self) -> int:
-        """Cuenta todo lo que se transmitio a la DIAN este mes calendario:
-        facturas, notas credito y debito, documentos soporte, nomina (y sus
-        anulaciones, que son un documento aparte) y eventos del receptor.
-        `estado != 'borrador'` (se intento enviar, sin importar si la DIAN
-        lo acepto o rechazo) es la metrica de actividad de la plataforma y
-        la base del costo de Alegra, no de facturacion al tenant (para eso
-        esta contar_documentos_usados, que solo cuenta aceptados). Los
-        eventos leidos de la DIAN (origen "dian") no los transmitio
-        IngeFact: no cuentan.
+        """Documentos que la DIAN acepto este mes calendario en toda la
+        plataforma: facturas, notas credito y debito, documentos soporte,
+        nomina (y sus anulaciones) y eventos del receptor enviados por
+        IngeFact. Misma regla que el cobro al tenant (contar_documentos_aceptados);
+        es tambien la base del costo de Alegra.
 
         "Este mes" es el mes calendario en hora de Colombia, no la del
         servidor (en produccion el contenedor corre en UTC) -- el limite
-        del 1ro de mes se calcula en America/Bogota y luego se compara tal
-        cual contra `fecha_envio` (datetime aware, Python normaliza la
-        comparacion entre zonas correctamente)."""
-        inicio_mes = self._inicio_mes()
-
-        total = 0
-        for modelo in DOCUMENTOS_EMITIDOS:
-            total += self.db.execute(
-                select(func.count())
-                .select_from(modelo)
-                .where(modelo.estado != "borrador", modelo.fecha_envio >= inicio_mes)
-            ).scalar_one()
-
-        total += self.db.execute(
-            select(func.count())
-            .select_from(Nomina)
-            .where(Nomina.estado == "anulada", Nomina.fecha_anulacion >= inicio_mes)
-        ).scalar_one()
-
-        # Los eventos se transmiten (y responde la DIAN) al crearse.
-        total += self.db.execute(
-            select(func.count())
-            .select_from(EventoReceptor)
-            .where(EventoReceptor.origen == ORIGEN_INGEFACT, EventoReceptor.creado >= inicio_mes)
-        ).scalar_one()
-        return total
+        del 1ro de mes se calcula en America/Bogota."""
+        return contar_documentos_aceptados(self.db, self._inicio_mes(), datetime.now(ZONA_HORARIA_COLOMBIA))
 
     def _alertas_clientes(self) -> tuple[list[dict], list[dict]]:
         """Estado de cada suscripcion activa frente a los dos umbrales que

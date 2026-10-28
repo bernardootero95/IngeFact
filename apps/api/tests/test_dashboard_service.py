@@ -243,7 +243,7 @@ def test_obtener_kpis_ultimas_empresas_limita_a_5_mas_recientes(db_session):
     assert "Empresa 0" not in nombres
 
 
-def test_documentos_emitidos_mes_cuenta_los_4_tipos_enviados_este_mes(db_session):
+def test_documentos_emitidos_mes_solo_cuenta_los_aceptados_este_mes(db_session):
     empresa = _crear_empresa(db_session)
     cliente = _crear_cliente(db_session, empresa.id)
     proveedor = _crear_proveedor(db_session, empresa.id)
@@ -260,8 +260,8 @@ def test_documentos_emitidos_mes_cuenta_los_4_tipos_enviados_este_mes(db_session
 
     kpis = DashboardService(db_session).obtener_kpis()
 
-    # 2 facturas + 1 NC + 1 ND + 1 doc soporte enviados este mes (borrador y fuera de mes no cuentan)
-    assert kpis["documentos_emitidos_mes"] == 5
+    # Factura + NC + doc soporte aceptados este mes (rechazados, borrador y fuera de mes no cuentan)
+    assert kpis["documentos_emitidos_mes"] == 3
 
 
 def test_documentos_emitidos_mes_incluye_nomina_y_su_anulacion(db_session):
@@ -280,12 +280,12 @@ def test_documentos_emitidos_mes_incluye_nomina_y_su_anulacion(db_session):
 
     kpis = DashboardService(db_session).obtener_kpis()
 
-    # aceptada + rechazada + (envio + anulacion) + anulacion = 5
-    assert kpis["documentos_emitidos_mes"] == 5
-    assert kpis["finanzas_mes"]["documentos_emitidos"] == 5
+    # aceptada + (envio + anulacion) + anulacion = 4; la rechazada no cuenta
+    assert kpis["documentos_emitidos_mes"] == 4
+    assert kpis["finanzas_mes"]["documentos_emitidos"] == 4
 
 
-def test_documentos_emitidos_mes_cuenta_cada_evento_transmitido_por_ingefact(db_session):
+def test_documentos_emitidos_mes_cuenta_cada_evento_aceptado_enviado_por_ingefact(db_session):
     empresa = _crear_empresa(db_session)
     _crear_factura_recibida(
         db_session,
@@ -293,7 +293,7 @@ def test_documentos_emitidos_mes_cuenta_cada_evento_transmitido_por_ingefact(db_
         [
             ("030", "ACCEPTED", "ingefact", _DENTRO_DEL_MES),
             ("032", "ACCEPTED", "ingefact", _DENTRO_DEL_MES),
-            ("033", "REJECTED", "ingefact", _DENTRO_DEL_MES),  # rechazado: igual se transmitio
+            ("033", "REJECTED", "ingefact", _DENTRO_DEL_MES),  # rechazado por la DIAN: no cuenta
         ],
     )
     _crear_factura_recibida(
@@ -307,7 +307,7 @@ def test_documentos_emitidos_mes_cuenta_cada_evento_transmitido_por_ingefact(db_
 
     kpis = DashboardService(db_session).obtener_kpis()
 
-    assert kpis["documentos_emitidos_mes"] == 3
+    assert kpis["documentos_emitidos_mes"] == 2
 
 
 def test_clientes_proximos_a_vencer_solo_incluye_dentro_del_umbral_de_30_dias(db_session):
