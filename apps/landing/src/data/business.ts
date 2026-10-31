@@ -34,9 +34,9 @@ export const BUSINESS = {
 export const RESPONSABLE = `${BUSINESS.titular} (${BUSINESS.nombreComercial})`;
 
 /** Fecha desde la que rigen las versiones actuales de las políticas. */
-export const LEGAL_LAST_UPDATED = "24 de septiembre de 2026";
+export const LEGAL_LAST_UPDATED = "31 de octubre de 2026";
 /** La misma fecha en ISO, para el lastmod del sitemap. */
-export const LEGAL_LAST_UPDATED_ISO = "2026-09-24";
+export const LEGAL_LAST_UPDATED_ISO = "2026-10-31";
 
 /** Condiciones comerciales de los paquetes, citadas en precios y términos. */
 export const PACKAGE_TERMS = {

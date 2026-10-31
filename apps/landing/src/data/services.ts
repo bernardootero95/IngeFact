@@ -206,7 +206,7 @@ export const SERVICES = {
       ],
     },
     features: featuresOf("Aceptación de facturas (RADIAN)"),
-    consumption: "Cada evento aceptado por la DIAN descuenta un documento de tu paquete; los que la DIAN rechaza no.",
+    consumption: "Cada factura recibida descuenta un solo documento de tu paquete, con su primer evento aceptado por la DIAN; los eventos siguientes de esa factura y los que la DIAN rechaza no descuentan.",
     guideSlugs: ["aceptar-facturas-recibidas", "eventos-en-bloque"],
     faq: [
       {

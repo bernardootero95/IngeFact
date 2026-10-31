@@ -5,7 +5,9 @@ siguiente ingreso (ver AceptacionLegalService)."""
 
 # 2026-09-24.2: los eventos del receptor consumen cupo y con el paquete
 # agotado no se envia nada a la DIAN (tambien notas y anulaciones).
-VERSION_TERMINOS_VIGENTE = "2026-09-24.2"
+# 2026-10-31: las facturas recibidas descuentan un documento una sola vez (no
+# uno por evento) y un plan vencido bloquea todo envio a la DIAN.
+VERSION_TERMINOS_VIGENTE = "2026-10-31"
 
 # Resolucion DIAN 000165 de 2023, art. 11, numeral 18: la representacion
 # grafica debe identificar al fabricante del software (nombre y NIT), el nombre

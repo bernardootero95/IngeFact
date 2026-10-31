@@ -11,7 +11,7 @@ export const PRICING_FAQ: FaqEntry[] = [
   {
     question: "¿Qué cuenta como un documento?",
     answer:
-      "Cada factura, nota crédito, nota débito, documento soporte, comprobante de nómina, anulación de nómina o evento sobre una factura recibida (acuse de recibo, recibo del bien o servicio, aceptación o reclamo) aceptado por la DIAN descuenta uno de tu paquete. Lo que la DIAN rechaza no se descuenta.",
+      "Cada factura, nota crédito, nota débito, documento soporte, comprobante de nómina o anulación de nómina aceptado por la DIAN descuenta uno de tu paquete. Las facturas que recibes descuentan uno solo con su primer evento aceptado (acuse de recibo, recibo del bien o servicio, aceptación o reclamo); los siguientes eventos de esa factura no descuentan. Lo que la DIAN rechaza no se descuenta.",
   },
   {
     question: "¿Los documentos vencen?",
@@ -21,7 +21,7 @@ export const PRICING_FAQ: FaqEntry[] = [
   {
     question: "¿Qué pasa cuando se me acaban los documentos?",
     answer:
-      "Te enviamos un aviso por correo al llegar al 90 % de tu paquete. Al agotarse, no podrás enviar ningún documento a la DIAN (tampoco notas crédito o débito, anulaciones ni eventos) hasta comprar otro paquete.",
+      "Te enviamos un aviso por correo al llegar al 90 % de tu paquete. Al agotarse, o al vencer tu plan, no podrás enviar ningún documento a la DIAN (tampoco notas crédito o débito, anulaciones ni eventos, aunque la factura recibida ya esté descontada) hasta comprar otro paquete.",
   },
   {
     question: "¿Necesito una resolución DIAN propia?",

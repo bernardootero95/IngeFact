@@ -75,9 +75,9 @@ export default function TerminosPage() {
             activación. Los que no se usen en ese plazo vencen y no son reembolsables.
           </li>
           <li>
-            Al agotarse el paquete no podrás enviar ningún documento a la DIAN (facturas, notas crédito y débito,
-            anulaciones, documentos soporte, nómina ni eventos sobre facturas recibidas) hasta comprar otro. Te enviamos
-            un aviso por correo cuando uses el 90 % del paquete.
+            Al agotarse o vencer el paquete no podrás enviar ningún documento a la DIAN (facturas, notas crédito y
+            débito, anulaciones, documentos soporte, nómina ni eventos sobre facturas recibidas, aunque la factura ya se
+            haya descontado) hasta comprar otro. Te enviamos un aviso por correo cuando uses el 90 % del paquete.
           </li>
           <li>
             Las devoluciones y el derecho de retracto se rigen por la{" "}
