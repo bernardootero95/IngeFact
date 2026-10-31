@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { NAV_ITEMS, type NavKey } from "@/data/nav";
 import { WhatsAppIcon } from "@/components/ui/icons";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { BUSINESS } from "@/data/business";
 
 const MOBILE_MENU_ID = "menu-movil";
+const APP_LOGIN_URL = `${BUSINESS.app}/login`;
 
 export function Header({ active }: { active?: NavKey }) {
   const [open, setOpen] = useState(false);
@@ -24,15 +26,15 @@ export function Header({ active }: { active?: NavKey }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutralCustom-100 bg-white">
-      <div className="flex h-20 items-center justify-between px-6 md:px-16">
-        <Link href="/" aria-label="IngeFact, ir al inicio" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+      <div className="flex h-20 items-center justify-between gap-6 px-6 md:px-16 lg:px-10 xl:px-16">
+        <Link href="/" aria-label="IngeFact, ir al inicio" className="flex shrink-0 items-center gap-2.5" onClick={() => setOpen(false)}>
           <Image src="/logo-mark.png" alt="" width={22} height={29} priority className="h-7 w-auto" />
           <span className="text-xl font-extrabold text-neutralCustom-800">
             Inge<span className="text-brand-600">Fact</span>
           </span>
         </Link>
 
-        <nav aria-label="Principal" className="hidden items-center gap-7 lg:flex xl:gap-9">
+        <nav aria-label="Principal" className="hidden items-center gap-5 lg:flex xl:gap-9">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.key}
@@ -48,6 +50,11 @@ export function Header({ active }: { active?: NavKey }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          {/* En móvil el acceso va dentro del menú, para no apretar el header. */}
+          <SecondaryButton href={APP_LOGIN_URL} className="hidden px-5 py-2.5 sm:inline-flex">
+            Ingresar
+          </SecondaryButton>
+
           <PrimaryButton
             href={buildWhatsAppLink("Hola, quiero comprar un paquete de documentos de IngeFact.")}
             external
@@ -87,6 +94,9 @@ export function Header({ active }: { active?: NavKey }) {
               {item.label}
             </Link>
           ))}
+          <SecondaryButton href={APP_LOGIN_URL} className="mt-2 w-full">
+            Ingresar a mi cuenta
+          </SecondaryButton>
         </nav>
       )}
     </header>
