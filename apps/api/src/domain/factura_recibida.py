@@ -33,6 +33,16 @@ ESTADOS_EVENTO_ACEPTADO = ("ACCEPTED", "ACCEPTED_WITH_OBSERVATIONS")
 ORIGEN_INGEFACT = "ingefact"
 ORIGEN_DIAN = "dian"
 
+
+def factura_recibida_cobrada(eventos) -> bool:
+    """Una factura recibida descuenta UN documento del paquete, una sola vez,
+    con su primer evento enviado por IngeFact y aceptado por la DIAN; los
+    eventos siguientes ya no descuentan (Alegra si cobra cada evento)."""
+    return any(
+        (e.origen or ORIGEN_INGEFACT) == ORIGEN_INGEFACT and e.legal_status in ESTADOS_EVENTO_ACEPTADO
+        for e in eventos
+    )
+
 # GET /events/invoice/{cufe}: "00" trae eventos, "67" = la factura no tiene.
 CODIGO_DIAN_CON_EVENTOS = "00"
 

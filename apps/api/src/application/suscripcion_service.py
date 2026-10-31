@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_alerta_cuota
-from src.core.tiempo import ZONA_HORARIA_COLOMBIA
+from src.core.tiempo import ZONA_HORARIA_COLOMBIA, hoy_colombia
 from src.domain.factura_recibida import ESTADOS_EVENTO_ACEPTADO, ORIGEN_INGEFACT
 from src.infrastructure.db.models import (
     DocumentoSoporte,
@@ -55,19 +55,47 @@ def contar_documentos_usados(db: Session, suscripcion: Suscripcion, hasta: datet
 
 
 def contar_documentos_aceptados(db: Session, inicio: datetime, fin: datetime, empresa_id=None) -> int:
-    """Documentos aceptados por la DIAN entre `inicio` y `fin` (ver
+    """Documentos que se le cobran al tenant entre `inicio` y `fin` (ver
     contar_documentos_usados para que cuenta y por que). Sin `empresa_id`
-    cuenta los de toda la plataforma (KPI del panel admin y costo de
-    Alegra): misma regla que el cobro al tenant, para que no se separen."""
+    cuenta los de toda la plataforma. Los eventos del receptor se cobran por
+    factura recibida, no por evento (decision de negocio 2026-10-31); lo que
+    cobra Alegra va en contar_documentos_alegra."""
+    return _contar_sin_eventos(db, inicio, fin, empresa_id) + _contar_facturas_recibidas_cobradas(
+        db, inicio, fin, empresa_id
+    )
 
-    def de_la_empresa(columna):
-        return (columna == empresa_id,) if empresa_id is not None else ()
 
+def contar_documentos_alegra(db: Session, inicio: datetime, fin: datetime) -> int:
+    """Documentos de toda la plataforma que Alegra le factura a IngeFact
+    entre `inicio` y `fin`: los mismos del cobro al tenant, salvo que Alegra
+    cuenta CADA evento del receptor aceptado. Base del costo de Alegra."""
+    eventos = db.execute(
+        select(func.count())
+        .select_from(EventoReceptor)
+        .where(*_eventos_cobrables(), EventoReceptor.creado >= inicio, EventoReceptor.creado <= fin)
+    ).scalar_one()
+    return _contar_sin_eventos(db, inicio, fin) + eventos
+
+
+def _filtro_empresa(columna, empresa_id) -> tuple:
+    return (columna == empresa_id,) if empresa_id is not None else ()
+
+
+def _eventos_cobrables() -> tuple:
+    # Los leidos de la DIAN (origen "dian") no los transmitio IngeFact: no cuentan.
+    return (
+        EventoReceptor.origen == ORIGEN_INGEFACT,
+        EventoReceptor.legal_status.in_(ESTADOS_EVENTO_ACEPTADO),
+    )
+
+
+def _contar_sin_eventos(db: Session, inicio: datetime, fin: datetime, empresa_id=None) -> int:
+    """Facturas, notas, documentos soporte y nomina: uno por documento."""
     total = db.execute(
         select(func.count())
         .select_from(Factura)
         .where(
-            *de_la_empresa(Factura.empresa_id),
+            *_filtro_empresa(Factura.empresa_id, empresa_id),
             Factura.estado.in_(("aceptada", "anulada")),
             Factura.fecha_envio >= inicio,
             Factura.fecha_envio <= fin,
@@ -87,7 +115,7 @@ def contar_documentos_aceptados(db: Session, inicio: datetime, fin: datetime, em
             select(func.count())
             .select_from(modelo)
             .where(
-                *de_la_empresa(modelo.empresa_id),
+                *_filtro_empresa(modelo.empresa_id, empresa_id),
                 modelo.estado.in_(estados),
                 modelo.fecha_envio >= inicio,
                 modelo.fecha_envio <= fin,
@@ -100,30 +128,36 @@ def contar_documentos_aceptados(db: Session, inicio: datetime, fin: datetime, em
         select(func.count())
         .select_from(Nomina)
         .where(
-            *de_la_empresa(Nomina.empresa_id),
+            *_filtro_empresa(Nomina.empresa_id, empresa_id),
             Nomina.estado == "anulada",
             Nomina.fecha_anulacion >= inicio,
             Nomina.fecha_anulacion <= fin,
         )
     ).scalar_one()
+    return total
 
-    # Los eventos no tienen empresa_id ni fecha_envio propios: cuelgan de la
-    # FacturaRecibida y se registran (y responde la DIAN) al crearse. Los
-    # leidos de la DIAN (origen "dian") no los transmitio IngeFact: no cuentan.
-    total += db.execute(
+
+def _contar_facturas_recibidas_cobradas(db: Session, inicio: datetime, fin: datetime, empresa_id=None) -> int:
+    """Facturas recibidas cuyo PRIMER evento aceptado de IngeFact cae entre
+    `inicio` y `fin`: cada una se cobra una sola vez en toda su vida (ver
+    factura_recibida_cobrada). Los eventos no tienen empresa_id propio:
+    cuelgan de la FacturaRecibida."""
+    primer_evento = (
+        select(EventoReceptor.factura_recibida_id, func.min(EventoReceptor.creado).label("creado"))
+        .where(*_eventos_cobrables())
+        .group_by(EventoReceptor.factura_recibida_id)
+        .subquery()
+    )
+    return db.execute(
         select(func.count())
-        .select_from(EventoReceptor)
-        .join(FacturaRecibida, EventoReceptor.factura_recibida_id == FacturaRecibida.id)
+        .select_from(primer_evento)
+        .join(FacturaRecibida, primer_evento.c.factura_recibida_id == FacturaRecibida.id)
         .where(
-            *de_la_empresa(FacturaRecibida.empresa_id),
-            EventoReceptor.origen == ORIGEN_INGEFACT,
-            EventoReceptor.legal_status.in_(ESTADOS_EVENTO_ACEPTADO),
-            EventoReceptor.creado >= inicio,
-            EventoReceptor.creado <= fin,
+            *_filtro_empresa(FacturaRecibida.empresa_id, empresa_id),
+            primer_evento.c.creado >= inicio,
+            primer_evento.c.creado <= fin,
         )
     ).scalar_one()
-
-    return total
 
 
 MENSAJE_SIN_SUSCRIPCION = "Esta empresa no tiene una suscripcion activa."
@@ -135,16 +169,38 @@ def _suscripcion_activa(db: Session, empresa_id) -> Suscripcion | None:
     ).scalar_one_or_none()
 
 
+def motivo_plan_no_vigente(db: Session, empresa_id) -> str | None:
+    """None si la empresa tiene una suscripcion activa y sin vencer; si no,
+    el motivo. Un plan vencido bloquea todo envio a la DIAN aunque el
+    documento no descuente cupo (decision de negocio 2026-10-31): antes,
+    pasada fecha_fin, el conteo dejaba de sumar y el plan nunca se agotaba."""
+    suscripcion = _suscripcion_activa(db, empresa_id)
+    if suscripcion is None:
+        return MENSAJE_SIN_SUSCRIPCION
+    if suscripcion.fecha_fin < hoy_colombia():
+        return (
+            f"Tu plan venció el {suscripcion.fecha_fin:%d/%m/%Y}. "
+            "Renuévalo para seguir enviando documentos a la DIAN."
+        )
+    return None
+
+
+def verificar_plan_vigente(db: Session, empresa_id) -> None:
+    """Para envios que no descuentan cupo (eventos sobre una factura
+    recibida ya cobrada): solo exige el plan vigente."""
+    motivo = motivo_plan_no_vigente(db, empresa_id)
+    if motivo:
+        raise HTTPException(status.HTTP_409_CONFLICT, motivo)
+
+
 def verificar_cupo_disponible(db: Session, empresa_id) -> None:
     """Bloquea CUALQUIER transmision a la DIAN (facturas, notas credito y
     debito, anulaciones, documentos soporte, nomina y su anulacion, eventos
-    del receptor) si la empresa no tiene suscripcion activa o ya agoto su
+    del receptor) si la empresa no tiene un plan vigente o ya agoto su
     cupo. Decision de negocio del 2026-09-24: sin documentos disponibles no
     se envia nada a la DIAN."""
-    suscripcion = _suscripcion_activa(db, empresa_id)
-    if suscripcion is None:
-        raise HTTPException(status.HTTP_409_CONFLICT, MENSAJE_SIN_SUSCRIPCION)
-    if contar_documentos_usados(db, suscripcion) >= suscripcion.max_documentos:
+    verificar_plan_vigente(db, empresa_id)
+    if documentos_disponibles(db, empresa_id) == 0:
         raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
 
 
@@ -166,8 +222,10 @@ def mensaje_cupo_insuficiente(disponibles: int | None, necesarios: int) -> str |
 
 
 def verificar_cupo_para(db: Session, empresa_id, cantidad: int) -> None:
-    """Como verificar_cupo_disponible, pero para un lote: exige cupo para
-    los `cantidad` envios antes de transmitir el primero."""
+    """Como verificar_cupo_disponible, pero para un lote: exige plan vigente
+    y cupo para los `cantidad` envios que descuentan antes de transmitir el
+    primero (con `cantidad` 0 solo exige el plan vigente)."""
+    verificar_plan_vigente(db, empresa_id)
     motivo = mensaje_cupo_insuficiente(documentos_disponibles(db, empresa_id), cantidad)
     if motivo:
         raise HTTPException(status.HTTP_409_CONFLICT, motivo)

@@ -110,6 +110,9 @@ export default function Dashboard() {
                 <p className="text-3xl font-bold text-neutralCustom-800 mt-2">
                   {kpis?.documentos_emitidos_mes ?? 0}
                 </p>
+                <p className="text-xs text-neutralCustom-500 mt-1">
+                  {kpis?.documentos_cobrados_mes ?? 0} cobrados a clientes (eventos: uno por factura recibida)
+                </p>
               </div>
 
               <div className="bg-white p-6 border border-neutralCustom-100 rounded-brand-lg shadow-sm">

@@ -7,7 +7,11 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
+from src.application.suscripcion_service import (
+    revisar_alerta_cuota_sin_romper,
+    verificar_cupo_disponible,
+    verificar_plan_vigente,
+)
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
 from src.core.alegra_errors import map_alegra_error, map_government_response
 from src.core.factura_ubl_parser import (
@@ -38,6 +42,7 @@ from src.domain.factura_recibida import (
     OmitidasPorMotivoResponse,
     ResultadoCargaFacturaResponse,
     XmlFacturaRecibidaResponse,
+    factura_recibida_cobrada,
     clasificar_filas_reporte,
     eventos_dian_nuevos,
     eventos_permitidos,
@@ -366,9 +371,12 @@ class FacturaRecibidaService:
         if data.tipo not in eventos_permitidos(factura_recibida.eventos):
             raise HTTPException(status.HTTP_409_CONFLICT, MENSAJES_ORDEN_EVENTO.get(data.tipo, MENSAJE_ORDEN_GENERICO))
         empresa = self.empresa_habilitada(empresa_id)
-        # Cada evento aceptado descuenta un documento del paquete (decision de
-        # negocio 2026-09-24, ver contar_documentos_usados).
-        verificar_cupo_disponible(self.db, empresa_id)
+        # La factura descuenta un documento con su primer evento aceptado; los
+        # siguientes solo exigen el plan vigente (ver factura_recibida_cobrada).
+        if factura_recibida_cobrada(factura_recibida.eventos):
+            verificar_plan_vigente(self.db, empresa_id)
+        else:
+            verificar_cupo_disponible(self.db, empresa_id)
 
         self.enviar_evento(empresa, factura_recibida, data)
         return self.obtener(empresa_id, factura_recibida.id)

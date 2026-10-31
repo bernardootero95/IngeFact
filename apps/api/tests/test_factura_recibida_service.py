@@ -477,6 +477,37 @@ def test_registrar_evento_con_cupo_agotado_falla_409_sin_llamar_a_la_dian(db_ses
     assert fake.last_payload is None
 
 
+def test_registrar_evento_sobre_factura_ya_cobrada_no_descuenta_ni_exige_cupo(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=1)
+    service, _ = _servicio(db_session)
+    factura = _crear(service, empresa)
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+
+    service.registrar_evento(empresa.id, factura.id, _evento("030"))  # agota el cupo
+    service.registrar_evento(empresa.id, factura.id, _evento("032"))
+    actualizada = service.registrar_evento(empresa.id, factura.id, _evento("033"))
+
+    assert [e.tipo for e in actualizada.eventos] == ["030", "032", "033"]
+    assert contar_documentos_usados(db_session, suscripcion) == 1
+
+
+def test_registrar_evento_con_plan_vencido_falla_409_aunque_la_factura_ya_este_cobrada(db_session):
+    empresa = _crear_empresa(db_session)
+    service, fake = _servicio(db_session)
+    factura = _crear(service, empresa)
+    service.registrar_evento(empresa.id, factura.id, _evento("030"))
+    db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).update({"fecha_fin": date(2020, 1, 31)})
+    db_session.commit()
+    fake.last_payload = None
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.registrar_evento(empresa.id, factura.id, _evento("032"))
+
+    assert exc_info.value.status_code == 409
+    assert "venció el 31/01/2020" in exc_info.value.detail
+    assert fake.last_payload is None
+
+
 def test_registrar_evento_alegra_api_error_da_400(db_session):
     empresa = _crear_empresa(db_session)
     service, _ = _servicio(

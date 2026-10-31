@@ -5,7 +5,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from src.application.factura_recibida_service import FacturaRecibidaService
-from src.application.suscripcion_service import documentos_disponibles, mensaje_cupo_insuficiente, verificar_cupo_para
+from src.application.suscripcion_service import (
+    documentos_disponibles,
+    mensaje_cupo_insuficiente,
+    motivo_plan_no_vigente,
+    verificar_cupo_para,
+)
 from src.core.alegra_client import AlegraClient
 from src.domain.evento_masivo import (
     MAX_FACTURAS_EVENTO_MASIVO,
@@ -19,7 +24,7 @@ from src.domain.evento_masivo import (
     ResultadoEventoMasivoResponse,
     ValidacionEventoMasivoResponse,
 )
-from src.domain.factura_recibida import ESTADOS_EVENTO_ACEPTADO, eventos_permitidos
+from src.domain.factura_recibida import ESTADOS_EVENTO_ACEPTADO, eventos_permitidos, factura_recibida_cobrada
 from src.infrastructure.db.models import FacturaRecibida
 
 
@@ -52,6 +57,7 @@ class EventoMasivoService:
 
     def validar(self, empresa_id: uuid.UUID, criterios: CriteriosEventoMasivoRequest) -> ValidacionEventoMasivoResponse:
         facturas = self.candidatas(empresa_id, criterios)
+        necesarios = _documentos_necesarios(facturas)
         disponibles = documentos_disponibles(self.db, empresa_id)
         bloqueo = None
         if len(facturas) > MAX_FACTURAS_EVENTO_MASIVO:
@@ -60,24 +66,25 @@ class EventoMasivoService:
                 "Acorta el rango de fechas o filtra por proveedor."
             )
         elif facturas:
-            bloqueo = mensaje_cupo_insuficiente(disponibles, len(facturas))
+            bloqueo = motivo_plan_no_vigente(self.db, empresa_id) or mensaje_cupo_insuficiente(disponibles, necesarios)
         return ValidacionEventoMasivoResponse(
             cantidad=len(facturas),
             facturas=[FacturaEventoMasivoResponse.from_model(f) for f in facturas],
             maximo=MAX_FACTURAS_EVENTO_MASIVO,
-            documentos_necesarios=len(facturas),
+            documentos_necesarios=necesarios,
             documentos_disponibles=disponibles or 0,
             bloqueo=bloqueo,
         )
 
     def emitir(self, empresa_id: uuid.UUID, data: EmitirEventoMasivoRequest) -> list[ResultadoEventoMasivoResponse]:
-        """Envia una tanda. Antes de transmitir nada exige cupo para todas
-        las facturas validas de la tanda; despues, un fallo no detiene el
-        resto: cada factura trae su propio resultado."""
+        """Envia una tanda. Antes de transmitir nada exige plan vigente y
+        cupo para las facturas validas de la tanda que aun no se han cobrado;
+        despues, un fallo no detiene el resto: cada factura trae su propio
+        resultado."""
         empresa = self._facturas.empresa_habilitada(empresa_id)
         vigentes = {f.id: f for f in self.candidatas(empresa_id, data)}
         validas = [vigentes[i] for i in data.factura_ids if i in vigentes]
-        verificar_cupo_para(self.db, empresa_id, len(validas))
+        verificar_cupo_para(self.db, empresa_id, _documentos_necesarios(validas))
 
         evento = data.evento()
         resultados = []
@@ -98,6 +105,11 @@ class EventoMasivoService:
                 motivo = registrado.razon_rechazo or MOTIVO_RECHAZO_GENERICO
                 resultados.append(_resultado(factura_id, factura, RESULTADO_EVENTO_FALLIDO, motivo))
         return resultados
+
+
+def _documentos_necesarios(facturas: list[FacturaRecibida]) -> int:
+    """Solo descuentan las facturas sin un evento aceptado previo."""
+    return sum(1 for f in facturas if not factura_recibida_cobrada(f.eventos))
 
 
 def _resultado(factura_id, factura, resultado: str, mensaje: str | None) -> ResultadoEventoMasivoResponse:
