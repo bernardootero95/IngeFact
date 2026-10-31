@@ -29,7 +29,7 @@ export default function HomePage() {
       <JsonLd data={softwareJsonLd()} />
       <section className="flex flex-col items-center gap-12 bg-neutralCustom-50 px-6 py-16 md:flex-row md:justify-between md:px-16 md:py-20">
         <div className="max-w-[560px]">
-          <span className="mb-5 inline-block rounded-full bg-brand-50 px-3.5 py-1.5 text-[13px] font-bold text-brand-600">
+          <span className="mb-5 inline-block text-balance rounded-brand-md bg-brand-50 px-3.5 py-1.5 text-[13px] font-bold text-brand-600 sm:rounded-full">
             Facturación · Nómina · Documento soporte · RADIAN
           </span>
           <h1 className="mb-5 text-4xl font-extrabold leading-[1.12] text-neutralCustom-800 md:text-[48px]">
@@ -72,7 +72,7 @@ export default function HomePage() {
         </div>
         <Link
           href="/caracteristicas"
-          className="mt-8 inline-block text-[14px] font-semibold text-brand-600 underline-offset-4 hover:text-brand-700 hover:underline"
+          className="mt-6 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-brand-600 underline-offset-4 hover:text-brand-700 hover:underline"
         >
           Ver todas las características <span aria-hidden="true">→</span>
         </Link>
@@ -92,7 +92,7 @@ export default function HomePage() {
         </div>
         <Link
           href="/precios"
-          className="mt-6 inline-block text-[14px] font-semibold text-brand-600 underline-offset-4 hover:text-brand-700 hover:underline"
+          className="mt-4 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-brand-600 underline-offset-4 hover:text-brand-700 hover:underline"
         >
           Ver todos los paquetes y sus condiciones <span aria-hidden="true">→</span>
         </Link>

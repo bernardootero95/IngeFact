@@ -4,6 +4,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* El header es sticky (h-20): sin esto tapa los títulos al saltar a un
+     ancla y el elemento con foco al navegar con teclado (WCAG 2.4.11). */
+  scroll-padding-top: 6rem;
 }
 
 @media (prefers-reduced-motion: reduce) {

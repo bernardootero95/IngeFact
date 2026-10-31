@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { NAV_ITEMS, type NavKey } from "@/data/nav";
 import { WhatsAppIcon } from "@/components/ui/icons";
 import { buildWhatsAppLink } from "@/lib/whatsapp";
-import { PrimaryButton } from "@/components/ui/Button";
+import { PrimaryButton, SecondaryButton } from "@/components/ui/Button";
+import { BUSINESS } from "@/data/business";
 
 const MOBILE_MENU_ID = "menu-movil";
+const APP_LOGIN_URL = `${BUSINESS.app}/login`;
 
 export function Header({ active }: { active?: NavKey }) {
   const [open, setOpen] = useState(false);
@@ -24,15 +26,15 @@ export function Header({ active }: { active?: NavKey }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-neutralCustom-100 bg-white">
-      <div className="flex h-20 items-center justify-between px-6 md:px-16">
-        <Link href="/" aria-label="IngeFact, ir al inicio" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+      <div className="flex h-20 items-center justify-between gap-6 px-6 md:px-16 lg:px-10 xl:px-16">
+        <Link href="/" aria-label="IngeFact, ir al inicio" className="flex shrink-0 items-center gap-2.5" onClick={() => setOpen(false)}>
           <Image src="/logo-mark.png" alt="" width={22} height={29} priority className="h-7 w-auto" />
           <span className="text-xl font-extrabold text-neutralCustom-800">
             Inge<span className="text-brand-600">Fact</span>
           </span>
         </Link>
 
-        <nav aria-label="Principal" className="hidden items-center gap-7 lg:flex xl:gap-9">
+        <nav aria-label="Principal" className="hidden items-center gap-5 lg:flex xl:gap-9">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.key}
@@ -48,13 +50,19 @@ export function Header({ active }: { active?: NavKey }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <SecondaryButton href={APP_LOGIN_URL} className="px-4 py-2.5 sm:px-5">
+            Ingresar
+          </SecondaryButton>
+
+          {/* En móvil comprar queda en el botón flotante de WhatsApp: aquí
+              solo repetía la misma acción y quitaba espacio a Ingresar. */}
           <PrimaryButton
             href={buildWhatsAppLink("Hola, quiero comprar un paquete de documentos de IngeFact.")}
             external
             icon={<WhatsAppIcon className="h-4 w-4" />}
-            className="px-5 py-2.5"
+            className="hidden px-5 py-2.5 sm:inline-flex"
           >
-            <span className="sr-only sm:not-sr-only">Comprar</span>
+            Comprar
           </PrimaryButton>
 
           <button

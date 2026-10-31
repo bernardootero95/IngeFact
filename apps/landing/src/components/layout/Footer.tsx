@@ -8,7 +8,8 @@ import { NewTabHint } from "@/components/ui/NewTabHint";
 
 // neutralCustom-300 sobre neutralCustom-800 = 7:1 (el -500 daba 3,4:1, no cumplía AA).
 const mutedText = "text-neutralCustom-300";
-const linkClasses = "mb-3 block text-sm text-neutralCustom-100 hover:text-brand-400";
+// py-2.5: área táctil de ~40 px en móvil (con mb-3 el enlace solo medía 20 px).
+const linkClasses = "block py-2.5 text-sm text-neutralCustom-100 hover:text-brand-400";
 
 export function Footer() {
   return (
@@ -46,7 +47,7 @@ export function Footer() {
         <FooterColumn title="Legal" links={LEGAL_NAV_ITEMS} />
 
         <div>
-          <h2 className={`mb-4 text-xs font-bold uppercase tracking-wide ${mutedText}`}>Contacto</h2>
+          <h2 className={`mb-1.5 text-xs font-bold uppercase tracking-wide ${mutedText}`}>Contacto</h2>
           <a href={buildWhatsAppLink()} target="_blank" rel="noopener noreferrer" className={linkClasses}>
             WhatsApp: {WHATSAPP_DISPLAY}
             <NewTabHint />
@@ -76,7 +77,7 @@ export function Footer() {
 function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <div>
-      <h2 className={`mb-4 text-xs font-bold uppercase tracking-wide ${mutedText}`}>{title}</h2>
+      <h2 className={`mb-1.5 text-xs font-bold uppercase tracking-wide ${mutedText}`}>{title}</h2>
       {links.map((link) => (
         <Link key={link.href} href={link.href} className={linkClasses}>
           {link.label}

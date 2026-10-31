@@ -118,7 +118,7 @@ export function ServicePage({ service }: { service: Service }) {
             {PACKAGE_TERMS.vigenciaMeses} meses.
           </p>
           <p className={`mb-5 ${bodyText}`}>{service.consumption} El mismo paquete sirve para todos los servicios.</p>
-          <Link href="/precios" className="text-[15px] font-semibold text-brand-600 underline-offset-4 hover:underline">
+          <Link href="/precios" className="inline-flex min-h-11 items-center gap-1 text-[15px] font-semibold text-brand-600 underline-offset-4 hover:underline">
             Ver todos los paquetes <span aria-hidden="true">→</span>
           </Link>
         </div>
