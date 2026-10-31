@@ -308,6 +308,10 @@ def test_documentos_emitidos_mes_cuenta_cada_evento_aceptado_enviado_por_ingefac
     kpis = DashboardService(db_session).obtener_kpis()
 
     assert kpis["documentos_emitidos_mes"] == 2
+    assert kpis["finanzas_mes"]["documentos_emitidos"] == 2
+    # Al cliente: la primera factura una vez; la segunda ya se cobro en
+    # otro mes (su primer evento de IngeFact fue _FUERA_DEL_MES).
+    assert kpis["documentos_cobrados_mes"] == 1
 
 
 def test_clientes_proximos_a_vencer_solo_incluye_dentro_del_umbral_de_30_dias(db_session):

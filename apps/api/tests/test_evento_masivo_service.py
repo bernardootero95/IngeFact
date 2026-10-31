@@ -191,6 +191,32 @@ def test_validar_con_cupo_suficiente_no_bloquea(db_session):
     assert resultado.documentos_disponibles == 5
 
 
+def test_validar_no_pide_documentos_por_facturas_ya_cobradas(db_session):
+    empresa = _crear_empresa(db_session, max_documentos=0)
+    _factura(db_session, empresa, "F1", eventos=[("030", "ACCEPTED")])
+    _factura(db_session, empresa, "F2", eventos=[("030", "ACCEPTED")])
+    service, _ = _servicio(db_session)
+
+    resultado = service.validar(empresa.id, _criterios("032"))
+
+    assert resultado.cantidad == 2
+    assert resultado.documentos_necesarios == 0
+    assert resultado.bloqueo is None
+
+
+def test_validar_con_plan_vencido_bloquea_aunque_no_necesite_documentos(db_session):
+    empresa = _crear_empresa(db_session)
+    db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).update({"fecha_fin": date(2020, 1, 31)})
+    db_session.commit()
+    _factura(db_session, empresa, "F1", eventos=[("030", "ACCEPTED")])
+    service, _ = _servicio(db_session)
+
+    resultado = service.validar(empresa.id, _criterios("032"))
+
+    assert resultado.documentos_necesarios == 0
+    assert "venció" in resultado.bloqueo
+
+
 def test_validar_bloquea_si_supera_el_maximo(db_session, monkeypatch):
     monkeypatch.setattr("src.application.evento_masivo_service.MAX_FACTURAS_EVENTO_MASIVO", 1)
     empresa = _crear_empresa(db_session)
@@ -231,6 +257,34 @@ def test_emitir_sin_cupo_suficiente_no_envia_nada(db_session):
 
     assert exc_info.value.status_code == 409
     assert exc_info.value.detail == "No tienes documentos suficientes: necesitas 2 y tienes 1 disponibles."
+    assert fake.payloads == []
+
+
+def test_emitir_solo_exige_cupo_para_las_facturas_no_cobradas(db_session):
+    # El acuse ya aceptado de F1 agota el unico documento del plan.
+    empresa = _crear_empresa(db_session, max_documentos=1)
+    cobrada = _factura(db_session, empresa, "F1", eventos=[("030", "ACCEPTED")])
+    suscripcion = db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).one()
+    service, fake = _servicio(db_session)
+
+    resultados = service.emitir(empresa.id, _emitir([cobrada], tipo="032"))
+
+    assert [r.resultado for r in resultados] == ["aceptado"]
+    assert len(fake.payloads) == 1
+    assert contar_documentos_usados(db_session, suscripcion) == 1
+
+
+def test_emitir_con_plan_vencido_no_envia_nada_aunque_no_necesite_documentos(db_session):
+    empresa = _crear_empresa(db_session)
+    db_session.query(Suscripcion).filter_by(empresa_id=empresa.id).update({"fecha_fin": date(2020, 1, 31)})
+    db_session.commit()
+    factura = _factura(db_session, empresa, "F1", eventos=[("030", "ACCEPTED")])
+    service, fake = _servicio(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.emitir(empresa.id, _emitir([factura], tipo="032"))
+
+    assert exc_info.value.status_code == 409
     assert fake.payloads == []
 
 

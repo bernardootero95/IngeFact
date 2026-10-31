@@ -60,7 +60,10 @@ class DashboardKpisResponse(BaseModel):
     empresas_activas: int
     empresas_inactivas: int
     empresas_con_error_alegra: int
+    # Emitidos = lo que cuenta Alegra (cada evento); cobrados = lo que se
+    # descuenta a los tenants (una vez por factura recibida).
     documentos_emitidos_mes: int
+    documentos_cobrados_mes: int
     clientes_proximos_a_vencer: list[ClienteAlertaResponse]
     clientes_proximos_a_agotar_cupo: list[ClienteAlertaResponse]
     ultimas_empresas: list[EmpresaResumen]

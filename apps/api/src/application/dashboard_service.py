@@ -7,6 +7,7 @@ from src.application.configuracion_service import ConfiguracionService
 from src.application.suscripcion_service import (
     UMBRAL_ALERTA_CUOTA,
     contar_documentos_aceptados,
+    contar_documentos_alegra,
     contar_documentos_usados,
 )
 from src.core.precio_paquete import costo_alegra_mes
@@ -38,6 +39,9 @@ class DashboardService:
             "empresas_inactivas": conteos.get("inactivo", 0),
             "empresas_con_error_alegra": conteos.get("error_alegra", 0),
             "documentos_emitidos_mes": documentos_mes,
+            "documentos_cobrados_mes": contar_documentos_aceptados(
+                self.db, self._inicio_mes(), datetime.now(ZONA_HORARIA_COLOMBIA)
+            ),
             "clientes_proximos_a_vencer": proximos_a_vencer,
             "clientes_proximos_a_agotar_cupo": proximos_a_agotar_cupo,
             "finanzas_mes": self._finanzas_mes(documentos_mes),
@@ -124,14 +128,15 @@ class DashboardService:
     def _contar_documentos_emitidos_mes(self) -> int:
         """Documentos que la DIAN acepto este mes calendario en toda la
         plataforma: facturas, notas credito y debito, documentos soporte,
-        nomina (y sus anulaciones) y eventos del receptor enviados por
-        IngeFact. Misma regla que el cobro al tenant (contar_documentos_aceptados);
-        es tambien la base del costo de Alegra.
+        nomina (y sus anulaciones) y CADA evento del receptor enviado por
+        IngeFact, como los cuenta Alegra (contar_documentos_alegra): es la
+        base del costo de Alegra. Al tenant los eventos se le cobran por
+        factura recibida (documentos_cobrados_mes).
 
         "Este mes" es el mes calendario en hora de Colombia, no la del
         servidor (en produccion el contenedor corre en UTC) -- el limite
         del 1ro de mes se calcula en America/Bogota."""
-        return contar_documentos_aceptados(self.db, self._inicio_mes(), datetime.now(ZONA_HORARIA_COLOMBIA))
+        return contar_documentos_alegra(self.db, self._inicio_mes(), datetime.now(ZONA_HORARIA_COLOMBIA))
 
     def _alertas_clientes(self) -> tuple[list[dict], list[dict]]:
         """Estado de cada suscripcion activa frente a los dos umbrales que
