@@ -31,7 +31,7 @@ function ButtonLink({ href, external, className, children }: Omit<ButtonProps, "
 
 export function PrimaryButton({ href, children, icon, external, className = "" }: ButtonProps) {
   return (
-    <ButtonLink href={href} external={external} className={`${baseClasses} bg-brand-600 text-white hover:bg-brand-700 ${className}`}>
+    <ButtonLink href={href} external={external} className={`${baseClasses} bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-700 ${className}`}>
       {icon}
       {children}
     </ButtonLink>
@@ -43,7 +43,7 @@ export function SecondaryButton({ href, children, external, className = "" }: Bu
     <ButtonLink
       href={href}
       external={external}
-      className={`${baseClasses} border border-neutralCustom-100 bg-white text-neutralCustom-800 hover:border-brand-400 hover:text-brand-600 ${className}`}
+      className={`${baseClasses} border border-neutralCustom-100 bg-white text-neutralCustom-800 hover:border-brand-400 hover:text-brand-600 active:bg-brand-50 ${className}`}
     >
       {children}
     </ButtonLink>

@@ -69,8 +69,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
       <section className="bg-neutralCustom-50 px-6 py-14 md:px-16">
         <div className="mx-auto max-w-[760px]">
-          <nav aria-label="Ruta de navegación" className="mb-6 text-[13px] text-neutralCustom-500">
-            <Link href="/articulos" className="hover:text-brand-600">
+          <nav aria-label="Ruta de navegación" className="mb-3 text-[13px] text-neutralCustom-500">
+            <Link href="/articulos" className="inline-flex min-h-11 items-center hover:text-brand-600">
               Artículos
             </Link>
           </nav>
@@ -90,10 +90,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <h2 id="contenido-articulo" className="mb-2 text-sm font-bold text-neutralCustom-800">
               En este artículo
             </h2>
-            <ol className="ml-5 list-decimal space-y-1 text-sm">
+            <ol className="ml-5 list-decimal text-sm">
               {article.sections.map((section) => (
                 <li key={section.id}>
-                  <a href={`#${section.id}`} className="text-brand-600 underline-offset-4 hover:underline">
+                  <a href={`#${section.id}`} className="inline-block py-1.5 text-brand-600 underline-offset-4 hover:underline">
                     {section.title}
                   </a>
                 </li>

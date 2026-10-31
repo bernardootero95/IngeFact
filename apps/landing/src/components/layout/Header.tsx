@@ -50,18 +50,19 @@ export function Header({ active }: { active?: NavKey }) {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* En móvil el acceso va dentro del menú, para no apretar el header. */}
-          <SecondaryButton href={APP_LOGIN_URL} className="hidden px-5 py-2.5 sm:inline-flex">
+          <SecondaryButton href={APP_LOGIN_URL} className="px-4 py-2.5 sm:px-5">
             Ingresar
           </SecondaryButton>
 
+          {/* En móvil comprar queda en el botón flotante de WhatsApp: aquí
+              solo repetía la misma acción y quitaba espacio a Ingresar. */}
           <PrimaryButton
             href={buildWhatsAppLink("Hola, quiero comprar un paquete de documentos de IngeFact.")}
             external
             icon={<WhatsAppIcon className="h-4 w-4" />}
-            className="px-5 py-2.5"
+            className="hidden px-5 py-2.5 sm:inline-flex"
           >
-            <span className="sr-only sm:not-sr-only">Comprar</span>
+            Comprar
           </PrimaryButton>
 
           <button
@@ -94,9 +95,6 @@ export function Header({ active }: { active?: NavKey }) {
               {item.label}
             </Link>
           ))}
-          <SecondaryButton href={APP_LOGIN_URL} className="mt-2 w-full">
-            Ingresar a mi cuenta
-          </SecondaryButton>
         </nav>
       )}
     </header>
