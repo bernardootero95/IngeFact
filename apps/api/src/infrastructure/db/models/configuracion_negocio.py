@@ -1,6 +1,8 @@
+import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, Numeric, func
+from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.infrastructure.db.session import Base
@@ -16,6 +18,11 @@ class ConfiguracionNegocio(Base):
     costo_servidor_usd: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     trm_usd_cop: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     comision_paquetes_pct: Mapped[float] = mapped_column(Numeric(5, 2), nullable=False)
+    # Empresa (tenant) que emite la factura de los paquetes vendidos. Vacio =
+    # la del NIT de Settings.empresa_facturadora_nit.
+    empresa_facturadora_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("empresas.id", ondelete="SET NULL")
+    )
     actualizado: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

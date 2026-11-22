@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     trm_usd_cop: float = 3200.0
     comision_paquetes_pct: float = 10.0
 
+    # Empresa que factura los paquetes vendidos si el admin no eligio otra en
+    # Configuracion: la del titular del negocio.
+    empresa_facturadora_nit: str = "1083000777"
+
 
 @lru_cache
 def get_settings() -> Settings:

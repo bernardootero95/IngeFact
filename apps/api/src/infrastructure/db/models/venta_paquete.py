@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, func
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,3 +25,8 @@ class VentaPaquete(Base):
     fecha_fin: Mapped[date] = mapped_column(Date, nullable=False)
     # Fecha de la compra (cuando el admin asigno el paquete).
     creado: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    # Factura electronica del paquete, emitida automaticamente por la empresa
+    # facturadora (ver FacturacionPlanService). factura_error guarda el
+    # ultimo motivo por el que no salio, para mostrarlo y reintentar.
+    factura_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("facturas.id", ondelete="SET NULL"))
+    factura_error: Mapped[str | None] = mapped_column(Text)
