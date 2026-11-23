@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { listReferenceTable, sincronizarReferenceTable } from "@ingefact/core-api";
 import { ToastAlert, Button, RefreshIcon, ArrowLeftIcon, TableSkeleton, ConfirmPopover } from "@ingefact/ui";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import { tableTitles } from "../tableTitles";
 
 export default function ReferenceDetail() {
@@ -108,7 +109,7 @@ export default function ReferenceDetail() {
             >
               Volver
             </Button>
-            <h2 className="text-lg font-bold text-neutralCustom-800">
+            <h2 className="text-lg font-medium text-neutralCustom-800">
               {title}
             </h2>
           </div>
@@ -310,6 +311,7 @@ export default function ReferenceDetail() {
             </div>
           )}
         </div>
+        <Footer />
       </main>
 
       <ToastAlert

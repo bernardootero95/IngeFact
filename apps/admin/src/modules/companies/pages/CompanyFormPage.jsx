@@ -15,6 +15,7 @@ import { ToastAlert, Button, FormSkeleton, ConfirmPopover, FieldError, fieldA11y
 import VentasPlanPanel from "../components/VentasPlanPanel";
 import { mensajeFacturaPlan } from "../facturaPlan";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import { calcularPrecio } from "../../pricing/pricingCalculator";
 
 const emptyForm = {
@@ -386,10 +387,10 @@ export default function CompanyFormPage() {
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
-              {isEditing ? "Gestionar Empresa" : "Aprovisionar Nueva Empresa"}
+              {isEditing ? "Gestionar empresa" : "Nueva empresa"}
             </h2>
             <p className="hidden sm:block text-xs text-neutralCustom-500">
-              {isEditing ? "Actualiza los datos y el plan de este tenant." : "Crea un nuevo tenant y su plan de facturación."}
+              {isEditing ? "Actualiza los datos y el plan de documentos de la empresa." : "Registra la empresa, su usuario de acceso y su plan de documentos."}
             </p>
           </div>
           <Button
@@ -657,7 +658,7 @@ export default function CompanyFormPage() {
 
                     <div className={activeTab === "suscripcion" ? "block" : "hidden"}>
                       <div className="bg-brand-50/30 border border-brand-100 rounded-brand-md p-4 mb-6">
-                        <h4 className="text-sm font-bold text-brand-800 mb-2">Usuario Administrador del Tenant</h4>
+                        <h4 className="text-sm font-bold text-brand-800 mb-2">Usuario administrador de la empresa</h4>
                         <p className="text-xs text-brand-600 mb-4">
                           El correo electrónico funcionará como usuario de acceso principal para esta empresa.
                         </p>
@@ -726,7 +727,7 @@ export default function CompanyFormPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="col-span-1 md:col-span-2 border-b border-neutralCustom-100 pb-2">
-                          <h4 className="text-sm font-bold text-neutralCustom-800">Plan de Facturación</h4>
+                          <h4 className="text-sm font-bold text-neutralCustom-800">Plan de documentos</h4>
                           <p className="text-xs text-neutralCustom-500 mt-0.5">
                             Al guardar un paquete nuevo (cantidad o fecha de inicio distinta) se emite automáticamente
                             su factura electrónica de contado al correo de la empresa.
@@ -973,6 +974,7 @@ export default function CompanyFormPage() {
             )}
           </div>
         </div>
+        <Footer />
       </main>
 
       <ToastAlert
