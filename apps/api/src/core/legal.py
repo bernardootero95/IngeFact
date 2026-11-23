@@ -7,7 +7,9 @@ siguiente ingreso (ver AceptacionLegalService)."""
 # agotado no se envia nada a la DIAN (tambien notas y anulaciones).
 # 2026-10-31: las facturas recibidas descuentan un documento una sola vez (no
 # uno por evento) y un plan vencido bloquea todo envio a la DIAN.
-VERSION_TERMINOS_VIGENTE = "2026-10-31"
+# 2026-11-23: con el plan vencido la cuenta queda en solo lectura (estado y
+# descargas en Excel, PDF y XML); sin cupo se sigue consultando.
+VERSION_TERMINOS_VIGENTE = "2026-11-23"
 
 # Resolucion DIAN 000165 de 2023, art. 11, numeral 18: la representacion
 # grafica debe identificar al fabricante del software (nombre y NIT), el nombre
