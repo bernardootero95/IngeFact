@@ -185,6 +185,19 @@ def motivo_plan_no_vigente(db: Session, empresa_id) -> str | None:
     return None
 
 
+def mensaje_plan_vencido(db: Session, empresa_id) -> str | None:
+    """Motivo del bloqueo si el plan activo de la empresa ya vencio; None si
+    sigue vigente o si no tiene plan (una empresa sin plan no queda en modo
+    restringido: aun no ha comprado nada)."""
+    suscripcion = _suscripcion_activa(db, empresa_id)
+    if suscripcion is None or suscripcion.fecha_fin >= hoy_colombia():
+        return None
+    return (
+        f"Tu plan venció el {suscripcion.fecha_fin:%d/%m/%Y}. Solo puedes consultar tu estado y descargar tu "
+        "información hasta que adquieras un nuevo paquete."
+    )
+
+
 def verificar_plan_vigente(db: Session, empresa_id) -> None:
     """Para envios que no descuentan cupo (eventos sobre una factura
     recibida ya cobrada): solo exige el plan vigente."""

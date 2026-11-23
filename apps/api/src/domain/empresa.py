@@ -3,6 +3,8 @@ from datetime import date, datetime
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
 from src.core.nit import is_valid_dv
+from src.core.tiempo import hoy_colombia
+from src.domain.estado_plan import VIGENTE, calcular_estado_plan
 
 
 def _regimen_fiscal_valido(v: str | None) -> str | None:
@@ -92,6 +94,8 @@ class SuscripcionResponse(BaseModel):
     fecha_inicio: date
     fecha_fin: date
     estado: str
+    # vigente | sin_cupo | vencido (ver domain/estado_plan.py).
+    estado_plan: str = VIGENTE
 
     model_config = {"from_attributes": True}
 
@@ -127,12 +131,14 @@ class EmpresaDetailResponse(BaseModel):
         activa = next((s for s in empresa.suscripciones if s.estado == "activa"), None)
         suscripcion_response = None
         if activa:
+            usados = documentos_usados if documentos_usados is not None else activa.documentos_usados
             suscripcion_response = SuscripcionResponse(
                 max_documentos=activa.max_documentos,
-                documentos_usados=documentos_usados if documentos_usados is not None else activa.documentos_usados,
+                documentos_usados=usados,
                 fecha_inicio=activa.fecha_inicio,
                 fecha_fin=activa.fecha_fin,
                 estado=activa.estado,
+                estado_plan=calcular_estado_plan(activa.fecha_fin, activa.max_documentos, usados, hoy_colombia()),
             )
         return EmpresaDetailResponse(
             id=str(empresa.id),

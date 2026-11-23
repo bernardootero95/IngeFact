@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -7,6 +7,7 @@ from src.core.config import get_settings
 from src.core.logging import configure_logging
 from src.core.monitoring import configure_error_monitoring
 from src.core.rate_limit import limiter
+from src.presentation.dependencias_plan import bloquear_escritura_con_plan_vencido
 from src.presentation.routes import (
     admin_api_keys,
     auth,
@@ -22,6 +23,7 @@ from src.presentation.routes import (
     tenant_documentos_soporte,
     tenant_empleados,
     tenant_empresa,
+    tenant_exportacion,
     tenant_facturas,
     tenant_facturas_recibidas,
     tenant_habilitacion,
@@ -65,22 +67,25 @@ app.include_router(configuracion.router)
 app.include_router(usuarios_admin.router)
 app.include_router(reference_tables.public_router)
 app.include_router(reference_tables.admin_router)
-app.include_router(tenant_empresa.router)
-app.include_router(tenant_dashboard.router)
-app.include_router(tenant_habilitacion.router)
-app.include_router(tenant_resolucion.router)
-app.include_router(tenant_resolucion_documento_soporte.router)
-app.include_router(tenant_clientes.router)
-app.include_router(tenant_proveedores.router)
-app.include_router(tenant_empleados.router)
-app.include_router(tenant_documentos_soporte.router)
-app.include_router(tenant_productos.router)
-app.include_router(tenant_impuestos.router)
-app.include_router(tenant_facturas.router)
-app.include_router(tenant_facturas_recibidas.router)
-app.include_router(tenant_notas_credito.router)
-app.include_router(tenant_notas_debito.router)
-app.include_router(tenant_nomina.router)
+# Con el plan vencido el tenant solo puede leer (ver dependencias_plan).
+PLAN_NO_VENCIDO = [Depends(bloquear_escritura_con_plan_vencido)]
+app.include_router(tenant_empresa.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_exportacion.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_dashboard.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_habilitacion.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_resolucion.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_resolucion_documento_soporte.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_clientes.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_proveedores.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_empleados.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_documentos_soporte.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_productos.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_impuestos.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_facturas.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_facturas_recibidas.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_notas_credito.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_notas_debito.router, dependencies=PLAN_NO_VENCIDO)
+app.include_router(tenant_nomina.router, dependencies=PLAN_NO_VENCIDO)
 app.include_router(external_clientes.router)
 app.include_router(external_productos.router)
 app.include_router(external_facturas.router)
