@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./modules/auth/store/authStore";
 import { EmpresaProvider } from "./context/EmpresaProvider";
+import PlanGate from "./modules/plan/components/PlanGate";
 
 import Login from "./modules/auth/pages/Login";
 import ForgotPassword from "./modules/auth/pages/ForgotPassword";
@@ -73,7 +74,11 @@ const RequireSession = ({ children }) => {
 const ProtectedRoute = ({ children }) => {
   const { debeCambiarPassword, profile } = useAuthStore();
 
-  let content = <EmpresaProvider>{children}</EmpresaProvider>;
+  let content = (
+    <EmpresaProvider>
+      <PlanGate>{children}</PlanGate>
+    </EmpresaProvider>
+  );
   if (debeCambiarPassword) content = <Navigate to="/change-password" replace />;
   else if (profile?.terminos_pendientes) content = <Navigate to="/accept-terms" replace />;
 

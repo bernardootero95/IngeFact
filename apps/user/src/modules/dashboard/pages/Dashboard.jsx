@@ -5,6 +5,8 @@ import { useAuthStore } from "../../auth/store/authStore";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import Footer from "../../../components/Footer";
+import SinCupoBanner from "../../plan/components/SinCupoBanner";
+import { ESTADO_PLAN, estadoPlanDe } from "../../plan/planEstado";
 
 export default function Dashboard() {
   const { profile } = useAuthStore();
@@ -54,6 +56,8 @@ export default function Dashboard() {
             <SpinnerLoading fullScreen={false} text="Cargando métricas..." />
           ) : (
             <>
+              {estadoPlanDe(empresa) === ESTADO_PLAN.SIN_CUPO && <SinCupoBanner empresa={empresa} />}
+
               {kpisError && (
                 <div className="p-4 bg-red-50 border border-fiscal-danger rounded-brand-lg flex items-center justify-between">
                   <p className="text-sm text-fiscal-danger">

@@ -18,6 +18,7 @@ export {
   getLogoEmpresa,
   subirLogoEmpresa,
   eliminarLogoEmpresa,
+  descargarExcelEmpresa,
 } from "./services/tenantEmpresa.js";
 export {
   getResolucionDian,
@@ -91,6 +92,7 @@ export {
   enviarDocumentoSoporte,
   obtenerFirmaDigitalDocumentoSoporte,
   obtenerRepresentacionPdfDocumentoSoporte,
+  obtenerUrlXmlDocumentoSoporte,
   enviarDocumentoSoportePorCorreo,
 } from "./services/documentosSoporte.js";
 export {

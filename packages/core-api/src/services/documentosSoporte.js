@@ -37,6 +37,10 @@ export async function obtenerFirmaDigitalDocumentoSoporte(id) {
   return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/firma-digital`);
 }
 
+export async function obtenerUrlXmlDocumentoSoporte(id) {
+  return apiRequest(`/api/v1/tenant/documentos-soporte/${id}/xml`);
+}
+
 export async function obtenerRepresentacionPdfDocumentoSoporte(id) {
   return apiRequestBlob(`/api/v1/tenant/documentos-soporte/${id}/representacion.pdf`);
 }
