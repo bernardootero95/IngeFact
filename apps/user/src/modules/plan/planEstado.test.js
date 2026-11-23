@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   ESTADO_PLAN,
+  alertasPorVencer,
+  textoDocumentos,
+  textoVencimiento,
+  tituloPorVencer,
   avisoPendiente,
   enlaceCompraPaquete,
   estadoPlanDe,
@@ -52,6 +56,40 @@ describe("aviso por ingreso", () => {
   it("sin storage disponible el aviso sale siempre", () => {
     expect(avisoPendiente("e1", "sin_cupo", undefined)).toBe(true);
     expect(() => marcarAvisoVisto("e1", "sin_cupo", undefined)).not.toThrow();
+  });
+});
+
+describe("alertasPorVencer", () => {
+  const empresa = (s) => ({ suscripcion: { estado_plan: "vigente", max_documentos: 100, documentos_usados: 10, dias_para_vencer: 90, fecha_fin: "2027-01-31", ...s } });
+
+  it("nada que avisar con plan holgado", () => {
+    expect(alertasPorVencer(empresa())).toBeNull();
+  });
+
+  it("avisa la fecha a 30 dias o menos", () => {
+    expect(alertasPorVencer(empresa({ dias_para_vencer: 31 }))).toBeNull();
+    expect(alertasPorVencer(empresa({ dias_para_vencer: 30 })).fecha).toEqual({ dias: 30, fechaFin: "2027-01-31" });
+  });
+
+  it("avisa los documentos con el 10 % o menos", () => {
+    expect(alertasPorVencer(empresa({ documentos_usados: 89 }))).toBeNull();
+    expect(alertasPorVencer(empresa({ documentos_usados: 90 })).documentos).toEqual({ restantes: 10, max: 100 });
+  });
+
+  it("en paquetes chicos avisa con el ultimo documento", () => {
+    expect(alertasPorVencer(empresa({ max_documentos: 5, documentos_usados: 4 })).documentos.restantes).toBe(1);
+  });
+
+  it("no aplica sin cupo ni vencido", () => {
+    expect(alertasPorVencer(empresa({ estado_plan: "sin_cupo", documentos_usados: 100 }))).toBeNull();
+    expect(alertasPorVencer(empresa({ estado_plan: "vencido", dias_para_vencer: -3 }))).toBeNull();
+  });
+
+  it("textos", () => {
+    expect(textoVencimiento({ dias: 0, fechaFin: "2026-11-23" })).toBe("Tu plan vence hoy (23/11/2026).");
+    expect(textoVencimiento({ dias: 12, fechaFin: "2026-12-05" })).toBe("Tu plan vence en 12 días, el 05/12/2026.");
+    expect(textoDocumentos({ restantes: 1, max: 10 })).toBe("Te queda 1 documento de 10 en tu paquete.");
+    expect(tituloPorVencer({ fecha: {}, documentos: {} })).toBe("Tu plan está por terminar");
   });
 });
 

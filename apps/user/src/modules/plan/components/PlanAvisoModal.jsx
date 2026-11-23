@@ -5,14 +5,27 @@ import { WhatsAppIcon } from "./iconos";
 const TONOS = {
   warning: { icono: "bg-amber-100 text-amber-700", borde: "border-t-amber-500" },
   danger: { icono: "bg-fiscal-danger/10 text-fiscal-danger", borde: "border-t-fiscal-danger" },
+  info: { icono: "bg-fiscal-info/10 text-fiscal-info", borde: "border-t-fiscal-info" },
 };
+
+const ICONO_ALERTA =
+  "M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z";
+const ICONO_RELOJ = "M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
 
 /**
  * Aviso de plan al ingresar. Usa <dialog> nativo con showModal(): el
  * navegador ya atrapa el foco, cierra con Esc y oculta el fondo para lectores
  * de pantalla. El boton principal abre el chat de WhatsApp para comprar.
  */
-export default function PlanAvisoModal({ abierto, titulo, children, tono = "warning", enlaceCompra, onCerrar }) {
+export default function PlanAvisoModal({
+  abierto,
+  titulo,
+  children,
+  tono = "warning",
+  enlaceCompra,
+  textoAccion = "Comprar paquete",
+  onCerrar,
+}) {
   const ref = useRef(null);
   const tituloId = useId();
   const estilos = TONOS[tono] ?? TONOS.warning;
@@ -35,7 +48,7 @@ export default function PlanAvisoModal({ abierto, titulo, children, tono = "warn
       <div className="p-6">
         <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-full ${estilos.icono}`}>
           <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d={tono === "info" ? ICONO_RELOJ : ICONO_ALERTA} />
           </svg>
         </div>
         <h2 id={tituloId} className="text-lg font-semibold text-neutralCustom-800">
@@ -56,7 +69,7 @@ export default function PlanAvisoModal({ abierto, titulo, children, tono = "warn
           icon={WhatsAppIcon}
           onClick={onCerrar}
         >
-          Comprar paquete
+          {textoAccion}
         </Button>
       </div>
     </dialog>

@@ -96,6 +96,8 @@ class SuscripcionResponse(BaseModel):
     estado: str
     # vigente | sin_cupo | vencido (ver domain/estado_plan.py).
     estado_plan: str = VIGENTE
+    # Dias de calendario (Colombia) hasta fecha_fin: 0 = vence hoy, negativo = vencido.
+    dias_para_vencer: int | None = None
 
     model_config = {"from_attributes": True}
 
@@ -132,13 +134,15 @@ class EmpresaDetailResponse(BaseModel):
         suscripcion_response = None
         if activa:
             usados = documentos_usados if documentos_usados is not None else activa.documentos_usados
+            hoy = hoy_colombia()
             suscripcion_response = SuscripcionResponse(
                 max_documentos=activa.max_documentos,
                 documentos_usados=usados,
                 fecha_inicio=activa.fecha_inicio,
                 fecha_fin=activa.fecha_fin,
                 estado=activa.estado,
-                estado_plan=calcular_estado_plan(activa.fecha_fin, activa.max_documentos, usados, hoy_colombia()),
+                estado_plan=calcular_estado_plan(activa.fecha_fin, activa.max_documentos, usados, hoy),
+                dias_para_vencer=(activa.fecha_fin - hoy).days,
             )
         return EmpresaDetailResponse(
             id=str(empresa.id),

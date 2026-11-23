@@ -113,6 +113,15 @@ def test_plan_sin_cupo_sigue_permitiendo_escrituras(api_client, db_session):
     assert respuesta.status_code == 201
 
 
+def test_suscripcion_informa_dias_para_vencer(api_client, db_session):
+    _, token = _empresa_con_tenant(db_session, fecha_fin=hoy_colombia() + timedelta(days=12))
+
+    suscripcion = api_client.get("/api/v1/tenant/empresa", headers=_auth(token)).json()["suscripcion"]
+
+    assert suscripcion["dias_para_vencer"] == 12
+    assert suscripcion["estado_plan"] == VIGENTE
+
+
 def test_exportar_excel_con_plan_vencido(api_client, db_session):
     empresa, token = _empresa_con_tenant(db_session, fecha_fin=hoy_colombia() - timedelta(days=5))
     db_session.add(
