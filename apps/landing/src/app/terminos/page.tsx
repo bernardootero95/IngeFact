@@ -75,9 +75,16 @@ export default function TerminosPage() {
             activación. Los que no se usen en ese plazo vencen y no son reembolsables.
           </li>
           <li>
-            Al agotarse o vencer el paquete no podrás enviar ningún documento a la DIAN (facturas, notas crédito y
-            débito, anulaciones, documentos soporte, nómina ni eventos sobre facturas recibidas, aunque la factura ya se
-            haya descontado) hasta comprar otro. Te enviamos un aviso por correo cuando uses el 90 % del paquete.
+            Si se agotan los documentos del paquete, puedes seguir entrando y consultando tu información, pero no podrás
+            enviar ningún documento a la DIAN (facturas, notas crédito y débito, anulaciones, documentos soporte, nómina
+            ni eventos sobre facturas recibidas, aunque la factura ya se haya descontado) hasta comprar otro. Te enviamos
+            un aviso por correo cuando uses el 90 % del paquete.
+          </li>
+          <li>
+            Si el paquete vence, aunque te queden documentos, dejas de tener un plan activo: no podrás enviar documentos
+            a la DIAN ni crear o modificar información en la plataforma. Al ingresar solo verás el estado de tu cuenta y
+            podrás descargar tu información (en Excel, y el PDF y el XML de tus documentos) hasta que compres otro
+            paquete.
           </li>
           <li>
             Las devoluciones y el derecho de retracto se rigen por la{" "}
@@ -126,7 +133,8 @@ export default function TerminosPage() {
         </p>
         <p>
           La información que registras y los documentos que emites son tuyos. Puedes descargar el PDF y el XML de cada
-          documento desde la plataforma en cualquier momento mientras tu cuenta esté activa.
+          documento, y toda tu información en Excel, desde la plataforma en cualquier momento mientras tu cuenta esté
+          activa, también con el paquete vencido.
         </p>
       </LegalSection>
 

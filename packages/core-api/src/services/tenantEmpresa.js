@@ -1,4 +1,4 @@
-import { apiRequest } from "../apiClient.js";
+import { apiRequest, apiRequestBlob } from "../apiClient.js";
 
 /**
  * Datos de la empresa del tenant autenticado (resuelta desde el JWT en el
@@ -29,4 +29,10 @@ export async function subirLogoEmpresa(imagen) {
 
 export async function eliminarLogoEmpresa() {
   return apiRequest("/api/v1/tenant/empresa/logo", { method: "DELETE" });
+}
+
+/** Libro .xlsx con toda la informacion de la empresa (documentos, eventos,
+ * terceros y productos). Disponible tambien con el plan vencido. */
+export async function descargarExcelEmpresa() {
+  return apiRequestBlob("/api/v1/tenant/exportacion/excel");
 }

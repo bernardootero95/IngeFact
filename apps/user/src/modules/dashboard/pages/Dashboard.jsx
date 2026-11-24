@@ -5,6 +5,9 @@ import { useAuthStore } from "../../auth/store/authStore";
 import { useCurrentEmpresa } from "../../../context/useCurrentEmpresa";
 import Sidebar from "../../../components/Sidebar";
 import Footer from "../../../components/Footer";
+import SinCupoBanner from "../../plan/components/SinCupoBanner";
+import PorVencerBanner from "../../plan/components/PorVencerBanner";
+import { ESTADO_PLAN, alertasPorVencer, estadoPlanDe } from "../../plan/planEstado";
 
 export default function Dashboard() {
   const { profile } = useAuthStore();
@@ -36,6 +39,7 @@ export default function Dashboard() {
   const loading = loadingEmpresa || loadingKpis;
   const suscripcion = empresa?.suscripcion ?? null;
   const conectadoAlegra = Boolean(empresa?.id_alegra);
+  const alertasPlan = alertasPorVencer(empresa);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
@@ -54,6 +58,9 @@ export default function Dashboard() {
             <SpinnerLoading fullScreen={false} text="Cargando métricas..." />
           ) : (
             <>
+              {estadoPlanDe(empresa) === ESTADO_PLAN.SIN_CUPO && <SinCupoBanner empresa={empresa} />}
+              {alertasPlan && <PorVencerBanner empresa={empresa} alertas={alertasPlan} />}
+
               {kpisError && (
                 <div className="p-4 bg-red-50 border border-fiscal-danger rounded-brand-lg flex items-center justify-between">
                   <p className="text-sm text-fiscal-danger">
