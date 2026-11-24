@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearUsuarioAdmin, actualizarUsuarioAdmin } from "@ingefact/core-api";
 import { isValidEmail } from "@ingefact/utils";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import { Button, FieldError, fieldA11y } from "@ingefact/ui";
 
 function validateName(value) {
@@ -84,7 +85,7 @@ export default function UserFormPage() {
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
-              {isEditing ? "Actualizar Usuario" : "Crear Nuevo Usuario"}
+              {isEditing ? "Editar usuario" : "Nuevo usuario"}
             </h2>
             <p className="hidden sm:block text-xs text-neutralCustom-500">
               {isEditing ? "Actualiza los datos de este usuario interno." : "Agrega un nuevo miembro del staff de IngeFact."}
@@ -188,6 +189,7 @@ export default function UserFormPage() {
             </form>
           </div>
         </div>
+        <Footer />
       </main>
     </div>
   );

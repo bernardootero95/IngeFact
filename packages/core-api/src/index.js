@@ -34,6 +34,8 @@ export {
   actualizarEmpresa,
   cambiarPlanEmpresa,
   sincronizarEmpresasAlegra,
+  listVentasEmpresa,
+  facturarVentaEmpresa,
 } from "./services/adminEmpresas.js";
 export { getDashboardKpis } from "./services/dashboard.js";
 export { getConfiguracionNegocio, guardarConfiguracionNegocio } from "./services/configuracion.js";

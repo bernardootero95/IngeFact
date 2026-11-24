@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { crearReferenceRecord, actualizarReferenceRecord } from "@ingefact/core-api";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import { tableTitles } from "../tableTitles";
 import { Button, FieldError, fieldA11y } from "@ingefact/ui";
 
@@ -123,7 +124,7 @@ export default function ReferenceFormPage() {
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
-              {isEditing ? `Modificar en ${title}` : `Nuevo Registro en ${title}`}
+              {isEditing ? `Modificar en ${title}` : `Nuevo registro en ${title}`}
             </h2>
             <p className="hidden sm:block text-xs text-neutralCustom-500">Catálogo de referencia DIAN.</p>
           </div>
@@ -297,6 +298,7 @@ export default function ReferenceFormPage() {
             </form>
           </div>
         </div>
+        <Footer />
       </main>
     </div>
   );

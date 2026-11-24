@@ -233,9 +233,15 @@ class EmpresaAdminService:
         return empresa
 
     def cambiar_plan(self, empresa_id: uuid.UUID, data: CambiarPlanRequest) -> Suscripcion:
+        return self.registrar_plan(empresa_id, data)[0]
+
+    def registrar_plan(
+        self, empresa_id: uuid.UUID, data: CambiarPlanRequest
+    ) -> tuple[Suscripcion, VentaPaquete | None]:
         """Upsert de la suscripcion activa de la empresa -- misma regla que
         usaba create-tenant: actualiza la que ya esta 'activa' si existe, si
-        no crea una nueva."""
+        no crea una nueva. Devuelve ademas la venta registrada (None si el
+        cambio no es una venta), para poder facturarla."""
         empresa = self.obtener(empresa_id)
 
         activa = self.db.execute(
@@ -262,16 +268,18 @@ class EmpresaAdminService:
         activa.alerta_cuota_enviada = False
 
         self.db.add(activa)
+        venta = None
         if es_venta:
-            self.db.add(
-                VentaPaquete(
-                    empresa_id=empresa.id,
-                    max_documentos=data.max_documentos,
-                    precio=data.precio if data.precio is not None else precio_paquete(data.max_documentos),
-                    fecha_inicio=data.fecha_inicio,
-                    fecha_fin=data.fecha_fin,
-                )
+            venta = VentaPaquete(
+                empresa_id=empresa.id,
+                max_documentos=data.max_documentos,
+                precio=data.precio if data.precio is not None else precio_paquete(data.max_documentos),
+                fecha_inicio=data.fecha_inicio,
+                fecha_fin=data.fecha_fin,
             )
+            self.db.add(venta)
         self.db.commit()
         self.db.refresh(activa)
-        return activa
+        if venta is not None:
+            self.db.refresh(venta)
+        return activa, venta
