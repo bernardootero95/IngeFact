@@ -12,6 +12,10 @@ import KpiCard from "../components/KpiCard";
 import ConsumoPlanCard from "../components/ConsumoPlanCard";
 import AccesosRapidos from "../components/AccesosRapidos";
 import ChecklistConfiguracion from "../components/ChecklistConfiguracion";
+import AlertasPanel from "../components/AlertasPanel";
+import UltimosDocumentos from "../components/UltimosDocumentos";
+import { useDashboardActividad } from "../hooks/useDashboardActividad";
+import { alertasDashboard } from "../dashboardActividad";
 import {
   configuracionCompleta,
   formatoCOP,
@@ -27,6 +31,7 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [kpisError, setKpisError] = useState(null);
+  const { actividad, error: actividadError, reintentar: reintentarActividad } = useDashboardActividad();
 
   const fetchKpis = useCallback(() => {
     setLoadingKpis(true);
@@ -99,6 +104,8 @@ export default function Dashboard() {
 
               {kpis && !configuracionCompleta(pasos) && <ChecklistConfiguracion pasos={pasos} />}
 
+              {actividad && <AlertasPanel alertas={alertasDashboard(actividad.alertas)} />}
+
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <KpiCard
                   titulo="Facturado este mes"
@@ -123,6 +130,19 @@ export default function Dashboard() {
                   <AccesosRapidos />
                 </div>
               </div>
+
+              {actividadError ? (
+                <div className="flex items-center justify-between gap-4 rounded-brand-lg border border-neutralCustom-100 bg-white p-4">
+                  <p className="text-sm text-neutralCustom-600">
+                    No se pudo cargar la actividad reciente: {actividadError}
+                  </p>
+                  <Button onClick={reintentarActividad} size="sm" className="shrink-0">
+                    Reintentar
+                  </Button>
+                </div>
+              ) : (
+                actividad && <UltimosDocumentos documentos={actividad.ultimos_documentos} />
+              )}
             </>
           )}
         </div>
