@@ -3,6 +3,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
 from src.core.nit import is_valid_dv
+from src.domain.facturacion_plan import FacturaVentaResponse
 
 
 def _regimen_fiscal_valido(v: str | None) -> str | None:
@@ -94,6 +95,11 @@ class SuscripcionResponse(BaseModel):
     estado: str
 
     model_config = {"from_attributes": True}
+
+
+class CambioPlanResponse(SuscripcionResponse):
+    # Factura automatica de la venta; None si el cambio no fue una venta.
+    factura: FacturaVentaResponse | None = None
 
 
 class EmpresaDetailResponse(BaseModel):

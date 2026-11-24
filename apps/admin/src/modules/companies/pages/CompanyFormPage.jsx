@@ -12,7 +12,10 @@ import {
 } from "@ingefact/core-api";
 import { isValidEmail, calculateNitDV } from "@ingefact/utils";
 import { ToastAlert, Button, FormSkeleton, ConfirmPopover, FieldError, fieldA11y } from "@ingefact/ui";
+import VentasPlanPanel from "../components/VentasPlanPanel";
+import { mensajeFacturaPlan } from "../facturaPlan";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import { calcularPrecio } from "../../pricing/pricingCalculator";
 
 const emptyForm = {
@@ -36,6 +39,24 @@ const emptyForm = {
   fechaInicio: "",
   fechaFin: "",
 };
+
+const CAMPOS_TAB_EMPRESA = [
+  "razonSocial",
+  "numeroIdentificacion",
+  "digitoVerificacion",
+  "departamento",
+  "municipio",
+  "regimen",
+  "tipoOrganizacion",
+];
+const CAMPOS_TAB_SUSCRIPCION = [
+  "correoElectronico",
+  "nombreUsuario",
+  "maxDocumentos",
+  "precioPaquete",
+  "fechaInicio",
+  "fechaFin",
+];
 
 export default function CompanyFormPage() {
   const navigate = useNavigate();
@@ -67,7 +88,7 @@ export default function CompanyFormPage() {
   const [newKeyNameError, setNewKeyNameError] = useState("");
   const [isGeneratingKey, setIsGeneratingKey] = useState(false);
   const [generatedKey, setGeneratedKey] = useState(null);
-  const [apiKeyToast, setApiKeyToast] = useState({ message: null, type: "success" });
+  const [toast, setToast] = useState({ message: null, type: "success" });
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -129,7 +150,7 @@ export default function CompanyFormPage() {
       const data = await listApiKeys(id);
       setApiKeys(data || []);
     } catch (error) {
-      setApiKeyToast({ message: `Error al cargar las API keys: ${error.message}`, type: "error" });
+      setToast({ message: `Error al cargar las API keys: ${error.message}`, type: "error" });
     } finally {
       setApiKeysLoading(false);
     }
@@ -153,7 +174,7 @@ export default function CompanyFormPage() {
       setNewKeyNameError("");
       await cargarApiKeys();
     } catch (error) {
-      setApiKeyToast({ message: error.message, type: "error" });
+      setToast({ message: error.message, type: "error" });
     } finally {
       setIsGeneratingKey(false);
     }
@@ -162,19 +183,19 @@ export default function CompanyFormPage() {
   const handleRevokeKey = async (apiKeyId) => {
     try {
       await revocarApiKey(id, apiKeyId);
-      setApiKeyToast({ message: "API key revocada.", type: "success" });
+      setToast({ message: "API key revocada.", type: "success" });
       await cargarApiKeys();
     } catch (error) {
-      setApiKeyToast({ message: error.message, type: "error" });
+      setToast({ message: error.message, type: "error" });
     }
   };
 
   const handleCopyKey = async () => {
     try {
       await navigator.clipboard.writeText(generatedKey);
-      setApiKeyToast({ message: "Key copiada al portapapeles.", type: "success" });
+      setToast({ message: "Key copiada al portapapeles.", type: "success" });
     } catch {
-      setApiKeyToast({ message: "No se pudo copiar automaticamente. Selecciona el texto manualmente.", type: "error" });
+      setToast({ message: "No se pudo copiar automaticamente. Selecciona el texto manualmente.", type: "error" });
     }
   };
 
@@ -256,29 +277,23 @@ export default function CompanyFormPage() {
     validateField("municipio", "");
   };
 
+  /** Valida todo y devuelve la primera pestaña con errores (null si no hay). */
   const checkAllErrors = () => {
-    const fields = [
-      "razonSocial",
-      "numeroIdentificacion",
-      "digitoVerificacion",
-      "correoElectronico",
-      "nombreUsuario",
-      "departamento",
-      "municipio",
-      "regimen",
-      "tipoOrganizacion",
-      "maxDocumentos",
-      "precioPaquete",
-      "fechaInicio",
-      "fechaFin",
-    ];
-    return fields.map((field) => validateField(field, form[field])).some(Boolean);
+    const conError = (fields) => fields.map((field) => validateField(field, form[field])).some(Boolean);
+    const empresa = conError(CAMPOS_TAB_EMPRESA);
+    const suscripcion = conError(CAMPOS_TAB_SUSCRIPCION);
+    if (empresa) return "empresa";
+    return suscripcion ? "suscripcion" : null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (checkAllErrors()) {
-      setSaveError("Por favor, corrige los errores en el formulario antes de guardar.");
+    const tabConError = checkAllErrors();
+    if (tabConError) {
+      setActiveTab(tabConError);
+      setSaveError(
+        `Corrige los campos marcados en «${tabConError === "empresa" ? "Datos de la Empresa" : "Suscripción y Accesos"}» antes de guardar.`,
+      );
       return;
     }
 
@@ -332,12 +347,12 @@ export default function CompanyFormPage() {
         empresaId = creada.id;
       }
 
-      await cambiarPlanEmpresa(empresaId, planPayload);
-      navigate("/admin/companies", {
-        state: isEditing
-          ? undefined
-          : { successMessage: `Empresa creada. Se enviaron las credenciales de acceso a ${form.correoElectronico}.` },
-      });
+      const plan = await cambiarPlanEmpresa(empresaId, planPayload);
+      const base = isEditing
+        ? "Cambios guardados."
+        : `Empresa creada. Se enviaron las credenciales de acceso a ${form.correoElectronico}.`;
+      const { message, type } = mensajeFacturaPlan(plan?.factura, base);
+      navigate("/admin/companies", { state: { successMessage: message, toastType: type } });
     } catch (err) {
       setSaveError(err.message);
     } finally {
@@ -356,7 +371,12 @@ export default function CompanyFormPage() {
       errors.tipoOrganizacion,
   );
   const suscripcionTabHasErrors = Boolean(
-    errors.maxDocumentos || errors.fechaInicio || errors.fechaFin || errors.correoElectronico || errors.nombreUsuario,
+    errors.maxDocumentos ||
+      errors.precioPaquete ||
+      errors.fechaInicio ||
+      errors.fechaFin ||
+      errors.correoElectronico ||
+      errors.nombreUsuario,
   );
 
   return (
@@ -367,10 +387,10 @@ export default function CompanyFormPage() {
         <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8 shrink-0">
           <div>
             <h2 className="text-lg font-medium text-neutralCustom-800">
-              {isEditing ? "Gestionar Empresa" : "Aprovisionar Nueva Empresa"}
+              {isEditing ? "Gestionar empresa" : "Nueva empresa"}
             </h2>
             <p className="hidden sm:block text-xs text-neutralCustom-500">
-              {isEditing ? "Actualiza los datos y el plan de este tenant." : "Crea un nuevo tenant y su plan de facturación."}
+              {isEditing ? "Actualiza los datos y el plan de documentos de la empresa." : "Registra la empresa, su usuario de acceso y su plan de documentos."}
             </p>
           </div>
           <Button
@@ -638,7 +658,7 @@ export default function CompanyFormPage() {
 
                     <div className={activeTab === "suscripcion" ? "block" : "hidden"}>
                       <div className="bg-brand-50/30 border border-brand-100 rounded-brand-md p-4 mb-6">
-                        <h4 className="text-sm font-bold text-brand-800 mb-2">Usuario Administrador del Tenant</h4>
+                        <h4 className="text-sm font-bold text-brand-800 mb-2">Usuario administrador de la empresa</h4>
                         <p className="text-xs text-brand-600 mb-4">
                           El correo electrónico funcionará como usuario de acceso principal para esta empresa.
                         </p>
@@ -707,7 +727,11 @@ export default function CompanyFormPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div className="col-span-1 md:col-span-2 border-b border-neutralCustom-100 pb-2">
-                          <h4 className="text-sm font-bold text-neutralCustom-800">Plan de Facturación</h4>
+                          <h4 className="text-sm font-bold text-neutralCustom-800">Plan de documentos</h4>
+                          <p className="text-xs text-neutralCustom-500 mt-0.5">
+                            Al guardar un paquete nuevo (cantidad o fecha de inicio distinta) se emite automáticamente
+                            su factura electrónica de contado al correo de la empresa.
+                          </p>
                         </div>
 
                         <div>
@@ -796,6 +820,8 @@ export default function CompanyFormPage() {
                           </select>
                         </div>
                       </div>
+
+                      {isEditing && <VentasPlanPanel empresaId={id} onMensaje={setToast} />}
                     </div>
                   </form>
 
@@ -948,12 +974,13 @@ export default function CompanyFormPage() {
             )}
           </div>
         </div>
+        <Footer />
       </main>
 
       <ToastAlert
-        message={apiKeyToast.message}
-        type={apiKeyToast.type}
-        onClose={() => setApiKeyToast({ message: null, type: "success" })}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: null, type: "success" })}
       />
     </div>
   );

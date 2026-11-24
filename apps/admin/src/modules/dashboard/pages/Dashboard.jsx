@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getDashboardKpis } from "@ingefact/core-api";
 import { useAuthStore } from "../../auth/store/authStore";
 import Sidebar from "../../../components/Sidebar";
+import Footer from "../../../components/Footer";
 import FinanzasMes from "../components/FinanzasMes";
 import { SpinnerLoading, Button } from "@ingefact/ui";
 
@@ -67,12 +68,13 @@ export default function Dashboard() {
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
       <Sidebar />
 
-      <main className="flex-1 flex flex-col">
-        <header className="min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8">
-          <h2 className="text-lg font-medium text-neutralCustom-800">
-            Resumen del Sistema
-          </h2>
-          <div className="text-sm text-neutralCustom-500">{profile?.email}</div>
+      <main className="relative flex-1 min-w-0 flex flex-col md:h-screen md:overflow-hidden">
+        <header className="shrink-0 min-h-16 py-2 md:py-0 md:h-16 bg-white border-b border-neutralCustom-100 flex items-center justify-between gap-3 px-4 md:px-8">
+          <div>
+            <h2 className="text-lg font-medium text-neutralCustom-800">Resumen del sistema</h2>
+            <p className="hidden sm:block text-xs text-neutralCustom-500">Clientes, documentos y finanzas del mes.</p>
+          </div>
+          <div className="hidden sm:block text-sm text-neutralCustom-500">{profile?.email}</div>
         </header>
 
         <div className="p-4 md:p-8 space-y-8 flex-1 overflow-y-auto">
@@ -169,6 +171,7 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
+        <Footer />
       </main>
     </div>
   );

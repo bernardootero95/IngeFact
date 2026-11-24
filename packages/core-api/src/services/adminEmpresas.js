@@ -28,3 +28,13 @@ export async function cambiarPlanEmpresa(id, payload) {
 export async function sincronizarEmpresasAlegra() {
   return apiRequest("/api/v1/admin/empresas/sync-alegra", { method: "POST" });
 }
+
+/** Ventas de paquetes de la empresa con el estado de su factura electrónica. */
+export async function listVentasEmpresa(id) {
+  return apiRequest(`/api/v1/admin/empresas/${id}/ventas`);
+}
+
+/** Reintenta la factura de una venta (no emite otra si ya salió). */
+export async function facturarVentaEmpresa(id, ventaId) {
+  return apiRequest(`/api/v1/admin/empresas/${id}/ventas/${ventaId}/facturar`, { method: "POST" });
+}
