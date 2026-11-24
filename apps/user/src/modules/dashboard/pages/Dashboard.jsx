@@ -8,6 +8,18 @@ import Footer from "../../../components/Footer";
 import SinCupoBanner from "../../plan/components/SinCupoBanner";
 import PorVencerBanner from "../../plan/components/PorVencerBanner";
 import { ESTADO_PLAN, alertasPorVencer, estadoPlanDe } from "../../plan/planEstado";
+import KpiCard from "../components/KpiCard";
+import ConsumoPlanCard from "../components/ConsumoPlanCard";
+import AccesosRapidos from "../components/AccesosRapidos";
+import ChecklistConfiguracion from "../components/ChecklistConfiguracion";
+import {
+  configuracionCompleta,
+  formatoCOP,
+  nombreMesAnterior,
+  pasosConfiguracion,
+  textoVariacion,
+  variacion,
+} from "../dashboardResumen";
 
 export default function Dashboard() {
   const { profile } = useAuthStore();
@@ -37,9 +49,17 @@ export default function Dashboard() {
   }, [refetchEmpresa]);
 
   const loading = loadingEmpresa || loadingKpis;
-  const suscripcion = empresa?.suscripcion ?? null;
-  const conectadoAlegra = Boolean(empresa?.id_alegra);
   const alertasPlan = alertasPorVencer(empresa);
+  const pasos = pasosConfiguracion(empresa, kpis);
+  const mes = kpis?.facturacion_mes;
+  const anterior = kpis?.facturacion_mes_anterior;
+  const variacionTotal = variacion(mes?.total ?? 0, anterior?.total ?? 0);
+  const variacionCantidad = variacion(mes?.cantidad ?? 0, anterior?.cantidad ?? 0);
+  const mesAnterior = nombreMesAnterior();
+  const detalleVariacion = (v) =>
+    v
+      ? { detalle: textoVariacion(v, mesAnterior), tendencia: v.tendencia }
+      : { detalle: anterior ? `Sin facturas en ${mesAnterior}` : null };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-neutralCustom-50 font-sans">
@@ -77,76 +97,31 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
-                  <p className="text-sm font-medium text-neutralCustom-500">
-                    Facturas emitidas (Mes)
-                  </p>
-                  <p className="text-3xl font-bold text-neutralCustom-800 mt-2">
-                    {kpis?.facturas_emitidas_mes ?? 0}
-                  </p>
-                </div>
+              {kpis && !configuracionCompleta(pasos) && <ChecklistConfiguracion pasos={pasos} />}
 
-                <div className="bg-white p-6 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
-                  <p className="text-sm font-medium text-neutralCustom-500">
-                    Clientes registrados
-                  </p>
-                  <p className="text-3xl font-bold text-neutralCustom-800 mt-2">
-                    {kpis?.clientes_registrados ?? 0}
-                  </p>
-                </div>
-
-                <div className="bg-white p-6 border border-neutralCustom-100 rounded-brand-lg shadow-sm">
-                  <p className="text-sm font-medium text-neutralCustom-500">
-                    Documentos disponibles
-                  </p>
-                  <p className="text-3xl font-bold text-brand-600 mt-2">
-                    {suscripcion
-                      ? `${suscripcion.max_documentos - suscripcion.documentos_usados}`
-                      : "Sin plan"}
-                  </p>
-                </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <KpiCard
+                  titulo="Facturado este mes"
+                  valor={formatoCOP(mes?.total)}
+                  destacado
+                  {...detalleVariacion(variacionTotal)}
+                />
+                <KpiCard
+                  titulo="Facturas aceptadas este mes"
+                  valor={(mes?.cantidad ?? 0).toLocaleString("es-CO")}
+                  {...detalleVariacion(variacionCantidad)}
+                />
+                <KpiCard
+                  titulo="Clientes registrados"
+                  valor={(kpis?.clientes_registrados ?? 0).toLocaleString("es-CO")}
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg p-6 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutralCustom-500">
-                      Facturación electrónica
-                    </p>
-                    <p className="text-base font-medium text-neutralCustom-800 mt-1">
-                      {conectadoAlegra ? "Habilitada" : "Pendiente de habilitar"}
-                    </p>
-                  </div>
-                  <span
-                    className={`h-3 w-3 rounded-full ${conectadoAlegra ? "bg-brand-600" : "bg-fiscal-danger"}`}
-                  />
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <ConsumoPlanCard empresa={empresa} />
+                <div className="lg:col-span-2">
+                  <AccesosRapidos />
                 </div>
-
-                <div className="bg-white border border-neutralCustom-100 rounded-brand-lg p-6 shadow-sm flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-neutralCustom-500">
-                      Resolución DIAN
-                    </p>
-                    <p className="text-base font-medium text-neutralCustom-800 mt-1">
-                      {kpis?.resolucion_configurada ? "Configurada" : "No configurada"}
-                    </p>
-                  </div>
-                  <span
-                    className={`h-3 w-3 rounded-full ${kpis?.resolucion_configurada ? "bg-brand-600" : "bg-fiscal-danger"}`}
-                  />
-                </div>
-              </div>
-
-              <div className="bg-white border border-neutralCustom-100 rounded-brand-lg p-6 shadow-sm">
-                <h3 className="text-base font-medium text-neutralCustom-800 mb-2">
-                  ¡Bienvenido a tu entorno de facturación!
-                </h3>
-                <p className="text-sm text-neutralCustom-500 leading-relaxed font-normal">
-                  Has iniciado sesión correctamente. Desde este panel podrás
-                  gestionar tus clientes, tu catálogo de productos y emitir
-                  comprobantes electrónicos validados por la DIAN.
-                </p>
               </div>
             </>
           )}
