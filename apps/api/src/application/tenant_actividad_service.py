@@ -102,15 +102,17 @@ class TenantActividadService:
             for tipo, id_, numero, fecha, total, estado, _creado, tercero in documentos[:LIMITE_ULTIMOS_DOCUMENTOS]
         ]
 
-    def _contar_por_estado(self, empresa_id: uuid.UUID, estado: str) -> int:
-        return sum(
-            self.db.execute(
+    def _contar_por_estado(self, empresa_id: uuid.UUID, estado: str) -> dict[str, int]:
+        conteo = {}
+        for f in FUENTES:
+            n = self.db.execute(
                 select(func.count()).select_from(f.modelo).where(
                     *self._vigentes(f.modelo, empresa_id), f.modelo.estado.in_(variantes_estado(estado))
                 )
             ).scalar_one()
-            for f in FUENTES
-        )
+            if n:
+                conteo[f.tipo] = n
+        return conteo
 
     def _recibidas_sin_evento(self, empresa_id: uuid.UUID) -> int:
         """Mismo criterio que ESTADO_SIN_EVENTO: ningun evento aceptado por la DIAN."""

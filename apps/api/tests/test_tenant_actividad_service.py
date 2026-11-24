@@ -188,9 +188,9 @@ def test_alertas_cuentan_estados_en_todos_los_tipos(db_session):
 
     alertas = TenantActividadService(db_session).obtener(e.id, HOY).alertas
 
-    assert alertas.rechazados == 2
-    assert alertas.en_validacion == 1
-    assert alertas.borradores == 1
+    assert alertas.rechazados == {"factura": 1, "documento_soporte": 1}
+    assert alertas.en_validacion == {"factura": 1}
+    assert alertas.borradores == {"factura": 1}
 
 
 def test_recibidas_sin_evento_ignora_eventos_rechazados(db_session):
@@ -248,6 +248,6 @@ def test_no_mezcla_datos_de_otra_empresa(db_session):
     actividad = TenantActividadService(db_session).obtener(b.id, HOY)
 
     assert actividad.ultimos_documentos == []
-    assert actividad.alertas.rechazados == 0
+    assert actividad.alertas.rechazados == {}
     assert actividad.alertas.recibidas_sin_evento == 0
     assert actividad.alertas.resoluciones == []

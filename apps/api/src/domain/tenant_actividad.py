@@ -59,9 +59,11 @@ class AlertaResolucion(BaseModel):
 
 
 class AlertasDocumentos(BaseModel):
-    rechazados: int
-    en_validacion: int
-    borradores: int
+    # Conteo por tipo de documento (solo los tipos con al menos uno), para que
+    # el panel lleve al listado correcto: {"factura": 2, "documento_soporte": 1}.
+    rechazados: dict[str, int]
+    en_validacion: dict[str, int]
+    borradores: dict[str, int]
     recibidas_sin_evento: int
     resoluciones: list[AlertaResolucion]
 
