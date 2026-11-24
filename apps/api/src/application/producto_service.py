@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from src.domain.factura_externa import ItemFacturaExternaRequest
@@ -27,6 +27,13 @@ class ProductoService:
             texto = f"%{search.strip()}%"
             query = query.where(or_(Producto.nombre.ilike(texto), Producto.codigo.ilike(texto)))
         return list(self.db.execute(query).scalars().all())
+
+    def contar(self, empresa_id: uuid.UUID) -> int:
+        return self.db.execute(
+            select(func.count()).select_from(Producto).where(
+                Producto.empresa_id == empresa_id, Producto.eliminado.is_(None)
+            )
+        ).scalar_one()
 
     def obtener(self, empresa_id: uuid.UUID, producto_id: uuid.UUID) -> Producto:
         producto = self.db.execute(
