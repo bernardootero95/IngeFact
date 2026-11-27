@@ -74,8 +74,8 @@ export default function ChangePasswordPage() {
     setLoading(true);
     setError(null);
     try {
-      await changePassword(currentPassword, newPassword);
-      markPasswordChanged();
+      const tokens = await changePassword(currentPassword, newPassword);
+      markPasswordChanged(tokens);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.message);

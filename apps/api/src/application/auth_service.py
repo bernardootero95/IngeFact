@@ -112,6 +112,16 @@ class AuthService:
             token.revoked_at = _now()
             self.db.add(token)
 
+    def _eliminar_refresh_tokens(self, *, user_id: uuid.UUID, user_type: str) -> None:
+        """Al cambiar o recuperar la contrasena se borran (no se marcan como
+        revocados) todos los refresh tokens del usuario: un token viejo debe
+        dar 401 sin disparar la deteccion de reuso de refresh(), que revocaria
+        tambien la sesion nueva de quien acaba de cambiar la clave."""
+        self.db.query(RefreshToken).filter(
+            RefreshToken.user_id == user_id,
+            RefreshToken.user_type == user_type,
+        ).delete(synchronize_session=False)
+
     def logout(self, refresh_token: str) -> None:
         token_hash = hash_opaque_token(refresh_token)
         record = self.db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).one_or_none()
@@ -183,21 +193,31 @@ class AuthService:
 
         user.password_hash = hash_password(new_password)
         record.used_at = _now()
+        # Recuperar la cuenta debe cerrar cualquier sesion abierta: si alguien
+        # robo un refresh token, el reset es justamente como se le corta el
+        # acceso (hallazgo de la auditoria de seguridad run-1).
+        self._eliminar_refresh_tokens(user_id=user.id, user_type=record.user_type)
         self.db.add_all([user, record])
         self.db.commit()
 
-    def change_password(self, user_id: uuid.UUID, current_password: str, new_password: str) -> None:
+    def change_password(self, user_id: uuid.UUID, current_password: str, new_password: str) -> TokenResponse:
         """Cambio de contrasena con sesion activa (usado por el onboarding de
         tenant con clave temporal) -- a diferencia de reset_password, exige
-        conocer la contrasena actual en vez de un token por correo."""
+        conocer la contrasena actual en vez de un token por correo.
+
+        Revoca todas las sesiones del usuario (igual que reset_password) y
+        devuelve un par de tokens nuevo para que quien cambio la clave siga
+        con sesion sin depender de un refresh token ya revocado."""
         user = self.db.get(UsuarioEmpresa, user_id)
         if user is None or not verify_password(current_password, user.password_hash):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Contrasena actual incorrecta.")
 
         user.password_hash = hash_password(new_password)
         user.debe_cambiar_password = False
+        self._eliminar_refresh_tokens(user_id=user.id, user_type="tenant")
         self.db.add(user)
         self.db.commit()
+        return self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
 
 
 def _now() -> datetime:

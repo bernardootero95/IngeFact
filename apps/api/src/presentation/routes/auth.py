@@ -65,13 +65,13 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
     AuthService(db).reset_password(body.token, body.new_password)
 
 
-@router.post("/change-password", status_code=204)
+@router.post("/change-password", response_model=TokenResponse)
 def change_password(
     body: ChangePasswordRequest,
     tenant: CurrentTenant = Depends(get_current_tenant),
     db: Session = Depends(get_db),
 ):
-    AuthService(db).change_password(tenant.id, body.current_password, body.new_password)
+    return AuthService(db).change_password(tenant.id, body.current_password, body.new_password)
 
 
 @router.get("/me", response_model=MeResponse)

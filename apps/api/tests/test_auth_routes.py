@@ -266,3 +266,33 @@ def test_forgot_and_reset_password_flow(db_session, admin_user, monkeypatch):
         service.login_admin("staff@ingefact.test", "Sandbox123!")
     tokens = service.login_admin("staff@ingefact.test", "ClaveNueva123!")
     assert tokens.access_token
+
+
+def test_reset_password_revokes_existing_refresh_tokens(db_session, admin_user, monkeypatch):
+    """Recuperar la cuenta corta cualquier sesion abierta: un refresh token
+    robado antes del reset deja de servir (auditoria de seguridad run-1)."""
+    service = AuthService(db_session, email_client=FakeEmailClient())
+    robado = service.login_admin("staff@ingefact.test", "Sandbox123!").refresh_token
+
+    monkeypatch.setattr("src.application.auth_service.generate_opaque_token", lambda: "token-reset-fijo")
+    service.forgot_password("staff@ingefact.test", "admin")
+    monkeypatch.undo()
+    service.reset_password("token-reset-fijo", "ClaveNueva123!")
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.refresh(robado)
+    assert exc_info.value.status_code == 401
+
+
+def test_change_password_revokes_other_sessions_and_returns_new_tokens(db_session, tenant_user):
+    user, _empresa = tenant_user
+    service = AuthService(db_session, email_client=FakeEmailClient())
+    otra_sesion = service.login_tenant("tenant@ingefact.test", "Sandbox123!").refresh_token
+
+    nuevos = service.change_password(user.id, "Sandbox123!", "ClaveNueva123!")
+
+    with pytest.raises(HTTPException) as exc_info:
+        service.refresh(otra_sesion)
+    assert exc_info.value.status_code == 401
+    # Quien cambio la clave sigue con sesion: el par nuevo si refresca.
+    assert service.refresh(nuevos.refresh_token).access_token
