@@ -16,6 +16,19 @@ bearer_scheme = HTTPBearer(auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
+ESTADO_EMPRESA_SUSPENDIDA = "inactivo"
+MENSAJE_EMPRESA_SUSPENDIDA = "Tu empresa esta suspendida. Escribenos para reactivarla."
+
+
+def empresa_suspendida(db: Session, empresa_id: uuid.UUID) -> bool:
+    """El staff suspende una empresa poniendola en 'inactivo' (apps/admin:
+    "Inactivo / Suspendido"). Solo ese estado corta el acceso del tenant:
+    'creando' y 'error_alegra' son pasos del alta y no deben bloquear el
+    onboarding."""
+    empresa = db.get(Empresa, empresa_id)
+    return empresa is not None and empresa.estado == ESTADO_EMPRESA_SUSPENDIDA
+
+
 @dataclass
 class CurrentAdmin:
     id: uuid.UUID
@@ -73,6 +86,8 @@ def get_current_tenant(
     user = db.get(UsuarioEmpresa, uuid.UUID(payload["sub"]))
     if user is None or user.estado != "activo":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado: no perteneces a ningun tenant activo.")
+    if empresa_suspendida(db, user.empresa_id):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, MENSAJE_EMPRESA_SUSPENDIDA)
 
     return CurrentTenant(id=user.id, email=user.email, empresa_id=user.empresa_id)
 

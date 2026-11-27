@@ -296,3 +296,32 @@ def test_change_password_revokes_other_sessions_and_returns_new_tokens(db_sessio
     assert exc_info.value.status_code == 401
     # Quien cambio la clave sigue con sesion: el par nuevo si refresca.
     assert service.refresh(nuevos.refresh_token).access_token
+
+
+def test_empresa_suspendida_no_puede_iniciar_ni_refrescar_sesion(db_session, tenant_user):
+    """Suspender la empresa ('inactivo') corta el acceso de su usuario aunque
+    el usuario siga 'activo' (auditoria de seguridad run-1)."""
+    user, empresa = tenant_user
+    service = AuthService(db_session, email_client=FakeEmailClient())
+    previo = service.login_tenant("tenant@ingefact.test", "Sandbox123!").refresh_token
+
+    empresa.estado = "inactivo"
+    db_session.add(empresa)
+    db_session.commit()
+
+    with pytest.raises(HTTPException) as login_exc:
+        service.login_tenant("tenant@ingefact.test", "Sandbox123!")
+    assert login_exc.value.status_code == 403
+    with pytest.raises(HTTPException) as refresh_exc:
+        service.refresh(previo)
+    assert refresh_exc.value.status_code == 401
+
+
+def test_empresa_en_alta_no_bloquea_el_login(db_session, tenant_user):
+    _user, empresa = tenant_user
+    empresa.estado = "creando"
+    db_session.add(empresa)
+    db_session.commit()
+
+    tokens = AuthService(db_session, email_client=FakeEmailClient()).login_tenant("tenant@ingefact.test", "Sandbox123!")
+    assert tokens.access_token

@@ -6,6 +6,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from src.core.config import get_settings
+from src.core.dependencies import MENSAJE_EMPRESA_SUSPENDIDA, empresa_suspendida
 from src.core.email_client import EmailClient, EmailSendError
 from src.core.email_templates import plantilla_reset_password
 from src.core.security import (
@@ -60,6 +61,10 @@ class AuthService:
         user = self.db.query(UsuarioEmpresa).filter(UsuarioEmpresa.email == email).one_or_none()
         if user is None or user.estado != "activo" or not verify_password(password, user.password_hash):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, INVALID_CREDENTIALS)
+        # Se revisa despues de la contrasena: el aviso de suspension solo lo ve
+        # quien ya probo ser el dueno de la cuenta.
+        if empresa_suspendida(self.db, user.empresa_id):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, MENSAJE_EMPRESA_SUSPENDIDA)
         tokens = self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
         tokens.debe_cambiar_password = user.debe_cambiar_password
         return tokens
@@ -91,7 +96,7 @@ class AuthService:
             return self._issue_tokens(user_id=user.id, user_type="admin", rol=user.rol, empresa_id=None)
 
         user = self.db.get(UsuarioEmpresa, record.user_id)
-        if user is None or user.estado != "activo":
+        if user is None or user.estado != "activo" or empresa_suspendida(self.db, user.empresa_id):
             self.db.commit()
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario no activo.")
         tokens = self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)

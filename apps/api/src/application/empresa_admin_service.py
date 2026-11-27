@@ -25,7 +25,8 @@ from src.domain.empresa import (
     CambiarPlanRequest,
     EmpresaDetailResponse,
 )
-from src.infrastructure.db.models import Empresa, Suscripcion, UsuarioEmpresa, VentaPaquete
+from src.core.dependencies import ESTADO_EMPRESA_SUSPENDIDA
+from src.infrastructure.db.models import Empresa, RefreshToken, Suscripcion, UsuarioEmpresa, VentaPaquete
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,15 @@ class EmpresaAdminService:
         empresa.tipo_organizacion = data.tipo_organizacion
         empresa.telefono = data.telefono
         empresa.notificacion_correo = data.notificacion_correo
+        se_suspende = data.estado == ESTADO_EMPRESA_SUSPENDIDA and empresa.estado != ESTADO_EMPRESA_SUSPENDIDA
         empresa.estado = data.estado
+        if se_suspende and usuarios:
+            # Suspender corta las sesiones abiertas de sus usuarios, no solo los
+            # logins nuevos (get_current_tenant ya rechaza sus access tokens).
+            self.db.query(RefreshToken).filter(
+                RefreshToken.user_type == "tenant",
+                RefreshToken.user_id.in_([u.id for u in usuarios]),
+            ).delete(synchronize_session=False)
         if cambia_correo:
             empresa.correo_electronico = data.correo_electronico
             for usuario in usuarios:

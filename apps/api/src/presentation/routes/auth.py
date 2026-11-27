@@ -6,7 +6,14 @@ from sqlalchemy.orm import Session
 
 from src.application.aceptacion_legal_service import AceptacionLegalService
 from src.application.auth_service import AuthService
-from src.core.dependencies import CurrentTenant, bearer_scheme, decode_or_401, get_current_tenant
+from src.core.dependencies import (
+    MENSAJE_EMPRESA_SUSPENDIDA,
+    CurrentTenant,
+    bearer_scheme,
+    decode_or_401,
+    empresa_suspendida,
+    get_current_tenant,
+)
 from src.core.legal import VERSION_TERMINOS_VIGENTE
 from src.core.rate_limit import limiter
 from src.domain.auth import (
@@ -85,6 +92,8 @@ def me(
     user = db.get(model, uuid.UUID(payload["sub"]))
     if user is None or user.estado != "activo":
         raise HTTPException(status.HTTP_403_FORBIDDEN, "No autorizado.")
+    if not es_admin and empresa_suspendida(db, user.empresa_id):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, MENSAJE_EMPRESA_SUSPENDIDA)
     return MeResponse(
         id=str(user.id),
         nombre=user.nombre,

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -56,7 +56,12 @@ class SincronizarEmpresasAlegraService:
                 "municipio": stmt.excluded.municipio,
                 # Si Alegra no trae regimeCode se conserva el que ya habia.
                 "regimen": func.coalesce(stmt.excluded.regimen, Empresa.regimen),
-                "estado": stmt.excluded.estado,
+                # Alegra no sabe de suspensiones: una empresa que el staff
+                # suspendio ('inactivo') sigue suspendida tras el sync.
+                "estado": case(
+                    (Empresa.estado == "inactivo", Empresa.estado),
+                    else_=stmt.excluded.estado,
+                ),
                 "actualizado": stmt.excluded.actualizado,
             },
         )
