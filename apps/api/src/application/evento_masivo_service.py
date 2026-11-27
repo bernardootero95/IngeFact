@@ -4,6 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.factura_recibida_service import FacturaRecibidaService
 from src.application.suscripcion_service import (
     documentos_disponibles,
@@ -76,6 +77,7 @@ class EventoMasivoService:
             bloqueo=bloqueo,
         )
 
+    @envio_exclusivo
     def emitir(self, empresa_id: uuid.UUID, data: EmitirEventoMasivoRequest) -> list[ResultadoEventoMasivoResponse]:
         """Envia una tanda. Antes de transmitir nada exige plan vigente y
         cupo para las facturas validas de la tanda que aun no se han cobrado;

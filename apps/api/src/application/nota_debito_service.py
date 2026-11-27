@@ -9,6 +9,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.estado_legal import aplicar_estado_legal
 from src.application.factura_service import _construir_customer_alegra, _construir_pago
 from src.application.habilitacion_dian_service import HabilitacionDianService
@@ -300,6 +301,7 @@ class NotaDebitoService:
             empresa_id=empresa_id,
         )
 
+    @envio_exclusivo
     def enviar(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> NotaDebito:
         nota = self._obtener_editable(empresa_id, nota_id)
         factura = self._obtener_factura_aceptada(empresa_id, nota.factura_id)

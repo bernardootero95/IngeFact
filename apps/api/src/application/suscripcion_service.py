@@ -213,8 +213,43 @@ def verificar_cupo_disponible(db: Session, empresa_id) -> None:
     cupo. Decision de negocio del 2026-09-24: sin documentos disponibles no
     se envia nada a la DIAN."""
     verificar_plan_vigente(db, empresa_id)
-    if documentos_disponibles(db, empresa_id) == 0:
+    if _cupo_para_enviar(db, empresa_id) == 0:
         raise HTTPException(status.HTTP_409_CONFLICT, "Se agoto el cupo de documentos del plan actual.")
+
+
+# Estado de cada documento ya transmitido que aun espera la respuesta de la
+# DIAN (ver aplicar_estado_legal y la reconciliacion).
+_ESTADOS_EN_VUELO = (
+    (Factura, "enviada"),
+    (NotaCredito, "enviada"),
+    (NotaDebito, "enviada"),
+    (DocumentoSoporte, "enviado"),
+    (Nomina, "enviada"),
+)
+
+
+def documentos_en_vuelo(db: Session, empresa_id) -> int:
+    """Documentos ya transmitidos sin respuesta de la DIAN. No se cobran
+    (pueden terminar rechazados), pero si reservan cupo: sin esto, mientras
+    la DIAN tarda se podia seguir enviando por encima del plan."""
+    return sum(
+        db.execute(
+            select(func.count()).select_from(modelo).where(
+                modelo.empresa_id == empresa_id, modelo.estado == estado, modelo.eliminado.is_(None)
+            )
+        ).scalar_one()
+        for modelo, estado in _ESTADOS_EN_VUELO
+    )
+
+
+def _cupo_para_enviar(db: Session, empresa_id) -> int | None:
+    """Cupo que queda para un envio nuevo: lo disponible menos lo que ya se
+    transmitio y espera respuesta. La serializacion por empresa
+    (envio_exclusivo) garantiza que esta lectura no la comparten dos envios."""
+    disponibles = documentos_disponibles(db, empresa_id)
+    if disponibles is None:
+        return None
+    return max(disponibles - documentos_en_vuelo(db, empresa_id), 0)
 
 
 def documentos_disponibles(db: Session, empresa_id) -> int | None:
@@ -239,7 +274,7 @@ def verificar_cupo_para(db: Session, empresa_id, cantidad: int) -> None:
     y cupo para los `cantidad` envios que descuentan antes de transmitir el
     primero (con `cantidad` 0 solo exige el plan vigente)."""
     verificar_plan_vigente(db, empresa_id)
-    motivo = mensaje_cupo_insuficiente(documentos_disponibles(db, empresa_id), cantidad)
+    motivo = mensaje_cupo_insuficiente(_cupo_para_enviar(db, empresa_id), cantidad)
     if motivo:
         raise HTTPException(status.HTTP_409_CONFLICT, motivo)
 

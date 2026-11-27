@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.estado_legal import aplicar_estado_legal
 from src.application.resolucion_dian_service import ResolucionDianService
 from src.application.habilitacion_dian_service import HabilitacionDianService
@@ -352,6 +353,7 @@ class FacturaService:
         self.db.add(factura)
         self.db.commit()
 
+    @envio_exclusivo
     def enviar(
         self,
         empresa_id: uuid.UUID,

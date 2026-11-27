@@ -7,6 +7,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.suscripcion_service import (
     revisar_alerta_cuota_sin_romper,
     verificar_cupo_disponible,
@@ -364,6 +365,7 @@ class FacturaRecibidaService:
                 payload["notes"] = [data.notas]
         return payload
 
+    @envio_exclusivo
     def registrar_evento(
         self, empresa_id: uuid.UUID, factura_recibida_id: uuid.UUID, data: CrearEventoReceptorRequest
     ) -> FacturaRecibida:
