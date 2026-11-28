@@ -479,3 +479,28 @@ def test_enviar_correo_acepta_cuerpo_opcional_y_valida_el_correo(api_client, emp
     assert api_client.post(url, json={"correo": "otro@example.com"}, headers=_auth_headers(token)).status_code == 409
     # Con un correo invalido: se rechaza antes de tocar nada.
     assert api_client.post(url, json={"correo": "no-es-un-correo"}, headers=_auth_headers(token)).status_code == 422
+
+
+def test_suspender_empresa_corta_el_acceso_del_tenant(api_client, db_session, empresa_a, admin_user):
+    """Auditoria de seguridad run-1: al poner la empresa en 'inactivo' su
+    usuario pierde acceso de inmediato (access token vigente, refresh y
+    login), igual que ya pasaba con sus API keys."""
+    empresa, _cliente, _producto, _factura = empresa_a
+    response = api_client.post("/api/v1/auth/login", json={"email": "usuario-a@example.com", "password": "ClaveTenantA123!"})
+    tenant_tokens = response.json()
+    tenant_headers = _auth_headers(tenant_tokens["access_token"])
+    assert api_client.get("/api/v1/tenant/clientes", headers=tenant_headers).status_code == 200
+
+    admin_token = _login(api_client, "staff-http@example.com", "ClaveAdmin123!", admin=True)
+    response = api_client.patch(
+        f"/api/v1/admin/empresas/{empresa.id}",
+        headers=_auth_headers(admin_token),
+        json={"razon_social": empresa.razon_social, "estado": "inactivo"},
+    )
+    assert response.status_code == 200, response.text
+
+    assert api_client.get("/api/v1/tenant/clientes", headers=tenant_headers).status_code == 403
+    assert api_client.get("/api/v1/auth/me", headers=tenant_headers).status_code == 403
+    assert api_client.post("/api/v1/auth/refresh", json={"refresh_token": tenant_tokens["refresh_token"]}).status_code == 401
+    login = api_client.post("/api/v1/auth/login", json={"email": "usuario-a@example.com", "password": "ClaveTenantA123!"})
+    assert login.status_code == 403

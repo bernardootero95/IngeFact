@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, selectinload
 
 import logging
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.estado_legal import aplicar_estado_legal
 from src.application.factura_service import _construir_customer_alegra, _construir_pago
 from src.application.habilitacion_dian_service import HabilitacionDianService
@@ -348,6 +349,7 @@ class NotaCreditoService:
             empresa_id=empresa_id,
         )
 
+    @envio_exclusivo
     def enviar(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> NotaCredito:
         nota = self._obtener_editable(empresa_id, nota_id)
         factura = self._obtener_factura_aceptada(empresa_id, nota.factura_id)
@@ -391,6 +393,7 @@ class NotaCreditoService:
 
         return self.obtener(empresa_id, nota.id)
 
+    @envio_exclusivo
     def anular_factura(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> NotaCredito:
         """Atajo: crea y envia de una sola vez una Nota Credito por el 100%
         de las lineas disponibles de la factura, con el motivo fijo

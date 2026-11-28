@@ -33,7 +33,15 @@ export function createAuthStore({ apiUrl, login: loginFn, refreshTokenKey }) {
       });
     },
 
-    markPasswordChanged: () => set({ debeCambiarPassword: false }),
+    // change-password revoca todas las sesiones y devuelve un par de tokens
+    // nuevo: se guarda para no quedar con un refresh token ya revocado.
+    markPasswordChanged: (tokens) => {
+      if (tokens?.access_token && tokens?.refresh_token) {
+        accessToken = tokens.access_token;
+        localStorage.setItem(refreshTokenKey, tokens.refresh_token);
+      }
+      set({ debeCambiarPassword: false });
+    },
 
     // Tras aceptar terminos y politica de datos (ver /api/v1/auth/aceptar-terminos).
     markTermsAccepted: () =>

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.consecutivo import revertir_consecutivo
 from src.application.estado_legal import aplicar_estado_legal
 from src.application.habilitacion_dian_service import HabilitacionDianService
@@ -237,6 +238,7 @@ class NominaService:
             empresa_id=empresa_id,
         )
 
+    @envio_exclusivo
     def enviar(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> Nomina:
         nomina = self._obtener_editable(empresa_id, nomina_id)
         empresa = self.db.get(Empresa, empresa_id)
@@ -272,6 +274,7 @@ class NominaService:
             revisar_alerta_cuota_sin_romper(self.db, empresa_id)
         return self.obtener(empresa_id, nomina.id)
 
+    @envio_exclusivo
     def anular(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> Nomina:
         """Nomina Individual de Eliminacion -- lleva su propia numeracion,
         independiente de la nomina que anula (confirmado en vivo, ver

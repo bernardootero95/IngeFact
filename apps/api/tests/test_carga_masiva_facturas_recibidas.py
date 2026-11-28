@@ -221,3 +221,64 @@ def test_cargar_lote_dos_veces_no_duplica(db_session):
     assert segundo[0].resultado == "omitida"
     assert segundo[0].mensaje == "Ya registraste esta factura."
     assert len(service.listar(empresa.id)) == 1
+
+
+def _con_dimension(contenido: bytes, ref: str) -> bytes:
+    """Reescribe la <dimension ref> declarada por la hoja (la controla quien
+    arma el archivo)."""
+    import re
+    import zipfile
+
+    entrada = zipfile.ZipFile(BytesIO(contenido))
+    salida = BytesIO()
+    with zipfile.ZipFile(salida, "w", zipfile.ZIP_DEFLATED) as zout:
+        for item in entrada.infolist():
+            datos = entrada.read(item.filename)
+            if item.filename == "xl/worksheets/sheet1.xml":
+                datos = re.sub(rb'<dimension ref="[^"]+"', f'<dimension ref="{ref}"'.encode(), datos)
+            zout.writestr(item, datos)
+    return salida.getvalue()
+
+
+def test_parser_ignora_la_dimension_inflada_que_declara_el_archivo():
+    """Auditoria de seguridad run-1: un archivo de pocos KB que declaraba
+    A1:XFD20000 costaba 15-19 s de CPU porque openpyxl rellenaba cada fila
+    hasta la columna XFD. Ahora la lectura no depende de lo declarado."""
+    import time
+
+    contenido = _con_dimension(_excel([_fila("cufe-1")]), "A1:XFD1048576")
+
+    inicio = time.perf_counter()
+    filas = parsear_reporte_dian(contenido)
+
+    assert [f.cufe for f in filas] == ["cufe-1"]
+    assert time.perf_counter() - inicio < 2
+
+
+def test_parser_sigue_rechazando_mas_de_max_filas():
+    from src.core.reporte_dian_parser import MAX_FILAS
+
+    with pytest.raises(ReporteDianInvalido):
+        parsear_reporte_dian(_excel([_fila(f"cufe-{i}") for i in range(MAX_FILAS + 1)]))
+
+
+def test_parser_con_datos_hasta_el_final_declarado_no_tarda():
+    """Variante del caso de la auditoria: ademas de declarar XFD, hay una
+    celda al fondo de la hoja, lo que obligaba a openpyxl a rellenar cada
+    fila intermedia."""
+    import time
+
+    libro = Workbook()
+    hoja = libro.active
+    hoja.append(ENCABEZADOS)
+    hoja.append(_fila("cufe-1"))
+    hoja.cell(row=200000, column=1, value="x")
+    salida = BytesIO()
+    libro.save(salida)
+    contenido = _con_dimension(salida.getvalue(), "A1:XFD200000")
+
+    inicio = time.perf_counter()
+    filas = parsear_reporte_dian(contenido)
+
+    assert [f.cufe for f in filas] == ["cufe-1"]
+    assert time.perf_counter() - inicio < 2

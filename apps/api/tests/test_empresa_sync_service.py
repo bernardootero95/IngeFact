@@ -174,3 +174,21 @@ def test_sincronizar_sin_regime_code_conserva_el_regimen_local(db_session):
 
     db_session.refresh(existente)
     assert existente.regimen == "O-13"
+
+
+def test_sincronizar_no_reactiva_una_empresa_suspendida(db_session):
+    """El staff suspende con 'inactivo'; Alegra no sabe de suspensiones, asi
+    que el sync no debe devolverla a 'activo' (auditoria de seguridad run-1)."""
+    db_session.add(
+        Empresa(razon_social="Suspendida", numero_identificacion="900618467", digito_verificacion="4", estado="inactivo")
+    )
+    db_session.commit()
+    fake_client = FakeAlegraClient(
+        [{"companies": [_company("alegra-1", "900618467", name="Suspendida")], "metadata": {"results_count": 1}}]
+    )
+
+    SincronizarEmpresasAlegraService(db_session, alegra_client=fake_client).sincronizar()
+
+    db_session.expire_all()
+    empresa = db_session.query(Empresa).filter(Empresa.numero_identificacion == "900618467").one()
+    assert empresa.estado == "inactivo"

@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
+from src.application.envio_exclusivo import envio_exclusivo
 from src.application.estado_legal import aplicar_estado_legal
 from src.application.resolucion_documento_soporte_service import ResolucionDocumentoSoporteService
 from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper, verificar_cupo_disponible
@@ -311,6 +312,7 @@ class DocumentoSoporteService:
         self.db.add(documento)
         self.db.commit()
 
+    @envio_exclusivo
     def enviar(self, empresa_id: uuid.UUID, documento_id: uuid.UUID, forma_pago: str, metodo_pago: str) -> DocumentoSoporte:
         documento = self._obtener_editable(empresa_id, documento_id)
         empresa = self.db.get(Empresa, empresa_id)

@@ -18,6 +18,12 @@ from io import BytesIO
 from openpyxl import load_workbook
 
 MAX_FILAS = 5000
+# Limites de lectura independientes de lo que el archivo declare: openpyxl
+# rellena las filas y columnas que faltan hasta la dimension declarada por la
+# hoja, asi que un archivo de pocos KB con <dimension ref="A1:XFD1048576">
+# costaba minutos de CPU (auditoria de seguridad run-1).
+MAX_COLUMNAS_ENCABEZADO = 100
+MAX_FILAS_VACIAS_SEGUIDAS = 100
 
 # Encabezado normalizado -> campo de FilaReporteDian.
 COLUMNAS = {
@@ -91,8 +97,8 @@ def parsear_reporte_dian(contenido: bytes) -> list[FilaReporteDian]:
         raise ReporteDianInvalido("El archivo no es un Excel válido. Descarga de nuevo el reporte de la DIAN.") from exc
 
     try:
-        filas = libro.worksheets[0].iter_rows(values_only=True)
-        encabezados = next(filas, None)
+        hoja = libro.worksheets[0]
+        encabezados = next(hoja.iter_rows(min_row=1, max_row=1, max_col=MAX_COLUMNAS_ENCABEZADO, values_only=True), None)
         if not encabezados:
             raise ReporteDianInvalido("El archivo está vacío.")
         posiciones = {campo: i for i, valor in enumerate(encabezados) if (campo := _encabezado(valor))}
@@ -103,10 +109,27 @@ def parsear_reporte_dian(contenido: bytes) -> list[FilaReporteDian]:
                 "\"Tipo de documento\", \"CUFE/CUDE\", \"NIT Receptor\", \"Forma de Pago\" o \"Grupo\"."
             )
 
+        # Solo se leen las columnas que se usan y como mucho MAX_FILAS filas
+        # con datos (mas los huecos permitidos): el costo ya no depende de la
+        # dimension que declare el archivo.
+        ultima_fila = 1 + MAX_FILAS * 2
+        filas = hoja.iter_rows(
+            min_row=2,
+            max_row=ultima_fila,
+            max_col=max(posiciones.values()) + 1,
+            values_only=True,
+        )
         resultado: list[FilaReporteDian] = []
+        vacias_seguidas = 0
+        leidas = 0
         for fila in filas:
+            leidas += 1
             if not any(v not in (None, "") for v in fila):
+                vacias_seguidas += 1
+                if vacias_seguidas > MAX_FILAS_VACIAS_SEGUIDAS:
+                    break
                 continue
+            vacias_seguidas = 0
             if len(resultado) >= MAX_FILAS:
                 raise ReporteDianInvalido(f"El reporte tiene más de {MAX_FILAS} filas. Descárgalo por un rango de fechas más corto.")
 
@@ -130,6 +153,11 @@ def parsear_reporte_dian(contenido: bytes) -> list[FilaReporteDian]:
                     grupo=_texto(valor("grupo")),
                 )
             )
+        else:
+            # Se agoto el tope de lectura sin llegar al final declarado: no se
+            # descartan filas en silencio.
+            if leidas >= ultima_fila - 1 and (hoja.max_row or 0) > ultima_fila:
+                raise ReporteDianInvalido(f"El reporte tiene más de {MAX_FILAS} filas. Descárgalo por un rango de fechas más corto.")
         return resultado
     finally:
         libro.close()
