@@ -25,6 +25,20 @@ MAX_FILAS = 5000
 MAX_COLUMNAS_ENCABEZADO = 100
 MAX_FILAS_VACIAS_SEGUIDAS = 100
 
+# Limites del zip antes de abrirlo: openpyxl carga completas las cadenas
+# compartidas, asi que un archivo de pocos cientos de KB que se descomprime en
+# cientos de MB consumia minutos de CPU y GB de memoria (run-2). Un reporte
+# real de 5.000 filas ocupa unos pocos MB de XML. Los limites aplican a TODAS
+# las partes: openpyxl ubica las cadenas compartidas por [Content_Types].xml,
+# no por el nombre del archivo, asi que filtrar por nombre no sirve.
+MAX_PARTES_ZIP = 100
+MAX_BYTES_POR_PARTE = 6 * 1024 * 1024
+MAX_BYTES_DESCOMPRIMIDOS = 12 * 1024 * 1024
+MAX_RAZON_COMPRESION = 100
+_MINIMO_PARA_RAZON = 1024 * 1024
+MENSAJE_EXCEL_INVALIDO = "El archivo no es un Excel válido. Descarga de nuevo el reporte de la DIAN."
+MENSAJE_EXCEL_GRANDE = "El archivo es demasiado grande. Descarga el reporte por un rango de fechas más corto."
+
 # Encabezado normalizado -> campo de FilaReporteDian.
 COLUMNAS = {
     "tipo de documento": "tipo_documento",
@@ -90,11 +104,32 @@ def _numero(valor) -> float | None:
         return None
 
 
+def _validar_tamano_descomprimido(contenido: bytes) -> None:
+    """Rechaza el zip si lo que declara descomprimido excede los limites.
+    El tamano declarado es una cota firme: zipfile corta la lectura en
+    file_size y falla el CRC si el contenido real es mayor."""
+    try:
+        with zipfile.ZipFile(BytesIO(contenido)) as archivo:
+            partes = archivo.infolist()
+    except (zipfile.BadZipFile, OSError, ValueError) as exc:
+        raise ReporteDianInvalido(MENSAJE_EXCEL_INVALIDO) from exc
+    if len(partes) > MAX_PARTES_ZIP:
+        raise ReporteDianInvalido(MENSAJE_EXCEL_INVALIDO)
+    total = 0
+    for parte in partes:
+        total += parte.file_size
+        if parte.file_size > MAX_BYTES_POR_PARTE or total > MAX_BYTES_DESCOMPRIMIDOS:
+            raise ReporteDianInvalido(MENSAJE_EXCEL_GRANDE)
+        if parte.file_size > _MINIMO_PARA_RAZON and parte.file_size > MAX_RAZON_COMPRESION * max(parte.compress_size, 1):
+            raise ReporteDianInvalido(MENSAJE_EXCEL_INVALIDO)
+
+
 def parsear_reporte_dian(contenido: bytes) -> list[FilaReporteDian]:
+    _validar_tamano_descomprimido(contenido)
     try:
         libro = load_workbook(BytesIO(contenido), read_only=True, data_only=True)
     except (zipfile.BadZipFile, KeyError, OSError, ValueError) as exc:
-        raise ReporteDianInvalido("El archivo no es un Excel válido. Descarga de nuevo el reporte de la DIAN.") from exc
+        raise ReporteDianInvalido(MENSAJE_EXCEL_INVALIDO) from exc
 
     try:
         hoja = libro.worksheets[0]
