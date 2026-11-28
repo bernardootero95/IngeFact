@@ -244,6 +244,7 @@ class DocumentoSoporteService:
         self.db.refresh(documento)
         return self.obtener(empresa_id, documento.id)
 
+    @envio_exclusivo
     def actualizar_borrador(
         self, empresa_id: uuid.UUID, documento_id: uuid.UUID, data: CrearDocumentoSoporteRequest
     ) -> DocumentoSoporte:
@@ -306,6 +307,7 @@ class DocumentoSoporteService:
         self.db.commit()
         return self.obtener(empresa_id, copia.id)
 
+    @envio_exclusivo
     def eliminar_borrador(self, empresa_id: uuid.UUID, documento_id: uuid.UUID) -> None:
         documento = self._obtener_editable(empresa_id, documento_id)
         documento.eliminado = datetime.now(timezone.utc)

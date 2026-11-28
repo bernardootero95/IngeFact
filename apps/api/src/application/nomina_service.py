@@ -143,6 +143,7 @@ class NominaService:
         self.db.refresh(nomina)
         return self.obtener(empresa_id, nomina.id)
 
+    @envio_exclusivo
     def actualizar_borrador(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID, data: GuardarNominaRequest) -> Nomina:
         nomina = self._obtener_editable(empresa_id, nomina_id)
         empleado = self._validar_empleado(empresa_id, uuid.UUID(data.empleado_id))
@@ -213,6 +214,7 @@ class NominaService:
         self.db.refresh(copia)
         return self.obtener(empresa_id, copia.id)
 
+    @envio_exclusivo
     def eliminar_borrador(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> None:
         nomina = self._obtener_editable(empresa_id, nomina_id)
         nomina.eliminado = datetime.now(timezone.utc)

@@ -240,6 +240,7 @@ class NotaDebitoService:
         self.db.refresh(nota)
         return self.obtener(empresa_id, nota.id)
 
+    @envio_exclusivo
     def actualizar_borrador(
         self, empresa_id: uuid.UUID, nota_id: uuid.UUID, data: ActualizarNotaDebitoRequest
     ) -> NotaDebito:
@@ -272,6 +273,7 @@ class NotaDebitoService:
         self.db.refresh(nota)
         return self.obtener(empresa_id, nota.id)
 
+    @envio_exclusivo
     def eliminar_borrador(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> None:
         nota = self._obtener_editable(empresa_id, nota_id)
         nota.eliminado = datetime.now(timezone.utc)

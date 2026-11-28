@@ -277,6 +277,7 @@ class FacturaService:
         self.db.refresh(factura)
         return self.obtener(empresa_id, factura.id)
 
+    @envio_exclusivo
     def actualizar_borrador(
         self, empresa_id: uuid.UUID, factura_id: uuid.UUID, data: ActualizarFacturaRequest
     ) -> Factura:
@@ -347,6 +348,7 @@ class FacturaService:
         self.db.commit()
         return self.obtener(empresa_id, copia.id)
 
+    @envio_exclusivo
     def eliminar_borrador(self, empresa_id: uuid.UUID, factura_id: uuid.UUID) -> None:
         factura = self._obtener_editable(empresa_id, factura_id)
         factura.eliminado = datetime.now(timezone.utc)
