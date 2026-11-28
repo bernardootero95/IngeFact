@@ -15,6 +15,7 @@ from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper,
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
+    limitar_reenvio_por_correo,
     resolver_destinatario,
 )
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
@@ -342,6 +343,7 @@ class NominaService:
         nomina = self.obtener(empresa_id, nomina_id)
         if nomina.estado != "aceptada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una nomina aceptada.")
+        limitar_reenvio_por_correo(empresa_id, nomina.id)
         correo = resolver_destinatario(
             destinatario, nomina.empleado.correo_electronico if nomina.empleado else None, "El empleado de esta nomina"
         )

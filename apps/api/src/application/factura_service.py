@@ -21,6 +21,7 @@ from src.core.tiempo import fecha_documento_colombia, hoy_colombia
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
+    limitar_reenvio_por_correo,
     resolver_destinatario,
 )
 from src.core.email_client import EmailClient
@@ -171,6 +172,7 @@ class FacturaService:
         factura = self.obtener(empresa_id, factura_id)
         if factura.estado != "aceptada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una factura aceptada.")
+        limitar_reenvio_por_correo(empresa_id, factura.id)
         correo = resolver_destinatario(
             destinatario, factura.cliente.correo_electronico if factura.cliente else None, "El cliente de esta factura"
         )

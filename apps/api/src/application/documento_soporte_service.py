@@ -19,6 +19,7 @@ from src.core.tiempo import fecha_documento_colombia, hoy_colombia
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
+    limitar_reenvio_por_correo,
     resolver_destinatario,
 )
 from src.core.email_client import EmailClient
@@ -419,6 +420,7 @@ class DocumentoSoporteService:
         documento = self.obtener(empresa_id, documento_id)
         if documento.estado != "aceptado":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo un documento soporte aceptado.")
+        limitar_reenvio_por_correo(empresa_id, documento.id)
         correo = resolver_destinatario(
             destinatario,
             documento.proveedor.correo_electronico if documento.proveedor else None,
