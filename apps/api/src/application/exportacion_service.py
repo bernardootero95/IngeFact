@@ -291,6 +291,13 @@ class ExportacionService:
         anchos = [len(c) for c in hoja.columnas]
         for fila in hoja.filas:
             ws.append(list(fila))
+            # openpyxl guarda como formula todo texto que empiece por "=".
+            # Los datos los escribe el tenant (o, como el telefono del
+            # comprador de un plan, otro tenant): se fuerzan a texto para que
+            # al abrir el archivo no se ejecute nada (run-2).
+            for celda in ws[ws.max_row]:
+                if celda.data_type == "f":
+                    celda.data_type = "s"
             for i, valor in enumerate(fila):
                 anchos[i] = max(anchos[i], len(str(valor)) if valor is not None else 0)
         for i, ancho in enumerate(anchos, start=1):
