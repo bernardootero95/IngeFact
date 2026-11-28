@@ -245,11 +245,18 @@ def documentos_en_vuelo(db: Session, empresa_id) -> int:
 def _cupo_para_enviar(db: Session, empresa_id) -> int | None:
     """Cupo que queda para un envio nuevo: lo disponible menos lo que ya se
     transmitio y espera respuesta. La serializacion por empresa
-    (envio_exclusivo) garantiza que esta lectura no la comparten dos envios."""
+    (envio_exclusivo) garantiza que esta lectura no la comparten dos envios.
+
+    Los en vuelo se cuentan ANTES que los usados: un webhook o la
+    reconciliacion pueden pasar un documento de enviada a aceptada entre las
+    dos lecturas. En este orden ese documento cuenta dos veces (se niega un
+    envio que si cabia, una sola vez); en el orden inverso no contaba en
+    ninguna y se regalaba un documento por encima del plan (run-2)."""
+    en_vuelo = documentos_en_vuelo(db, empresa_id)
     disponibles = documentos_disponibles(db, empresa_id)
     if disponibles is None:
         return None
-    return max(disponibles - documentos_en_vuelo(db, empresa_id), 0)
+    return max(disponibles - en_vuelo, 0)
 
 
 def documentos_disponibles(db: Session, empresa_id) -> int | None:
