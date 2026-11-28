@@ -17,6 +17,7 @@ from src.application.suscripcion_service import revisar_alerta_cuota_por_empresa
 from src.application.correo_documento import (
     ejecutar_envio_reportando_errores,
     enviar_nota_por_correo,
+    limitar_reenvio_por_correo,
     resolver_destinatario,
 )
 from src.application.consecutivo import revertir_consecutivo
@@ -132,6 +133,7 @@ class NotaDebitoService:
             raise HTTPException(
                 status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una nota debito aceptada."
             )
+        limitar_reenvio_por_correo(empresa_id, nota.id)
         correo = resolver_destinatario(
             destinatario, nota.cliente.correo_electronico if nota.cliente else None, "El cliente de esta nota"
         )
@@ -240,6 +242,7 @@ class NotaDebitoService:
         self.db.refresh(nota)
         return self.obtener(empresa_id, nota.id)
 
+    @envio_exclusivo
     def actualizar_borrador(
         self, empresa_id: uuid.UUID, nota_id: uuid.UUID, data: ActualizarNotaDebitoRequest
     ) -> NotaDebito:
@@ -272,6 +275,7 @@ class NotaDebitoService:
         self.db.refresh(nota)
         return self.obtener(empresa_id, nota.id)
 
+    @envio_exclusivo
     def eliminar_borrador(self, empresa_id: uuid.UUID, nota_id: uuid.UUID) -> None:
         nota = self._obtener_editable(empresa_id, nota_id)
         nota.eliminado = datetime.now(timezone.utc)

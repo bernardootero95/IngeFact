@@ -15,6 +15,7 @@ from src.application.suscripcion_service import revisar_alerta_cuota_sin_romper,
 from src.application.correo_documento import (
     construir_adjuntos,
     ejecutar_envio_reportando_errores,
+    limitar_reenvio_por_correo,
     resolver_destinatario,
 )
 from src.core.alegra_client import AlegraApiError, AlegraClient, AlegraTransientError
@@ -143,6 +144,7 @@ class NominaService:
         self.db.refresh(nomina)
         return self.obtener(empresa_id, nomina.id)
 
+    @envio_exclusivo
     def actualizar_borrador(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID, data: GuardarNominaRequest) -> Nomina:
         nomina = self._obtener_editable(empresa_id, nomina_id)
         empleado = self._validar_empleado(empresa_id, uuid.UUID(data.empleado_id))
@@ -213,6 +215,7 @@ class NominaService:
         self.db.refresh(copia)
         return self.obtener(empresa_id, copia.id)
 
+    @envio_exclusivo
     def eliminar_borrador(self, empresa_id: uuid.UUID, nomina_id: uuid.UUID) -> None:
         nomina = self._obtener_editable(empresa_id, nomina_id)
         nomina.eliminado = datetime.now(timezone.utc)
@@ -340,6 +343,7 @@ class NominaService:
         nomina = self.obtener(empresa_id, nomina_id)
         if nomina.estado != "aceptada":
             raise HTTPException(status.HTTP_409_CONFLICT, "Solo se puede enviar por correo una nomina aceptada.")
+        limitar_reenvio_por_correo(empresa_id, nomina.id)
         correo = resolver_destinatario(
             destinatario, nomina.empleado.correo_electronico if nomina.empleado else None, "El empleado de esta nomina"
         )

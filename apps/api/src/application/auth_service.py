@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from src.core.config import get_settings
@@ -74,34 +75,51 @@ class AuthService:
         record = self.db.query(RefreshToken).filter(RefreshToken.token_hash == token_hash).one_or_none()
 
         if record is not None and record.revoked_at is not None:
-            # El token ya fue usado/rotado -- si alguien lo reutiliza es senal
-            # de que fue robado (el legitimo ya recibio uno nuevo). Se revocan
-            # todas las sesiones activas del usuario en vez de solo rechazar
-            # este intento.
-            self._revoke_all_refresh_tokens(user_id=record.user_id, user_type=record.user_type)
-            self.db.commit()
-            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token invalido o expirado.")
+            self._detectar_reuso(record)
 
         if record is None or record.expires_at.timestamp() < _now_ts():
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token invalido o expirado.")
 
-        record.revoked_at = _now()
-        self.db.add(record)
+        # El lock sobre la fila del usuario serializa este canje con otros
+        # canjes y con reset/cambio de contrasena (que toman el mismo lock
+        # antes de borrar los tokens). Sin el, dos canjes simultaneos del
+        # mismo token generaban dos sesiones, y un canje que se cruzaba con
+        # un reset dejaba vivo el token nuevo (auditoria de seguridad run-2).
+        model = UsuarioAdmin if record.user_type == "admin" else UsuarioEmpresa
+        user = self.db.get(model, record.user_id, with_for_update=True, populate_existing=True)
+
+        # Canje atomico: solo uno puede revocar el token. Si no quedo fila es
+        # porque otro lo canjeo o un reset lo borro mientras se esperaba el
+        # lock: se trata como reuso.
+        revocado = self.db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.id == record.id, RefreshToken.revoked_at.is_(None))
+            .values(revoked_at=_now())
+            .execution_options(synchronize_session=False)
+        ).rowcount
+        if revocado != 1:
+            self._detectar_reuso(record)
 
         if record.user_type == "admin":
-            user = self.db.get(UsuarioAdmin, record.user_id)
             if user is None or user.estado != "activo":
                 self.db.commit()
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario no activo.")
             return self._issue_tokens(user_id=user.id, user_type="admin", rol=user.rol, empresa_id=None)
 
-        user = self.db.get(UsuarioEmpresa, record.user_id)
         if user is None or user.estado != "activo" or empresa_suspendida(self.db, user.empresa_id):
             self.db.commit()
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario no activo.")
         tokens = self._issue_tokens(user_id=user.id, user_type="tenant", rol="tenant", empresa_id=user.empresa_id)
         tokens.debe_cambiar_password = user.debe_cambiar_password
         return tokens
+
+    def _detectar_reuso(self, record: RefreshToken):
+        # El token ya fue usado/rotado -- si alguien lo reutiliza es senal de
+        # que fue robado (el legitimo ya recibio uno nuevo). Se revocan todas
+        # las sesiones activas del usuario en vez de solo rechazar este intento.
+        self._revoke_all_refresh_tokens(user_id=record.user_id, user_type=record.user_type)
+        self.db.commit()
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Refresh token invalido o expirado.")
 
     def _revoke_all_refresh_tokens(self, *, user_id: uuid.UUID, user_type: str) -> None:
         activos = (
@@ -192,7 +210,9 @@ class AuthService:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token de recuperacion invalido o expirado.")
 
         model = UsuarioAdmin if record.user_type == "admin" else UsuarioEmpresa
-        user = self.db.get(model, record.user_id)
+        # Mismo lock que refresh: un canje en curso termina antes del borrado
+        # de tokens (y su token nuevo tambien se borra) o falla despues.
+        user = self.db.get(model, record.user_id, with_for_update=True, populate_existing=True)
         if user is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Token de recuperacion invalido o expirado.")
 
@@ -213,7 +233,7 @@ class AuthService:
         Revoca todas las sesiones del usuario (igual que reset_password) y
         devuelve un par de tokens nuevo para que quien cambio la clave siga
         con sesion sin depender de un refresh token ya revocado."""
-        user = self.db.get(UsuarioEmpresa, user_id)
+        user = self.db.get(UsuarioEmpresa, user_id, with_for_update=True, populate_existing=True)
         if user is None or not verify_password(current_password, user.password_hash):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Contrasena actual incorrecta.")
 

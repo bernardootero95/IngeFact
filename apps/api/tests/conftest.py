@@ -138,3 +138,12 @@ def api_client(db_session):
     finally:
         limiter.reset()
         app.dependency_overrides.pop(get_db, None)
+
+
+@pytest.fixture(autouse=True)
+def _reiniciar_limite_de_reenvios():
+    from src.application.correo_documento import limite_de_reenvios
+
+    limite_de_reenvios.reiniciar()
+    yield
+    limite_de_reenvios.reiniciar()
